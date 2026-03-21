@@ -643,7 +643,7 @@ export async function GET(request: NextRequest) {
       } else {
         // No radius - filter by exact city match AND state if provided
         allDeals = allDeals.filter((deal: NormalizedProperty) => {
-          const cityMatch = deal.city?.toLowerCase().includes(city);
+          const cityMatch = deal.city?.toLowerCase() === city;
           const stateMatch = state ? deal.state === state : true;
           return cityMatch && stateMatch;
         });

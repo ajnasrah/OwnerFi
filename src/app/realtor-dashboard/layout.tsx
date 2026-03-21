@@ -5,6 +5,7 @@ import { BottomTabBar } from '@/components/navigation/BottomTabBar';
 import { getRealtorTabs } from '@/components/navigation/tab-configs';
 import Chatbot from '@/components/ui/Chatbot';
 import FloatingChatbotButton from '@/components/ui/FloatingChatbotButton';
+import { Header } from '@/components/ui/Header';
 
 export default function RealtorDashboardLayout({
   children,
@@ -16,6 +17,7 @@ export default function RealtorDashboardLayout({
 
   return (
     <>
+      <Header />
       {children}
       <BottomTabBar tabs={getRealtorTabs()} />
 

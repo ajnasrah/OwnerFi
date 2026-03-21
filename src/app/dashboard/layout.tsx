@@ -8,6 +8,7 @@ import { getBuyerTabs, getInvestorTabs, getRealtorTabs, getAdminTabs } from '@/c
 import { ExtendedSession } from '@/types/session';
 import Chatbot from '@/components/ui/Chatbot';
 import FloatingChatbotButton from '@/components/ui/FloatingChatbotButton';
+import { Header } from '@/components/ui/Header';
 
 function HelpBanner({ onOpenChat }: { onOpenChat: () => void }) {
   const [visible, setVisible] = useState(false);
@@ -114,6 +115,7 @@ export default function DashboardLayout({
 
   return (
     <>
+      <Header />
       {children}
       {/* Don't render tabs until session is loaded to avoid flashing wrong tabs */}
       {status !== 'loading' && <BottomTabBar tabs={tabs} />}

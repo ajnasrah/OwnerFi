@@ -110,6 +110,15 @@ function timestampToUnix(ts: Timestamp | Date | string | number | { _seconds?: n
 export function transformPropertyForTypesense(
   property: UnifiedProperty
 ): TypesensePropertyDocument {
+  const listPrice = property.listPrice ?? 0;
+  const zestimate = property.zestimate ?? 0;
+
+  // Calculate percentOfArv if not already stored (BUG 6 fix)
+  const storedPercent = (property as any).percentOfArv;
+  const percentOfArv = storedPercent != null
+    ? storedPercent
+    : (zestimate > 0 ? Math.round((listPrice / zestimate) * 1000) / 10 : undefined);
+
   return {
     id: property.id,
     address: property.address || '',
@@ -132,15 +141,16 @@ export function transformPropertyForTypesense(
         : (property as any).isCashDeal
           ? 'cash_deal'
           : property.dealType || 'unknown',
-    listPrice: property.listPrice || 0,
-    monthlyPayment: property.ownerFinance?.monthlyPayment || undefined,
-    downPaymentAmount: property.ownerFinance?.downPaymentAmount || undefined,
-    bedrooms: property.bedrooms || 0,
-    bathrooms: property.bathrooms || 0,
-    squareFeet: property.squareFeet || undefined,
-    yearBuilt: property.yearBuilt || undefined,
-    zestimate: property.zestimate || undefined,
-    discountPercent: property.cashDeal?.discountPercent || undefined,
+    listPrice,
+    // Use ?? to preserve 0 as a valid value (BUG 5 fix)
+    monthlyPayment: property.ownerFinance?.monthlyPayment ?? undefined,
+    downPaymentAmount: property.ownerFinance?.downPaymentAmount ?? undefined,
+    bedrooms: property.bedrooms ?? 0,
+    bathrooms: property.bathrooms ?? 0,
+    squareFeet: property.squareFeet ?? undefined,
+    yearBuilt: property.yearBuilt ?? undefined,
+    zestimate: zestimate || undefined, // 0 zestimate is meaningless, keep || here
+    discountPercent: property.cashDeal?.discountPercent ?? undefined,
 
     isActive: property.isActive !== false, // Default to true if not set
     ownerFinanceVerified: (property as any).isOwnerfinance || property.ownerFinance?.verified || false,
@@ -161,14 +171,14 @@ export function transformPropertyForTypesense(
     agentEmail: (property as any).agentEmail || undefined,
 
     // Loan terms
-    downPaymentPercent: property.ownerFinance?.downPaymentPercent || undefined,
-    interestRate: property.ownerFinance?.interestRate || undefined,
-    termYears: property.ownerFinance?.termYears || (property as any).loanTermYears || undefined,
-    balloonYears: property.ownerFinance?.balloonYears || undefined,
+    downPaymentPercent: property.ownerFinance?.downPaymentPercent ?? undefined,
+    interestRate: property.ownerFinance?.interestRate ?? undefined,
+    termYears: property.ownerFinance?.termYears ?? (property as any).loanTermYears ?? undefined,
+    balloonYears: property.ownerFinance?.balloonYears ?? undefined,
 
     // Cash flow / rental fields
-    rentEstimate: (property as any).rentEstimate || (property as any).rentZestimate || undefined,
-    percentOfArv: (property as any).percentOfArv || undefined,
+    rentEstimate: (property as any).rentEstimate ?? (property as any).rentZestimate ?? undefined,
+    percentOfArv,
 
     // URLs
     url: (property as any).url || ((property as any).hdpUrl ? ((property as any).hdpUrl.startsWith('http') ? (property as any).hdpUrl : `https://www.zillow.com${(property as any).hdpUrl}`) : undefined),
@@ -419,23 +429,24 @@ export async function indexRawFirestoreProperty(
       location,
       dealType,
       listPrice: price,
-      monthlyPayment: data.monthlyPayment || undefined,
-      downPaymentAmount: data.downPaymentAmount || undefined,
-      downPaymentPercent: data.downPaymentPercent || undefined,
-      bedrooms: data.bedrooms || data.beds || 0,
-      bathrooms: data.bathrooms || data.baths || 0,
-      squareFeet: (data.squareFoot || data.squareFeet || data.sqft) ? Math.round(data.squareFoot || data.squareFeet || data.sqft) : undefined,
-      yearBuilt: data.yearBuilt || undefined,
-      zestimate: zestimate || undefined,
-      discountPercent: data.discountPercentage || data.discount || undefined,
+      // Use ?? to preserve 0 as a valid value
+      monthlyPayment: data.monthlyPayment ?? undefined,
+      downPaymentAmount: data.downPaymentAmount ?? undefined,
+      downPaymentPercent: data.downPaymentPercent ?? undefined,
+      bedrooms: data.bedrooms ?? data.beds ?? 0,
+      bathrooms: data.bathrooms ?? data.baths ?? 0,
+      squareFeet: (data.squareFoot ?? data.squareFeet ?? data.sqft) != null ? Math.round(data.squareFoot ?? data.squareFeet ?? data.sqft) : undefined,
+      yearBuilt: data.yearBuilt ?? undefined,
+      zestimate: zestimate || undefined, // 0 zestimate is meaningless
+      discountPercent: data.discountPercentage ?? data.discount ?? undefined,
       percentOfArv,
       // Cash flow / rental fields
-      rentEstimate: data.rentEstimate || data.rentZestimate || undefined,
-      annualTaxAmount: data.annualTaxAmount || data.taxAmount || undefined,
-      propertyTaxRate: data.propertyTaxRate || undefined,
-      monthlyHoa: data.hoa || data.hoaFees || undefined,
+      rentEstimate: data.rentEstimate ?? data.rentZestimate ?? undefined,
+      annualTaxAmount: data.annualTaxAmount ?? data.taxAmount ?? undefined,
+      propertyTaxRate: data.propertyTaxRate ?? undefined,
+      monthlyHoa: data.hoa ?? data.hoaFees ?? undefined,
       // Days on market
-      daysOnZillow: data.daysOnZillow || undefined,
+      daysOnZillow: data.daysOnZillow ?? undefined,
       // Status
       isActive: data.isActive !== false && data.status !== 'inactive',
       ownerFinanceVerified: data.ownerFinanceVerified || false,
@@ -458,9 +469,9 @@ export async function indexRawFirestoreProperty(
       agentPhone: data.agentPhoneNumber || data.agentPhone || data.brokerPhoneNumber || undefined,
       agentEmail: data.agentEmail || data.listingAgentEmail || undefined,
       // Loan terms
-      interestRate: data.interestRate || undefined,
-      termYears: data.termYears || data.loanTermYears || undefined,
-      balloonYears: data.balloonYears || undefined,
+      interestRate: data.interestRate ?? undefined,
+      termYears: data.termYears ?? data.loanTermYears ?? undefined,
+      balloonYears: data.balloonYears ?? undefined,
       createdAt: timestampToUnix(data.createdAt || data.foundAt || data.importedAt),
       updatedAt: timestampToUnix(data.updatedAt),
       nearbyCities: data.nearbyCities || undefined,

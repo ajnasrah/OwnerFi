@@ -328,9 +328,9 @@ async function searchTypesense(
 
     const price = (doc.listPrice as number) || 0;
     const arv = (doc.zestimate as number) || 0;
-    // Use pre-indexed percentOfArv if available, otherwise compute
+    // Use pre-indexed percentOfArv if available, otherwise compute (1 decimal place)
     const indexedPercent = doc.percentOfArv as number | undefined;
-    const percentOfArv = indexedPercent != null ? Math.round(indexedPercent) : (arv > 0 ? Math.round((price / arv) * 100) : null);
+    const percentOfArv = indexedPercent != null ? Math.round(indexedPercent * 10) / 10 : (arv > 0 ? Math.round((price / arv) * 1000) / 10 : null);
     const discount = arv > 0 ? arv - price : 0;
     const rawDealType = (doc.dealType as string) || 'standard';
     const needsWork = doc.needsWork === true;
@@ -468,7 +468,7 @@ async function searchFirestore(
 
         const price = (data.price as number) || (data.listPrice as number) || 0;
         const arv = (data.estimate as number) || (data.zestimate as number) || 0;
-        const percentOfArv = arv > 0 ? Math.round((price / arv) * 100) : null;
+        const percentOfArv = arv > 0 ? Math.round((price / arv) * 1000) / 10 : null;
         const discount = arv > 0 ? arv - price : 0;
         const needsWork = data.needsWork === true;
         const isOwnerfinance = data.isOwnerfinance === true;

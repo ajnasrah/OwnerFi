@@ -3,6 +3,7 @@
 import DealAlerts from '@/components/DealAlerts';
 import { BottomTabBar } from '@/components/navigation/BottomTabBar';
 import { getAdminTabs } from '@/components/navigation/tab-configs';
+import { Header } from '@/components/ui/Header';
 
 export default function AdminLayout({
   children,
@@ -11,6 +12,7 @@ export default function AdminLayout({
 }) {
   return (
     <>
+      <Header />
       {children}
       <DealAlerts />
       <BottomTabBar tabs={getAdminTabs()} />

@@ -1,1962 +1,435 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import WorkflowRecoveryButtons from '@/components/WorkflowRecoveryButtons';
-import AnalyticsDashboard from '@/components/AnalyticsDashboard';
-import YouTubeAnalyticsDashboard from '@/components/YouTubeAnalyticsDashboard';
 
-interface SchedulerStatus {
-  timestamp: string;
-  scheduler: {
-    running: boolean;
-    config: {
-      maxVideosPerDay: {
-        carz: number;
-        ownerfi: number;
-      };
-    };
-  };
-  feeds: {
-    total: number;
-    carz: number;
-    ownerfi: number;
-  };
-  articles?: {
-    carz: number;
-    ownerfi: number;
-  };
-  queue: {
-    carz: {
-      pending: number;
-      items: Array<{ id: string; [key: string]: unknown }>;
-    };
-    ownerfi: {
-      pending: number;
-      items: Array<{ id: string; [key: string]: unknown }>;
-    };
-  };
-  stats?: {
-    carz: {
-      totalFeeds: number;
-      activeFeeds: number;
-      totalArticles: number;
-      unprocessedArticles: number;
-      videosGenerated: number;
-      queuePending: number;
-      queueProcessing: number;
-    };
-    ownerfi: {
-      totalFeeds: number;
-      activeFeeds: number;
-      totalArticles: number;
-      unprocessedArticles: number;
-      videosGenerated: number;
-      queuePending: number;
-      queueProcessing: number;
-    };
-  };
-  results?: Array<{
-    brand: string;
-    success: boolean;
-    article?: string;
-    videoId?: string;
-    error?: string;
-  }>;
+// ─── Types ───
+
+interface RunInfo {
+  id: number;
+  status: 'success' | 'failure' | 'in_progress' | 'queued' | 'cancelled' | 'unknown';
+  conclusion: string | null;
+  started_at: string;
+  duration_seconds: number;
+  trigger: string;
+  url: string;
+  run_number: number;
 }
 
-interface WorkflowLog {
-  id: string;
-  articleId: string;
-  articleTitle: string;
-  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'gaza' | 'realtors';
-  status: 'pending' | 'heygen_processing' | 'submagic_processing' | 'posting' | 'completed' | 'failed';
-  heygenVideoId?: string;
-  submagicVideoId?: string;
-  latePostId?: string; // Changed from metricoolPostId
-  metricoolPostId?: string; // Keep for backwards compatibility with old workflows
-  captionTemplate?: string; // For A/B testing tracking
-  error?: string;
-  createdAt: number;
-  updatedAt: number;
-}
-
-interface WorkflowLogs {
-  success: boolean;
-  workflows: {
-    carz: WorkflowLog[];
-    ownerfi: WorkflowLog[];
-    abdullah?: WorkflowLog[];
-    gaza?: WorkflowLog[];
-  };
-  timestamp: string;
-}
-
-interface BenefitWorkflowLog {
-  id: string;
-  benefitId: string;
-  audience: 'seller' | 'buyer';
-  benefitTitle: string;
-  status: 'heygen_processing' | 'submagic_processing' | 'video_processing' | 'posting' | 'completed' | 'failed';
-  heygenVideoId?: string;
-  submagicProjectId?: string;
-  finalVideoUrl?: string;
-  latePostId?: string;
-  error?: string;
-  createdAt: number;
-  updatedAt: number;
-}
-
-interface BenefitWorkflowLogs {
-  success: boolean;
-  workflows: BenefitWorkflowLog[];
-  timestamp: string;
-}
-
-interface PropertyQueueStats {
-  total: number;
-  queued: number;
-  processing: number;
-  nextProperty?: {
-    address: string;
-    city: string;
-    state: string;
-    videoCount: number;
-  };
-  rotationDays: number;
-  videosToday: number;
-}
-
-interface GuestProfile {
-  id: string;
+interface Pipeline {
   name: string;
-  title: string;
-  expertise: string;
-  avatar_id: string;
-  voice_id: string;
-  enabled: boolean;
-}
-
-interface Recommendation {
-  id: string;
-  type: 'success' | 'warning' | 'info' | 'critical';
-  category: 'performance' | 'content' | 'scheduling' | 'technical';
-  title: string;
+  workflow_file: string;
+  schedule: string;
   description: string;
-  action: string;
-  impact: 'high' | 'medium' | 'low';
-  copyPasteText: string;
+  recent_runs: RunInfo[];
+  last_success: string | null;
+  last_failure: string | null;
+  success_rate_7d: number;
+  streak: { type: 'success' | 'failure'; count: number };
 }
 
-interface AnalyticsData {
+interface StatusData {
+  success: boolean;
+  pipelines: Pipeline[];
+  error?: string;
   timestamp: string;
-  brands: {
-    carz: BrandAnalytics;
-    ownerfi: BrandAnalytics;
-  };
-  recommendations: Recommendation[];
-  overallHealth: 'excellent' | 'good' | 'fair' | 'poor';
-  keyMetrics: {
-    totalVideosGenerated: number;
-    successRate: number;
-    averageProcessingTime: string;
-    contentQuality: string;
-  };
 }
 
-interface BrandAnalytics {
-  totalFeeds: number;
-  activeFeeds: number;
-  totalArticles: number;
-  unprocessedArticles: number;
-  videosGenerated: number;
-  queueStats: {
-    pending: number;
-    processing: number;
-    completed: number;
-    failed: number;
-  };
-  successRate: number;
-  health: 'excellent' | 'good' | 'fair' | 'poor';
+// ─── Helpers ───
+
+function timeAgo(dateStr: string): string {
+  const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+  if (seconds < 0) return 'just now';
+  if (seconds < 60) return `${seconds}s ago`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
 }
 
-export default function SocialMediaDashboard() {
+function formatDuration(seconds: number): string {
+  if (seconds < 60) return `${seconds}s`;
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}m ${s}s`;
+}
+
+function statusBadge(status: RunInfo['status']) {
+  const map: Record<string, { bg: string; text: string; label: string }> = {
+    success: { bg: 'bg-green-900/40', text: 'text-green-400', label: 'Success' },
+    failure: { bg: 'bg-red-900/40', text: 'text-red-400', label: 'Failed' },
+    in_progress: { bg: 'bg-blue-900/40', text: 'text-blue-400', label: 'Running' },
+    queued: { bg: 'bg-yellow-900/40', text: 'text-yellow-400', label: 'Queued' },
+    cancelled: { bg: 'bg-slate-700', text: 'text-slate-400', label: 'Cancelled' },
+    unknown: { bg: 'bg-slate-700', text: 'text-slate-400', label: 'Unknown' },
+  };
+  const s = map[status] || map.unknown;
+  return (
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${s.bg} ${s.text}`}>
+      {status === 'in_progress' && (
+        <span className="w-2 h-2 bg-blue-400 rounded-full mr-1.5 animate-pulse" />
+      )}
+      {s.label}
+    </span>
+  );
+}
+
+// ─── Component ───
+
+export default function SocialDashboard() {
   const { data: session, status: authStatus } = useSession();
   const router = useRouter();
-  const [activeSubTab, setActiveSubTab] = useState<'carz' | 'ownerfi' | 'ownerfi-benefits' | 'abdullah' | 'gaza' | 'analytics' | 'youtube-analytics'>('carz');
-  const [status, setStatus] = useState<SchedulerStatus | null>(null);
-  const [workflows, setWorkflows] = useState<WorkflowLogs | null>(null);
-  const [benefitWorkflows, setBenefitWorkflows] = useState<BenefitWorkflowLogs | null>(null);
+  const [data, setData] = useState<StatusData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [triggeringViral, setTriggeringViral] = useState(false);
-  const [triggeringBenefit, setTriggeringBenefit] = useState(false);
-  const [triggeringAbdullah, setTriggeringAbdullah] = useState(false);
-  const [showHistory, setShowHistory] = useState(false);
-  const [deletingWorkflow, setDeletingWorkflow] = useState<string | null>(null);
-  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
-  const [copiedRecId, setCopiedRecId] = useState<string | null>(null);
-  const [refreshingAnalytics, setRefreshingAnalytics] = useState(false);
-  interface AbdullahQueueStats {
-    total: number;
-    pending: number;
-    processing: number;
-    nextItems: Array<{ id: string; [key: string]: unknown }>;
-  }
-  const [abdullahQueueStats, setAbdullahQueueStats] = useState<AbdullahQueueStats | null>(null);
-  const [recentScripts, setRecentScripts] = useState<Array<{
-    id: string;
-    title: string;
-    script: string;
-    caption: string;
-    theme: string;
-    hook: string;
-    status: string;
-    createdAt: number;
-    finalVideoUrl?: string;
-  }>>([]);
-  const [copiedScriptId, setCopiedScriptId] = useState<string | null>(null);
+  const [triggering, setTriggering] = useState<string | null>(null);
 
-  // Auth check
   useEffect(() => {
-    if (authStatus === 'unauthenticated') {
-      router.replace('/auth');
-    }
-
-    if (authStatus === 'authenticated') {
-      const userRole = (session?.user as { role?: string })?.role;
-      if (userRole !== 'admin') {
-        if (userRole === 'buyer') {
-          router.replace('/dashboard');
-        } else if (userRole === 'realtor') {
-          router.replace('/realtor-dashboard');
-        } else {
-          router.replace('/auth');
-        }
-      }
-    }
+    if (authStatus === 'unauthenticated') router.replace('/auth');
+    if (authStatus === 'authenticated' && (session?.user as any)?.role !== 'admin') router.replace('/');
   }, [authStatus, session, router]);
 
-  useEffect(() => {
-    if (authStatus === 'authenticated' && (session?.user as { role?: string })?.role === 'admin') {
-      // PERFORMANCE FIX: Replace 7 concurrent intervals with single coordinated polling
-      // OLD: 7 intervals = 14,000 API calls/day = $100/month + browser memory leaks
-      // NEW: 1 interval with coordinated polling = 2,880 API calls/day = $20/month
-
-      // Initial load
-      loadStatus();
-      loadWorkflows();
-      loadBenefitWorkflows();
-      loadAnalytics();
-      loadAbdullahQueueStats();
-      loadRecentScripts();
-
-      let tickCount = 0;
-
-      // Single coordinated interval (every 30 seconds)
-      const coordinatedInterval = setInterval(() => {
-        tickCount++;
-
-        // Workflows: every 30s (tick 1, 2, 3, ...)
-        loadWorkflows();
-        loadBenefitWorkflows();
-        loadAbdullahQueueStats();
-
-        // Status & Stats: every 60s (tick 2, 4, 6, ...)
-        if (tickCount % 2 === 0) {
-          loadStatus();
-          loadRecentScripts();
-        }
-
-        // Analytics: every 24 hours (tick 2880)
-        if (tickCount % 2880 === 0) {
-          loadAnalytics();
-        }
-
-        // Guest profiles: once at start, then only on manual refresh
-        // (already loaded at initial mount)
-      }, 30000); // 30 seconds
-
-      return () => {
-        clearInterval(coordinatedInterval);
-      };
-    }
-    return undefined;
-  }, [showHistory, authStatus, session]);
-
-  const loadWorkflows = async () => {
+  const loadStatus = useCallback(async () => {
     try {
-      const url = showHistory ? '/api/workflow/logs?history=true' : '/api/workflow/logs';
-      const response = await fetch(url);
-      const data = await response.json();
-      setWorkflows(data);
-    } catch (error) {
-      console.error('Failed to load workflows:', error);
-    }
-  };
-
-  const loadBenefitWorkflows = async () => {
-    try {
-      const url = showHistory ? '/api/benefit/workflow/logs?history=true' : '/api/benefit/workflow/logs';
-      const response = await fetch(url);
-      const data = await response.json();
-      setBenefitWorkflows(data);
-    } catch (error) {
-      console.error('Failed to load benefit workflows:', error);
-    }
-  };
-
-  const loadAnalytics = async (manual = false) => {
-    if (manual) setRefreshingAnalytics(true);
-    try {
-      // Add cache-busting timestamp to ensure fresh data
-      const cacheBuster = `?_=${Date.now()}`;
-      const response = await fetch(`/api/analytics/recommendations${cacheBuster}`, {
-        cache: 'no-store',
-        headers: {
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
-        }
-      });
-      const data = await response.json();
-      setAnalytics(data);
-    } catch (error) {
-      console.error('Failed to load analytics:', error);
-    } finally {
-      if (manual) setRefreshingAnalytics(false);
-    }
-  };
-
-  const loadAbdullahQueueStats = async () => {
-    try {
-      const response = await fetch('/api/admin/abdullah-queue-stats');
-      const data = await response.json();
-      if (data.success) {
-        setAbdullahQueueStats(data.stats);
-      }
-    } catch (error) {
-      console.error('Failed to load Abdullah queue stats:', error);
-    }
-  };
-
-  const loadRecentScripts = async () => {
-    try {
-      const response = await fetch('/api/admin/recent-scripts?limit=10');
-      const data = await response.json();
-      if (data.success) {
-        setRecentScripts(data.scripts);
-      }
-    } catch (error) {
-      console.error('Failed to load recent scripts:', error);
-    }
-  };
-
-  const copyScriptToClipboard = async (script: typeof recentScripts[0]) => {
-    const text = `TITLE: ${script.title}
-THEME: ${script.theme}
-HOOK: ${script.hook}
-
-SCRIPT:
-${script.script}
-
-CAPTION:
-${script.caption}`;
-
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopiedScriptId(script.id);
-      setTimeout(() => setCopiedScriptId(null), 2000);
-    } catch (error) {
-      console.error('Failed to copy script:', error);
-    }
-  };
-
-  const copyToClipboard = async (text: string, recId: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopiedRecId(recId);
-      setTimeout(() => setCopiedRecId(null), 2000);
-    } catch (error) {
-      console.error('Failed to copy to clipboard:', error);
-    }
-  };
-
-  const updateGuestProfile = async (profileId: string, updates: Partial<GuestProfile>) => {
-    try {
-      const response = await fetch(`/api/podcast/profiles/${profileId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updates)
-      });
-      const data = await response.json();
-      if (data.success) {
-        await loadGuestProfiles();
-        setEditingProfile(null);
-      }
-    } catch (error) {
-      console.error('Failed to update guest profile:', error);
-    }
-  };
-
-  const loadStatus = async () => {
-    try {
-      const response = await fetch('/api/debug/scheduler-status');
-      const data = await response.json();
-      setStatus(data);
-    } catch (error) {
-      console.error('Failed to load status:', error);
+      const res = await fetch('/api/admin/social-status');
+      const json = await res.json();
+      setData(json);
+    } catch (err) {
+      console.error('Failed to load social status:', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const triggerCron = async () => {
-    setTriggeringViral(true);
+  useEffect(() => {
+    if (authStatus === 'authenticated' && (session?.user as any)?.role === 'admin') {
+      loadStatus();
+      const interval = setInterval(loadStatus, 60000); // refresh every 60s
+      return () => clearInterval(interval);
+    }
+  }, [authStatus, session, loadStatus]);
+
+  const triggerWorkflow = async (workflowFile: string, inputs?: Record<string, string>) => {
+    setTriggering(workflowFile);
     try {
-      // Determine which brand based on active tab
-      const brand = activeSubTab === 'carz' ? 'carz' : 'ownerfi';
-
-      const response = await fetch('/api/workflow/complete-viral', {
+      const res = await fetch('/api/admin/trigger-workflow', {
         method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          brand: brand,
-          platforms: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads'],
-          schedule: 'immediate'
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ workflow: workflowFile, inputs }),
       });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Workflow trigger failed:', response.status, errorText);
-        alert(`Failed to start workflow (${response.status}): ${errorText}`);
-        return;
-      }
-
-      const data = await response.json();
-
-      if (data.success) {
-        alert(`Video workflow started!\n\nArticle: ${data.article?.title || 'N/A'}\nWorkflow ID: ${data.workflow_id || 'N/A'}`);
-        loadStatus();
-        loadWorkflows();
+      const json = await res.json();
+      if (json.success) {
+        alert(`Pipeline triggered! It will appear in the run list within ~30 seconds.`);
+        setTimeout(loadStatus, 15000);
       } else {
-        alert(`Error: ${data.error || 'Unknown error'}`);
+        alert(`Failed: ${json.error || 'Unknown error'}`);
       }
-    } catch (error) {
-      console.error('Workflow trigger error:', error);
-      alert(`Failed to start workflow: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } catch (err) {
+      alert('Failed to trigger workflow');
     } finally {
-      setTriggeringViral(false);
+      setTriggering(null);
     }
   };
 
-  const triggerBenefitCron = async () => {
-    setTriggeringBenefit(true);
-    try {
-      const response = await fetch('/api/benefit/cron?force=true', { method: 'POST' });
-      const data = await response.json();
-      alert(data.success ? 'Benefit video cron triggered successfully!' : `Error: ${data.error}`);
-      if (data.success) {
-        loadBenefitWorkflows();
-      }
-    } catch (error) {
-      alert('Failed to trigger benefit cron');
-    } finally {
-      setTriggeringBenefit(false);
-    }
-  };
-
-  const triggerAbdullahWorkflow = async () => {
-    setTriggeringAbdullah(true);
-    try {
-      const response = await fetch('/api/workflow/complete-abdullah', {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          platforms: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin'],
-          schedule: 'staggered' // Posts throughout the day
-        })
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Abdullah workflow failed:', response.status, errorText);
-        alert(`Failed to start Abdullah workflow (${response.status}): ${errorText}`);
-        return;
-      }
-
-      const data = await response.json();
-
-      if (data.success) {
-        const videosGenerated = data.videos?.length || 0;
-        alert(`Abdullah workflow started!\n\n${videosGenerated} videos generating...\n\nThemes: Mindset, Business, Money, Freedom, Story/Lesson`);
-        loadWorkflows();
-      } else {
-        alert(`Error: ${data.error || 'Unknown error'}`);
-      }
-    } catch (error) {
-      console.error('Abdullah workflow error:', error);
-      alert(`Failed to start Abdullah workflow: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    } finally {
-      setTriggeringAbdullah(false);
-    }
-  };
-
-  const deleteWorkflow = async (workflowId: string, brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'gaza' | 'realtors') => {
-    if (!confirm('Are you sure you want to delete this workflow? This action cannot be undone.')) {
-      return;
-    }
-
-    setDeletingWorkflow(workflowId);
-    try {
-      const response = await fetch(`/api/workflow/delete?workflowId=${workflowId}&brand=${brand}`, {
-        method: 'DELETE'
-      });
-      const data = await response.json();
-
-      if (data.success) {
-        // Refresh workflows list
-        if (brand === 'benefit') {
-          await loadBenefitWorkflows();
-        } else {
-          await loadWorkflows();
-        }
-      } else {
-        alert(`Failed to delete workflow: ${data.error}`);
-      }
-    } catch (error) {
-      alert('Failed to delete workflow');
-      console.error('Delete error:', error);
-    } finally {
-      setDeletingWorkflow(null);
-    }
-  };
-
-  const getStatusColor = (status: WorkflowLog['status']) => {
-    switch (status) {
-      case 'pending': return 'bg-gray-100 text-gray-700';
-      case 'heygen_processing': return 'bg-blue-100 text-blue-700';
-      case 'submagic_processing': return 'bg-purple-100 text-purple-700';
-      case 'posting': return 'bg-yellow-100 text-yellow-700';
-      case 'completed': return 'bg-green-100 text-green-700';
-      case 'failed': return 'bg-red-100 text-red-700';
-      default: return 'bg-gray-100 text-gray-700';
-    }
-  };
-
-  const getBenefitStatusColor = (status: BenefitWorkflowLog['status']) => {
-    switch (status) {
-      case 'heygen_processing': return 'bg-blue-100 text-blue-700';
-      case 'submagic_processing': return 'bg-purple-100 text-purple-700';
-      case 'video_processing': return 'bg-indigo-100 text-indigo-700';
-      case 'posting': return 'bg-yellow-100 text-yellow-700';
-      case 'completed': return 'bg-green-100 text-green-700';
-      case 'failed': return 'bg-red-100 text-red-700';
-      default: return 'bg-gray-100 text-gray-700';
-    }
-  };
-
-  const formatStatus = (status: WorkflowLog['status'] | BenefitWorkflowLog['status']) => {
-    return status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-  };
-
-  const formatTimeAgo = (timestamp: number) => {
-    // Validate timestamp
-    if (!timestamp || isNaN(timestamp) || timestamp <= 0) {
-      return 'Just now';
-    }
-
-    const seconds = Math.floor((Date.now() - timestamp) / 1000);
-
-    // Handle invalid calculations
-    if (isNaN(seconds) || seconds < 0) {
-      return 'Just now';
-    }
-
-    if (seconds < 60) return `${seconds}s ago`;
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `${minutes}m ago`;
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours}h ago`;
-    const days = Math.floor(hours / 24);
-    return `${days}d ago`;
-  };
-
-  if (authStatus !== 'authenticated' || (session?.user as { role?: string })?.role !== 'admin' || loading) {
+  if (authStatus !== 'authenticated' || (session?.user as any)?.role !== 'admin' || loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <div className="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <div className="text-lg font-medium text-gray-900">Loading...</div>
-        </div>
+      <div className="flex items-center justify-center h-screen bg-[#111625]">
+        <div className="w-8 h-8 border-2 border-[#00BC7D] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
+  const pipelines = data?.pipelines || [];
+
   return (
     <div className="h-screen overflow-hidden bg-[#111625] flex flex-col">
       <div className="flex-1 overflow-y-auto p-6">
-        <div className="max-w-7xl mx-auto">
-        {/* Back to Hub */}
-        <Link href="/admin" className="text-[#00BC7D] hover:text-[#00d68f] mb-4 inline-flex items-center gap-1">
-          ← Back to Admin Hub
-        </Link>
-
-        {/* Header */}
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-white">Social Media Automation</h1>
-            <p className="text-slate-400 mt-1">Monitor and control viral video generation</p>
-          </div>
-          <Link
-            href="/admin/ab-tests"
-            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg"
-          >
-            <span className="text-xl">🧪</span>
-            <span>A/B Testing</span>
+        <div className="max-w-5xl mx-auto">
+          {/* Header */}
+          <Link href="/admin" className="text-[#00BC7D] hover:text-[#00d68f] mb-4 inline-flex items-center gap-1">
+            ← Back to Admin Hub
           </Link>
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold text-white">Social Media Pipelines</h1>
+            <p className="text-slate-400 mt-1">
+              GitHub Actions video pipelines — Creatify + Late.dev
+              {data?.timestamp && (
+                <span className="ml-2 text-slate-500 text-xs">Updated {timeAgo(data.timestamp)}</span>
+              )}
+            </p>
+          </div>
+
+          {/* Config missing warning */}
+          {data?.error && (
+            <div className="bg-amber-900/30 border border-amber-600/50 rounded-xl p-4 mb-6">
+              <p className="text-amber-300 text-sm">{data.error}</p>
+            </div>
+          )}
+
+          {/* Overview Cards */}
+          {pipelines.length > 0 && (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              <div className="bg-slate-800 rounded-xl border border-slate-700 p-4">
+                <div className="text-sm text-slate-400">Pipelines</div>
+                <div className="text-2xl font-bold text-white mt-1">{pipelines.length}</div>
+                <div className="text-xs text-slate-500 mt-1">active</div>
+              </div>
+              <div className="bg-slate-800 rounded-xl border border-slate-700 p-4">
+                <div className="text-sm text-slate-400">Avg Success Rate</div>
+                <div className={`text-2xl font-bold mt-1 ${
+                  pipelines.every(p => p.success_rate_7d >= 90) ? 'text-green-400' :
+                  pipelines.some(p => p.success_rate_7d < 50) ? 'text-red-400' : 'text-yellow-400'
+                }`}>
+                  {Math.round(pipelines.reduce((sum, p) => sum + p.success_rate_7d, 0) / pipelines.length)}%
+                </div>
+                <div className="text-xs text-slate-500 mt-1">recent runs</div>
+              </div>
+              <div className="bg-slate-800 rounded-xl border border-slate-700 p-4">
+                <div className="text-sm text-slate-400">Video Engine</div>
+                <div className="text-lg font-bold text-white mt-1">Creatify</div>
+                <div className="text-xs text-slate-500 mt-1">AI avatar</div>
+              </div>
+              <div className="bg-slate-800 rounded-xl border border-slate-700 p-4">
+                <div className="text-sm text-slate-400">Posting</div>
+                <div className="text-lg font-bold text-white mt-1">Late.dev</div>
+                <div className="text-xs text-slate-500 mt-1">all platforms</div>
+              </div>
+            </div>
+          )}
+
+          {/* Pipeline Cards */}
+          {pipelines.map((pipeline) => (
+            <PipelineCard
+              key={pipeline.workflow_file}
+              pipeline={pipeline}
+              triggering={triggering === pipeline.workflow_file}
+              onTrigger={(inputs) => triggerWorkflow(pipeline.workflow_file, inputs)}
+            />
+          ))}
+
+          {pipelines.length === 0 && !data?.error && (
+            <div className="bg-slate-800 rounded-xl border border-slate-700 p-12 text-center">
+              <p className="text-slate-400">No pipeline data available.</p>
+              <p className="text-slate-500 text-sm mt-1">Make sure GITHUB_TOKEN is set in environment variables.</p>
+            </div>
+          )}
+
+          {/* Platforms */}
+          <div className="bg-slate-800 rounded-xl border border-slate-700 p-6 mt-6">
+            <h3 className="text-lg font-semibold text-white mb-4">Publishing Platforms</h3>
+            <div className="flex flex-wrap gap-2">
+              {['Instagram', 'TikTok', 'YouTube', 'Facebook', 'LinkedIn', 'Twitter/X', 'Threads', 'Bluesky'].map((p) => (
+                <span key={p} className="px-3 py-1.5 rounded-full text-xs font-medium bg-[#00BC7D]/10 text-[#00BC7D] border border-[#00BC7D]/20">
+                  {p}
+                </span>
+              ))}
+            </div>
+            <div className="mt-4 text-xs text-slate-500">
+              Videos posted via Late.dev to Ownerfi profile. YouTube uses Short format.
+            </div>
+          </div>
+
+          {/* System Info */}
+          <div className="bg-slate-800 rounded-xl border border-slate-700 p-6 mt-6">
+            <h3 className="text-lg font-semibold text-white mb-4">Pipeline Architecture</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+              <div>
+                <h4 className="font-medium text-slate-300 mb-2">Ownerfi Daily Video</h4>
+                <ol className="text-slate-400 space-y-1 list-decimal ml-4">
+                  <li>Query Typesense for properties by rotating state</li>
+                  <li>Puppeteer renders property cards (uploaded to R2)</li>
+                  <li>GPT-4o-mini generates script + caption</li>
+                  <li>Creatify renders AI avatar video with cards</li>
+                  <li>Late.dev posts to all platforms</li>
+                </ol>
+                <div className="text-xs text-slate-500 mt-2">EN + ES versions, ~8-10 min each</div>
+              </div>
+              <div>
+                <h4 className="font-medium text-slate-300 mb-2">Realtor Lead Demo</h4>
+                <ol className="text-slate-400 space-y-1 list-decimal ml-4">
+                  <li>Puppeteer captures 5 dashboard screenshots</li>
+                  <li>Upload screens to R2</li>
+                  <li>GPT-4o-mini generates walkthrough script</li>
+                  <li>Creatify renders avatar demo video</li>
+                  <li>Late.dev posts to all platforms</li>
+                </ol>
+                <div className="text-xs text-slate-500 mt-2">Targets licensed agents, ~5 min</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Pipeline Card ───
+
+function PipelineCard({
+  pipeline,
+  triggering,
+  onTrigger,
+}: {
+  pipeline: Pipeline;
+  triggering: boolean;
+  onTrigger: (inputs?: Record<string, string>) => void;
+}) {
+  const isDaily = pipeline.workflow_file === 'daily-video.yml';
+  const [showAll, setShowAll] = useState(false);
+  const displayRuns = showAll ? pipeline.recent_runs : pipeline.recent_runs.slice(0, 5);
+
+  return (
+    <div className="bg-slate-800 rounded-xl border border-slate-700 p-6 mb-6">
+      {/* Header */}
+      <div className="flex items-start justify-between mb-4">
+        <div>
+          <div className="flex items-center gap-3">
+            <h3 className="text-lg font-semibold text-white">{pipeline.name}</h3>
+            {pipeline.streak.count > 0 && (
+              <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                pipeline.streak.type === 'success'
+                  ? 'bg-green-900/40 text-green-400'
+                  : 'bg-red-900/40 text-red-400'
+              }`}>
+                {pipeline.streak.count}x {pipeline.streak.type}
+              </span>
+            )}
+          </div>
+          <p className="text-slate-400 text-sm mt-1">{pipeline.description}</p>
+          <p className="text-slate-500 text-xs mt-1">Schedule: {pipeline.schedule}</p>
+        </div>
+        <div className="flex gap-2">
+          {isDaily && (
+            <div className="flex gap-1">
+              <button
+                onClick={() => onTrigger({ lang: 'en', dry_run: 'false' })}
+                disabled={triggering}
+                className="px-3 py-2 bg-[#00BC7D] text-white text-xs font-medium rounded-lg hover:bg-[#009B66] disabled:bg-slate-600 disabled:text-slate-400 transition-colors"
+              >
+                {triggering ? 'Triggering...' : 'Run EN'}
+              </button>
+              <button
+                onClick={() => onTrigger({ lang: 'es', dry_run: 'false' })}
+                disabled={triggering}
+                className="px-3 py-2 bg-indigo-600 text-white text-xs font-medium rounded-lg hover:bg-indigo-700 disabled:bg-slate-600 disabled:text-slate-400 transition-colors"
+              >
+                ES
+              </button>
+            </div>
+          )}
+          {!isDaily && (
+            <button
+              onClick={() => onTrigger({ dry_run: 'false' })}
+              disabled={triggering}
+              className="px-4 py-2 bg-[#00BC7D] text-white text-xs font-medium rounded-lg hover:bg-[#009B66] disabled:bg-slate-600 disabled:text-slate-400 transition-colors"
+            >
+              {triggering ? 'Triggering...' : 'Run Now'}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Stats Row */}
+      <div className="grid grid-cols-4 gap-3 mb-4">
+        <div className="bg-slate-700/50 rounded-lg p-3">
+          <div className="text-xs text-slate-400">Success Rate</div>
+          <div className={`text-xl font-bold mt-1 ${
+            pipeline.success_rate_7d >= 90 ? 'text-green-400' :
+            pipeline.success_rate_7d >= 70 ? 'text-yellow-400' : 'text-red-400'
+          }`}>
+            {pipeline.success_rate_7d}%
+          </div>
+        </div>
+        <div className="bg-slate-700/50 rounded-lg p-3">
+          <div className="text-xs text-slate-400">Last Success</div>
+          <div className="text-sm font-medium text-white mt-1">
+            {pipeline.last_success ? timeAgo(pipeline.last_success) : 'Never'}
+          </div>
+        </div>
+        <div className="bg-slate-700/50 rounded-lg p-3">
+          <div className="text-xs text-slate-400">Last Failure</div>
+          <div className="text-sm font-medium text-white mt-1">
+            {pipeline.last_failure ? timeAgo(pipeline.last_failure) : 'None'}
+          </div>
+        </div>
+        <div className="bg-slate-700/50 rounded-lg p-3">
+          <div className="text-xs text-slate-400">Total Runs</div>
+          <div className="text-xl font-bold text-white mt-1">{pipeline.recent_runs.length}</div>
+        </div>
+      </div>
+
+      {/* Run History */}
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <h4 className="text-sm font-medium text-slate-300">Recent Runs</h4>
+          {pipeline.recent_runs.length > 5 && (
+            <button
+              onClick={() => setShowAll(!showAll)}
+              className="text-xs text-[#00BC7D] hover:text-[#00d68f]"
+            >
+              {showAll ? 'Show less' : `Show all ${pipeline.recent_runs.length}`}
+            </button>
+          )}
         </div>
 
-        {/* Sub-navigation Tabs - Scrollable on mobile */}
-        <div className="flex space-x-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
-          {[
-            { key: 'carz', label: 'Carz Inc', icon: '🚗' },
-            { key: 'ownerfi', label: 'Ownerfi', icon: '🏠', hasSubtabs: true },
-            { key: 'abdullah', label: 'Abdullah', icon: '👤', hasSubtabs: true },
-            { key: 'gaza', label: 'Gaza', icon: '🇵🇸' },
-            { key: 'analytics', label: 'Analytics', icon: '📊' },
-            { key: 'youtube-analytics', label: 'YouTube', icon: '📺' }
-          ].map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => {
-                // Set default subtab when clicking main tab
-                if (tab.key === 'ownerfi') {
-                  setActiveSubTab('ownerfi' as any);
-                } else if (tab.key === 'abdullah') {
-                  setActiveSubTab('abdullah' as any);
-                } else {
-                  setActiveSubTab(tab.key as any);
-                }
-              }}
-              className={`flex items-center space-x-2 px-6 py-3 rounded-xl font-medium transition-all whitespace-nowrap flex-shrink-0 ${
-                (activeSubTab === tab.key ||
-                 (tab.key === 'ownerfi' && activeSubTab.startsWith('ownerfi')) ||
-                 (tab.key === 'abdullah' && activeSubTab === 'abdullah'))
-                  ? 'bg-gradient-to-r from-[#00BC7D] to-[#009B66] text-white shadow-lg'
-                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700'
+        {/* Mini status bar */}
+        <div className="flex gap-1 mb-3">
+          {pipeline.recent_runs.slice(0, 15).reverse().map((run) => (
+            <div
+              key={run.id}
+              className={`h-6 flex-1 rounded-sm ${
+                run.status === 'success' ? 'bg-green-500' :
+                run.status === 'failure' ? 'bg-red-500' :
+                run.status === 'in_progress' ? 'bg-blue-500 animate-pulse' :
+                run.status === 'cancelled' ? 'bg-slate-600' :
+                'bg-slate-600'
               }`}
-            >
-              <span className="text-lg">{tab.icon}</span>
-              <span>{tab.label}</span>
-            </button>
+              title={`#${run.run_number} - ${run.status} - ${new Date(run.started_at).toLocaleString()}`}
+            />
           ))}
         </div>
 
-        {/* Sub-tabs for Ownerfi */}
-        {(activeSubTab.startsWith('ownerfi')) && (
-          <div className="flex space-x-2 mb-6 ml-0 md:ml-4 overflow-x-auto pb-2 scrollbar-hide">
-            <button
-              onClick={() => setActiveSubTab('ownerfi')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 ${
-                activeSubTab === 'ownerfi'
-                  ? 'bg-[#00BC7D] text-white'
-                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-              }`}
+        {/* Run list */}
+        <div className="space-y-2">
+          {displayRuns.map((run) => (
+            <a
+              key={run.id}
+              href={run.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-between bg-slate-700/50 hover:bg-slate-700 rounded-lg px-4 py-2.5 transition-colors group"
             >
-              Viral Videos
-            </button>
-            <button
-              onClick={() => setActiveSubTab('ownerfi-benefits')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 ${
-                activeSubTab === 'ownerfi-benefits'
-                  ? 'bg-[#00BC7D] text-white'
-                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-              }`}
-            >
-              💎 Benefits
-            </button>
-          </div>
-        )}
-
-        {/* Sub-tabs for Abdullah */}
-        {activeSubTab === 'abdullah' && (
-          <div className="flex space-x-2 mb-6 ml-0 md:ml-4 overflow-x-auto pb-2 scrollbar-hide">
-            <button
-              onClick={() => setActiveSubTab('abdullah')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 ${
-                activeSubTab === 'abdullah'
-                  ? 'bg-[#00BC7D] text-white'
-                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-              }`}
-            >
-              Daily Content
-            </button>
-          </div>
-        )}
-
-        {/* Status Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <div className="bg-slate-800 rounded-xl border border-slate-700 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-sm font-medium text-slate-400">System Mode</div>
-                <div className="text-lg font-bold text-white mt-1">
-                  Serverless Cron
-                </div>
-                <div className="text-xs text-slate-500 mt-1">5x daily (9AM-9PM CDT)</div>
+              <div className="flex items-center gap-3">
+                {statusBadge(run.status)}
+                <span className="text-xs text-slate-500">#{run.run_number}</span>
+                <span className="text-xs text-slate-400">
+                  {new Date(run.started_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}{' '}
+                  {new Date(run.started_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Chicago' })} CT
+                </span>
               </div>
-              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-blue-900/30">
-                <div className="w-6 h-6 rounded-full bg-blue-500"></div>
+              <div className="flex items-center gap-3">
+                <span className={`text-xs px-2 py-0.5 rounded ${
+                  run.trigger === 'scheduled' ? 'bg-slate-600 text-slate-300' : 'bg-purple-900/40 text-purple-400'
+                }`}>
+                  {run.trigger}
+                </span>
+                <span className="text-xs text-slate-500">{formatDuration(run.duration_seconds)}</span>
+                <svg className="w-4 h-4 text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
               </div>
-            </div>
-          </div>
-
-          <div className="bg-slate-800 rounded-xl border border-slate-700 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-sm font-medium text-slate-400">RSS Feeds</div>
-                <div className="text-2xl font-bold text-white mt-1">
-                  {status?.feeds?.total || 0}
-                </div>
-                <div className="text-xs text-slate-500 mt-1">
-                  {status?.feeds?.carz || 0} Carz • {status?.feeds?.ownerfi || 0} Ownerfi
-                </div>
-              </div>
-              <div className="w-12 h-12 bg-blue-900/30 rounded-full flex items-center justify-center">
-                <span className="text-2xl">📰</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-slate-800 rounded-xl border border-slate-700 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-sm font-medium text-slate-400">Articles in Queue</div>
-                <div className="text-2xl font-bold text-white mt-1">
-                  {(status?.stats?.carz?.unprocessedArticles || 0) + (status?.stats?.ownerfi?.unprocessedArticles || 0)}
-                </div>
-                <div className="text-xs text-slate-500 mt-1">
-                  {status?.stats?.carz?.unprocessedArticles || 0} Carz • {status?.stats?.ownerfi?.unprocessedArticles || 0} Ownerfi
-                </div>
-              </div>
-              <div className="w-12 h-12 bg-purple-900/30 rounded-full flex items-center justify-center">
-                <span className="text-2xl">📋</span>
-              </div>
-            </div>
-          </div>
+            </a>
+          ))}
         </div>
 
-        {/* Brand-Specific Content */}
-        {activeSubTab === 'carz' && (
-          <div className="space-y-6">
-            <div className="bg-slate-800 rounded-xl border border-slate-700 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-white">Carz Inc Status</h3>
-                <button
-                  onClick={triggerCron}
-                  disabled={triggeringViral}
-                  className="px-4 py-2 bg-[#00BC7D] text-white text-sm font-medium rounded-lg hover:bg-[#009B66] disabled:bg-gray-400 transition-colors"
-                >
-                  {triggeringViral ? 'Generating...' : 'Generate Video Now'}
-                </button>
-              </div>
-
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-slate-700/50 rounded-lg p-4">
-                  <div className="text-sm text-slate-400">Daily Limit</div>
-                  <div className="text-2xl font-bold text-white mt-1">
-                    {status?.scheduler?.config?.maxVideosPerDay?.carz || 5}
-                  </div>
-                  <div className="text-xs text-slate-500 mt-1">videos/day</div>
-                </div>
-
-                <div className="bg-slate-700/50 rounded-lg p-4">
-                  <div className="text-sm text-slate-400">Available Articles</div>
-                  <div className="text-2xl font-bold text-white mt-1">
-                    {status?.stats?.carz?.unprocessedArticles || 0}
-                  </div>
-                  <div className="text-xs text-slate-500 mt-1">ready to process</div>
-                </div>
-
-                <div className="bg-slate-700/50 rounded-lg p-4">
-                  <div className="text-sm text-slate-400">In Queue</div>
-                  <div className="text-2xl font-bold text-white mt-1">
-                    {(status?.stats?.carz?.queuePending || 0) + (status?.stats?.carz?.queueProcessing || 0)}
-                  </div>
-                  <div className="text-xs text-slate-500 mt-1">
-                    {status?.stats?.carz?.queueProcessing || 0} processing
-                  </div>
-                </div>
-
-                <div className="bg-slate-700/50 rounded-lg p-4">
-                  <div className="text-sm text-slate-400">RSS Feeds</div>
-                  <div className="text-2xl font-bold text-white mt-1">
-                    {status?.feeds?.carz || 0}
-                  </div>
-                  <div className="text-xs text-slate-500 mt-1">active sources</div>
-                </div>
-              </div>
-
-              <div className="mt-6 pt-6 border-t border-slate-200">
-                <h4 className="text-sm font-semibold text-white mb-3">Publishing Platforms</h4>
-                <div className="flex flex-wrap gap-2">
-                  {['Instagram', 'TikTok', 'YouTube', 'Facebook', 'LinkedIn'].map((platform) => (
-                    <span key={platform} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700">
-                      {platform}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              {/* Workflow Logs */}
-              <div className="mt-6 pt-6 border-t border-slate-200">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-sm font-semibold text-white">Workflows</h4>
-                  <button
-                    onClick={() => setShowHistory(!showHistory)}
-                    className="text-xs px-3 py-1 rounded-full bg-slate-600 hover:bg-slate-500 text-slate-200 font-medium transition-colors"
-                  >
-                    {showHistory ? 'Active Only' : 'Show History'}
-                  </button>
-                </div>
-                {workflows && workflows.workflows && workflows.workflows.carz && workflows.workflows.carz.length > 0 ? (
-                  <div className="space-y-3">
-                    {workflows.workflows.carz.map((workflow) => (
-                      <div key={workflow.id} className="bg-slate-700 border border-slate-600 rounded-lg p-4 hover:border-indigo-400 transition-colors">
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex-1">
-                            <div className="font-medium text-white text-sm mb-1" dangerouslySetInnerHTML={{ __html: workflow.articleTitle }} />
-                            <div className="flex items-center gap-2 mt-1">
-                              <div className="text-xs text-slate-500">{formatTimeAgo(workflow.createdAt)}</div>
-                              {workflow.captionTemplate && (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700" title="A/B Test Caption Template">
-                                  🧪 {workflow.captionTemplate.replace(/_/g, ' ')}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(workflow.status)}`}>
-                              {formatStatus(workflow.status)}
-                            </span>
-                            <button
-                              onClick={() => deleteWorkflow(workflow.id, 'carz')}
-                              disabled={deletingWorkflow === workflow.id}
-                              className="text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded-lg transition-colors disabled:opacity-50"
-                              title="Delete workflow"
-                            >
-                              {deletingWorkflow === workflow.id ? (
-                                <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24">
-                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
-                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                              ) : (
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                              )}
-                            </button>
-                          </div>
-                        </div>
-                        {(workflow.heygenVideoId || workflow.submagicVideoId || workflow.latePostId || workflow.metricoolPostId) && (
-                          <div className="grid grid-cols-3 gap-2 text-xs">
-                            {workflow.heygenVideoId && (
-                              <div>
-                                <div className="text-slate-500 mb-1">HeyGen</div>
-                                <div className="font-mono text-slate-300 truncate">{workflow.heygenVideoId.substring(0, 12)}...</div>
-                              </div>
-                            )}
-                            {workflow.submagicVideoId && (
-                              <div>
-                                <div className="text-slate-500 mb-1">Submagic</div>
-                                <div className="font-mono text-slate-300 truncate">{workflow.submagicVideoId.substring(0, 12)}...</div>
-                              </div>
-                            )}
-                            {(workflow.latePostId || workflow.metricoolPostId) && (
-                              <div>
-                                <div className="text-slate-500 mb-1">GetLate</div>
-                                <div className="font-mono text-slate-300 truncate">{(workflow.latePostId || workflow.metricoolPostId)?.substring(0, 12)}...</div>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                        {workflow.error && (
-                          <div className="mt-3 space-y-2">
-                            <div className="text-xs text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2">
-                              <span className="font-semibold">Error:</span> {workflow.error}
-                            </div>
-                            <WorkflowRecoveryButtons workflow={workflow} onSuccess={loadWorkflows} />
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="bg-slate-700/50 rounded-lg p-8 text-center border border-slate-600">
-                    <div className="text-slate-500 text-sm font-medium">No active workflows</div>
-                    <div className="text-xs text-slate-400 mt-1">Videos will appear here when being processed</div>
-                  </div>
-                )}
-              </div>
-            </div>
+        {pipeline.recent_runs.length === 0 && (
+          <div className="bg-slate-700/50 rounded-lg p-6 text-center">
+            <p className="text-slate-500 text-sm">No runs found</p>
           </div>
         )}
-
-        {activeSubTab === 'ownerfi' && (
-          <div className="space-y-6">
-            <div className="bg-slate-800 rounded-xl border border-slate-700 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-white">Ownerfi Status</h3>
-                <button
-                  onClick={triggerCron}
-                  disabled={triggeringViral}
-                  className="px-4 py-2 bg-[#00BC7D] text-white text-sm font-medium rounded-lg hover:bg-[#009B66] disabled:bg-gray-400 transition-colors"
-                >
-                  {triggeringViral ? 'Generating...' : 'Generate Video Now'}
-                </button>
-              </div>
-
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-slate-700/50 rounded-lg p-4">
-                  <div className="text-sm text-slate-400">Daily Limit</div>
-                  <div className="text-2xl font-bold text-white mt-1">
-                    {status?.scheduler?.config?.maxVideosPerDay?.ownerfi || 5}
-                  </div>
-                  <div className="text-xs text-slate-500 mt-1">videos/day</div>
-                </div>
-
-                <div className="bg-slate-700/50 rounded-lg p-4">
-                  <div className="text-sm text-slate-400">Available Articles</div>
-                  <div className="text-2xl font-bold text-white mt-1">
-                    {status?.stats?.ownerfi?.unprocessedArticles || 0}
-                  </div>
-                  <div className="text-xs text-slate-500 mt-1">ready to process</div>
-                </div>
-
-                <div className="bg-slate-700/50 rounded-lg p-4">
-                  <div className="text-sm text-slate-400">In Queue</div>
-                  <div className="text-2xl font-bold text-white mt-1">
-                    {(status?.stats?.ownerfi?.queuePending || 0) + (status?.stats?.ownerfi?.queueProcessing || 0)}
-                  </div>
-                  <div className="text-xs text-slate-500 mt-1">
-                    {status?.stats?.ownerfi?.queueProcessing || 0} processing
-                  </div>
-                </div>
-
-                <div className="bg-slate-700/50 rounded-lg p-4">
-                  <div className="text-sm text-slate-400">RSS Feeds</div>
-                  <div className="text-2xl font-bold text-white mt-1">
-                    {status?.feeds?.ownerfi || 0}
-                  </div>
-                  <div className="text-xs text-slate-500 mt-1">active sources</div>
-                </div>
-              </div>
-
-              <div className="mt-6 pt-6 border-t border-slate-200">
-                <h4 className="text-sm font-semibold text-white mb-3">Publishing Platforms</h4>
-                <div className="flex flex-wrap gap-2">
-                  {['Instagram', 'TikTok', 'YouTube', 'Facebook', 'LinkedIn', 'Threads'].map((platform) => (
-                    <span key={platform} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700">
-                      {platform}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              {/* Workflow Logs */}
-              <div className="mt-6 pt-6 border-t border-slate-200">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-sm font-semibold text-white">Workflows</h4>
-                  <button
-                    onClick={() => setShowHistory(!showHistory)}
-                    className="text-xs px-3 py-1 rounded-full bg-slate-600 hover:bg-slate-500 text-slate-200 font-medium transition-colors"
-                  >
-                    {showHistory ? 'Active Only' : 'Show History'}
-                  </button>
-                </div>
-                {workflows && workflows.workflows && workflows.workflows.ownerfi && workflows.workflows.ownerfi.length > 0 ? (
-                  <div className="space-y-3">
-                    {workflows.workflows.ownerfi.map((workflow) => (
-                      <div key={workflow.id} className="bg-slate-700 border border-slate-600 rounded-lg p-4 hover:border-indigo-400 transition-colors">
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex-1">
-                            <div className="font-medium text-white text-sm mb-1" dangerouslySetInnerHTML={{ __html: workflow.articleTitle }} />
-                            <div className="flex items-center gap-2 mt-1">
-                              <div className="text-xs text-slate-500">{formatTimeAgo(workflow.createdAt)}</div>
-                              {workflow.captionTemplate && (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700" title="A/B Test Caption Template">
-                                  🧪 {workflow.captionTemplate.replace(/_/g, ' ')}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(workflow.status)}`}>
-                              {formatStatus(workflow.status)}
-                            </span>
-                            <button
-                              onClick={() => deleteWorkflow(workflow.id, 'ownerfi')}
-                              disabled={deletingWorkflow === workflow.id}
-                              className="text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded-lg transition-colors disabled:opacity-50"
-                              title="Delete workflow"
-                            >
-                              {deletingWorkflow === workflow.id ? (
-                                <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24">
-                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
-                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                              ) : (
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                              )}
-                            </button>
-                          </div>
-                        </div>
-                        {(workflow.heygenVideoId || workflow.submagicVideoId || workflow.latePostId || workflow.metricoolPostId) && (
-                          <div className="grid grid-cols-3 gap-2 text-xs">
-                            {workflow.heygenVideoId && (
-                              <div>
-                                <div className="text-slate-500 mb-1">HeyGen</div>
-                                <div className="font-mono text-slate-300 truncate">{workflow.heygenVideoId.substring(0, 12)}...</div>
-                              </div>
-                            )}
-                            {workflow.submagicVideoId && (
-                              <div>
-                                <div className="text-slate-500 mb-1">Submagic</div>
-                                <div className="font-mono text-slate-300 truncate">{workflow.submagicVideoId.substring(0, 12)}...</div>
-                              </div>
-                            )}
-                            {(workflow.latePostId || workflow.metricoolPostId) && (
-                              <div>
-                                <div className="text-slate-500 mb-1">GetLate</div>
-                                <div className="font-mono text-slate-300 truncate">{(workflow.latePostId || workflow.metricoolPostId)?.substring(0, 12)}...</div>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                        {workflow.error && (
-                          <div className="mt-3 space-y-2">
-                            <div className="text-xs text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2">
-                              <span className="font-semibold">Error:</span> {workflow.error}
-                            </div>
-                            <WorkflowRecoveryButtons workflow={workflow} onSuccess={loadWorkflows} />
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="bg-slate-700/50 rounded-lg p-8 text-center border border-slate-600">
-                    <div className="text-slate-500 text-sm font-medium">No active workflows</div>
-                    <div className="text-xs text-slate-400 mt-1">Videos will appear here when being processed</div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeSubTab === 'ownerfi-benefits' && (
-          <div className="space-y-6">
-            <div className="bg-slate-800 rounded-xl border border-slate-700 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-white">Owner Financing Benefits</h3>
-                <button
-                  onClick={triggerBenefitCron}
-                  disabled={triggeringBenefit}
-                  className="px-4 py-2 bg-[#00BC7D] text-white text-sm font-medium rounded-lg hover:bg-[#009B66] disabled:bg-gray-400 transition-colors"
-                >
-                  {triggeringBenefit ? 'Generating...' : 'Generate Video Now'}
-                </button>
-              </div>
-
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-slate-700/50 rounded-lg p-4">
-                  <div className="text-sm text-slate-400">Schedule</div>
-                  <div className="text-lg font-bold text-white mt-1">
-                    2x Daily
-                  </div>
-                  <div className="text-xs text-slate-500 mt-1">6 AM, 2 PM CDT</div>
-                </div>
-
-                <div className="bg-slate-700/50 rounded-lg p-4">
-                  <div className="text-sm text-slate-400">Daily Target</div>
-                  <div className="text-lg font-bold text-white mt-1">
-                    2 videos
-                  </div>
-                  <div className="text-xs text-slate-500 mt-1">1 seller + 1 buyer</div>
-                </div>
-
-                <div className="bg-slate-700/50 rounded-lg p-4">
-                  <div className="text-sm text-slate-400">Content Library</div>
-                  <div className="text-lg font-bold text-white mt-1">
-                    20 benefits
-                  </div>
-                  <div className="text-xs text-slate-500 mt-1">10 seller + 10 buyer</div>
-                </div>
-
-                <div className="bg-slate-700/50 rounded-lg p-4">
-                  <div className="text-sm text-slate-400">Status</div>
-                  <div className="text-lg font-bold text-green-600 mt-1">
-                    Ready
-                  </div>
-                  <div className="text-xs text-slate-500 mt-1">operational</div>
-                </div>
-              </div>
-
-              <div className="mt-6 pt-6 border-t border-slate-200">
-                <h4 className="text-sm font-semibold text-white mb-3">Publishing Platforms</h4>
-                <div className="flex flex-wrap gap-2">
-                  {['Instagram', 'TikTok', 'YouTube', 'Facebook', 'LinkedIn', 'Threads'].map((platform) => (
-                    <span key={platform} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                      {platform}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mt-6 pt-6 border-t border-slate-200">
-                <h4 className="text-sm font-semibold text-white mb-3">Video Format</h4>
-                <div className="bg-slate-700/50 rounded-lg p-4">
-                  <ul className="text-sm text-slate-300 space-y-2">
-                    <li>• <strong>Educational format</strong> - ONE benefit per video</li>
-                    <li>• Rotating audience (alternates seller/buyer)</li>
-                    <li>• Smart anti-repetition (avoids last 5 used benefits)</li>
-                    <li>• Clear CTA: "Visit ownerfi.ai" in speech + captions</li>
-                    <li>• HeyGen avatar + Submagic captions</li>
-                    <li>• Posted to Ownerfi social media accounts</li>
-                  </ul>
-                </div>
-              </div>
-
-              {/* Benefit Workflow Logs */}
-              <div className="mt-6 pt-6 border-t border-slate-200">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-sm font-semibold text-white">Workflows</h4>
-                  <button
-                    onClick={() => setShowHistory(!showHistory)}
-                    className="text-xs px-3 py-1 rounded-full bg-slate-600 hover:bg-slate-500 text-slate-200 font-medium transition-colors"
-                  >
-                    {showHistory ? 'Active Only' : 'Show History'}
-                  </button>
-                </div>
-                {benefitWorkflows && benefitWorkflows.workflows && benefitWorkflows.workflows.length > 0 ? (
-                  <div className="space-y-3">
-                    {benefitWorkflows.workflows.map((workflow) => (
-                      <div key={workflow.id} className="bg-slate-700 border border-slate-600 rounded-lg p-4 hover:border-indigo-400 transition-colors">
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                                workflow.audience === 'seller' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'
-                              }`}>
-                                {workflow.audience === 'seller' ? '💼 Seller' : '🏡 Buyer'}
-                              </span>
-                              <div className="font-medium text-white text-sm">{workflow.benefitTitle}</div>
-                            </div>
-                            <div className="text-xs text-slate-500">{formatTimeAgo(workflow.createdAt)}</div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getBenefitStatusColor(workflow.status)}`}>
-                              {formatStatus(workflow.status)}
-                            </span>
-                            <button
-                              onClick={() => deleteWorkflow(workflow.id, 'benefit')}
-                              disabled={deletingWorkflow === workflow.id}
-                              className="text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded-lg transition-colors disabled:opacity-50"
-                              title="Delete workflow"
-                            >
-                              {deletingWorkflow === workflow.id ? (
-                                <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24">
-                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
-                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                              ) : (
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                              )}
-                            </button>
-                          </div>
-                        </div>
-                        {(workflow.heygenVideoId || workflow.submagicProjectId || workflow.latePostId) && (
-                          <div className="grid grid-cols-3 gap-2 text-xs">
-                            {workflow.heygenVideoId && (
-                              <div>
-                                <div className="text-slate-500 mb-1">HeyGen</div>
-                                <div className="font-mono text-slate-300 truncate">{workflow.heygenVideoId.substring(0, 12)}...</div>
-                              </div>
-                            )}
-                            {workflow.submagicProjectId && (
-                              <div>
-                                <div className="text-slate-500 mb-1">Submagic</div>
-                                <div className="font-mono text-slate-300 truncate">{workflow.submagicProjectId.substring(0, 12)}...</div>
-                              </div>
-                            )}
-                            {workflow.latePostId && (
-                              <div>
-                                <div className="text-slate-500 mb-1">GetLate</div>
-                                <div className="font-mono text-slate-300 truncate">{workflow.latePostId.substring(0, 12)}...</div>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                        {workflow.error && (
-                          <div className="mt-3 text-xs text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2">
-                            <span className="font-semibold">Error:</span> {workflow.error}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="bg-slate-700/50 rounded-lg p-8 text-center border border-slate-600">
-                    <div className="text-slate-500 text-sm font-medium">No active workflows</div>
-                    <div className="text-xs text-slate-400 mt-1">Benefit videos will appear here when being generated</div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeSubTab === 'abdullah' && (
-          <div className="space-y-6">
-            <div className="bg-slate-800 rounded-xl border border-slate-700 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-white">Abdullah Personal Brand</h3>
-                <button
-                  onClick={() => triggerAbdullahWorkflow()}
-                  disabled={triggeringAbdullah}
-                  className="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 disabled:bg-gray-400 transition-colors"
-                >
-                  {triggeringAbdullah ? 'Generating...' : 'Generate 5 Videos Now'}
-                </button>
-              </div>
-
-              {/* Queue Stats */}
-              <div className="mb-6">
-                <h4 className="text-sm font-semibold text-white mb-3">Daily Content Queue</h4>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                  <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                    <div className="text-sm text-blue-600 font-medium">Pending</div>
-                    <div className="text-2xl font-bold text-blue-900 mt-1">
-                      {abdullahQueueStats?.queue?.pending || 0}
-                    </div>
-                    <div className="text-xs text-blue-600 mt-1">in queue</div>
-                  </div>
-
-                  <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
-                    <div className="text-sm text-yellow-600 font-medium">Generating</div>
-                    <div className="text-2xl font-bold text-yellow-900 mt-1">
-                      {abdullahQueueStats?.queue?.generating || 0}
-                    </div>
-                    <div className="text-xs text-yellow-600 mt-1">processing now</div>
-                  </div>
-
-                  <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-                    <div className="text-sm text-green-600 font-medium">Today</div>
-                    <div className="text-2xl font-bold text-green-900 mt-1">
-                      {abdullahQueueStats?.queue?.completedToday || 0}
-                    </div>
-                    <div className="text-xs text-green-600 mt-1">completed</div>
-                  </div>
-
-                  <div className="bg-red-50 rounded-lg p-4 border border-red-200">
-                    <div className="text-sm text-red-600 font-medium">Failed</div>
-                    <div className="text-2xl font-bold text-red-900 mt-1">
-                      {abdullahQueueStats?.queue?.failed || 0}
-                    </div>
-                    <div className="text-xs text-red-600 mt-1">need retry</div>
-                  </div>
-
-                  <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
-                    <div className="text-sm text-purple-600 font-medium">Total</div>
-                    <div className="text-2xl font-bold text-purple-900 mt-1">
-                      {abdullahQueueStats?.queue?.total || 0}
-                    </div>
-                    <div className="text-xs text-purple-600 mt-1">all items</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Next Scheduled Items */}
-              {abdullahQueueStats?.nextItems && abdullahQueueStats.nextItems.length > 0 && (
-                <div className="mb-6 pb-6 border-b border-slate-200">
-                  <h4 className="text-sm font-semibold text-white mb-3">Upcoming Videos</h4>
-                  <div className="space-y-2">
-                    {abdullahQueueStats.nextItems.map((item, index: number) => (
-                      <div key={item.id} className="flex items-center justify-between bg-slate-700/50 rounded-lg p-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-700 font-bold flex items-center justify-center text-sm">
-                            {index + 1}
-                          </div>
-                          <div>
-                            <div className="font-medium text-white text-sm">{item.title}</div>
-                            <div className="text-xs text-slate-500 capitalize">{item.theme}</div>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-xs text-slate-400">
-                            Generate: {new Date(item.scheduledGenerationTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Chicago' })} CST
-                          </div>
-                          <div className="text-xs text-slate-500">
-                            Post: {new Date(item.scheduledPostTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Chicago' })} CST
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* System Info */}
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-                <div className="bg-slate-700/50 rounded-lg p-4">
-                  <div className="text-sm text-slate-400">Daily Videos</div>
-                  <div className="text-2xl font-bold text-white mt-1">5</div>
-                  <div className="text-xs text-slate-500 mt-1">videos/day</div>
-                </div>
-
-                <div className="bg-slate-700/50 rounded-lg p-4">
-                  <div className="text-sm text-slate-400">Content Type</div>
-                  <div className="text-sm font-bold text-white mt-1">AI Generated</div>
-                  <div className="text-xs text-slate-500 mt-1">queue system</div>
-                </div>
-
-                <div className="bg-slate-700/50 rounded-lg p-4">
-                  <div className="text-sm text-slate-400">Schedule</div>
-                  <div className="text-sm font-bold text-white mt-1">11 AM CST</div>
-                  <div className="text-xs text-slate-500 mt-1">daily scripts</div>
-                </div>
-              </div>
-
-              <div className="mt-6 pt-6 border-t border-slate-200">
-                <h4 className="text-sm font-semibold text-white mb-3">Daily Themes</h4>
-                <div className="flex flex-wrap gap-2">
-                  {['Mindset', 'Business', 'Money', 'Freedom', 'Story/Lesson'].map((theme) => (
-                    <span key={theme} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
-                      {theme}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mt-6 pt-6 border-t border-slate-200">
-                <h4 className="text-sm font-semibold text-white mb-3">Publishing Platforms</h4>
-                <div className="flex flex-wrap gap-2">
-                  {['Instagram', 'TikTok', 'YouTube', 'Facebook', 'LinkedIn'].map((platform) => (
-                    <span key={platform} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700">
-                      {platform}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              {/* Workflow Logs */}
-              <div className="mt-6 pt-6 border-t border-slate-200">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-sm font-semibold text-white">Workflows</h4>
-                  <button
-                    onClick={() => setShowHistory(!showHistory)}
-                    className="text-xs px-3 py-1 rounded-full bg-slate-600 hover:bg-slate-500 text-slate-200 font-medium transition-colors"
-                  >
-                    {showHistory ? 'Active Only' : 'Show History'}
-                  </button>
-                </div>
-                {workflows && workflows.workflows && workflows.workflows.abdullah && workflows.workflows.abdullah.length > 0 ? (
-                  <div className="space-y-3">
-                    {workflows.workflows.abdullah.map((workflow) => (
-                      <div key={workflow.id} className="bg-slate-700 border border-slate-600 rounded-lg p-4 hover:border-purple-400 transition-colors">
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex-1">
-                            <div className="font-medium text-white text-sm mb-1" dangerouslySetInnerHTML={{ __html: workflow.articleTitle }} />
-                            <div className="flex items-center gap-2 mt-1">
-                              <div className="text-xs text-slate-500">{formatTimeAgo(workflow.createdAt)}</div>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(workflow.status)}`}>
-                              {formatStatus(workflow.status)}
-                            </span>
-                            <button
-                              onClick={() => deleteWorkflow(workflow.id, 'abdullah')}
-                              disabled={deletingWorkflow === workflow.id}
-                              className="text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded-lg transition-colors disabled:opacity-50"
-                              title="Delete workflow"
-                            >
-                              {deletingWorkflow === workflow.id ? (
-                                <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24">
-                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
-                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                              ) : (
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                              )}
-                            </button>
-                          </div>
-                        </div>
-                        {(workflow.heygenVideoId || workflow.submagicVideoId || workflow.latePostId || workflow.metricoolPostId) && (
-                          <div className="grid grid-cols-3 gap-2 text-xs">
-                            {workflow.heygenVideoId && (
-                              <div>
-                                <div className="text-slate-500 mb-1">HeyGen</div>
-                                <div className="font-mono text-slate-300 truncate">{workflow.heygenVideoId.substring(0, 12)}...</div>
-                              </div>
-                            )}
-                            {workflow.submagicVideoId && (
-                              <div>
-                                <div className="text-slate-500 mb-1">Submagic</div>
-                                <div className="font-mono text-slate-300 truncate">{workflow.submagicVideoId.substring(0, 12)}...</div>
-                              </div>
-                            )}
-                            {(workflow.latePostId || workflow.metricoolPostId) && (
-                              <div>
-                                <div className="text-slate-500 mb-1">GetLate</div>
-                                <div className="font-mono text-slate-300 truncate">{(workflow.latePostId || workflow.metricoolPostId)?.substring(0, 12)}...</div>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                        {workflow.error && (
-                          <div className="mt-3 space-y-2">
-                            <div className="text-xs text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2">
-                              <span className="font-semibold">Error:</span> {workflow.error}
-                            </div>
-                            <WorkflowRecoveryButtons workflow={workflow} onSuccess={loadWorkflows} />
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="bg-slate-700/50 rounded-lg p-8 text-center border border-slate-600">
-                    <div className="text-slate-500 text-sm font-medium">No active workflows</div>
-                    <div className="text-xs text-slate-400 mt-1">Videos will appear here when being processed</div>
-                  </div>
-                )}
-              </div>
-
-              {/* Recent ChatGPT Scripts - For Prompt Improvement */}
-              <div className="mt-6 pt-6 border-t border-slate-200">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-sm font-semibold text-white">Recent ChatGPT Scripts</h4>
-                  <span className="text-xs text-slate-500">Copy to improve prompts</span>
-                </div>
-                {recentScripts.length > 0 ? (
-                  <div className="space-y-3 max-h-[600px] overflow-y-auto">
-                    {recentScripts.map((script) => (
-                      <div key={script.id} className="bg-gradient-to-r from-slate-50 to-purple-50 border border-slate-200 rounded-lg p-4 hover:border-purple-300 transition-colors">
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="font-semibold text-white text-sm">{script.title}</span>
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700 capitalize">
-                                {script.theme}
-                              </span>
-                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                                script.status === 'completed' ? 'bg-green-100 text-green-700' :
-                                script.status === 'failed' ? 'bg-red-100 text-red-700' :
-                                'bg-yellow-100 text-yellow-700'
-                              }`}>
-                                {script.status}
-                              </span>
-                            </div>
-                            <div className="text-xs text-slate-500">
-                              {script.createdAt ? new Date(script.createdAt).toLocaleString() : 'N/A'}
-                            </div>
-                          </div>
-                          <button
-                            onClick={() => copyScriptToClipboard(script)}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                              copiedScriptId === script.id
-                                ? 'bg-green-100 text-green-700'
-                                : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
-                            }`}
-                          >
-                            {copiedScriptId === script.id ? (
-                              <>
-                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
-                                Copied!
-                              </>
-                            ) : (
-                              <>
-                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                </svg>
-                                Copy
-                              </>
-                            )}
-                          </button>
-                        </div>
-
-                        {/* Hook */}
-                        {script.hook && (
-                          <div className="mb-2">
-                            <div className="text-xs font-medium text-purple-600 mb-1">Hook:</div>
-                            <div className="text-xs text-slate-300 bg-purple-50 rounded px-2 py-1 italic">
-                              "{script.hook}"
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Script */}
-                        <div className="mb-2">
-                          <div className="text-xs font-medium text-slate-400 mb-1">Script:</div>
-                          <div className="text-xs text-slate-300 bg-white rounded px-2 py-1.5 border border-slate-200 max-h-20 overflow-y-auto">
-                            {script.script}
-                          </div>
-                        </div>
-
-                        {/* Caption */}
-                        <div>
-                          <div className="text-xs font-medium text-slate-400 mb-1">Caption:</div>
-                          <div className="text-xs text-slate-400 bg-slate-100 rounded px-2 py-1.5 max-h-16 overflow-y-auto">
-                            {script.caption}
-                          </div>
-                        </div>
-
-                        {/* Video Link */}
-                        {script.finalVideoUrl && (
-                          <div className="mt-2 pt-2 border-t border-slate-200">
-                            <a
-                              href={script.finalVideoUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-purple-600 hover:text-purple-800 flex items-center gap-1"
-                            >
-                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                              </svg>
-                              Watch Video
-                            </a>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="bg-slate-700/50 rounded-lg p-8 text-center border border-slate-600">
-                    <div className="text-slate-500 text-sm font-medium">No scripts available yet</div>
-                    <div className="text-xs text-slate-400 mt-1">Scripts will appear here after the next video generation</div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeSubTab === 'gaza' && (
-          <div className="space-y-6">
-            <div className="bg-slate-800 rounded-xl border border-slate-700 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-white">🇵🇸 Gaza News Channel</h3>
-                <button
-                  onClick={async () => {
-                    try {
-                      const response = await fetch('/api/admin/trigger-cron', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ cronPath: '/api/cron/gaza?force=true' })
-                      });
-                      const data = await response.json();
-                      alert(data.success ? `Video workflow started: ${data.workflow_id}` : `Error: ${data.error || data.message}`);
-                    } catch (e) {
-                      alert('Failed to trigger Gaza video generation');
-                    }
-                  }}
-                  className="px-4 py-2 bg-[#00BC7D] text-white text-sm font-medium rounded-lg hover:bg-[#009B66] transition-colors"
-                >
-                  Generate Video Now
-                </button>
-              </div>
-
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div className="bg-[#00BC7D]/5 rounded-lg p-4 border border-[#00BC7D]/30">
-                  <div className="text-sm text-[#00BC7D] font-medium">Profile ID</div>
-                  <div className="text-xs font-mono text-[#004D33] mt-1 truncate">6930ec1545584e27f626ccb6</div>
-                </div>
-                <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                  <div className="text-sm text-blue-600 font-medium">Videos/Day</div>
-                  <div className="text-2xl font-bold text-blue-900 mt-1">5</div>
-                </div>
-                <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
-                  <div className="text-sm text-purple-600 font-medium">Schedule</div>
-                  <div className="text-sm text-purple-900 mt-1">9am, 12pm, 3pm, 6pm, 9pm</div>
-                </div>
-                <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
-                  <div className="text-sm text-orange-600 font-medium">Platforms</div>
-                  <div className="text-xs text-orange-900 mt-1">IG, TikTok, YT, FB, LI, Threads, X</div>
-                </div>
-              </div>
-
-              <div className="bg-slate-700/50 rounded-lg p-4 mb-6">
-                <h4 className="text-sm font-semibold text-white mb-2">System Info</h4>
-                <div className="text-sm text-slate-300 space-y-1">
-                  <p>• <strong>Late Profile:</strong> Connected for Threads, Instagram, TikTok, Twitter, Bluesky, Facebook, LinkedIn</p>
-                  <p>• <strong>YouTube:</strong> Direct API upload (bypasses quota limits)</p>
-                  <p>• <strong>Cron:</strong> Runs via consolidated /api/cron/generate-videos</p>
-                  <p>• <strong>RSS Feeds:</strong> Stored in <code className="bg-slate-600 px-1 rounded">gaza_rss_feeds</code> collection</p>
-                  <p>• <strong>Articles:</strong> Stored in <code className="bg-slate-600 px-1 rounded">gaza_articles</code> collection</p>
-                  <p>• <strong>Workflows:</strong> Stored in <code className="bg-slate-600 px-1 rounded">gaza_workflow_queue</code> collection</p>
-                </div>
-              </div>
-
-              <div className="bg-amber-900/30 border border-amber-600/50 rounded-lg p-4">
-                <h4 className="text-sm font-semibold text-amber-400 mb-2">⚠️ Setup Required</h4>
-                <div className="text-sm text-amber-200">
-                  <p>To start generating Gaza news videos:</p>
-                  <ol className="list-decimal ml-4 mt-2 space-y-1">
-                    <li>Connect social accounts in Get Late dashboard (profile: 6930ec1545584e27f626ccb6)</li>
-                    <li>Add RSS feeds to <code className="bg-amber-800/50 px-1 rounded">gaza_rss_feeds</code> Firestore collection</li>
-                    <li>Run /api/cron/fetch-rss to populate articles</li>
-                    <li>Run /api/cron/rate-articles to score articles</li>
-                  </ol>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeSubTab === 'analytics' && (
-          <AnalyticsDashboard />
-        )}
-
-        {activeSubTab === 'youtube-analytics' && (
-          <YouTubeAnalyticsDashboard />
-        )}
-
-        {activeSubTab === 'old_analytics_backup' && (
-          <div className="space-y-6">
-            {/* Overall Health */}
-            {analytics && (
-              <>
-                <div className="bg-slate-800 rounded-xl border border-slate-700 p-6">
-                  <h3 className="text-lg font-semibold text-white mb-4">System Health & Performance</h3>
-
-                  {/* Health Badge */}
-                  <div className="mb-6">
-                    <div className={`inline-flex items-center px-6 py-3 rounded-full text-lg font-bold ${
-                      analytics.overallHealth === 'excellent' ? 'bg-green-100 text-green-800' :
-                      analytics.overallHealth === 'good' ? 'bg-blue-100 text-blue-800' :
-                      analytics.overallHealth === 'fair' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-red-100 text-red-800'
-                    }`}>
-                      {analytics.overallHealth === 'excellent' ? '✅ Excellent' :
-                       analytics.overallHealth === 'good' ? '👍 Good' :
-                       analytics.overallHealth === 'fair' ? '⚠️ Fair' :
-                       '🚨 Needs Attention'}
-                    </div>
-                  </div>
-
-                  {/* Key Metrics */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="bg-slate-700/50 rounded-lg p-4">
-                      <div className="text-sm text-slate-400">Total Videos</div>
-                      <div className="text-2xl font-bold text-white mt-1">
-                        {analytics.keyMetrics.totalVideosGenerated}
-                      </div>
-                      <div className="text-xs text-slate-500 mt-1">all time</div>
-                    </div>
-
-                    <div className="bg-slate-700/50 rounded-lg p-4">
-                      <div className="text-sm text-slate-400">Success Rate</div>
-                      <div className={`text-2xl font-bold mt-1 ${
-                        analytics.keyMetrics.successRate >= 90 ? 'text-green-600' :
-                        analytics.keyMetrics.successRate >= 75 ? 'text-yellow-600' :
-                        'text-red-600'
-                      }`}>
-                        {analytics.keyMetrics.successRate.toFixed(1)}%
-                      </div>
-                      <div className="text-xs text-slate-500 mt-1">completion rate</div>
-                    </div>
-
-                    <div className="bg-slate-700/50 rounded-lg p-4">
-                      <div className="text-sm text-slate-400">Processing Time</div>
-                      <div className="text-lg font-bold text-white mt-1">
-                        {analytics.keyMetrics.averageProcessingTime}
-                      </div>
-                      <div className="text-xs text-slate-500 mt-1">per video</div>
-                    </div>
-
-                    <div className="bg-slate-700/50 rounded-lg p-4">
-                      <div className="text-sm text-slate-400">Content Quality</div>
-                      <div className="text-sm font-bold text-white mt-1">
-                        {analytics.keyMetrics.contentQuality}
-                      </div>
-                      <div className="text-xs text-slate-500 mt-1">AI filtering</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Brand Comparison */}
-                <div className="bg-slate-800 rounded-xl border border-slate-700 p-6">
-                  <h3 className="text-lg font-semibold text-white mb-4">Brand Performance Comparison</h3>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Carz Analytics */}
-                    <div className="border border-slate-200 rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <span className="text-2xl">🚗</span>
-                          <h4 className="font-semibold text-white">Carz Inc</h4>
-                        </div>
-                        <span className={`text-xs px-3 py-1 rounded-full font-semibold ${
-                          analytics.brands.carz.health === 'excellent' ? 'bg-green-100 text-green-700' :
-                          analytics.brands.carz.health === 'good' ? 'bg-blue-100 text-blue-700' :
-                          analytics.brands.carz.health === 'fair' ? 'bg-yellow-100 text-yellow-700' :
-                          'bg-red-100 text-red-700'
-                        }`}>
-                          {analytics.brands.carz.health.toUpperCase()}
-                        </span>
-                      </div>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-slate-400">Success Rate:</span>
-                          <span className="font-medium">{analytics.brands.carz.successRate.toFixed(1)}%</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-400">Articles Ready:</span>
-                          <span className="font-medium">{analytics.brands.carz.unprocessedArticles}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-400">Videos Generated:</span>
-                          <span className="font-medium">{analytics.brands.carz.videosGenerated}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-400">Failed Workflows:</span>
-                          <span className="font-medium text-red-600">{analytics.brands.carz.queueStats.failed}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Ownerfi Analytics */}
-                    <div className="border border-slate-200 rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <span className="text-2xl">🏠</span>
-                          <h4 className="font-semibold text-white">Ownerfi</h4>
-                        </div>
-                        <span className={`text-xs px-3 py-1 rounded-full font-semibold ${
-                          analytics.brands.ownerfi.health === 'excellent' ? 'bg-green-100 text-green-700' :
-                          analytics.brands.ownerfi.health === 'good' ? 'bg-blue-100 text-blue-700' :
-                          analytics.brands.ownerfi.health === 'fair' ? 'bg-yellow-100 text-yellow-700' :
-                          'bg-red-100 text-red-700'
-                        }`}>
-                          {analytics.brands.ownerfi.health.toUpperCase()}
-                        </span>
-                      </div>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-slate-400">Success Rate:</span>
-                          <span className="font-medium">{analytics.brands.ownerfi.successRate.toFixed(1)}%</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-400">Articles Ready:</span>
-                          <span className="font-medium">{analytics.brands.ownerfi.unprocessedArticles}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-400">Videos Generated:</span>
-                          <span className="font-medium">{analytics.brands.ownerfi.videosGenerated}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-400">Failed Workflows:</span>
-                          <span className="font-medium text-red-600">{analytics.brands.ownerfi.queueStats.failed}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Recommendations */}
-                <div className="bg-slate-800 rounded-xl border border-slate-700 p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <h3 className="text-lg font-semibold text-white">AI Recommendations</h3>
-                      <div className="text-xs text-slate-500 mt-1">
-                        Last updated: {new Date(analytics.timestamp).toLocaleTimeString()}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="text-sm text-slate-400">
-                        {analytics.recommendations.length} insights
-                      </div>
-                      <button
-                        onClick={() => loadAnalytics(true)}
-                        disabled={refreshingAnalytics}
-                        className="px-3 py-2 bg-[#00BC7D] text-white text-xs font-medium rounded-lg hover:bg-[#009B66] disabled:bg-gray-400 transition-colors flex items-center gap-2"
-                      >
-                        {refreshingAnalytics ? (
-                          <>
-                            <svg className="w-3 h-3 animate-spin" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            <span>Refreshing...</span>
-                          </>
-                        ) : (
-                          <>
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                            </svg>
-                            <span>Refresh</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </div>
-
-                  {analytics.recommendations.length === 0 ? (
-                    <div className="bg-slate-700/50 rounded-lg p-8 text-center border border-slate-600">
-                      <div className="text-slate-500 text-sm font-medium">No recommendations at this time</div>
-                      <div className="text-xs text-slate-400 mt-1">Your system is running optimally!</div>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {analytics.recommendations.map((rec) => (
-                        <div
-                          key={rec.id}
-                          className={`border-2 rounded-lg p-4 ${
-                            rec.type === 'critical' ? 'border-red-300 bg-red-50' :
-                            rec.type === 'warning' ? 'border-yellow-300 bg-yellow-50' :
-                            rec.type === 'success' ? 'border-green-300 bg-green-50' :
-                            'border-blue-300 bg-blue-50'
-                          }`}
-                        >
-                          <div className="flex items-start justify-between mb-3">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className={`text-2xl ${
-                                  rec.type === 'critical' ? '🚨' :
-                                  rec.type === 'warning' ? '⚠️' :
-                                  rec.type === 'success' ? '✅' :
-                                  '💡'
-                                }`}></span>
-                                <h4 className="font-semibold text-white">{rec.title}</h4>
-                                <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                                  rec.impact === 'high' ? 'bg-red-200 text-red-800' :
-                                  rec.impact === 'medium' ? 'bg-yellow-200 text-yellow-800' :
-                                  'bg-gray-200 text-gray-800'
-                                }`}>
-                                  {rec.impact.toUpperCase()} IMPACT
-                                </span>
-                              </div>
-                              <p className="text-sm text-slate-300 mb-2">{rec.description}</p>
-                              <div className="text-xs text-slate-400 mb-3">
-                                <span className="font-medium">Action:</span> {rec.action}
-                              </div>
-
-                              {/* Copy-Paste Section */}
-                              <div className="bg-white border border-slate-300 rounded-lg p-3 mt-3">
-                                <div className="flex items-center justify-between mb-2">
-                                  <span className="text-xs font-semibold text-slate-300">Copy for Claude:</span>
-                                  <button
-                                    onClick={() => copyToClipboard(rec.copyPasteText, rec.id)}
-                                    className={`text-xs px-3 py-1 rounded-lg font-medium transition-all ${
-                                      copiedRecId === rec.id
-                                        ? 'bg-green-600 text-white'
-                                        : 'bg-[#00BC7D] text-white hover:bg-[#009B66]'
-                                    }`}
-                                  >
-                                    {copiedRecId === rec.id ? '✓ Copied!' : '📋 Copy'}
-                                  </button>
-                                </div>
-                                <pre className="text-xs text-slate-300 whitespace-pre-wrap font-mono bg-slate-700/50 p-2 rounded border border-slate-600">
-                                  {rec.copyPasteText}
-                                </pre>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Future Analytics Placeholder */}
-                <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl shadow-sm p-6 border-2 border-dashed border-purple-300">
-                  <div className="flex items-center gap-3 mb-3">
-                    <span className="text-3xl">🚀</span>
-                    <h3 className="text-lg font-semibold text-white">Coming Soon: Late.so Analytics Integration</h3>
-                  </div>
-                  <p className="text-sm text-slate-300 mb-4">
-                    Once Late.so releases their analytics API, we'll automatically track:
-                  </p>
-                  <ul className="text-sm text-slate-300 space-y-2">
-                    <li>• Real-time engagement metrics (views, likes, comments, shares)</li>
-                    <li>• Platform-specific performance comparison</li>
-                    <li>• Optimal posting time analysis</li>
-                    <li>• Content type performance (trending vs evergreen)</li>
-                    <li>• Audience retention heatmaps</li>
-                    <li>• A/B testing results for captions and thumbnails</li>
-                  </ul>
-                  <div className="mt-4 text-xs text-slate-400">
-                    For now, manually track engagement in your platform dashboards and use the recommendations above to optimize performance.
-                  </div>
-                </div>
-              </>
-            )}
-
-            {!analytics && (
-              <div className="bg-slate-800 rounded-xl border border-slate-700 p-6">
-                <div className="flex items-center justify-center h-64">
-                  <div className="text-center">
-                    <div className="w-12 h-12 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                    <div className="text-lg font-medium text-gray-900">Loading analytics...</div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* System Information */}
-        <div className="bg-slate-800 rounded-xl border border-slate-700 p-6 mt-6">
-          <h3 className="text-lg font-semibold text-white mb-4">System Information</h3>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-            <div>
-              <div className="text-slate-400">Cron Schedule</div>
-              <div className="font-medium text-white mt-1">5x daily (9AM-9PM CDT)</div>
-            </div>
-            <div>
-              <div className="text-slate-400">Video Generation</div>
-              <div className="font-medium text-white mt-1">HeyGen + Submagic</div>
-            </div>
-            <div>
-              <div className="text-slate-400">Storage</div>
-              <div className="font-medium text-white mt-1">Cloudflare R2</div>
-            </div>
-            <div>
-              <div className="text-slate-400">Publishing</div>
-              <div className="font-medium text-white mt-1">GetLate API</div>
-            </div>
-            <div>
-              <div className="text-slate-400">Last Updated</div>
-              <div className="font-medium text-white mt-1">
-                {status?.timestamp ? new Date(status.timestamp).toLocaleTimeString() : 'N/A'}
-              </div>
-            </div>
-            <div>
-              <div className="text-slate-400">Cost per Video</div>
-              <div className="font-medium text-white mt-1">~$1.05</div>
-            </div>
-          </div>
-        </div>
-        </div>
       </div>
     </div>
   );

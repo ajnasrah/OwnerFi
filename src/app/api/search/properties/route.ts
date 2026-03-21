@@ -236,9 +236,9 @@ async function queryFirestoreCollection(
   }
   // 'both' doesn't need additional filter - we get all active properties
 
-  // Price filter
+  // Price filter — unified collection uses listPrice as primary field
   if (params.maxPrice) {
-    constraints.push(where('price', '<=', params.maxPrice));
+    constraints.push(where('listPrice', '<=', params.maxPrice));
   }
 
   try {
@@ -285,12 +285,18 @@ async function searchWithFirestore(params: SearchParams) {
   const startTime = Date.now();
 
   // Query unified properties collection with dealType filter
+  // Default to querying both deal types separately to avoid returning 'standard' properties
   const dealTypeFilter = (params.dealType || 'both') as 'owner_finance' | 'cash_deal' | 'both';
 
-  // Query unified properties collection
-  const results = await Promise.all([
-    queryFirestoreCollection('properties', params, dealTypeFilter)
-  ]);
+  // When 'both', run two separate queries to get owner_finance + cash_deal (not 'standard' properties)
+  const results = dealTypeFilter === 'both'
+    ? await Promise.all([
+        queryFirestoreCollection('properties', params, 'owner_finance'),
+        queryFirestoreCollection('properties', params, 'cash_deal'),
+      ])
+    : await Promise.all([
+        queryFirestoreCollection('properties', params, dealTypeFilter),
+      ]);
 
   // Merge and deduplicate results
   const seen = new Set<string>();

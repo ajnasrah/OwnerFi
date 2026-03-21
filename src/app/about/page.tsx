@@ -6,15 +6,15 @@ export default function AboutPage() {
   return (
     <div className="min-h-screen bg-[#111625] text-white">
       {/* Header */}
-      <nav className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 px-4 py-4">
-        <div className="flex justify-between items-center max-w-6xl mx-auto">
+      <nav className="sticky top-0 z-50 bg-[#111625]/90 backdrop-blur-xl border-b border-white/[0.06] px-4 sm:px-6">
+        <div className="flex justify-between items-center max-w-6xl mx-auto h-14 sm:h-16">
           <Link href="/" className="flex items-center gap-2">
-            <img src="/logo.jpg" alt="Ownerfi" width={32} height={32} className="rounded-lg" />
+            <svg width="28" height="28" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="lg" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stopColor="#00BC7D"/><stop offset="100%" stopColor="#3B82F6"/></linearGradient></defs><circle cx="50" cy="50" r="45" stroke="url(#lg)" strokeWidth="7" fill="none"/><ellipse cx="50" cy="50" rx="42" ry="22" stroke="url(#lg)" strokeWidth="5.5" fill="none" transform="rotate(-25 50 50)"/><ellipse cx="50" cy="50" rx="22" ry="42" stroke="url(#lg)" strokeWidth="5.5" fill="none" transform="rotate(-25 50 50)"/></svg>
             <span className="text-lg font-bold text-white">Ownerfi</span>
           </Link>
           <Link
             href="/"
-            className="text-slate-300 hover:text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+            className="hidden sm:inline-flex text-sm text-slate-400 hover:text-white px-3 py-2 rounded-lg transition-colors"
           >
             Back to Home
           </Link>

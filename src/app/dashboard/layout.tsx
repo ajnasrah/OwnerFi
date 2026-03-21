@@ -35,7 +35,7 @@ function HelpBanner({ onOpenChat }: { onOpenChat: () => void }) {
   return (
     <div className="fixed top-14 left-0 right-0 z-[45] px-3 pt-2 md:px-0">
       <div className="max-w-md mx-auto bg-[#00BC7D]/95 backdrop-blur-sm rounded-xl px-3 py-2.5 flex items-center gap-2.5 shadow-lg border border-[#00BC7D]/30 animate-fadeInScale">
-        <div className="flex-shrink-0 text-base">👩</div>
+        <div className="flex-shrink-0"><svg width="20" height="20" viewBox="0 0 100 100" fill="none"><defs><linearGradient id="hb" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stopColor="#fff"/><stop offset="100%" stopColor="#fff"/></linearGradient></defs><circle cx="50" cy="50" r="45" stroke="url(#hb)" strokeWidth="7" fill="none"/><ellipse cx="50" cy="50" rx="42" ry="22" stroke="url(#hb)" strokeWidth="5.5" fill="none" transform="rotate(-25 50 50)"/><ellipse cx="50" cy="50" rx="22" ry="42" stroke="url(#hb)" strokeWidth="5.5" fill="none" transform="rotate(-25 50 50)"/></svg></div>
         <div className="flex-1 min-w-0">
           <p className="text-white text-[13px] font-medium leading-snug">
             Need help? <button onClick={onOpenChat} className="underline font-bold">Chat with Sarah</button> — she can answer anything.

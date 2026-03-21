@@ -183,40 +183,27 @@ export default async function HomePage() {
       />
 
       <div className="bg-[#111625] text-white">
-        {/* SEO-Optimized Header */}
-        <header>
-          <nav className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 px-4 lg:px-6 py-4" aria-label="Main navigation">
-            <div className="flex justify-between items-center max-w-6xl mx-auto">
-              <div className="flex items-center gap-2">
-                <img src="/logo.jpg" alt="Ownerfi" width={32} height={32} className="rounded-lg" />
+        {/* Header */}
+        <header className="sticky top-0 z-50 bg-[#111625]/90 backdrop-blur-xl border-b border-white/[0.06]">
+          <nav className="max-w-7xl mx-auto px-4 sm:px-6" aria-label="Main navigation">
+            <div className="flex items-center justify-between h-14 sm:h-16">
+              <Link href="/" className="flex items-center gap-2">
+                <svg width="28" height="28" viewBox="0 0 100 100" fill="none"><defs><linearGradient id="lg" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stopColor="#00BC7D"/><stop offset="100%" stopColor="#3B82F6"/></linearGradient></defs><circle cx="50" cy="50" r="45" stroke="url(#lg)" strokeWidth="7" fill="none"/><ellipse cx="50" cy="50" rx="42" ry="22" stroke="url(#lg)" strokeWidth="5.5" fill="none" transform="rotate(-25 50 50)"/><ellipse cx="50" cy="50" rx="22" ry="42" stroke="url(#lg)" strokeWidth="5.5" fill="none" transform="rotate(-25 50 50)"/></svg>
                 <span className="text-lg font-bold text-white">Ownerfi</span>
-              </div>
-
-              <div className="flex items-center gap-4">
-                <Link
-                  href="/how-owner-finance-works"
-                  className="text-slate-300 hover:text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-                >
+              </Link>
+              <div className="flex items-center gap-1 sm:gap-2">
+                <Link href="/how-owner-finance-works" className="hidden sm:inline-flex text-sm text-slate-400 hover:text-white px-3 py-2 rounded-lg transition-colors">
                   How It Works
                 </Link>
-                <Link
-                  href="/for-realtors"
-                  className="text-slate-300 hover:text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-                >
+                <Link href="/for-realtors" className="hidden sm:inline-flex text-sm text-slate-400 hover:text-white px-3 py-2 rounded-lg transition-colors">
                   For Realtors
                 </Link>
                 {session ? (
-                  <Link
-                    href={getDashboardUrl()}
-                    className="bg-gradient-to-r from-[#00BC7D]/50 to-[#00BC7D] hover:from-[#00BC7D] hover:to-[#00BC7D]/50 text-white px-4 py-2 rounded-xl font-semibold text-sm transition-all duration-300 hover:scale-105 shadow-lg shadow-[#00BC7D]/25"
-                  >
-                    Go to Dashboard
+                  <Link href={getDashboardUrl()} className="bg-[#00BC7D] hover:bg-[#00d68f] text-white px-4 py-2 rounded-lg font-semibold text-sm transition-colors">
+                    Dashboard
                   </Link>
                 ) : (
-                  <Link
-                    href="/auth"
-                    className="text-slate-300 hover:text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-                  >
+                  <Link href="/auth" className="bg-[#00BC7D] hover:bg-[#00d68f] text-white px-4 py-2 rounded-lg font-semibold text-sm transition-colors">
                     Get Started
                   </Link>
                 )}
@@ -286,7 +273,7 @@ export default async function HomePage() {
                   </div>
 
                   <div className="absolute -bottom-8 -right-8 bg-slate-800/90 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-4 shadow-2xl z-10 animate-float-delayed">
-                    <div className="text-3xl font-black text-blue-400">3</div>
+                    <div className="text-3xl font-black text-blue-400">50</div>
                     <div className="text-slate-300 text-sm">States</div>
                   </div>
 
@@ -546,7 +533,7 @@ export default async function HomePage() {
                   <div className="text-slate-300 text-sm" data-translate="testimonials.stat2">Active Properties</div>
                 </div>
                 <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6 text-center">
-                  <div className="text-4xl font-black text-purple-400 mb-2">3</div>
+                  <div className="text-4xl font-black text-purple-400 mb-2">50</div>
                   <div className="text-slate-300 text-sm" data-translate="testimonials.stat3">States Covered</div>
                 </div>
                 <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6 text-center">

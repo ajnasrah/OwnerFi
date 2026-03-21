@@ -255,7 +255,7 @@ export default function AuthPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-block mb-6 hover:scale-105 transition-all duration-300" title="Back to Home">
-            <img src="/logo.jpg" alt="Ownerfi" width={80} height={80} className="rounded-3xl shadow-2xl" />
+            <svg width="64" height="64" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="lg" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stopColor="#00BC7D"/><stop offset="100%" stopColor="#3B82F6"/></linearGradient></defs><circle cx="50" cy="50" r="45" stroke="url(#lg)" strokeWidth="7" fill="none"/><ellipse cx="50" cy="50" rx="42" ry="22" stroke="url(#lg)" strokeWidth="5.5" fill="none" transform="rotate(-25 50 50)"/><ellipse cx="50" cy="50" rx="22" ry="42" stroke="url(#lg)" strokeWidth="5.5" fill="none" transform="rotate(-25 50 50)"/></svg>
           </Link>
           <h1 className="text-4xl font-bold text-white mb-3">Welcome to Ownerfi</h1>
           <p className="text-slate-300 text-lg">Skip the bank. Buy direct.</p>

@@ -40,7 +40,7 @@ export function FilterUpgradeModal({ onClose, onUpgrade }: FilterUpgradeModalPro
         {/* Compact Header */}
         <div className="p-4 border-b border-slate-700/50">
           <div className="flex items-start gap-3">
-            <img src="/logo.jpg" alt="Ownerfi" width={40} height={40} className="rounded-lg flex-shrink-0" />
+            <svg width="36" height="36" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="lg" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stopColor="#00BC7D"/><stop offset="100%" stopColor="#3B82F6"/></linearGradient></defs><circle cx="50" cy="50" r="45" stroke="url(#lg)" strokeWidth="7" fill="none"/><ellipse cx="50" cy="50" rx="42" ry="22" stroke="url(#lg)" strokeWidth="5.5" fill="none" transform="rotate(-25 50 50)"/><ellipse cx="50" cy="50" rx="22" ry="42" stroke="url(#lg)" strokeWidth="5.5" fill="none" transform="rotate(-25 50 50)"/></svg>
             <div className="flex-1 pr-6">
               <h2 className="text-lg font-bold text-white mb-1">
                 New Filter Options Available!

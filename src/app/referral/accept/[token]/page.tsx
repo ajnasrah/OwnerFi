@@ -147,7 +147,7 @@ export default function AcceptReferralPage() {
         <div className="text-center">
           {/* Ownerfi Branding */}
           <Link href="/" className="flex items-center justify-center gap-2 mb-6 hover:opacity-80 transition-opacity">
-            <img src="/logo.jpg" alt="Ownerfi" width={40} height={40} className="rounded-lg" />
+            <svg width="36" height="36" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="lg" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stopColor="#00BC7D"/><stop offset="100%" stopColor="#3B82F6"/></linearGradient></defs><circle cx="50" cy="50" r="45" stroke="url(#lg)" strokeWidth="7" fill="none"/><ellipse cx="50" cy="50" rx="42" ry="22" stroke="url(#lg)" strokeWidth="5.5" fill="none" transform="rotate(-25 50 50)"/><ellipse cx="50" cy="50" rx="22" ry="42" stroke="url(#lg)" strokeWidth="5.5" fill="none" transform="rotate(-25 50 50)"/></svg>
             <span className="text-xl font-bold text-white">Ownerfi</span>
           </Link>
           <div className="w-8 h-8 border-4 border-[#00BC7D] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -163,7 +163,7 @@ export default function AcceptReferralPage() {
         <div className="bg-slate-800 rounded-xl p-8 max-w-md w-full text-center">
           {/* Ownerfi Branding */}
           <Link href="/" className="flex items-center justify-center gap-2 mb-6 hover:opacity-80 transition-opacity">
-            <img src="/logo.jpg" alt="Ownerfi" width={40} height={40} className="rounded-lg" />
+            <svg width="36" height="36" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="lg" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stopColor="#00BC7D"/><stop offset="100%" stopColor="#3B82F6"/></linearGradient></defs><circle cx="50" cy="50" r="45" stroke="url(#lg)" strokeWidth="7" fill="none"/><ellipse cx="50" cy="50" rx="42" ry="22" stroke="url(#lg)" strokeWidth="5.5" fill="none" transform="rotate(-25 50 50)"/><ellipse cx="50" cy="50" rx="22" ry="42" stroke="url(#lg)" strokeWidth="5.5" fill="none" transform="rotate(-25 50 50)"/></svg>
             <span className="text-xl font-bold text-white">Ownerfi</span>
           </Link>
           <div className="text-red-400 text-xl mb-4">{error}</div>
@@ -181,7 +181,7 @@ export default function AcceptReferralPage() {
         <div className="bg-slate-800 rounded-xl p-8 max-w-lg w-full">
           {/* Ownerfi Branding */}
           <Link href="/" className="flex items-center justify-center gap-2 mb-6 hover:opacity-80 transition-opacity">
-            <img src="/logo.jpg" alt="Ownerfi" width={40} height={40} className="rounded-lg" />
+            <svg width="36" height="36" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="lg" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stopColor="#00BC7D"/><stop offset="100%" stopColor="#3B82F6"/></linearGradient></defs><circle cx="50" cy="50" r="45" stroke="url(#lg)" strokeWidth="7" fill="none"/><ellipse cx="50" cy="50" rx="42" ry="22" stroke="url(#lg)" strokeWidth="5.5" fill="none" transform="rotate(-25 50 50)"/><ellipse cx="50" cy="50" rx="22" ry="42" stroke="url(#lg)" strokeWidth="5.5" fill="none" transform="rotate(-25 50 50)"/></svg>
             <span className="text-xl font-bold text-white">Ownerfi</span>
           </Link>
           <div className="text-center mb-6">
@@ -221,7 +221,7 @@ export default function AcceptReferralPage() {
         {/* Ownerfi Branding */}
         <div className="flex justify-center mb-6">
           <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <img src="/logo.jpg" alt="Ownerfi" width={40} height={40} className="rounded-lg" />
+            <svg width="36" height="36" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="lg" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stopColor="#00BC7D"/><stop offset="100%" stopColor="#3B82F6"/></linearGradient></defs><circle cx="50" cy="50" r="45" stroke="url(#lg)" strokeWidth="7" fill="none"/><ellipse cx="50" cy="50" rx="42" ry="22" stroke="url(#lg)" strokeWidth="5.5" fill="none" transform="rotate(-25 50 50)"/><ellipse cx="50" cy="50" rx="22" ry="42" stroke="url(#lg)" strokeWidth="5.5" fill="none" transform="rotate(-25 50 50)"/></svg>
             <span className="text-xl font-bold text-white">Ownerfi</span>
           </Link>
         </div>

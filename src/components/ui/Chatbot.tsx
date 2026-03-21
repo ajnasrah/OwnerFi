@@ -449,8 +449,8 @@ export default function Chatbot({ isOpen, onClose, bottomClass, initialMessage }
         {/* Header */}
         <div className="bg-gradient-to-r from-[#00BC7D] to-[#009B66] px-4 py-3 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-white rounded-full flex items-center justify-center flex-shrink-0 shadow-sm">
-              <span className="text-base">👩</span>
+            <div className="w-9 h-9 bg-white/10 rounded-full flex items-center justify-center flex-shrink-0">
+              <svg width="22" height="22" viewBox="0 0 100 100" fill="none"><defs><linearGradient id="cg" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stopColor="#fff"/><stop offset="100%" stopColor="#fff"/></linearGradient></defs><circle cx="50" cy="50" r="45" stroke="url(#cg)" strokeWidth="7" fill="none"/><ellipse cx="50" cy="50" rx="42" ry="22" stroke="url(#cg)" strokeWidth="5.5" fill="none" transform="rotate(-25 50 50)"/><ellipse cx="50" cy="50" rx="22" ry="42" stroke="url(#cg)" strokeWidth="5.5" fill="none" transform="rotate(-25 50 50)"/></svg>
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
@@ -481,7 +481,7 @@ export default function Chatbot({ isOpen, onClose, bottomClass, initialMessage }
           {messages.map((message, index) => (
             <div key={`${message.timestamp}-${index}`} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               {message.role === 'assistant' && (
-                <div className="w-6 h-6 bg-[#00BC7D]/10 rounded-full flex items-center justify-center flex-shrink-0 mr-2 mt-1"><span className="text-xs">👩</span></div>
+                <div className="w-6 h-6 bg-[#00BC7D]/10 rounded-full flex items-center justify-center flex-shrink-0 mr-2 mt-1"><svg width="14" height="14" viewBox="0 0 100 100" fill="none"><defs><linearGradient id="cl" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stopColor="#00BC7D"/><stop offset="100%" stopColor="#3B82F6"/></linearGradient></defs><circle cx="50" cy="50" r="45" stroke="url(#cl)" strokeWidth="7" fill="none"/><ellipse cx="50" cy="50" rx="42" ry="22" stroke="url(#cl)" strokeWidth="5.5" fill="none" transform="rotate(-25 50 50)"/><ellipse cx="50" cy="50" rx="22" ry="42" stroke="url(#cl)" strokeWidth="5.5" fill="none" transform="rotate(-25 50 50)"/></svg></div>
               )}
               <div className="flex flex-col max-w-[80%]">
                 <div className={`px-3.5 py-2.5 break-words ${
@@ -522,7 +522,7 @@ export default function Chatbot({ isOpen, onClose, bottomClass, initialMessage }
           {/* Typing indicator */}
           {isLoading && (
             <div className="flex justify-start">
-              <div className="w-6 h-6 bg-[#00BC7D]/10 rounded-full flex items-center justify-center flex-shrink-0 mr-2 mt-1"><span className="text-xs">👩</span></div>
+              <div className="w-6 h-6 bg-[#00BC7D]/10 rounded-full flex items-center justify-center flex-shrink-0 mr-2 mt-1"><svg width="14" height="14" viewBox="0 0 100 100" fill="none"><defs><linearGradient id="cl" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stopColor="#00BC7D"/><stop offset="100%" stopColor="#3B82F6"/></linearGradient></defs><circle cx="50" cy="50" r="45" stroke="url(#cl)" strokeWidth="7" fill="none"/><ellipse cx="50" cy="50" rx="42" ry="22" stroke="url(#cl)" strokeWidth="5.5" fill="none" transform="rotate(-25 50 50)"/><ellipse cx="50" cy="50" rx="22" ry="42" stroke="url(#cl)" strokeWidth="5.5" fill="none" transform="rotate(-25 50 50)"/></svg></div>
               <div className="bg-white text-slate-800 border border-slate-100 rounded-2xl rounded-bl-md px-3.5 py-2.5 shadow-sm">
                 <div className="flex items-center gap-2">
                   <div className="flex gap-1">

@@ -1,6 +1,6 @@
 
 import Link from 'next/link';
-import Image from 'next/image';
+import { OwnerfiLogo } from './OwnerfiLogo';
 
 interface FooterProps {
   className?: string;
@@ -8,17 +8,11 @@ interface FooterProps {
 
 export function Footer({ className = '' }: FooterProps) {
   return (
-    <footer className={`bg-[#111625] text-white py-8 px-6 border-t border-slate-700/50 ${className}`}>
+    <footer className={`bg-[#111625] text-white py-8 px-6 border-t border-white/[0.06] ${className}`}>
       {/* Mobile-first simplified footer */}
       <div className="text-center mb-8">
-        <div className="flex items-center justify-center space-x-3 mb-4">
-          <Image
-            src="/logo.jpg"
-            alt="Ownerfi"
-            width={40}
-            height={40}
-            className="rounded-xl"
-          />
+        <div className="flex items-center justify-center gap-3 mb-4">
+          <OwnerfiLogo size={36} />
           <h3 className="text-2xl font-bold">Ownerfi</h3>
         </div>
         <p className="text-slate-400 text-lg leading-relaxed">

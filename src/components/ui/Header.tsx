@@ -1,9 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { useSession, signOut } from 'next-auth/react';
 import { Button } from './Button';
+import { OwnerfiLogo } from './OwnerfiLogo';
 import { ExtendedSession } from '@/types/session';
 import { trackEvent } from '@/components/analytics/AnalyticsProvider';
 
@@ -15,29 +15,34 @@ export function Header({ className = '' }: HeaderProps) {
   const { data: session } = useSession();
 
   return (
-    <header className={`bg-[#111625]/80 backdrop-blur-lg border-b border-slate-700/50 sticky top-0 z-50 ${className}`}>
-      <div className="px-6 py-4">
-        <div className="flex items-center justify-between">
-          {/* Brand logo */}
-          <Link href="/" className="flex items-center space-x-3 group">
-            <Image
-              src="/logo.jpg"
-              alt="Ownerfi"
-              width={44}
-              height={44}
-              className="rounded-xl group-hover:scale-110 transition-all duration-300"
-            />
-            <div>
-              <h1 className="text-2xl font-black text-white group-hover:text-[#00BC7D] transition-all duration-300">
-                Ownerfi
-              </h1>
-            </div>
+    <header className={`bg-[#111625]/90 backdrop-blur-xl border-b border-white/[0.06] sticky top-0 z-50 ${className}`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="flex items-center justify-between h-16">
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <OwnerfiLogo size={34} />
+            <span className="text-xl font-bold text-white tracking-tight group-hover:text-[#00BC7D] transition-colors duration-200">
+              Ownerfi
+            </span>
           </Link>
 
-          {/* Dynamic navigation based on auth status */}
-          <div className="flex items-center space-x-4">
+          {/* Navigation */}
+          <div className="flex items-center gap-1">
+            <Link
+              href="/how-owner-finance-works"
+              className="hidden sm:inline-flex text-sm text-slate-400 hover:text-white px-3 py-2 rounded-lg transition-colors"
+            >
+              How It Works
+            </Link>
+            <Link
+              href="/for-realtors"
+              className="hidden sm:inline-flex text-sm text-slate-400 hover:text-white px-3 py-2 rounded-lg transition-colors"
+            >
+              For Realtors
+            </Link>
+
             {session?.user ? (
-              <>
+              <div className="flex items-center gap-2 ml-2">
                 <Button
                   variant="primary"
                   size="sm"
@@ -45,9 +50,9 @@ export function Header({ className = '' }: HeaderProps) {
                     (session as unknown as ExtendedSession)?.user?.role === 'admin' ? '/admin' :
                     (session as unknown as ExtendedSession)?.user?.role === 'realtor' ? '/realtor-dashboard' : '/dashboard'
                   }
-                  className="font-bold bg-gradient-to-r from-[#00BC7D] to-[#009B66] hover:from-[#00d68f] hover:to-[#00BC7D] px-6 py-2 rounded-xl transition-all duration-300 hover:scale-105 shadow-xl shadow-[#00BC7D]/25"
+                  className="bg-[#00BC7D] hover:bg-[#00d68f] text-white px-5 py-2 rounded-lg font-semibold text-sm transition-all duration-200"
                 >
-                  DASHBOARD
+                  Dashboard
                 </Button>
                 <Button
                   variant="ghost"
@@ -56,28 +61,18 @@ export function Header({ className = '' }: HeaderProps) {
                     trackEvent('auth_logout', { method: 'header_button' });
                     signOut({ callbackUrl: '/auth/signout' });
                   }}
-                  className="font-bold text-slate-300 hover:text-white px-4 py-2 rounded-xl hover:bg-slate-700/50 transition-all duration-300"
+                  className="text-sm text-slate-400 hover:text-white px-3 py-2 rounded-lg transition-colors"
                 >
-                  SIGN OUT
+                  Sign Out
                 </Button>
-              </>
+              </div>
             ) : (
-              <>
-                <Link
-                  href="/for-realtors"
-                  className="hidden sm:block text-slate-300 hover:text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-                >
-                  For Realtors
-                </Link>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  href="/auth"
-                  className="font-bold bg-gradient-to-r from-[#00BC7D] to-[#009B66] hover:from-[#00d68f] hover:to-[#00BC7D] px-6 py-2 rounded-xl transition-all duration-300 hover:scale-105 shadow-xl shadow-[#00BC7D]/25"
-                >
-                  GET STARTED
-                </Button>
-              </>
+              <Link
+                href="/auth"
+                className="ml-2 bg-[#00BC7D] hover:bg-[#00d68f] text-white px-5 py-2 rounded-lg font-semibold text-sm transition-all duration-200"
+              >
+                Get Started
+              </Link>
             )}
           </div>
         </div>

@@ -25,6 +25,7 @@ interface UserContext {
   city?: string;
   state?: string;
   isInvestor?: boolean;
+  isRealtor?: boolean;
   likedCount?: number;
   currentPage?: string;
 }
@@ -214,6 +215,7 @@ export default function Chatbot({ isOpen, onClose, bottomClass, initialMessage }
           city: data.profile.preferredCity || data.profile.city,
           state: data.profile.preferredState || data.profile.state,
           isInvestor: data.profile.isInvestor,
+          isRealtor: data.profile.role === 'realtor',
           likedCount: data.profile.likedPropertyIds?.length || 0,
           currentPage: pathname,
         });

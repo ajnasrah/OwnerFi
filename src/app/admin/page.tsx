@@ -77,10 +77,10 @@ export default function AdminHub() {
       color: 'indigo',
     },
     {
-      href: '/admin/cash-deals',
-      icon: '💰',
-      title: 'Cash Deals',
-      description: 'Investor cash deals',
+      href: '/admin/all-properties',
+      icon: '🔍',
+      title: 'All Properties',
+      description: 'Search all properties by address, city, zip',
       color: 'yellow',
     },
     {

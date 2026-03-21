@@ -15,6 +15,7 @@ function buildSystemPrompt(userContext?: UserContext): string {
     if (userContext.firstName) parts.push(`The user's name is ${userContext.firstName}.`);
     if (userContext.city && userContext.state) parts.push(`They're browsing from ${userContext.city}, ${userContext.state}.`);
     else if (userContext.city) parts.push(`They're browsing from ${userContext.city}.`);
+    if (userContext.isRealtor) parts.push('They are a REALTOR using the referral program. When they ask about "leads", they mean buyer leads for agents — NOT property listings. Direct them to /realtor-dashboard/buyers to see available leads.');
     if (userContext.isInvestor) parts.push('They have Investor Mode enabled — they can see cash deals.');
     if (userContext.likedCount && userContext.likedCount > 0) parts.push(`They have ${userContext.likedCount} saved/liked properties.`);
     if (userContext.currentPage) {
@@ -119,6 +120,9 @@ PRICING:
 PROPERTY SEARCH:
 You have access to a search_properties tool. When users ask about specific properties or what's available, USE IT to search our database and share real results. Present 3-5 properties naturally in your response with key details (address, price, beds/baths). Always mention they can see more on their dashboard and that we can refer them to a licensed buying agent when they're ready.
 
+IMPORTANT — REALTORS vs BUYERS:
+If the user is a realtor (check the user context), they may ask about "leads" — this means BUYER LEADS (people looking to buy homes), NOT property listings. Do NOT use the search_properties tool for lead questions. Instead, direct them to their Realtor Dashboard at /realtor-dashboard/buyers where they can see available buyer leads in their area. Leads are pre-screened buyers with confirmed contact info. Realtors can accept leads, sign referral agreements, and get buyer contact details through the dashboard.
+
 FOR REALTORS — REFERRAL PROGRAM:
 Ownerfi runs a referral network for real estate agents. Here's what we offer:
 - **Free to join** — no credit card, no upfront cost. Sign up at /auth?role=realtor
@@ -160,6 +164,7 @@ interface UserContext {
   city?: string;
   state?: string;
   isInvestor?: boolean;
+  isRealtor?: boolean;
   likedCount?: number;
   currentPage?: string;
 }
@@ -281,6 +286,7 @@ export async function POST(request: Request) {
           city: typeof body.userContext.city === 'string' ? body.userContext.city : undefined,
           state: typeof body.userContext.state === 'string' ? body.userContext.state : undefined,
           isInvestor: typeof body.userContext.isInvestor === 'boolean' ? body.userContext.isInvestor : undefined,
+          isRealtor: typeof body.userContext.isRealtor === 'boolean' ? body.userContext.isRealtor : undefined,
           likedCount: typeof body.userContext.likedCount === 'number' ? body.userContext.likedCount : undefined,
           currentPage: typeof body.userContext.currentPage === 'string' ? body.userContext.currentPage : undefined,
         }

@@ -1,10 +1,9 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useSession, signOut } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { isExtendedSession } from '@/types/session';
 import Tutorial from '@/components/dashboard/Tutorial';
 import { PropertySwiper2 } from '@/components/ui/PropertySwiper2';
 import { FilterUpgradeModal } from '@/components/FilterUpgradeModal';
@@ -419,90 +418,6 @@ export default function Dashboard() {
         isVisible={showTutorial}
         onComplete={() => setShowTutorial(false)}
       />
-
-      {/* Top Navigation - Compact Design */}
-      <div className="fixed top-0 left-0 right-0 z-header bg-gradient-to-b from-slate-900/90 to-transparent backdrop-blur-sm">
-        <div className="max-w-md mx-auto px-3 py-2">
-          {/* Single Row Layout */}
-          <div className="flex items-center justify-between gap-2">
-            {/* Left: Location - Clickable to edit */}
-            <Link
-              href="/dashboard/settings"
-              className="flex items-center gap-1.5 bg-white/10 backdrop-blur-xl rounded-full px-3 py-1.5 border border-white/20 hover:bg-white/20 transition-colors active:scale-95"
-            >
-              <span className="text-sm">📍</span>
-              <span className="text-white font-bold text-xs">{profile?.city}</span>
-            </Link>
-
-            {/* Right: Action Buttons */}
-            <div className="flex items-center gap-1.5">
-              {/* Admin Dashboard Button - Only show for admins */}
-              {session && isExtendedSession(session) && session.user.role === 'admin' && (
-                <Link
-                  href="/admin"
-                  className="px-2.5 py-1 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 rounded-lg flex items-center gap-1 transition-all"
-                  title="Back to Admin"
-                >
-                  <svg className="w-3 h-3 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
-                  </svg>
-                  <span className="text-purple-400 text-[10px] font-bold">ADMIN</span>
-                </Link>
-              )}
-              {/* Realtor Dashboard Button - Only show for realtors */}
-              {session && isExtendedSession(session) && session.user.role === 'realtor' && (
-                <Link
-                  href="/realtor-dashboard"
-                  className="px-2.5 py-1 bg-[#00BC7D]/20 hover:bg-[#00BC7D]/30 border border-[#00BC7D]/30 rounded-lg flex items-center gap-1 transition-all border-white/20"
-                  title="Realtor Dashboard"
-                >
-                  <span className="text-[#00BC7D] text-[10px] font-bold">HUB</span>
-                  <svg className="w-3 h-3 text-[#00BC7D]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-                  </svg>
-                </Link>
-              )}
-              <Link
-                href="/dashboard/liked"
-                className="hidden md:flex relative w-8 h-8 bg-white/10 backdrop-blur-xl hover:bg-white/20 rounded-full items-center justify-center transition-all border border-white/20"
-              >
-                <span className="text-sm">❤️</span>
-                {likedProperties.length > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-bold border border-slate-900">
-                    {likedProperties.length}
-                  </span>
-                )}
-              </Link>
-              <Link
-                href="/dashboard/settings"
-                className="hidden md:flex w-8 h-8 bg-white/10 backdrop-blur-xl hover:bg-white/20 rounded-full items-center justify-center transition-all border border-white/20"
-              >
-                <span className="text-sm">⚙️</span>
-              </Link>
-              <button
-                onClick={() => setShowTutorial(true)}
-                className="flex w-8 h-8 bg-white/10 backdrop-blur-xl hover:bg-white/20 active:bg-white/30 rounded-full items-center justify-center transition-all border border-white/20"
-                title="Show Help"
-              >
-                <span className="text-sm">❓</span>
-              </button>
-              <button
-                onClick={() => {
-                  trackEvent('auth_logout', { method: 'dashboard' });
-                  signOut({ callbackUrl: '/auth/signout' });
-                }}
-                className="hidden md:flex w-8 h-8 bg-red-500/20 backdrop-blur-xl hover:bg-red-500/30 rounded-full items-center justify-center transition-all border border-red-500/40"
-                title="Logout"
-              >
-                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-              </button>
-            </div>
-          </div>
-
-        </div>
-      </div>
 
       {/* Content - PropertySwiper shows both owner finance and cash deals */}
       <PropertySwiper2

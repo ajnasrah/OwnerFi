@@ -1,12 +1,11 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { useSession, signOut } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { useDebounce } from 'use-debounce';
 import { ExtendedSession } from '@/types/session';
-import Link from 'next/link';
 import { trackEvent } from '@/components/analytics/AnalyticsProvider';
 
 import { Agreement, OwnedBuyer, DisputeModalState, ReferralModalState } from './types';
@@ -224,14 +223,6 @@ export default function RealtorDashboard() {
   if ((status === 'loading') || (isReady && dashboard.isLoading && !dashboard.data)) {
     return (
       <div className="min-h-screen bg-[#111625] overflow-y-auto pb-20">
-        <header className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50">
-          <div className="px-4 py-3">
-            <div className="h-5 w-40 bg-slate-700 rounded animate-pulse" />
-          </div>
-          <div className="px-4 pb-3">
-            <div className="h-4 w-56 bg-slate-700/60 rounded animate-pulse" />
-          </div>
-        </header>
         <main className="max-w-6xl mx-auto p-4">
           <div className="bg-slate-800/30 rounded-xl p-1 mb-6">
             <div className="flex gap-1">
@@ -273,49 +264,10 @@ export default function RealtorDashboard() {
 
   return (
     <div className="min-h-screen bg-[#111625] overflow-y-auto pb-20">
-      {/* Header */}
-      <header className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50">
-        <div className="px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link href="/realtor-dashboard" className="text-slate-400 hover:text-white transition-colors">
-              Back to Hub
-            </Link>
-            <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-              <svg width="28" height="28" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="lg" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stopColor="#00BC7D"/><stop offset="100%" stopColor="#3B82F6"/></linearGradient></defs><circle cx="50" cy="50" r="45" stroke="url(#lg)" strokeWidth="7" fill="none"/><ellipse cx="50" cy="50" rx="42" ry="22" stroke="url(#lg)" strokeWidth="5.5" fill="none" transform="rotate(-25 50 50)"/><ellipse cx="50" cy="50" rx="22" ry="42" stroke="url(#lg)" strokeWidth="5.5" fill="none" transform="rotate(-25 50 50)"/></svg>
-              <span className="text-lg font-bold text-white">Ownerfi</span>
-            </Link>
-          </div>
-
-          <div className="flex items-center gap-2">
-            {role === 'admin' && (
-              <Link href="/admin" className="text-sm text-[#00BC7D] hover:text-[#00d68f] transition-colors">
-                &larr; Admin
-              </Link>
-            )}
-            <Link
-              href="/realtor-dashboard/settings"
-              className="text-slate-400 hover:text-white transition-colors p-1.5"
-              title="Profile"
-            >
-              Profile
-            </Link>
-            <button
-              onClick={() => {
-                trackEvent('auth_logout', { method: 'realtor_buyers' });
-                signOut({ callbackUrl: '/auth/signout' });
-              }}
-              className="text-slate-400 hover:text-red-400 transition-colors p-1.5"
-              title="Logout"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-
-        <div className="px-4 pb-3">
-          <div className="text-slate-300 text-sm">Welcome back, <span className="text-white font-medium">{dashboardData.realtorData.firstName}</span></div>
-        </div>
-      </header>
+      {/* Welcome message */}
+      <div className="px-4 py-3">
+        <div className="text-slate-300 text-sm">Welcome back, <span className="text-white font-medium">{dashboardData.realtorData.firstName}</span></div>
+      </div>
 
       {/* Main Content */}
       <main className="max-w-6xl mx-auto p-4">

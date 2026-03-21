@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useSession, signOut } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { ExtendedSession } from '@/types/session';
 import Link from 'next/link';
-import { trackEvent } from '@/components/analytics/AnalyticsProvider';
+
 
 export default function RealtorDashboardHub() {
   const { data: session, status } = useSession();
@@ -39,34 +39,6 @@ export default function RealtorDashboardHub() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      {/* Header */}
-      <header className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50">
-        <div className="px-4 py-3 flex items-center justify-between max-w-6xl mx-auto">
-          <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <svg width="28" height="28" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="lg" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stopColor="#00BC7D"/><stop offset="100%" stopColor="#3B82F6"/></linearGradient></defs><circle cx="50" cy="50" r="45" stroke="url(#lg)" strokeWidth="7" fill="none"/><ellipse cx="50" cy="50" rx="42" ry="22" stroke="url(#lg)" strokeWidth="5.5" fill="none" transform="rotate(-25 50 50)"/><ellipse cx="50" cy="50" rx="22" ry="42" stroke="url(#lg)" strokeWidth="5.5" fill="none" transform="rotate(-25 50 50)"/></svg>
-            <span className="text-lg font-bold text-white">Ownerfi</span>
-          </Link>
-
-          <div className="flex items-center gap-2">
-            {(session as unknown as ExtendedSession)?.user?.role === 'admin' && (
-              <Link href="/admin" className="text-sm text-[#00BC7D] hover:text-[#00d68f] transition-colors mr-2">
-                ← Admin
-              </Link>
-            )}
-            <button
-              onClick={() => {
-                trackEvent('auth_logout', { method: 'realtor_dashboard' });
-                signOut({ callbackUrl: '/auth/signout' });
-              }}
-              className="text-slate-400 hover:text-red-400 transition-colors p-1.5"
-              title="Logout"
-            >
-              ⏻
-            </button>
-          </div>
-        </div>
-      </header>
-
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 py-12 pb-20 md:pb-12">
         {/* Welcome Section */}

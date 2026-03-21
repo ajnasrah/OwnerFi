@@ -1,12 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSession, signOut } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 import { PropertyListing } from '@/lib/property-schema';
-import { trackEvent } from '@/components/analytics/AnalyticsProvider';
 
 type Property = PropertyListing & {
   isLiked: boolean;
@@ -118,61 +117,15 @@ export default function LikedProperties() {
 
   return (
     <div className="h-screen overflow-y-auto bg-[#111625]">
-      {/* Header with Navigation */}
-      <header className="relative z-20 bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-black text-white">SAVED HOMES</h1>
-            <p className="text-sm text-slate-400 mt-1 font-semibold">
-              {properties.length} SAVED {properties.length === 1 ? 'PROPERTY' : 'PROPERTIES'}
-            </p>
-          </div>
+      {/* Page Title */}
+      <div className="px-6 py-4">
+        <h1 className="text-xl font-black text-white">SAVED HOMES</h1>
+        <p className="text-sm text-slate-400 mt-1 font-semibold">
+          {properties.length} SAVED {properties.length === 1 ? 'PROPERTY' : 'PROPERTIES'}
+        </p>
+      </div>
 
-          {/* Mobile Navigation Buttons - hidden, tab bar handles nav */}
-          <div className="hidden">
-          </div>
-
-          <div className="hidden md:flex items-center space-x-6">
-            <div className="flex space-x-4">
-              <Link href={isInvestor ? '/dashboard/investor' : '/dashboard'} className="flex flex-col items-center group">
-                <div className="w-12 h-12 bg-slate-700/50 hover:bg-slate-600/50 rounded-xl flex items-center justify-center transition-colors group-hover:scale-110">
-                  <span className="text-slate-300 text-xl">🏠</span>
-                </div>
-                <span className="text-xs font-bold text-slate-400 mt-1">BROWSE</span>
-              </Link>
-
-              <Link href="/dashboard/liked" className="flex flex-col items-center group">
-                <div className="w-12 h-12 bg-gradient-to-br from-[#00BC7D]/50 to-[#00BC7D] rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                  <span className="text-white text-xl">♥</span>
-                </div>
-                <span className="text-xs font-bold text-[#00BC7D] mt-1">SAVED</span>
-              </Link>
-
-              <Link href="/dashboard/settings" className="flex flex-col items-center group">
-                <div className="w-12 h-12 bg-slate-700/50 hover:bg-slate-600/50 rounded-xl flex items-center justify-center transition-colors group-hover:scale-110">
-                  <span className="text-slate-300 text-xl">⚙</span>
-                </div>
-                <span className="text-xs font-bold text-slate-400 mt-1">PROFILE</span>
-              </Link>
-            </div>
-
-            <button
-              onClick={() => {
-                trackEvent('auth_logout', { method: 'liked_page' });
-                signOut({ callbackUrl: '/auth/signout' });
-              }}
-              className="flex flex-col items-center group"
-            >
-              <div className="w-12 h-12 bg-slate-700/50 hover:bg-red-600/30 rounded-xl flex items-center justify-center transition-all group-hover:scale-110 duration-300">
-                <span className="text-slate-300 group-hover:text-red-400 text-xl transition-colors">⏻</span>
-              </div>
-              <span className="text-xs font-bold text-slate-400 group-hover:text-red-400 mt-1 transition-colors">LOGOUT</span>
-            </button>
-          </div>
-        </div>
-      </header>
-
-      <main className="px-4 pb-20 md:pb-8 pt-6">
+      <main className="px-4 pb-20 md:pb-8">
         <div className="max-w-7xl mx-auto">
           {/* Error State */}
           {error && (

@@ -108,21 +108,9 @@ export default function FavoritesPage() {
 
   return (
     <div className="h-screen overflow-y-auto bg-primary-bg">
-      <header className="bg-white px-6 py-4 border-b border-slate-100">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={() => router.back()}
-              className="text-slate-600 hover:text-slate-800 transition-colors p-1"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-            </button>
-            <h1 className="text-2xl font-bold text-slate-900">Saved Properties</h1>
-          </div>
-        </div>
-      </header>
+      <div className="px-6 py-4">
+        <h1 className="text-2xl font-bold text-slate-900">Saved Properties</h1>
+      </div>
 
       <div className="p-6">
         {favoriteProperties.length === 0 ? (

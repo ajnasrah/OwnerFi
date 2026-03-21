@@ -187,54 +187,10 @@ export default function InvestorPreview() {
   return (
     <div className="min-h-screen bg-[#111625]">
       {/* Admin Preview Banner */}
-      <div className="fixed top-0 left-0 right-0 z-[60] bg-yellow-500 text-black px-4 py-2 text-center font-bold text-sm">
+      <div className="bg-yellow-500 text-black px-4 py-2 text-center font-bold text-sm">
         📊 ADMIN INVESTOR PREVIEW — Viewing as: {profile?.firstName} {profile?.lastName} ({city}, {state})
         <Link href="/admin/buyers" className="ml-4 underline">Back to Admin</Link>
       </div>
-
-      {/* Header (offset for admin banner) */}
-      <header className="sticky top-10 z-50 bg-[#111625]/90 backdrop-blur-xl border-b border-slate-700/50">
-        <div className="max-w-7xl mx-auto px-4 py-2.5">
-          <div className="flex items-center justify-between">
-            {/* Left: Location (disabled in preview) */}
-            <div className="flex items-center gap-2 bg-white/5 backdrop-blur-xl rounded-full px-3 py-1.5 border border-white/10 opacity-90 cursor-not-allowed">
-              <span className="text-sm">📍</span>
-              <span className="text-white font-bold text-xs">{city}, {state}</span>
-            </div>
-
-            {/* Center: Branding */}
-            <div className="hidden sm:flex items-center gap-2">
-              <span className="text-[#00BC7D] font-black text-sm">INVESTOR</span>
-              <span className="text-slate-500 text-xs">Preview</span>
-            </div>
-
-            {/* Right: Liked count (display only) */}
-            <div className="flex items-center gap-1.5">
-              <div className="relative w-8 h-8 bg-white/5 rounded-full flex items-center justify-center border border-white/10">
-                <svg className="w-4 h-4 text-red-400" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-                </svg>
-                {likedProperties.length > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-bold border border-slate-900">
-                    {likedProperties.length}
-                  </span>
-                )}
-              </div>
-              <div className="w-8 h-8 bg-white/5 rounded-full flex items-center justify-center border border-white/10 opacity-50 cursor-not-allowed">
-                <svg className="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </div>
-              <div className="w-8 h-8 bg-white/5 rounded-full flex items-center justify-center border border-white/10 opacity-50 cursor-not-allowed">
-                <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-4">

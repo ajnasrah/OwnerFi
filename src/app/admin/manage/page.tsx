@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react';
-import { useSession, signOut } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { LeadDispute } from '@/lib/firebase-models';
@@ -10,7 +10,7 @@ import Image from 'next/image';
 import { calculatePropertyFinancials } from '@/lib/property-calculations';
 import { useDropzone } from 'react-dropzone';
 import { convertToDirectImageUrl } from '../lib/image-utils';
-import { trackEvent } from '@/components/analytics/AnalyticsProvider';
+
 
 // Lazy load tab components
 const PropertySearchTab = lazy(() => import('../components/PropertySearchTab'));
@@ -822,24 +822,6 @@ export default function AdminDashboard() {
     <div className="h-screen overflow-hidden bg-[#111625] flex flex-col md:flex-row">
       {/* Mobile Dropdown Navigation */}
       <div className="md:hidden bg-slate-800 border-b border-slate-700 p-4">
-        <Link href="/admin" className="text-[#00BC7D] hover:text-[#00d68f] text-sm mb-2 inline-flex items-center gap-1">
-          ← Back to Hub
-        </Link>
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center space-x-2">
-            <svg width="28" height="28" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="lg" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stopColor="#00BC7D"/><stop offset="100%" stopColor="#3B82F6"/></linearGradient></defs><circle cx="50" cy="50" r="45" stroke="url(#lg)" strokeWidth="7" fill="none"/><ellipse cx="50" cy="50" rx="42" ry="22" stroke="url(#lg)" strokeWidth="5.5" fill="none" transform="rotate(-25 50 50)"/><ellipse cx="50" cy="50" rx="22" ry="42" stroke="url(#lg)" strokeWidth="5.5" fill="none" transform="rotate(-25 50 50)"/></svg>
-            <h1 className="text-lg font-bold text-white">Ownerfi Admin</h1>
-          </div>
-          <button
-            onClick={() => { trackEvent('auth_logout', { method: 'admin_manage' }); signOut({ callbackUrl: '/auth/signout' }); }}
-            className="text-slate-400 hover:text-red-600"
-            title="Sign Out"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-          </button>
-        </div>
         <select
           value={activeTab}
           onChange={(e) => setActiveTab(e.target.value as 'overview' | 'properties' | 'upload' | 'disputes' | 'contacts' | 'buyers' | 'realtors' | 'social')}
@@ -858,20 +840,6 @@ export default function AdminDashboard() {
 
       {/* Desktop Sidebar */}
       <div className="hidden md:flex w-64 lg:w-72 bg-slate-800 shadow-xl border-r border-slate-700 flex-shrink-0 relative flex-col h-screen">
-        {/* Logo Section */}
-        <div className="p-6 border-b border-slate-700 flex-shrink-0">
-          <Link href="/admin" className="text-[#00BC7D] hover:text-[#00d68f] text-sm mb-2 inline-flex items-center gap-1">
-            ← Back to Hub
-          </Link>
-          <div className="flex items-center space-x-3">
-            <svg width="36" height="36" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="lg" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stopColor="#00BC7D"/><stop offset="100%" stopColor="#3B82F6"/></linearGradient></defs><circle cx="50" cy="50" r="45" stroke="url(#lg)" strokeWidth="7" fill="none"/><ellipse cx="50" cy="50" rx="42" ry="22" stroke="url(#lg)" strokeWidth="5.5" fill="none" transform="rotate(-25 50 50)"/><ellipse cx="50" cy="50" rx="22" ry="42" stroke="url(#lg)" strokeWidth="5.5" fill="none" transform="rotate(-25 50 50)"/></svg>
-            <div>
-              <h1 className="text-xl font-bold text-white">Ownerfi</h1>
-              <p className="text-sm text-slate-500">Admin Dashboard</p>
-            </div>
-          </div>
-        </div>
-
         {/* Navigation Menu */}
         <nav className="p-4 space-y-2 flex-1 overflow-y-auto">
           {[
@@ -933,25 +901,6 @@ export default function AdminDashboard() {
           </Link>
         </div>
 
-        {/* User Section */}
-        <div className="p-4 border-t border-slate-700 bg-slate-800 flex-shrink-0 mt-auto">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span className="text-sm text-slate-400">System Online</span>
-            </div>
-            <button
-              onClick={() => { trackEvent('auth_logout', { method: 'admin_manage_mobile' }); signOut({ callbackUrl: '/auth/signout' }); }}
-              className="flex items-center space-x-2 px-3 py-2 text-sm text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
-              title="Sign Out"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-              <span>Sign Out</span>
-            </button>
-          </div>
-        </div>
       </div>
 
       {/* Main Content */}

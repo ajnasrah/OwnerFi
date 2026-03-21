@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { ExtendedSession } from '@/types/session';
-import Link from 'next/link';
 import { GooglePlacesAutocomplete } from '@/components/ui/GooglePlacesAutocomplete';
 import { trackEvent, useFormTracking } from '@/components/analytics/AnalyticsProvider';
 
@@ -229,61 +228,6 @@ export default function BuyerSettings() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      {/* Modern Floating Header */}
-      <header className="sticky top-0 z-50 backdrop-blur-xl bg-[#111625]/80 border-b border-slate-700/50 shadow-lg shadow-black/20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4">
-          <div className="flex items-center justify-between">
-            {/* Back Button */}
-            <Link
-              href={formData.isInvestor ? '/dashboard/investor' : '/dashboard'}
-              className="flex items-center gap-2 text-slate-300 hover:text-white transition-all duration-200 group"
-            >
-              <div className="w-9 h-9 bg-slate-800/50 group-hover:bg-slate-700/50 rounded-xl flex items-center justify-center transition-all duration-200 group-hover:scale-105">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
-                </svg>
-              </div>
-              <span className="text-lg font-bold hidden sm:block">Profile</span>
-            </Link>
-
-            {/* Action Buttons */}
-            <div className="flex items-center gap-2">
-              {/* Realtor Dashboard Button - Only show for realtors */}
-              {(session as unknown as ExtendedSession)?.user?.role === 'realtor' && (
-                <Link
-                  href="/realtor-dashboard"
-                  className="px-3 py-1.5 bg-[#00BC7D]/20 hover:bg-[#00BC7D]/30 border border-[#00BC7D]/30 rounded-lg flex items-center gap-1.5 transition-all duration-200 hover:scale-105 group"
-                  title="Realtor Dashboard"
-                >
-                  <span className="text-[#00BC7D] text-xs font-semibold">Realtor Hub</span>
-                  <svg className="w-4 h-4 text-[#00BC7D]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </Link>
-              )}
-              <Link
-                href="/dashboard/liked"
-                className="hidden md:flex w-9 h-9 bg-slate-800/50 hover:bg-slate-700/50 rounded-xl items-center justify-center transition-all duration-200 hover:scale-105"
-              >
-                <span className="text-lg">❤️</span>
-              </Link>
-              <button
-                onClick={() => {
-                  trackEvent('auth_logout', { method: 'settings_button' });
-                  signOut({ callbackUrl: '/auth/signout' });
-                }}
-                className="hidden md:flex w-9 h-9 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-xl items-center justify-center transition-all duration-200 hover:scale-105 group"
-                title="Sign Out"
-              >
-                <svg className="w-5 h-5 text-red-400 group-hover:text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
       {/* Main Content */}
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-4 pb-20 md:pb-8">
         {/* Compact Hero Section */}

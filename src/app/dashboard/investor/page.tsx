@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { InvestorPropertyCard } from '@/components/dashboard/InvestorPropertyCard';
 import { InvestorFilterBar, getFilterParams, type DealTypeFilter, type PriceFilter } from '@/components/dashboard/InvestorFilterBar';
 import { trackEvent } from '@/components/analytics/AnalyticsProvider';

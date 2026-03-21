@@ -51,7 +51,7 @@ export default function PropertyDetails({ property }: PropertyDetailsProps) {
             {features.map((feature: string, index: number) => (
               <span
                 key={index}
-                className="bg-emerald-900/30 text-emerald-400 px-3 py-1 rounded-full text-sm"
+                className="bg-[#004D33]/30 text-[#00BC7D] px-3 py-1 rounded-full text-sm"
               >
                 {feature}
               </span>

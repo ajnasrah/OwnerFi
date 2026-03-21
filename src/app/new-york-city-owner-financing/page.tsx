@@ -4,14 +4,14 @@ import { db } from '@/lib/firebase'
 import { collection, query, where, getDocs } from 'firebase/firestore'
 
 export const metadata: Metadata = {
-  title: 'Owner Financing New York City | Rent to Own Alternative NYC | Manhattan, Brooklyn, Queens | OwnerFi',
+  title: 'Owner Financing New York City | Rent to Own Alternative NYC | Manhattan, Brooklyn, Queens | Ownerfi',
   description: 'Find owner financed homes in New York City - better than rent to own! Immediate ownership in Manhattan, Brooklyn, Queens, Bronx, Staten Island. No banks needed. Flexible credit options.',
   keywords: 'owner financing nyc, owner financed homes new york city, rent to own nyc, rent to own manhattan, owner financing brooklyn, seller financing nyc, no credit check homes nyc, bad credit homes manhattan, nyc real estate owner financing',
   openGraph: {
-    title: 'Owner Financed Homes in New York City - Better Than Rent to Own | OwnerFi',
+    title: 'Owner Financed Homes in New York City - Better Than Rent to Own | Ownerfi',
     description: 'Skip the banks! Find owner financed properties across NYC with immediate ownership. Serving Manhattan, Brooklyn, Queens, Bronx and Staten Island.',
     url: 'https://ownerfi.ai/new-york-city-owner-financing',
-    siteName: 'OwnerFi',
+    siteName: 'Ownerfi',
     type: 'website',
   },
   twitter: {
@@ -53,7 +53,7 @@ async function getNYCProperties() {
   }
 }
 
-export default async function OwnerFinancingNYC() {
+export default async function OwnerfinancingNYC() {
   const { boroughCounts, totalCount } = await getNYCProperties()
 
   const faqSchema = {
@@ -98,7 +98,7 @@ export default async function OwnerFinancingNYC() {
   const localBusinessSchema = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
-    "name": "OwnerFi New York City - Owner Financed Homes",
+    "name": "Ownerfi New York City - Owner Financed Homes",
     "description": "Find owner financed homes throughout New York City. Better than rent to own with immediate ownership.",
     "url": "https://ownerfi.ai/new-york-city-owner-financing",
     "areaServed": {
@@ -150,7 +150,7 @@ export default async function OwnerFinancingNYC() {
             </p>
 
             <div className="grid md:grid-cols-3 gap-6 mb-8">
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-xl border border-green-200">
+              <div className="bg-gradient-to-br from-green-50 to-[#00BC7D]/5 p-6 rounded-xl border border-green-200">
                 <h3 className="font-bold text-green-900 mb-2">Immediate NYC Ownership</h3>
                 <p className="text-green-800">Get the deed right away, unlike rent to own</p>
               </div>

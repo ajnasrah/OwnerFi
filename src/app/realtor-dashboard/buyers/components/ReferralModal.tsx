@@ -99,7 +99,7 @@ export function ReferralModal({
                   <span className="text-white font-medium">{(modal.feePercent * 0.7).toFixed(1)}%</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">OwnerFi&apos;s share (30% of referral):</span>
+                  <span className="text-slate-400">Ownerfi&apos;s share (30% of referral):</span>
                   <span className="text-slate-500">{(modal.feePercent * 0.3).toFixed(1)}%</span>
                 </div>
               </div>
@@ -256,7 +256,7 @@ export function ReferralModal({
                   <label className="block text-white text-sm font-medium mb-2">
                     Referral Link
                   </label>
-                  <div className="bg-slate-700/50 border border-slate-600 rounded-lg p-3 break-all text-sm text-emerald-400 font-mono">
+                  <div className="bg-slate-700/50 border border-slate-600 rounded-lg p-3 break-all text-sm text-[#00BC7D] font-mono">
                     {modal.inviteUrl}
                   </div>
                 </div>
@@ -264,8 +264,8 @@ export function ReferralModal({
                   onClick={onCopyLink}
                   className={`w-full py-3 px-4 rounded-lg font-medium transition-colors ${
                     modal.copied
-                      ? 'bg-emerald-600 text-white'
-                      : 'bg-emerald-500 hover:bg-emerald-600 text-white'
+                      ? 'bg-[#00BC7D] text-white'
+                      : 'bg-[#00BC7D]/50 hover:bg-[#00BC7D] text-white'
                   }`}
                 >
                   {modal.copied ? 'Copied!' : 'Copy to Clipboard'}

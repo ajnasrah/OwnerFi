@@ -124,10 +124,10 @@ export function transformPropertyForTypesense(
       ? [property.latitude, property.longitude]
       : undefined,
 
-    // Derive dealType from isOwnerFinance/isCashDeal flags
-    dealType: (property as any).isOwnerFinance && (property as any).isCashDeal
+    // Derive dealType from isOwnerfinance/isCashDeal flags
+    dealType: (property as any).isOwnerfinance && (property as any).isCashDeal
       ? 'both'
-      : (property as any).isOwnerFinance
+      : (property as any).isOwnerfinance
         ? 'owner_finance'
         : (property as any).isCashDeal
           ? 'cash_deal'
@@ -143,7 +143,7 @@ export function transformPropertyForTypesense(
     discountPercent: property.cashDeal?.discountPercent || undefined,
 
     isActive: property.isActive !== false, // Default to true if not set
-    ownerFinanceVerified: (property as any).isOwnerFinance || property.ownerFinance?.verified || false,
+    ownerFinanceVerified: (property as any).isOwnerfinance || property.ownerFinance?.verified || false,
     needsWork: (property as any).needsWork || property.cashDeal?.needsWork || false,
     isLand: property.isLand || property.propertyType === 'land' || false,
     manuallyVerified: property.verification?.manuallyVerified || undefined,
@@ -384,17 +384,17 @@ export async function indexRawFirestoreProperty(
   }
 
   try {
-    // Determine deal type from unified collection flags (isOwnerFinance, isCashDeal)
+    // Determine deal type from unified collection flags (isOwnerfinance, isCashDeal)
     // For backward compatibility, also check source collection name
     let dealType = 'owner_finance'; // default
-    const isOwnerFinance = data.isOwnerFinance === true || source === 'zillow_imports';
+    const isOwnerfinance = data.isOwnerfinance === true || source === 'zillow_imports';
     const isCashDeal = data.isCashDeal === true || source === 'cash_houses' || data.discountPercentage > 15;
 
-    if (isOwnerFinance && isCashDeal) {
+    if (isOwnerfinance && isCashDeal) {
       dealType = 'both';
     } else if (isCashDeal) {
       dealType = 'cash_deal';
-    } else if (isOwnerFinance) {
+    } else if (isOwnerfinance) {
       dealType = 'owner_finance';
     }
 

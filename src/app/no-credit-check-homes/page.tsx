@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_US',
     url: 'https://ownerfi.ai/no-credit-check-homes',
-    siteName: 'OwnerFi',
+    siteName: 'Ownerfi',
     title: 'No Credit Check Homes - Flexible Owner Financing Options',
     description: 'Find owner financed properties with flexible credit requirements. Many sellers work with all credit situations.',
     images: [{
@@ -75,19 +75,17 @@ export default function NoCreditCheckHomes() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(generateFAQSchema()) }}
       />
 
-      <div className="min-h-screen bg-slate-900 text-white">
+      <div className="min-h-screen bg-[#111625] text-white">
         {/* Header */}
         <header className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 px-6 py-4">
           <div className="max-w-6xl mx-auto flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">O</span>
-              </div>
-              <span className="text-lg font-bold text-white">OwnerFi</span>
+              <img src="/logo.jpg" alt="Ownerfi" width={32} height={32} className="rounded-lg" />
+              <span className="text-lg font-bold text-white">Ownerfi</span>
             </Link>
             <nav className="flex items-center gap-4">
               <Link href="/how-owner-finance-works" className="text-slate-300 hover:text-white text-sm">How It Works</Link>
-              <Link href="/auth" className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
+              <Link href="/auth" className="bg-[#00BC7D]/50 hover:bg-[#00BC7D] text-white px-4 py-2 rounded-lg text-sm font-medium">
                 Browse Properties
               </Link>
             </nav>
@@ -99,7 +97,7 @@ export default function NoCreditCheckHomes() {
           <section className="py-20 px-6 bg-gradient-to-b from-slate-800 to-slate-900">
             <div className="max-w-6xl mx-auto text-center">
               <h1 className="text-5xl font-bold text-white mb-6">
-                Owner Financed Homes with <span className="text-emerald-400">Flexible Credit Requirements</span>
+                Owner Financed Homes with <span className="text-[#00BC7D]">Flexible Credit Requirements</span>
               </h1>
               <p className="text-xl text-slate-300 max-w-3xl mx-auto mb-8">
                 Find properties with varying credit requirements. While some sellers require credit checks,
@@ -125,7 +123,7 @@ export default function NoCreditCheckHomes() {
 
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link href="/auth" className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-4 rounded-xl font-semibold text-lg">
+                <Link href="/auth" className="bg-[#00BC7D]/50 hover:bg-[#00BC7D] text-white px-8 py-4 rounded-xl font-semibold text-lg">
                   Browse All Properties
                 </Link>
                 <Link href="/how-owner-finance-works" className="bg-slate-700 hover:bg-slate-600 text-white px-8 py-4 rounded-xl font-semibold text-lg">
@@ -192,7 +190,7 @@ export default function NoCreditCheckHomes() {
               </h2>
               <div className="grid md:grid-cols-2 gap-8">
                 <div className="bg-slate-800/50 rounded-xl p-8 border border-slate-700/50">
-                  <h3 className="text-2xl font-bold text-emerald-400 mb-6">More Important Than Credit</h3>
+                  <h3 className="text-2xl font-bold text-[#00BC7D] mb-6">More Important Than Credit</h3>
                   <div className="space-y-4">
                     <div>
                       <h4 className="text-white font-semibold mb-2">💰 Down Payment</h4>
@@ -250,32 +248,32 @@ export default function NoCreditCheckHomes() {
                 * These are illustrative examples of typical buyer situations. Individual results vary and are not guaranteed.
               </p>
               <div className="grid md:grid-cols-3 gap-6">
-                <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
+                <div className="bg-[#111625]/50 rounded-xl p-6 border border-slate-700/50">
                   <div className="text-2xl mb-3">🏗️</div>
                   <h3 className="text-xl font-semibold text-white mb-3">Self-Employed Contractor</h3>
                   <p className="text-slate-300 text-sm mb-3">
                     "Banks wouldn't approve me because of variable income. Found a seller who accepted
                     my tax returns and 15% down. No credit check needed."
                   </p>
-                  <p className="text-emerald-400 text-sm">✓ Approved with tax returns</p>
+                  <p className="text-[#00BC7D] text-sm">✓ Approved with tax returns</p>
                 </div>
-                <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
+                <div className="bg-[#111625]/50 rounded-xl p-6 border border-slate-700/50">
                   <div className="text-2xl mb-3">🏥</div>
                   <h3 className="text-xl font-semibold text-white mb-3">Medical Bankruptcy</h3>
                   <p className="text-slate-300 text-sm mb-3">
                     "Had a bankruptcy from medical bills 3 years ago. Seller did check credit but
                     focused on my current income and 20% down payment."
                   </p>
-                  <p className="text-emerald-400 text-sm">✓ Approved despite bankruptcy</p>
+                  <p className="text-[#00BC7D] text-sm">✓ Approved despite bankruptcy</p>
                 </div>
-                <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
+                <div className="bg-[#111625]/50 rounded-xl p-6 border border-slate-700/50">
                   <div className="text-2xl mb-3">💼</div>
                   <h3 className="text-xl font-semibold text-white mb-3">New Job, Good Income</h3>
                   <p className="text-slate-300 text-sm mb-3">
                     "Just started a new job with great salary but short employment history.
                     Seller required credit check but approved with employment contract."
                   </p>
-                  <p className="text-emerald-400 text-sm">✓ Approved with verification</p>
+                  <p className="text-[#00BC7D] text-sm">✓ Approved with verification</p>
                 </div>
               </div>
             </div>
@@ -287,46 +285,46 @@ export default function NoCreditCheckHomes() {
               <h2 className="text-3xl font-bold text-white text-center mb-12">
                 How to Improve Your Approval Chances
               </h2>
-              <div className="bg-gradient-to-br from-emerald-900/20 to-emerald-800/20 rounded-xl p-8 border border-emerald-500/30">
+              <div className="bg-gradient-to-br from-[#004D33]/20 to-[#007A52]/20 rounded-xl p-8 border border-[#00BC7D]/30">
                 <div className="grid md:grid-cols-2 gap-8">
                   <div>
-                    <h3 className="text-xl font-bold text-emerald-400 mb-4">Before You Apply:</h3>
+                    <h3 className="text-xl font-bold text-[#00BC7D] mb-4">Before You Apply:</h3>
                     <ul className="space-y-2 text-slate-300">
                       <li className="flex items-start gap-2">
-                        <span className="text-emerald-400 mt-1">✓</span>
+                        <span className="text-[#00BC7D] mt-1">✓</span>
                         <span>Save a larger down payment (10-20%)</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-emerald-400 mt-1">✓</span>
+                        <span className="text-[#00BC7D] mt-1">✓</span>
                         <span>Gather income documentation</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-emerald-400 mt-1">✓</span>
+                        <span className="text-[#00BC7D] mt-1">✓</span>
                         <span>Get rental payment history records</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-emerald-400 mt-1">✓</span>
+                        <span className="text-[#00BC7D] mt-1">✓</span>
                         <span>Write an explanation letter for credit issues</span>
                       </li>
                     </ul>
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-emerald-400 mb-4">Be Honest About:</h3>
+                    <h3 className="text-xl font-bold text-[#00BC7D] mb-4">Be Honest About:</h3>
                     <ul className="space-y-2 text-slate-300">
                       <li className="flex items-start gap-2">
-                        <span className="text-emerald-400 mt-1">✓</span>
+                        <span className="text-[#00BC7D] mt-1">✓</span>
                         <span>Your credit situation upfront</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-emerald-400 mt-1">✓</span>
+                        <span className="text-[#00BC7D] mt-1">✓</span>
                         <span>Your income sources</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-emerald-400 mt-1">✓</span>
+                        <span className="text-[#00BC7D] mt-1">✓</span>
                         <span>Any past financial challenges</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-emerald-400 mt-1">✓</span>
+                        <span className="text-[#00BC7D] mt-1">✓</span>
                         <span>Your current financial stability</span>
                       </li>
                     </ul>
@@ -343,19 +341,19 @@ export default function NoCreditCheckHomes() {
                 Frequently Asked Questions
               </h2>
               <div className="space-y-6">
-                <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
+                <div className="bg-[#111625]/50 rounded-xl p-6 border border-slate-700/50">
                   <h3 className="text-xl font-semibold text-white mb-3">Do all owner financed homes require no credit check?</h3>
                   <p className="text-slate-300">No, credit requirements vary by seller. While many sellers are flexible and may not require traditional credit checks, some do check credit. Each seller sets their own requirements.</p>
                 </div>
-                <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
+                <div className="bg-[#111625]/50 rounded-xl p-6 border border-slate-700/50">
                   <h3 className="text-xl font-semibold text-white mb-3">What credit score do I need for owner financing?</h3>
                   <p className="text-slate-300">There's no universal credit score requirement. Some sellers don't check credit at all, while others may look for scores above 500-600. Many focus more on down payment and income than credit scores.</p>
                 </div>
-                <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
+                <div className="bg-[#111625]/50 rounded-xl p-6 border border-slate-700/50">
                   <h3 className="text-xl font-semibold text-white mb-3">Can I get owner financing after bankruptcy?</h3>
                   <p className="text-slate-300">Yes, many sellers will work with buyers who have past bankruptcies, especially if it's been 2+ years and you can show current financial stability with steady income and a good down payment.</p>
                 </div>
-                <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
+                <div className="bg-[#111625]/50 rounded-xl p-6 border border-slate-700/50">
                   <h3 className="text-xl font-semibold text-white mb-3">How can I find properties that don't require credit checks?</h3>
                   <p className="text-slate-300">When browsing properties, look for listings that mention "flexible credit," "all credit considered," or "credit flexible." Contact sellers or agents to discuss specific requirements before applying.</p>
                 </div>
@@ -373,7 +371,7 @@ export default function NoCreditCheckHomes() {
                 Browse properties with varying credit requirements. From no-credit-check to flexible terms, find sellers who work with your situation.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link href="/auth" className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-4 rounded-xl font-semibold text-lg">
+                <Link href="/auth" className="bg-[#00BC7D]/50 hover:bg-[#00BC7D] text-white px-8 py-4 rounded-xl font-semibold text-lg">
                   Browse All Properties
                 </Link>
                 <Link href="/bad-credit-home-buying" className="bg-slate-700 hover:bg-slate-600 text-white px-8 py-4 rounded-xl font-semibold text-lg">

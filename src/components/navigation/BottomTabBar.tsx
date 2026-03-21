@@ -42,12 +42,12 @@ export function BottomTabBar({ tabs }: BottomTabBarProps) {
   }, null);
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-header md:hidden bg-slate-900/95 backdrop-blur-xl border-t border-slate-700/50 pb-safe">
+    <nav className="fixed bottom-0 left-0 right-0 z-header md:hidden bg-[#111625]/95 backdrop-blur-xl border-t border-slate-700/50 pb-safe">
       <div className="flex items-center justify-around h-14 px-1">
         {tabs.map((tab) => {
           const active = tab.key === activeKey;
           const className = `flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors ${
-            active ? 'text-emerald-400' : 'text-slate-500'
+            active ? 'text-[#00BC7D]' : 'text-slate-500'
           }`;
 
           const content = (

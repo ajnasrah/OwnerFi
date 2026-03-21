@@ -4,14 +4,14 @@ import { db } from '@/lib/firebase'
 import { collection, query, where, getDocs } from 'firebase/firestore'
 
 export const metadata: Metadata = {
-  title: 'Owner Financing San Antonio | Rent to Own Alternative TX | Alamo Heights, Stone Oak | OwnerFi',
+  title: 'Owner Financing San Antonio | Rent to Own Alternative TX | Alamo Heights, Stone Oak | Ownerfi',
   description: 'Find owner financed homes in San Antonio - better than rent to own! Immediate ownership in Alamo Heights, Stone Oak, Southtown, Downtown. No banks needed. Flexible credit options.',
   keywords: 'owner financing san antonio, owner financed homes san antonio, rent to own san antonio, rent to own texas, owner financing alamo heights, seller financing san antonio, no credit check homes san antonio, bad credit homes san antonio, san antonio real estate owner financing',
   openGraph: {
-    title: 'Owner Financed Homes in San Antonio - Better Than Rent to Own | OwnerFi',
+    title: 'Owner Financed Homes in San Antonio - Better Than Rent to Own | Ownerfi',
     description: 'Skip the banks! Find owner financed properties across San Antonio with immediate ownership. Serving Alamo Heights, Stone Oak, Southtown and more.',
     url: 'https://ownerfi.ai/san-antonio-owner-financing',
-    siteName: 'OwnerFi',
+    siteName: 'Ownerfi',
     type: 'website',
   },
   twitter: {
@@ -53,7 +53,7 @@ async function getSanAntonioProperties() {
   }
 }
 
-export default async function OwnerFinancingSanAntonio() {
+export default async function OwnerfinancingSanAntonio() {
   const { areaCounts, totalCount } = await getSanAntonioProperties()
 
   const faqSchema = {
@@ -98,7 +98,7 @@ export default async function OwnerFinancingSanAntonio() {
   const localBusinessSchema = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
-    "name": "OwnerFi San Antonio - Owner Financed Homes",
+    "name": "Ownerfi San Antonio - Owner Financed Homes",
     "description": "Find owner financed homes throughout San Antonio. Better than rent to own with immediate ownership.",
     "url": "https://ownerfi.ai/san-antonio-owner-financing",
     "areaServed": {
@@ -150,7 +150,7 @@ export default async function OwnerFinancingSanAntonio() {
             </p>
 
             <div className="grid md:grid-cols-3 gap-6 mb-8">
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-xl border border-green-200">
+              <div className="bg-gradient-to-br from-green-50 to-[#00BC7D]/5 p-6 rounded-xl border border-green-200">
                 <h3 className="font-bold text-green-900 mb-2">Immediate San Antonio Ownership</h3>
                 <p className="text-green-800">Get the deed right away, unlike rent to own</p>
               </div>
@@ -178,7 +178,7 @@ export default async function OwnerFinancingSanAntonio() {
             </h2>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              <div className="p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border-2 border-green-200">
+              <div className="p-6 bg-gradient-to-br from-green-50 to-[#00BC7D]/5 rounded-xl border-2 border-green-200">
                 <h3 className="text-xl font-bold text-green-900 mb-2">
                   Alamo Heights
                 </h3>

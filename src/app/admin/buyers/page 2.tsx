@@ -208,7 +208,7 @@ export default function AdminBuyers() {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${title} - OwnerFi Buyer Leads Map</title>
+  <title>${title} - Ownerfi Buyer Leads Map</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
@@ -221,7 +221,7 @@ export default function AdminBuyers() {
       left: 0;
       right: 0;
       z-index: 1000;
-      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      background: linear-gradient(135deg, #1e293b 0%, #111625 100%);
       padding: 12px 24px;
       display: flex;
       justify-content: space-between;
@@ -230,7 +230,7 @@ export default function AdminBuyers() {
     }
     .header h1 { color: white; font-size: 18px; font-weight: 600; }
     .header .stats { color: #94a3b8; font-size: 14px; }
-    .header .progress { color: #10b981; font-size: 12px; }
+    .header .progress { color: #00BC7D; font-size: 12px; }
     .legend {
       position: fixed;
       bottom: 24px;
@@ -244,7 +244,7 @@ export default function AdminBuyers() {
     .legend h4 { font-size: 13px; color: #1e293b; margin-bottom: 10px; }
     .legend-item { display: flex; align-items: center; gap: 8px; margin: 6px 0; font-size: 12px; color: #64748b; }
     .legend-dot { width: 12px; height: 12px; border-radius: 50%; }
-    .legend-dot.available { background: #10b981; }
+    .legend-dot.available { background: #00BC7D; }
     .legend-dot.referred { background: #ef4444; }
     .popup-content h3 { font-size: 14px; margin-bottom: 6px; color: #1e293b; }
     .popup-content p { font-size: 12px; color: #64748b; margin: 3px 0; }
@@ -300,7 +300,7 @@ export default function AdminBuyers() {
 
     // Create custom marker icons using circle markers (more reliable)
     function getMarkerColor(isAvailable) {
-      return isAvailable ? '#10b981' : '#ef4444';
+      return isAvailable ? '#00BC7D' : '#ef4444';
     }
 
     // Geocode using free Nominatim API
@@ -337,7 +337,7 @@ export default function AdminBuyers() {
           const marker = L.circleMarker([coords.lat, coords.lng], {
             radius: 10,
             fillColor: getMarkerColor(buyer.isAvailable),
-            color: buyer.isAvailable ? '#059669' : '#dc2626',
+            color: buyer.isAvailable ? '#00BC7D' : '#dc2626',
             weight: 2,
             opacity: 1,
             fillOpacity: 0.8
@@ -460,19 +460,19 @@ export default function AdminBuyers() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-900 p-8">
+      <div className="min-h-screen bg-[#111625] p-8">
         <div className="text-center text-white">Loading buyers...</div>
       </div>
     );
   }
 
   return (
-    <div className="h-screen overflow-hidden bg-slate-900 flex flex-col">
+    <div className="h-screen overflow-hidden bg-[#111625] flex flex-col">
       <div className="flex-1 overflow-y-auto p-8">
         <div className="max-w-7xl mx-auto relative">
         {/* Header */}
         <div className="mb-8">
-          <Link href="/admin" className="text-emerald-400 hover:text-emerald-300 mb-4 inline-block">
+          <Link href="/admin" className="text-[#00BC7D] hover:text-[#00d68f] mb-4 inline-block">
             ← Back to Admin Dashboard
           </Link>
           <h1 className="text-3xl font-bold text-white mb-2">Manage Buyers</h1>
@@ -487,17 +487,17 @@ export default function AdminBuyers() {
         {/* Actions Bar */}
         <div className="bg-slate-800 rounded-lg p-5 mb-6 flex items-center justify-between shadow-lg">
           <div className="flex items-center gap-6">
-            <label className="flex items-center gap-3 text-white cursor-pointer hover:text-emerald-400 transition-colors">
+            <label className="flex items-center gap-3 text-white cursor-pointer hover:text-[#00BC7D] transition-colors">
               <input
                 type="checkbox"
                 checked={selectAll}
                 onChange={handleSelectAll}
-                className="w-5 h-5 rounded border-slate-600 bg-slate-700 text-emerald-500 focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+                className="w-5 h-5 rounded border-slate-600 bg-slate-700 text-[#00BC7D] focus:ring-2 focus:ring-[#00BC7D] cursor-pointer"
               />
               <span className="font-medium">Select All ({buyers.length})</span>
             </label>
             {selectedBuyers.size > 0 && (
-              <span className="px-3 py-1 bg-emerald-500/20 text-emerald-400 rounded-full font-semibold text-sm">
+              <span className="px-3 py-1 bg-[#00BC7D]/20 text-[#00BC7D] rounded-full font-semibold text-sm">
                 {selectedBuyers.size} selected
               </span>
             )}
@@ -509,7 +509,7 @@ export default function AdminBuyers() {
               <button
                 onClick={() => setShowExportDropdown(!showExportDropdown)}
                 disabled={exporting}
-                className="px-4 py-2 rounded-lg font-semibold bg-emerald-600 hover:bg-emerald-700 text-white transition-all hover:scale-105 flex items-center gap-2 shadow-md"
+                className="px-4 py-2 rounded-lg font-semibold bg-[#00BC7D] hover:bg-[#009B66] text-white transition-all hover:scale-105 flex items-center gap-2 shadow-md"
               >
                 {exporting ? (
                   <>
@@ -538,7 +538,7 @@ export default function AdminBuyers() {
                     onClick={() => exportMap(true)}
                     className="w-full px-4 py-3 text-left text-white hover:bg-slate-600 transition-colors flex items-center gap-3"
                   >
-                    <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
+                    <div className="w-3 h-3 rounded-full bg-[#00BC7D]/50"></div>
                     <div>
                       <div className="font-medium">Available Only</div>
                       <div className="text-xs text-slate-400">Not referred out</div>
@@ -592,7 +592,7 @@ export default function AdminBuyers() {
                       type="checkbox"
                       checked={selectAll}
                       onChange={handleSelectAll}
-                      className="w-5 h-5 rounded border-slate-500 bg-slate-600 text-emerald-500 focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+                      className="w-5 h-5 rounded border-slate-500 bg-slate-600 text-[#00BC7D] focus:ring-2 focus:ring-[#00BC7D] cursor-pointer"
                     />
                   </th>
                   <th className="p-4 text-left font-semibold uppercase text-xs tracking-wider">Name</th>
@@ -613,7 +613,7 @@ export default function AdminBuyers() {
                         type="checkbox"
                         checked={selectedBuyers.has(buyer.id)}
                         onChange={() => toggleSelectBuyer(buyer.id)}
-                        className="w-5 h-5 rounded border-slate-600 bg-slate-700 text-emerald-500 focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+                        className="w-5 h-5 rounded border-slate-600 bg-slate-700 text-[#00BC7D] focus:ring-2 focus:ring-[#00BC7D] cursor-pointer"
                       />
                     </td>
                     <td className="p-4">
@@ -668,7 +668,7 @@ export default function AdminBuyers() {
                     <td className="p-4">
                       <Link
                         href={`/admin/buyers/preview/${buyer.id}`}
-                        className="inline-flex items-center gap-1 text-emerald-400 hover:text-emerald-300 font-semibold text-sm transition-colors hover:underline"
+                        className="inline-flex items-center gap-1 text-[#00BC7D] hover:text-[#00d68f] font-semibold text-sm transition-colors hover:underline"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -704,7 +704,7 @@ export default function AdminBuyers() {
         {totalPages > 1 && (
           <div className="mt-6 flex items-center justify-between bg-slate-800 rounded-lg p-5 shadow-lg">
             <div className="text-slate-300 font-medium">
-              Showing <span className="text-emerald-400 font-semibold">{((currentPage - 1) * 50) + 1}</span> to <span className="text-emerald-400 font-semibold">{Math.min(currentPage * 50, totalBuyers)}</span> of <span className="text-emerald-400 font-semibold">{totalBuyers}</span> buyers
+              Showing <span className="text-[#00BC7D] font-semibold">{((currentPage - 1) * 50) + 1}</span> to <span className="text-[#00BC7D] font-semibold">{Math.min(currentPage * 50, totalBuyers)}</span> of <span className="text-[#00BC7D] font-semibold">{totalBuyers}</span> buyers
             </div>
 
             <div className="flex gap-2">
@@ -714,7 +714,7 @@ export default function AdminBuyers() {
                 className={`px-5 py-2 rounded-lg font-semibold transition-all flex items-center gap-2 ${
                   currentPage === 1
                     ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
-                    : 'bg-emerald-600 hover:bg-emerald-700 text-white hover:scale-105 shadow-md'
+                    : 'bg-[#00BC7D] hover:bg-[#009B66] text-white hover:scale-105 shadow-md'
                 }`}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -742,7 +742,7 @@ export default function AdminBuyers() {
                       onClick={() => handlePageChange(pageNum)}
                       className={`px-4 py-2 rounded-lg font-semibold transition-all min-w-[2.5rem] ${
                         currentPage === pageNum
-                          ? 'bg-emerald-500 text-white shadow-md scale-105'
+                          ? 'bg-[#00BC7D]/50 text-white shadow-md scale-105'
                           : 'bg-slate-700 text-slate-300 hover:bg-slate-600 hover:scale-105'
                       }`}
                     >
@@ -758,7 +758,7 @@ export default function AdminBuyers() {
                 className={`px-5 py-2 rounded-lg font-semibold transition-all flex items-center gap-2 ${
                   currentPage === totalPages
                     ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
-                    : 'bg-emerald-600 hover:bg-emerald-700 text-white hover:scale-105 shadow-md'
+                    : 'bg-[#00BC7D] hover:bg-[#009B66] text-white hover:scale-105 shadow-md'
                 }`}
               >
                 Next

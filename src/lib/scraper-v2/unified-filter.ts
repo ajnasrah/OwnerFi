@@ -2,7 +2,7 @@
  * Unified Property Filter v2
  *
  * Runs BOTH filters on EVERY property:
- * 1. Owner Finance Filter → properties with isOwnerFinance=true
+ * 1. Owner Finance Filter → properties with isOwnerfinance=true
  * 2. Cash Deal Filter (price < 80% Zestimate) → properties with isCashDeal=true
  *
  * IMPORTANT (Jan 2026):
@@ -13,16 +13,16 @@
  * A single property can match BOTH filters.
  */
 
-import { hasStrictOwnerFinancing } from '../owner-financing-filter-strict';
+import { hasStrictOwnerfinancing } from '../owner-financing-filter-strict';
 import { hasNegativeKeywords } from '../negative-keywords';
 import { detectNeedsWorkWithKeywords } from '../property-needs-work-detector';
 import { detectFinancingType, FinancingTypeResult } from '../financing-type-detector';
 
 export interface FilterResult {
   // Owner Finance Filter
-  passesOwnerFinance: boolean;
+  passesOwnerfinance: boolean;
   ownerFinanceKeywords: string[];
-  primaryOwnerFinanceKeyword?: string;
+  primaryOwnerfinanceKeyword?: string;
   financingType: FinancingTypeResult;
 
   // Cash Deal Filter
@@ -41,7 +41,7 @@ export interface FilterResult {
 
   // UNIFIED: Deal types array for single collection
   dealTypes: ('owner_finance' | 'cash_deal')[];
-  isOwnerFinance: boolean;
+  isOwnerfinance: boolean;
   isCashDeal: boolean;
 
   // Whether to save to the unified 'properties' collection
@@ -66,12 +66,12 @@ export function runUnifiedFilter(
   // ===== LAND DETECTION =====
   const isLand = homeType === 'land';
   // ===== OWNER FINANCE FILTER =====
-  const ownerFinanceResult = hasStrictOwnerFinancing(description);
+  const ownerFinanceResult = hasStrictOwnerfinancing(description);
   const negativeResult = hasNegativeKeywords(description);
   const financingType = detectFinancingType(description);
 
   // Owner finance passes if: has positive keywords AND no negative keywords
-  const passesOwnerFinance = ownerFinanceResult.passes && !negativeResult.hasNegative;
+  const passesOwnerfinance = ownerFinanceResult.passes && !negativeResult.hasNegative;
 
   // ===== CASH DEAL FILTER =====
   // Use combined function for single-pass efficiency (avoids scanning description twice)
@@ -111,7 +111,7 @@ export function runUnifiedFilter(
   // ===== DETERMINE DEAL TYPES (UNIFIED) =====
   const dealTypes: ('owner_finance' | 'cash_deal')[] = [];
 
-  if (passesOwnerFinance) {
+  if (passesOwnerfinance) {
     dealTypes.push('owner_finance');
   }
 
@@ -120,18 +120,18 @@ export function runUnifiedFilter(
   }
 
   // Should save if passes ANY filter
-  const shouldSave = passesOwnerFinance || passesCashDeal;
+  const shouldSave = passesOwnerfinance || passesCashDeal;
 
   // DEPRECATED: Legacy target collections for backwards compatibility
   const targetCollections: ('zillow_imports' | 'cash_houses')[] = [];
-  if (passesOwnerFinance) targetCollections.push('zillow_imports');
+  if (passesOwnerfinance) targetCollections.push('zillow_imports');
   if (passesCashDeal) targetCollections.push('cash_houses');
 
   return {
     // Owner Finance
-    passesOwnerFinance,
+    passesOwnerfinance,
     ownerFinanceKeywords: ownerFinanceResult.matchedKeywords,
-    primaryOwnerFinanceKeyword: ownerFinanceResult.primaryKeyword,
+    primaryOwnerfinanceKeyword: ownerFinanceResult.primaryKeyword,
     financingType,
 
     // Cash Deal
@@ -150,12 +150,12 @@ export function runUnifiedFilter(
 
     // UNIFIED: New fields for single collection
     dealTypes,
-    isOwnerFinance: passesOwnerFinance,
+    isOwnerfinance: passesOwnerfinance,
     isCashDeal: passesCashDeal,
     shouldSave,
 
     // DEPRECATED: Legacy fields for backwards compatibility
-    shouldSaveToZillowImports: passesOwnerFinance,
+    shouldSaveToZillowImports: passesOwnerfinance,
     shouldSaveToCashHouses: passesCashDeal,
     targetCollections,
   };
@@ -170,7 +170,7 @@ export function logFilterResult(
   _price?: number,
   _zestimate?: number
 ): void {
-  const { passesOwnerFinance, passesCashDeal, targetCollections } = filterResult;
+  const { passesOwnerfinance, passesCashDeal, targetCollections } = filterResult;
 
   if (targetCollections.length === 0) {
     console.log(`   [SKIP] ${address} - No filters passed`);
@@ -179,7 +179,7 @@ export function logFilterResult(
 
   const badges: string[] = [];
 
-  if (passesOwnerFinance) {
+  if (passesOwnerfinance) {
     badges.push(`OF: ${filterResult.ownerFinanceKeywords.slice(0, 2).join(', ')}`);
   }
 
@@ -202,7 +202,7 @@ export function logFilterResult(
  */
 export interface FilterStats {
   total: number;
-  passedOwnerFinance: number;
+  passedOwnerfinance: number;
   passedCashDeal: number;
   passedBoth: number;
   passedNeither: number;
@@ -213,10 +213,10 @@ export interface FilterStats {
 export function calculateFilterStats(results: FilterResult[]): FilterStats {
   return {
     total: results.length,
-    passedOwnerFinance: results.filter(r => r.passesOwnerFinance).length,
+    passedOwnerfinance: results.filter(r => r.passesOwnerfinance).length,
     passedCashDeal: results.filter(r => r.passesCashDeal).length,
-    passedBoth: results.filter(r => r.passesOwnerFinance && r.passesCashDeal).length,
-    passedNeither: results.filter(r => !r.passesOwnerFinance && !r.passesCashDeal).length,
+    passedBoth: results.filter(r => r.passesOwnerfinance && r.passesCashDeal).length,
+    passedNeither: results.filter(r => !r.passesOwnerfinance && !r.passesCashDeal).length,
     savedToZillowImports: results.filter(r => r.shouldSaveToZillowImports).length,
     savedToCashHouses: results.filter(r => r.shouldSaveToCashHouses).length,
   };
@@ -227,7 +227,7 @@ export function logFilterStats(stats: FilterStats): void {
   console.log(`Total Properties: ${stats.total}`);
   console.log(`----------------------------------------`);
   console.log(`Owner Finance Filter:`);
-  console.log(`  - Passed: ${stats.passedOwnerFinance} (${((stats.passedOwnerFinance / stats.total) * 100).toFixed(1)}%)`);
+  console.log(`  - Passed: ${stats.passedOwnerfinance} (${((stats.passedOwnerfinance / stats.total) * 100).toFixed(1)}%)`);
   console.log(`Cash Deal Filter:`);
   console.log(`  - Passed: ${stats.passedCashDeal} (${((stats.passedCashDeal / stats.total) * 100).toFixed(1)}%)`);
   console.log(`----------------------------------------`);

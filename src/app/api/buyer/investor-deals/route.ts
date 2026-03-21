@@ -376,7 +376,7 @@ async function searchFirestore(
         getDocs(query(
           collection(db, 'properties'),
           where('isActive', '==', true),
-          where('isOwnerFinance', '==', true),
+          where('isOwnerfinance', '==', true),
           where('state', '==', state),
           firestoreLimit(200)
         ))
@@ -429,7 +429,7 @@ async function searchFirestore(
         const percentOfArv = arv > 0 ? Math.round((price / arv) * 100) : null;
         const discount = arv > 0 ? arv - price : 0;
         const needsWork = data.needsWork === true;
-        const isOwnerFinance = data.isOwnerFinance === true;
+        const isOwnerfinance = data.isOwnerfinance === true;
 
         // Filter by nearby cities (case-insensitive match against buyer's pre-computed list)
         const propCity = ((data.city as string) || '').toLowerCase().trim();
@@ -439,10 +439,10 @@ async function searchFirestore(
 
         const isCashDeal = data.isCashDeal === true;
         let dealType: 'owner_finance' | 'cash_deal';
-        if (isOwnerFinance && isCashDeal) {
+        if (isOwnerfinance && isCashDeal) {
           // 'both' — show based on filter preference
           dealType = dealTypeFilter === 'cash_deal' ? 'cash_deal' : 'owner_finance';
-        } else if (isOwnerFinance) {
+        } else if (isOwnerfinance) {
           dealType = 'owner_finance';
         } else if (isCashDeal || needsWork) {
           dealType = 'cash_deal';

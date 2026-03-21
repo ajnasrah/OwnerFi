@@ -1,4 +1,4 @@
-# OwnerFi - Owner Financed Properties Platform
+# Ownerfi - Owner Financed Properties Platform
 
 A Next.js application connecting buyers with owner-financed properties and real estate agents.
 

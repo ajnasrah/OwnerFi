@@ -6,7 +6,7 @@
  * 2. Cash Deals Search (regional AR/TN, no keywords)
  *
  * ALL properties from BOTH searches run through:
- * - Owner finance filter → properties collection with isOwnerFinance=true
+ * - Owner finance filter → properties collection with isOwnerfinance=true
  * - Cash deals filter (< 80% ARV) → properties collection with isCashDeal=true
  *
  * ONLY Search 2 (Cash Deals Regional) sends to GHL webhook

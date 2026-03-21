@@ -76,12 +76,12 @@ function generateArticleSchema() {
     "image": "https://ownerfi.ai/og-owner-finance-guide.png",
     "author": {
       "@type": "Organization",
-      "name": "OwnerFi",
+      "name": "Ownerfi",
       "url": "https://ownerfi.ai"
     },
     "publisher": {
       "@type": "Organization",
-      "name": "OwnerFi",
+      "name": "Ownerfi",
       "logo": {
         "@type": "ImageObject",
         "url": "https://ownerfi.ai/logo.png"
@@ -125,7 +125,7 @@ function generateBreadcrumbSchema() {
   }
 }
 
-export default function HowOwnerFinanceWorks() {
+export default function HowOwnerfinanceWorks() {
   return (
     <>
       {/* Schema Markup for SEO */}
@@ -151,15 +151,13 @@ export default function HowOwnerFinanceWorks() {
         }}
       />
 
-      <div className="min-h-screen bg-slate-900 text-white">
+      <div className="min-h-screen bg-[#111625] text-white">
         {/* Header */}
         <header className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 px-6 py-4">
           <div className="max-w-4xl mx-auto flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">O</span>
-              </div>
-              <span className="text-lg font-bold text-white">OwnerFi</span>
+              <img src="/logo.jpg" alt="Ownerfi" width={32} height={32} className="rounded-lg" />
+              <span className="text-lg font-bold text-white">Ownerfi</span>
             </Link>
             <nav aria-label="Breadcrumb">
               <Link
@@ -200,7 +198,7 @@ export default function HowOwnerFinanceWorks() {
           <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 mb-8">
             <p className="text-yellow-200 text-xs text-center">
               <strong>Disclaimer:</strong> This content is for educational purposes only and does not constitute legal, financial, or real estate advice.
-              OwnerFi is a lead generation platform, not a licensed real estate broker or lender. Always consult licensed professionals before making real estate decisions.
+              Ownerfi is a lead generation platform, not a licensed real estate broker or lender. Always consult licensed professionals before making real estate decisions.
               Some jurisdictions limit how much liability can be disclaimed; these terms apply only to the fullest extent permitted by law in your location.
             </p>
           </div>
@@ -227,7 +225,7 @@ export default function HowOwnerFinanceWorks() {
                 → Browse Owner Financed Properties
               </Link>
               <Link href="/about" className="text-blue-400 hover:text-blue-300">
-                → About OwnerFi Platform
+                → About Ownerfi Platform
               </Link>
               <Link href="/contact" className="text-blue-400 hover:text-blue-300">
                 → Contact Our Team
@@ -239,7 +237,7 @@ export default function HowOwnerFinanceWorks() {
           </div>
 
           {/* Call to Action */}
-          <div className="text-center bg-gradient-to-r from-emerald-600/20 to-blue-600/20 rounded-2xl p-8 mt-8">
+          <div className="text-center bg-gradient-to-r from-[#00BC7D]/20 to-blue-600/20 rounded-2xl p-8 mt-8">
             <h2 className="text-2xl font-bold text-white mb-4">
               Ready to Find Owner Financed Properties?
             </h2>
@@ -249,7 +247,7 @@ export default function HowOwnerFinanceWorks() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 href="/auth"
-                className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white py-3 px-8 rounded-xl font-semibold transition-all duration-300 hover:scale-105 shadow-lg"
+                className="bg-gradient-to-r from-[#00BC7D] to-[#009B66] hover:from-[#00d68f] hover:to-[#00BC7D] text-white py-3 px-8 rounded-xl font-semibold transition-all duration-300 hover:scale-105 shadow-lg"
               >
                 Browse Properties
               </Link>

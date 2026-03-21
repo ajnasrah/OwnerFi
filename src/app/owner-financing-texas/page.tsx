@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_US',
     url: 'https://ownerfi.ai/owner-financing-texas',
-    siteName: 'OwnerFi',
+    siteName: 'Ownerfi',
     title: 'Owner Financing Texas - Find Seller Financed Homes',
     description: 'Browse owner financed properties across Texas. No bank needed, flexible terms, bad credit options available.',
     images: [{
@@ -34,7 +34,7 @@ function generateLocalBusinessSchema() {
   return {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    "name": "OwnerFi - Texas Properties",
+    "name": "Ownerfi - Texas Properties",
     "description": "Lead generation platform for owner financed properties in Texas",
     "applicationCategory": "Real Estate",
     "url": "https://ownerfi.ai/owner-financing-texas",
@@ -113,7 +113,7 @@ function generateBreadcrumbSchema() {
   }
 }
 
-export default function OwnerFinancingTexas() {
+export default function OwnerfinancingTexas() {
   return (
     <>
       {/* Schema Markup */}
@@ -133,20 +133,18 @@ export default function OwnerFinancingTexas() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(generateBreadcrumbSchema()) }}
       />
 
-      <div className="min-h-screen bg-slate-900 text-white">
+      <div className="min-h-screen bg-[#111625] text-white">
         {/* Header */}
         <header className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 px-6 py-4">
           <div className="max-w-6xl mx-auto flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">O</span>
-              </div>
-              <span className="text-lg font-bold text-white">OwnerFi</span>
+              <img src="/logo.jpg" alt="Ownerfi" width={32} height={32} className="rounded-lg" />
+              <span className="text-lg font-bold text-white">Ownerfi</span>
             </Link>
             <nav className="flex items-center gap-4">
               <Link href="/" className="text-slate-300 hover:text-white text-sm">Home</Link>
               <Link href="/how-owner-finance-works" className="text-slate-300 hover:text-white text-sm">How It Works</Link>
-              <Link href="/auth" className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
+              <Link href="/auth" className="bg-[#00BC7D]/50 hover:bg-[#00BC7D] text-white px-4 py-2 rounded-lg text-sm font-medium">
                 Browse Properties
               </Link>
             </nav>
@@ -159,7 +157,7 @@ export default function OwnerFinancingTexas() {
             <div className="max-w-6xl mx-auto">
               <div className="text-center mb-12">
                 <h1 className="text-5xl font-bold text-white mb-6">
-                  Owner Financing in <span className="text-emerald-400">Texas</span>
+                  Owner Financing in <span className="text-[#00BC7D]">Texas</span>
                   <span className="block text-3xl mt-4 text-slate-300">Find Seller Financed Homes with No Bank Needed</span>
                 </h1>
                 <p className="text-xl text-slate-300 max-w-3xl mx-auto">
@@ -170,7 +168,7 @@ export default function OwnerFinancingTexas() {
 
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-                <Link href="/auth" className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all">
+                <Link href="/auth" className="bg-[#00BC7D]/50 hover:bg-[#00BC7D] text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all">
                   Browse Texas Properties
                 </Link>
                 <Link href="/how-owner-finance-works" className="bg-slate-700 hover:bg-slate-600 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all">
@@ -181,7 +179,7 @@ export default function OwnerFinancingTexas() {
               {/* Stats */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 text-center border border-slate-700/50">
-                  <div className="text-3xl font-bold text-emerald-400">200+</div>
+                  <div className="text-3xl font-bold text-[#00BC7D]">200+</div>
                   <div className="text-slate-300 mt-2">Texas Properties</div>
                 </div>
                 <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 text-center border border-slate-700/50">
@@ -209,7 +207,7 @@ export default function OwnerFinancingTexas() {
           </section>
 
           {/* Call to Action Section */}
-          <section className="py-12 px-6 bg-gradient-to-r from-emerald-900/30 to-blue-900/30">
+          <section className="py-12 px-6 bg-gradient-to-r from-[#004D33]/30 to-blue-900/30">
             <div className="max-w-4xl mx-auto text-center">
               <h2 className="text-3xl font-bold text-white mb-4">
                 Ready to Find Your Texas Home?
@@ -220,7 +218,7 @@ export default function OwnerFinancingTexas() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link href="/auth">
-                  <button className="bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white py-4 px-8 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-[1.02] shadow-lg hover:shadow-xl">
+                  <button className="bg-gradient-to-r from-[#00BC7D] to-[#009B66] hover:from-[#00d68f] hover:to-[#00BC7D] text-white py-4 px-8 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-[1.02] shadow-lg hover:shadow-xl">
                     🏠 Browse Texas Properties
                   </button>
                 </Link>
@@ -244,8 +242,8 @@ export default function OwnerFinancingTexas() {
               </h2>
               <div className="grid md:grid-cols-3 gap-6">
                 <Link href="/owner-financing-houston" className="group">
-                  <div className="bg-slate-900/50 border border-slate-700/50 rounded-xl p-6 hover:border-emerald-400/50 transition-all">
-                    <h3 className="text-xl font-bold text-emerald-400 mb-2 group-hover:text-emerald-300">Houston</h3>
+                  <div className="bg-[#111625]/50 border border-slate-700/50 rounded-xl p-6 hover:border-[#00BC7D]/50 transition-all">
+                    <h3 className="text-xl font-bold text-[#00BC7D] mb-2 group-hover:text-[#00d68f]">Houston</h3>
                     <p className="text-slate-300 text-sm mb-3">Harris County & Surrounding Areas</p>
                     <ul className="text-slate-400 text-sm space-y-1">
                       <li>• The Woodlands</li>
@@ -253,12 +251,12 @@ export default function OwnerFinancingTexas() {
                       <li>• Katy</li>
                       <li>• Pearland</li>
                     </ul>
-                    <p className="text-emerald-400 text-sm mt-3">50+ Properties Available →</p>
+                    <p className="text-[#00BC7D] text-sm mt-3">50+ Properties Available →</p>
                   </div>
                 </Link>
 
                 <Link href="/owner-financing-dallas" className="group">
-                  <div className="bg-slate-900/50 border border-slate-700/50 rounded-xl p-6 hover:border-blue-400/50 transition-all">
+                  <div className="bg-[#111625]/50 border border-slate-700/50 rounded-xl p-6 hover:border-blue-400/50 transition-all">
                     <h3 className="text-xl font-bold text-blue-400 mb-2 group-hover:text-blue-300">Dallas-Fort Worth</h3>
                     <p className="text-slate-300 text-sm mb-3">DFW Metroplex</p>
                     <ul className="text-slate-400 text-sm space-y-1">
@@ -272,7 +270,7 @@ export default function OwnerFinancingTexas() {
                 </Link>
 
                 <Link href="/owner-financing-austin" className="group">
-                  <div className="bg-slate-900/50 border border-slate-700/50 rounded-xl p-6 hover:border-purple-400/50 transition-all">
+                  <div className="bg-[#111625]/50 border border-slate-700/50 rounded-xl p-6 hover:border-purple-400/50 transition-all">
                     <h3 className="text-xl font-bold text-purple-400 mb-2 group-hover:text-purple-300">Austin</h3>
                     <p className="text-slate-300 text-sm mb-3">Travis County & Metro</p>
                     <ul className="text-slate-400 text-sm space-y-1">
@@ -286,7 +284,7 @@ export default function OwnerFinancingTexas() {
                 </Link>
 
                 <Link href="/owner-financing-san-antonio" className="group">
-                  <div className="bg-slate-900/50 border border-slate-700/50 rounded-xl p-6 hover:border-yellow-400/50 transition-all">
+                  <div className="bg-[#111625]/50 border border-slate-700/50 rounded-xl p-6 hover:border-yellow-400/50 transition-all">
                     <h3 className="text-xl font-bold text-yellow-400 mb-2 group-hover:text-yellow-300">San Antonio</h3>
                     <p className="text-slate-300 text-sm mb-3">Bexar County</p>
                     <ul className="text-slate-400 text-sm space-y-1">
@@ -300,7 +298,7 @@ export default function OwnerFinancingTexas() {
                 </Link>
 
                 <Link href="/owner-financing-el-paso" className="group">
-                  <div className="bg-slate-900/50 border border-slate-700/50 rounded-xl p-6 hover:border-orange-400/50 transition-all">
+                  <div className="bg-[#111625]/50 border border-slate-700/50 rounded-xl p-6 hover:border-orange-400/50 transition-all">
                     <h3 className="text-xl font-bold text-orange-400 mb-2 group-hover:text-orange-300">El Paso</h3>
                     <p className="text-slate-300 text-sm mb-3">West Texas</p>
                     <ul className="text-slate-400 text-sm space-y-1">
@@ -314,7 +312,7 @@ export default function OwnerFinancingTexas() {
                 </Link>
 
                 <Link href="/owner-financing-corpus-christi" className="group">
-                  <div className="bg-slate-900/50 border border-slate-700/50 rounded-xl p-6 hover:border-cyan-400/50 transition-all">
+                  <div className="bg-[#111625]/50 border border-slate-700/50 rounded-xl p-6 hover:border-cyan-400/50 transition-all">
                     <h3 className="text-xl font-bold text-cyan-400 mb-2 group-hover:text-cyan-300">Corpus Christi</h3>
                     <p className="text-slate-300 text-sm mb-3">Coastal Texas</p>
                     <ul className="text-slate-400 text-sm space-y-1">
@@ -341,7 +339,7 @@ export default function OwnerFinancingTexas() {
               </p>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                 <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border border-slate-700/50">
-                  <div className="text-emerald-400 text-3xl mb-4">🏛️</div>
+                  <div className="text-[#00BC7D] text-3xl mb-4">🏛️</div>
                   <h3 className="text-xl font-semibold text-white mb-3">Texas Law Protection</h3>
                   <p className="text-slate-300">Texas has specific laws protecting buyers in owner finance deals, including required disclosures and contractual safeguards.</p>
                 </div>
@@ -381,23 +379,23 @@ export default function OwnerFinancingTexas() {
                 Texas Owner Financing FAQs
               </h2>
               <div className="space-y-6">
-                <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
+                <div className="bg-[#111625]/50 rounded-xl p-6 border border-slate-700/50">
                   <h3 className="text-xl font-semibold text-white mb-3">How does owner financing work in Texas?</h3>
                   <p className="text-slate-300">In Texas, owner financing allows property sellers to act as the lender. The buyer makes payments directly to the seller instead of getting a traditional mortgage. Texas has specific laws protecting both buyers and sellers in owner finance transactions.</p>
                 </div>
-                <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
+                <div className="bg-[#111625]/50 rounded-xl p-6 border border-slate-700/50">
                   <h3 className="text-xl font-semibold text-white mb-3">Is owner financing legal in Texas?</h3>
                   <p className="text-slate-300">Yes, owner financing is completely legal in Texas. The state has specific regulations under the Texas Property Code that govern seller financing, including required disclosures and protections for buyers.</p>
                 </div>
-                <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
+                <div className="bg-[#111625]/50 rounded-xl p-6 border border-slate-700/50">
                   <h3 className="text-xl font-semibold text-white mb-3">What are typical down payments in Texas?</h3>
                   <p className="text-slate-300">Down payments for owner financed homes in Texas typically range from 5% to 20% of the purchase price, though some sellers may accept less. The amount is negotiable between buyer and seller.</p>
                 </div>
-                <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
+                <div className="bg-[#111625]/50 rounded-xl p-6 border border-slate-700/50">
                   <h3 className="text-xl font-semibold text-white mb-3">Can I get owner financing with bad credit?</h3>
                   <p className="text-slate-300">Yes, many Texas sellers offering owner financing are more flexible about credit scores than banks. They often focus more on your down payment and ability to make monthly payments rather than credit history.</p>
                 </div>
-                <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
+                <div className="bg-[#111625]/50 rounded-xl p-6 border border-slate-700/50">
                   <h3 className="text-xl font-semibold text-white mb-3">What Texas cities have the most owner financed homes?</h3>
                   <p className="text-slate-300">Houston, Dallas-Fort Worth, San Antonio, and Austin have the most owner financed properties. However, you can find seller financing options throughout Texas, including smaller cities and rural areas.</p>
                 </div>
@@ -415,7 +413,7 @@ export default function OwnerFinancingTexas() {
                 Browse hundreds of owner financed properties across Texas. No bank needed, flexible terms, and fast closing.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link href="/auth" className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all">
+                <Link href="/auth" className="bg-[#00BC7D]/50 hover:bg-[#00BC7D] text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all">
                   Browse Texas Properties Now
                 </Link>
                 <Link href="/auth" className="bg-slate-700 hover:bg-slate-600 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all">
@@ -427,7 +425,7 @@ export default function OwnerFinancingTexas() {
         </main>
 
         {/* Footer */}
-        <footer className="bg-slate-900 border-t border-slate-800 py-12 px-6">
+        <footer className="bg-[#111625] border-t border-slate-800 py-12 px-6">
           <div className="max-w-6xl mx-auto">
             <div className="grid md:grid-cols-4 gap-8 mb-8">
               <div>
@@ -465,7 +463,7 @@ export default function OwnerFinancingTexas() {
             </div>
             <div className="border-t border-slate-800 pt-8 text-center">
               <p className="text-slate-400 text-sm">
-                © {new Date().getFullYear()} OwnerFi. All rights reserved. |
+                © {new Date().getFullYear()} Ownerfi. All rights reserved. |
                 <Link href="/terms" className="hover:text-white ml-2">Terms</Link> |
                 <Link href="/privacy" className="hover:text-white ml-2">Privacy</Link> |
                 <Link href="/creative-finance-disclaimer" className="hover:text-white ml-2">Creative Finance Disclaimer</Link>

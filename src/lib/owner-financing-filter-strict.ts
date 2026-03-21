@@ -66,7 +66,7 @@ const STRICT_PATTERNS = [
  * @param description - Property description text
  * @returns StrictFilterResult with pass/fail and ALL matched keywords
  */
-export function hasStrictOwnerFinancing(description: string | null | undefined): StrictFilterResult {
+export function hasStrictOwnerfinancing(description: string | null | undefined): StrictFilterResult {
   if (!description || description.trim().length === 0) {
     return {
       passes: false,
@@ -136,7 +136,7 @@ export function getStrictMatchedPatterns(description: string | null | undefined)
  * @returns Human-readable explanation
  */
 export function explainStrictFilter(description: string | null | undefined): string {
-  const result = hasStrictOwnerFinancing(description);
+  const result = hasStrictOwnerfinancing(description);
 
   if (!description || description.trim().length === 0) {
     return '❌ No description available';

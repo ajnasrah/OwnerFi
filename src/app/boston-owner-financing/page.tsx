@@ -4,14 +4,14 @@ import { db } from '@/lib/firebase'
 import { collection, query, where, getDocs } from 'firebase/firestore'
 
 export const metadata: Metadata = {
-  title: 'Owner Financing Boston | Rent to Own Alternative MA | Downtown, Back Bay | OwnerFi',
+  title: 'Owner Financing Boston | Rent to Own Alternative MA | Downtown, Back Bay | Ownerfi',
   description: 'Find owner financed homes in Boston - better than rent to own! Immediate ownership in Downtown, Back Bay, Beacon Hill. No banks needed. Flexible credit options.',
   keywords: 'owner financing boston, owner financed homes boston, rent to own boston, rent to own massachusetts, seller financing boston, no credit check homes boston, bad credit homes boston, boston real estate owner financing',
   openGraph: {
-    title: 'Owner Financed Homes in Boston - Better Than Rent to Own | OwnerFi',
+    title: 'Owner Financed Homes in Boston - Better Than Rent to Own | Ownerfi',
     description: 'Skip the banks! Find owner financed properties across Boston with immediate ownership. Serving Downtown, Back Bay, Beacon Hill and more.',
     url: 'https://ownerfi.ai/boston-owner-financing',
-    siteName: 'OwnerFi',
+    siteName: 'Ownerfi',
     type: 'website',
   },
   twitter: {
@@ -53,7 +53,7 @@ async function getBostonProperties() {
   }
 }
 
-export default async function OwnerFinancingBoston() {
+export default async function OwnerfinancingBoston() {
   const { areaCounts, totalCount } = await getBostonProperties()
 
   const faqSchema = {
@@ -98,7 +98,7 @@ export default async function OwnerFinancingBoston() {
   const localBusinessSchema = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
-    "name": "OwnerFi Boston - Owner Financed Homes",
+    "name": "Ownerfi Boston - Owner Financed Homes",
     "description": "Find owner financed homes throughout Boston. Better than rent to own with immediate ownership.",
     "url": "https://ownerfi.ai/boston-owner-financing",
     "areaServed": {
@@ -149,7 +149,7 @@ export default async function OwnerFinancingBoston() {
             </p>
 
             <div className="grid md:grid-cols-3 gap-6 mb-8">
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-xl border border-green-200">
+              <div className="bg-gradient-to-br from-green-50 to-[#00BC7D]/5 p-6 rounded-xl border border-green-200">
                 <h3 className="font-bold text-green-900 mb-2">Immediate Boston Ownership</h3>
                 <p className="text-green-800">Get the deed right away, unlike rent to own</p>
               </div>
@@ -238,14 +238,14 @@ export default async function OwnerFinancingBoston() {
                   Great neighborhood with owner financing options
                 </p>
               </div>
-              <div className="p-6 bg-gradient-to-br from-emerald-50 to-emerald-50 rounded-xl border-2 border-emerald-200">
-                <h3 className="text-xl font-bold text-emerald-900 mb-2">
+              <div className="p-6 bg-gradient-to-br from-[#00BC7D]/5 to-[#00BC7D]/5 rounded-xl border-2 border-[#00BC7D]/30">
+                <h3 className="text-xl font-bold text-[#004D33] mb-2">
                   North End
                 </h3>
-                <p className="text-emerald-700 mb-2">
+                <p className="text-[#009B66] mb-2">
                   {areaCounts['North End'] || 'Premium'} owner financed properties
                 </p>
-                <p className="text-sm text-emerald-600 mb-3">
+                <p className="text-sm text-[#00BC7D] mb-3">
                   Great neighborhood with owner financing options
                 </p>
               </div>

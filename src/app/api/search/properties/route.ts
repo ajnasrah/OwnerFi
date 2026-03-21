@@ -224,7 +224,7 @@ async function queryFirestoreCollection(
 
   // Filter by deal type using unified collection flags
   if (dealType === 'owner_finance') {
-    constraints.push(where('isOwnerFinance', '==', true));
+    constraints.push(where('isOwnerfinance', '==', true));
   } else if (dealType === 'cash_deal') {
     constraints.push(where('isCashDeal', '==', true));
   }
@@ -254,7 +254,7 @@ async function queryFirestoreCollection(
         const data = doc.data();
         // Determine deal type from flags
         let docDealType: 'owner_finance' | 'cash_deal' | 'both' = 'owner_finance';
-        if (data.isOwnerFinance && data.isCashDeal) {
+        if (data.isOwnerfinance && data.isCashDeal) {
           docDealType = 'both';
         } else if (data.isCashDeal) {
           docDealType = 'cash_deal';

@@ -195,7 +195,7 @@ export async function POST(request: NextRequest) {
 
         await propertyRef.update({
           ownerFinanceVerified: false,
-          agentConfirmedOwnerFinance: false,
+          agentConfirmedOwnerfinance: false,
           agentRejectedAt: new Date(),
           agentRejectionNote: note || 'Marked not interested via GHL',
           updatedAt: new Date(),

@@ -41,7 +41,7 @@ export async function GET() {
     // - Disputes: leadDisputes collection
     const [propertiesCount, ownerFinanceCount, cashDealCount, buyerUsersSnapshot, buyerProfilesSnapshot, realtorsCount, disputesCount] = await Promise.all([
       getCountFromServer(query(collection(db, 'properties'), where('isActive', '==', true))),
-      getCountFromServer(query(collection(db, 'properties'), where('isActive', '==', true), where('isOwnerFinance', '==', true))),
+      getCountFromServer(query(collection(db, 'properties'), where('isActive', '==', true), where('isOwnerfinance', '==', true))),
       getCountFromServer(query(collection(db, 'properties'), where('isActive', '==', true), where('isCashDeal', '==', true))),
       getDocs(query(collection(db, 'users'), where('role', '==', 'buyer'))),
       getDocs(collection(db, 'buyerProfiles')),

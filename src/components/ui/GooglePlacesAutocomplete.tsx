@@ -159,7 +159,7 @@ export function GooglePlacesAutocomplete({
           type="text"
           value={value}
           onChange={handleInputChange}
-          className="w-full p-3 sm:p-4 bg-emerald-500/10 border border-emerald-400/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 text-white placeholder-slate-400 font-normal text-sm sm:text-base"
+          className="w-full p-3 sm:p-4 bg-[#00BC7D]/10 border border-[#00BC7D]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00BC7D] focus:border-[#00BC7D] text-white placeholder-slate-400 font-normal text-sm sm:text-base"
           placeholder={isLoading ? "Loading maps..." : placeholder}
           disabled={isLoading}
           required

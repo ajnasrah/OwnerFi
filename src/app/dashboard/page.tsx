@@ -355,20 +355,20 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-slate-900 flex items-center justify-center p-6 overflow-hidden">
+      <div className="fixed inset-0 bg-[#111625] flex items-center justify-center p-6 overflow-hidden">
           <div className="text-center max-w-sm w-full flex flex-col justify-center min-h-0">
             {/* Animated Logo/Icon */}
             <div className="mb-6">
               <div className="w-16 h-16 mx-auto mb-3 relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-3xl animate-pulse"></div>
-                <div className="absolute inset-2 bg-slate-900 rounded-2xl flex items-center justify-center">
+                <div className="absolute inset-0 bg-gradient-to-br from-[#00BC7D] to-blue-500 rounded-3xl animate-pulse"></div>
+                <div className="absolute inset-2 bg-[#111625] rounded-2xl flex items-center justify-center">
                   <span className="text-2xl font-black">🏠</span>
                 </div>
               </div>
 
               {/* Animated Spinner */}
               <div className="flex justify-center">
-                <div className="w-12 h-12 border-4 border-slate-700 border-t-emerald-400 rounded-full animate-spin"></div>
+                <div className="w-12 h-12 border-4 border-slate-700 border-t-[#00BC7D] rounded-full animate-spin"></div>
               </div>
             </div>
 
@@ -382,16 +382,16 @@ export default function Dashboard() {
 
             {/* Loading Progress Bar */}
             <div className="bg-slate-700/50 rounded-full h-2 mb-4 overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-emerald-400 to-blue-500 rounded-full animate-pulse w-3/4"></div>
+              <div className="h-full bg-gradient-to-r from-[#00BC7D] to-blue-500 rounded-full animate-pulse w-3/4"></div>
             </div>
 
             {/* Educational Information Section - Compact */}
             {currentFact && (
-              <div className="bg-gradient-to-br from-emerald-500/10 to-blue-500/10 border border-emerald-500/30 rounded-xl p-4 max-h-[40vh] overflow-y-auto">
+              <div className="bg-gradient-to-br from-[#00BC7D]/10 to-blue-500/10 border border-[#00BC7D]/30 rounded-xl p-4 max-h-[40vh] overflow-y-auto">
                 <div className="flex items-start gap-3">
                   <div className="text-xl flex-shrink-0">💡</div>
                   <div className="text-left flex-1 min-w-0">
-                    <h3 className="text-emerald-400 font-bold text-sm mb-2">General Information</h3>
+                    <h3 className="text-[#00BC7D] font-bold text-sm mb-2">General Information</h3>
                     <p className="text-slate-200 text-sm leading-relaxed">
                       {currentFact}
                     </p>
@@ -409,16 +409,16 @@ export default function Dashboard() {
 
   if (!properties.length) {
     return (
-      <div className="h-screen overflow-hidden bg-slate-900 flex flex-col items-center justify-center p-4">
+      <div className="h-screen overflow-hidden bg-[#111625] flex flex-col items-center justify-center p-4">
         <div className="text-center">
           <div className="text-4xl mb-4">🏠</div>
           <h2 className="text-xl font-bold text-white mb-4">NO HOMES FOUND</h2>
           <p className="text-slate-300 mb-6 text-base">
-            No properties in <span className="text-emerald-400">{profile?.city}</span> match your criteria.
+            No properties in <span className="text-[#00BC7D]">{profile?.city}</span> match your criteria.
           </p>
           <Link
             href="/dashboard/settings"
-            className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg font-semibold"
+            className="bg-[#00BC7D] hover:bg-[#00BC7D]/50 text-white px-4 py-2 rounded-lg font-semibold"
           >
             ADJUST SEARCH
           </Link>
@@ -468,11 +468,11 @@ export default function Dashboard() {
               {session && isExtendedSession(session) && session.user.role === 'realtor' && (
                 <Link
                   href="/realtor-dashboard"
-                  className="px-2.5 py-1 bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/30 rounded-lg flex items-center gap-1 transition-all border-white/20"
+                  className="px-2.5 py-1 bg-[#00BC7D]/20 hover:bg-[#00BC7D]/30 border border-[#00BC7D]/30 rounded-lg flex items-center gap-1 transition-all border-white/20"
                   title="Realtor Dashboard"
                 >
-                  <span className="text-emerald-400 text-[10px] font-bold">HUB</span>
-                  <svg className="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <span className="text-[#00BC7D] text-[10px] font-bold">HUB</span>
+                  <svg className="w-3 h-3 text-[#00BC7D]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
                   </svg>
                 </Link>

@@ -27,8 +27,8 @@ export function DisputeModal({ modal, onUpdateField, onSubmit, onClose }: Disput
 
         {modal.success ? (
           <div className="text-center py-4">
-            <div className="w-14 h-14 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
-              <span className="text-2xl text-emerald-400">&#10003;</span>
+            <div className="w-14 h-14 bg-[#00BC7D]/20 rounded-full flex items-center justify-center mx-auto mb-3">
+              <span className="text-2xl text-[#00BC7D]">&#10003;</span>
             </div>
             <h4 className="text-lg font-bold text-white mb-2">Dispute Submitted</h4>
             <p className="text-slate-400 text-sm mb-4">
@@ -36,7 +36,7 @@ export function DisputeModal({ modal, onUpdateField, onSubmit, onClose }: Disput
             </p>
             <button
               onClick={onClose}
-              className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-2 px-4 rounded-lg font-medium transition-colors"
+              className="w-full bg-[#00BC7D]/50 hover:bg-[#00BC7D] text-white py-2 px-4 rounded-lg font-medium transition-colors"
             >
               Done
             </button>

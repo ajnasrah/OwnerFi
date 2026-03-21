@@ -201,9 +201,9 @@ export default function ArticlesPage() {
 
   if (authStatus === 'loading' || loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-slate-900">
+      <div className="flex items-center justify-center h-screen bg-[#111625]">
         <div className="text-center">
-          <div className="w-8 h-8 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-8 h-8 border-2 border-[#00BC7D] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <div className="text-lg font-medium text-white">Loading articles...</div>
         </div>
       </div>
@@ -224,10 +224,10 @@ export default function ArticlesPage() {
   const displayArticles = activeView === 'queue' ? queueArticles : unprocessedArticles;
 
   return (
-    <div className="h-screen overflow-hidden bg-slate-900 flex flex-col">
+    <div className="h-screen overflow-hidden bg-[#111625] flex flex-col">
       <div className="flex-1 overflow-y-auto p-6">
         <div className="max-w-7xl mx-auto">
-        <Link href="/admin" className="text-emerald-400 hover:text-emerald-300 text-sm mb-4 inline-block">← Back to Admin</Link>
+        <Link href="/admin" className="text-[#00BC7D] hover:text-[#00d68f] text-sm mb-4 inline-block">← Back to Admin</Link>
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-white">Article Management</h1>
@@ -238,14 +238,14 @@ export default function ArticlesPage() {
         <div className="flex space-x-2 mb-6">
           {[
             { key: 'carz', label: 'Carz Inc', icon: '🚗' },
-            { key: 'ownerfi', label: 'OwnerFi', icon: '🏠' }
+            { key: 'ownerfi', label: 'Ownerfi', icon: '🏠' }
           ].map((tab) => (
             <button
               key={tab.key}
               onClick={() => setActiveBrand(tab.key as 'carz' | 'ownerfi')}
               className={`flex items-center space-x-2 px-6 py-3 rounded-xl font-medium transition-all ${
                 activeBrand === tab.key
-                  ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg'
+                  ? 'bg-gradient-to-r from-[#00BC7D] to-[#009B66] text-white shadow-lg'
                   : 'bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700'
               }`}
             >
@@ -266,7 +266,7 @@ export default function ArticlesPage() {
               onClick={() => setActiveView(tab.key as 'queue' | 'unprocessed')}
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                 activeView === tab.key
-                  ? 'bg-emerald-600 text-white'
+                  ? 'bg-[#00BC7D] text-white'
                   : 'bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700'
               }`}
             >
@@ -314,7 +314,7 @@ export default function ArticlesPage() {
               )}
               <button
                 onClick={loadArticles}
-                className="px-4 py-2 rounded-lg text-sm font-medium bg-slate-700 text-emerald-400 hover:bg-slate-600 border border-slate-600 transition-colors"
+                className="px-4 py-2 rounded-lg text-sm font-medium bg-slate-700 text-[#00BC7D] hover:bg-slate-600 border border-slate-600 transition-colors"
               >
                 🔄 Refresh
               </button>
@@ -326,12 +326,12 @@ export default function ArticlesPage() {
               {displayArticles.map((article, index) => (
                 <div
                   key={article.id}
-                  className="border border-slate-600 rounded-lg p-4 hover:border-emerald-500 transition-colors bg-slate-700/50"
+                  className="border border-slate-600 rounded-lg p-4 hover:border-[#00BC7D] transition-colors bg-slate-700/50"
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
                       <div className="flex items-start gap-3">
-                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-emerald-900/50 text-emerald-400 font-semibold text-sm flex-shrink-0">
+                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#004D33]/50 text-[#00BC7D] font-semibold text-sm flex-shrink-0">
                           {index + 1}
                         </span>
                         <div className="flex-1">
@@ -362,7 +362,7 @@ export default function ArticlesPage() {
                         href={article.link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors"
+                        className="inline-flex items-center px-4 py-2 bg-[#00BC7D] text-white text-sm font-medium rounded-lg hover:bg-[#009B66] transition-colors"
                       >
                         View Article →
                       </a>
@@ -404,7 +404,7 @@ export default function ArticlesPage() {
         <div className="mt-6 grid grid-cols-4 gap-4">
           <div className="bg-slate-800 rounded-lg border border-slate-700 p-4">
             <div className="text-sm text-slate-400">Video-Ready Queue</div>
-            <div className="text-2xl font-bold text-emerald-400 mt-1">
+            <div className="text-2xl font-bold text-[#00BC7D] mt-1">
               {queueArticles.length}
             </div>
             <div className="text-xs text-slate-500 mt-1">Score ≥65</div>

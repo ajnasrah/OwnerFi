@@ -4,14 +4,14 @@ import { db } from '@/lib/firebase'
 import { collection, query, where, getDocs } from 'firebase/firestore'
 
 export const metadata: Metadata = {
-  title: 'Owner Financing Seattle | Rent to Own Alternative WA | Downtown, Capitol Hill | OwnerFi',
+  title: 'Owner Financing Seattle | Rent to Own Alternative WA | Downtown, Capitol Hill | Ownerfi',
   description: 'Find owner financed homes in Seattle - better than rent to own! Immediate ownership in Downtown, Capitol Hill, Ballard. No banks needed. Flexible credit options.',
   keywords: 'owner financing seattle, owner financed homes seattle, rent to own seattle, rent to own washington, seller financing seattle, no credit check homes seattle, bad credit homes seattle, seattle real estate owner financing',
   openGraph: {
-    title: 'Owner Financed Homes in Seattle - Better Than Rent to Own | OwnerFi',
+    title: 'Owner Financed Homes in Seattle - Better Than Rent to Own | Ownerfi',
     description: 'Skip the banks! Find owner financed properties across Seattle with immediate ownership. Serving Downtown, Capitol Hill, Ballard and more.',
     url: 'https://ownerfi.ai/seattle-owner-financing',
-    siteName: 'OwnerFi',
+    siteName: 'Ownerfi',
     type: 'website',
   },
   twitter: {
@@ -53,7 +53,7 @@ async function getSeattleProperties() {
   }
 }
 
-export default async function OwnerFinancingSeattle() {
+export default async function OwnerfinancingSeattle() {
   const { areaCounts, totalCount } = await getSeattleProperties()
 
   const faqSchema = {
@@ -98,7 +98,7 @@ export default async function OwnerFinancingSeattle() {
   const localBusinessSchema = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
-    "name": "OwnerFi Seattle - Owner Financed Homes",
+    "name": "Ownerfi Seattle - Owner Financed Homes",
     "description": "Find owner financed homes throughout Seattle. Better than rent to own with immediate ownership.",
     "url": "https://ownerfi.ai/seattle-owner-financing",
     "areaServed": {
@@ -149,11 +149,11 @@ export default async function OwnerFinancingSeattle() {
             </p>
 
             <div className="grid md:grid-cols-3 gap-6 mb-8">
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-xl border border-green-200">
+              <div className="bg-gradient-to-br from-green-50 to-[#00BC7D]/5 p-6 rounded-xl border border-green-200">
                 <h3 className="font-bold text-green-900 mb-2">Immediate Seattle Ownership</h3>
                 <p className="text-green-800">Get the deed right away, unlike rent to own</p>
               </div>
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-xl border border-green-200">
+              <div className="bg-gradient-to-br from-green-50 to-[#00BC7D]/5 p-6 rounded-xl border border-green-200">
                 <h3 className="font-bold text-green-900 mb-2">Emerald City</h3>
                 <p className="text-green-800">Premium location, great lifestyle</p>
               </div>
@@ -164,14 +164,14 @@ export default async function OwnerFinancingSeattle() {
             </div>
 
             <Link href="/auth">
-              <button className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:from-green-700 hover:to-emerald-700 transition-all transform hover:scale-105 shadow-lg">
+              <button className="bg-gradient-to-r from-green-600 to-[#00BC7D] text-white px-8 py-4 rounded-xl font-semibold text-lg hover:from-green-700 hover:to-[#009B66] transition-all transform hover:scale-105 shadow-lg">
                 Browse Seattle Properties →
               </button>
             </Link>
           </div>
 
           {/* Call to Action Section */}
-          <section className="py-12 px-6 bg-gradient-to-r from-green-900/30 to-emerald-900/30 rounded-2xl mb-12">
+          <section className="py-12 px-6 bg-gradient-to-r from-green-900/30 to-[#004D33]/30 rounded-2xl mb-12">
             <div className="max-w-4xl mx-auto text-center">
               <h2 className="text-3xl font-bold text-white mb-4">
                 Ready to Find Your Seattle Home?
@@ -238,14 +238,14 @@ export default async function OwnerFinancingSeattle() {
                   Great neighborhood with owner financing options
                 </p>
               </div>
-              <div className="p-6 bg-gradient-to-br from-emerald-50 to-emerald-50 rounded-xl border-2 border-emerald-200">
-                <h3 className="text-xl font-bold text-emerald-900 mb-2">
+              <div className="p-6 bg-gradient-to-br from-[#00BC7D]/5 to-[#00BC7D]/5 rounded-xl border-2 border-[#00BC7D]/30">
+                <h3 className="text-xl font-bold text-[#004D33] mb-2">
                   Fremont
                 </h3>
-                <p className="text-emerald-700 mb-2">
+                <p className="text-[#009B66] mb-2">
                   {areaCounts['Fremont'] || 'Premium'} owner financed properties
                 </p>
-                <p className="text-sm text-emerald-600 mb-3">
+                <p className="text-sm text-[#00BC7D] mb-3">
                   Great neighborhood with owner financing options
                 </p>
               </div>
@@ -373,7 +373,7 @@ export default async function OwnerFinancingSeattle() {
           </div>
 
           {/* CTA Section */}
-          <div className="bg-gradient-to-r from-green-600 to-emerald-600 rounded-2xl shadow-xl p-8 text-center text-white">
+          <div className="bg-gradient-to-r from-green-600 to-[#00BC7D] rounded-2xl shadow-xl p-8 text-center text-white">
             <h2 className="text-3xl font-bold mb-4">
               Start Your Seattle Homeownership Journey Today
             </h2>

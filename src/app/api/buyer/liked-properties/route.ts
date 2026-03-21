@@ -148,7 +148,7 @@ export async function GET(request: NextRequest) {
           listPrice: listPrice,
           imageUrl: data.firstPropertyImage || data.imgSrc || data.imageUrl || null,
           isLiked: true,
-          source: data.isOwnerFinance ? 'owner_finance' : data.isCashDeal ? 'cash_deal' : 'curated'
+          source: data.isOwnerfinance ? 'owner_finance' : data.isCashDeal ? 'cash_deal' : 'curated'
         };
       });
 

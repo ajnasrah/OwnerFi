@@ -24,7 +24,7 @@ export default function TermsOfService() {
               onClick={() => setActiveSection('buyer')}
               className={`px-6 py-3 rounded-lg font-medium transition-all ${
                 activeSection === 'buyer'
-                  ? 'bg-emerald-500 text-white'
+                  ? 'bg-[#00BC7D]/50 text-white'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
@@ -49,12 +49,12 @@ export default function TermsOfService() {
               <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8">
                 <h2 className="text-2xl font-semibold text-blue-800 mb-4">📋 What You Need to Know (Plain English)</h2>
                 <ul className="space-y-2 text-blue-700">
-                  <li>• <strong>OwnerFi is a property search and lead-generation platform</strong> — we show properties that may offer owner financing</li>
+                  <li>• <strong>Ownerfi is a property search and lead-generation platform</strong> — we show properties that may offer owner financing</li>
                   <li>• <strong>We share your contact info with licensed real estate agents</strong> who will call/text/email you to offer help</li>
-                  <li>• <strong>Agents pay OwnerFi a referral fee (30% of their commission)</strong> when they help you close on a home</li>
+                  <li>• <strong>Agents pay Ownerfi a referral fee (30% of their commission)</strong> when they help you close on a home</li>
                   <li>• <strong>Agents will offer to show properties, write offers, and represent you</strong> (optional)</li>
                   <li>• <strong>You can decline representation anytime</strong> by telling the agent "I do not want representation"</li>
-                  <li>• <strong>OwnerFi is NOT your agent or broker</strong> — we don't represent buyers or sellers</li>
+                  <li>• <strong>Ownerfi is NOT your agent or broker</strong> — we don't represent buyers or sellers</li>
                   <li>• <strong>We do NOT verify property information</strong> — listings may be inaccurate, outdated, or unavailable</li>
                   <li>• <strong>Payment estimates are illustrations only</strong> — not quotes or commitments</li>
                   <li>• <strong>You must verify everything yourself</strong> with licensed professionals</li>
@@ -65,9 +65,9 @@ export default function TermsOfService() {
               <div className="space-y-8 text-lg leading-relaxed text-slate-700">
 
             <section>
-              <h2 className="text-2xl font-semibold text-primary-text mb-4">1. What OwnerFi Does</h2>
+              <h2 className="text-2xl font-semibold text-primary-text mb-4">1. What Ownerfi Does</h2>
               <p className="mb-4">
-                OwnerFi is a <strong>property search and lead-generation platform</strong> for owner-finance–friendly real estate.
+                Ownerfi is a <strong>property search and lead-generation platform</strong> for owner-finance–friendly real estate.
               </p>
               <p className="mb-2">We:</p>
               <ul className="list-disc ml-6 space-y-1 mb-4">
@@ -87,14 +87,14 @@ export default function TermsOfService() {
               </ul>
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                 <p className="text-red-700 font-bold">
-                  OwnerFi does NOT verify listing details or confirm availability.
+                  Ownerfi does NOT verify listing details or confirm availability.
                 </p>
               </div>
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-primary-text mb-4">2. OwnerFi Is NOT Your Agent</h2>
-              <p className="mb-3">OwnerFi:</p>
+              <h2 className="text-2xl font-semibold text-primary-text mb-4">2. Ownerfi Is NOT Your Agent</h2>
+              <p className="mb-3">Ownerfi:</p>
               <ul className="list-disc ml-6 space-y-1 mb-4">
                 <li><strong>Is not</strong> a real estate brokerage</li>
                 <li><strong>Does not</strong> represent buyers or sellers</li>
@@ -105,7 +105,7 @@ export default function TermsOfService() {
               </ul>
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
                 <p className="text-yellow-700">
-                  All representation services come from <strong>licensed real estate agents</strong>, not from OwnerFi.
+                  All representation services come from <strong>licensed real estate agents</strong>, not from Ownerfi.
                 </p>
               </div>
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -119,7 +119,7 @@ export default function TermsOfService() {
             <section>
               <h2 className="text-2xl font-semibold text-primary-text mb-4">3. User Contact Information Is Shared With Real Estate Agents</h2>
               <p className="mb-4">
-                By submitting your information on OwnerFi, you <strong>authorize us to share your profile</strong> (name, phone, email, property interest, budget, and relevant details) with licensed real estate agents in your general area.
+                By submitting your information on Ownerfi, you <strong>authorize us to share your profile</strong> (name, phone, email, property interest, budget, and relevant details) with licensed real estate agents in your general area.
               </p>
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
                 <p className="font-bold text-blue-800 mb-2">📞 How Agents Will Contact You</p>
@@ -147,7 +147,7 @@ export default function TermsOfService() {
                 <ul className="list-disc ml-6 space-y-1 text-green-700">
                   <li>You may tell any agent who contacts you: <strong>"I do not wish to be represented."</strong></li>
                   <li>It is the <strong>agent's responsibility</strong> to stop contacting you once notified.</li>
-                  <li>OwnerFi is <strong>not responsible</strong> for ongoing communication from agents after you decline representation.</li>
+                  <li>Ownerfi is <strong>not responsible</strong> for ongoing communication from agents after you decline representation.</li>
                 </ul>
               </div>
             </section>
@@ -161,7 +161,7 @@ export default function TermsOfService() {
                 <li>Do-Not-Call rules (once you ask them to stop)</li>
               </ul>
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <p className="font-bold text-red-800 mb-2">⚠️ OwnerFi Is Not Responsible For:</p>
+                <p className="font-bold text-red-800 mb-2">⚠️ Ownerfi Is Not Responsible For:</p>
                 <ul className="list-disc ml-6 space-y-1 text-red-700">
                   <li>agent conduct</li>
                   <li>agent communication frequency</li>
@@ -174,7 +174,7 @@ export default function TermsOfService() {
             <section>
               <h2 className="text-2xl font-semibold text-primary-text mb-4">6. Property Information Disclaimer</h2>
               <p className="mb-4">
-                OwnerFi relies on <strong>public data sources, MLS feeds, and automated systems</strong>.
+                Ownerfi relies on <strong>public data sources, MLS feeds, and automated systems</strong>.
               </p>
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                 <p className="font-bold text-red-800 mb-2">🚨 Critical Disclaimer</p>
@@ -193,7 +193,7 @@ export default function TermsOfService() {
 
             <section>
               <h2 className="text-2xl font-semibold text-primary-text mb-4">7. No Guarantees or Approvals</h2>
-              <p className="mb-3">OwnerFi does <strong>not</strong>:</p>
+              <p className="mb-3">Ownerfi does <strong>not</strong>:</p>
               <ul className="list-disc ml-6 space-y-1 mb-4">
                 <li>approve buyers</li>
                 <li>prequalify buyers</li>
@@ -226,7 +226,7 @@ export default function TermsOfService() {
               <h2 className="text-2xl font-semibold text-primary-text mb-4">9. Payment Estimates Disclaimer</h2>
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
                 <p className="text-amber-700 mb-3">
-                  Any payment calculations shown on OwnerFi are <strong>illustrative estimates only</strong> and may differ substantially from actual seller terms.
+                  Any payment calculations shown on Ownerfi are <strong>illustrative estimates only</strong> and may differ substantially from actual seller terms.
                 </p>
                 <p className="text-amber-800 font-bold">
                   They are NOT commitments or quotes.
@@ -238,11 +238,11 @@ export default function TermsOfService() {
               <h2 className="text-2xl font-semibold text-primary-text mb-4">10. Limitation of Liability</h2>
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                 <p className="font-bold text-red-800 mb-2">⚠️ Liability Limitation</p>
-                <p className="text-red-700 mb-2">OwnerFi is not liable for:</p>
+                <p className="text-red-700 mb-2">Ownerfi is not liable for:</p>
                 <ul className="list-disc ml-6 space-y-1 text-red-700">
                   <li>inaccurate data</li>
                   <li>communication from agents</li>
-                  <li>decisions made based on OwnerFi's displays</li>
+                  <li>decisions made based on Ownerfi's displays</li>
                   <li>losses, disputes, failed offers, or denied approvals</li>
                 </ul>
                 <p className="text-red-700 mt-3 font-bold">
@@ -255,7 +255,7 @@ export default function TermsOfService() {
               <h2 className="text-2xl font-semibold text-primary-text mb-4">11. Refund Policy</h2>
               <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
                 <p className="text-orange-700 font-bold mb-2">
-                  All payments made to OwnerFi (if any) are <strong>non-refundable</strong>, except where prohibited by law or where we fail to provide the agreed-upon service.
+                  All payments made to Ownerfi (if any) are <strong>non-refundable</strong>, except where prohibited by law or where we fail to provide the agreed-upon service.
                 </p>
                 <p className="text-orange-600 text-sm">
                   If you believe you are entitled to a refund due to service failure or applicable law, contact <a href="mailto:support@ownerfi.ai" className="underline">support@ownerfi.ai</a>.
@@ -308,10 +308,10 @@ export default function TermsOfService() {
             <div className="border-t pt-8 mt-8">
               <div className="bg-blue-100 border-2 border-blue-300 rounded-lg p-6">
                 <p className="text-blue-900 font-bold text-center text-lg mb-3">
-                  ✅ By Using OwnerFi, You Agree
+                  ✅ By Using Ownerfi, You Agree
                 </p>
                 <p className="text-blue-800 text-sm text-center">
-                  By using OwnerFi, you acknowledge that you have read and agree to these Terms of Service. You understand that: (1) your contact information will be shared with licensed real estate agents who may contact you; (2) agents pay OwnerFi a referral fee when you close; (3) you can decline representation at any time; (4) OwnerFi does not verify property information; (5) all data may be inaccurate or outdated; and (6) you must independently verify all information with licensed professionals.
+                  By using Ownerfi, you acknowledge that you have read and agree to these Terms of Service. You understand that: (1) your contact information will be shared with licensed real estate agents who may contact you; (2) agents pay Ownerfi a referral fee when you close; (3) you can decline representation at any time; (4) Ownerfi does not verify property information; (5) all data may be inaccurate or outdated; and (6) you must independently verify all information with licensed professionals.
                 </p>
               </div>
             </div>
@@ -326,14 +326,14 @@ export default function TermsOfService() {
               <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8">
                 <h2 className="text-2xl font-semibold text-blue-800 mb-4">📋 What Agents Need to Know (Plain English)</h2>
                 <ul className="space-y-2 text-blue-700">
-                  <li>• <strong>OwnerFi provides buyer leads</strong> — pre-screened buyers interested in owner-financed properties (not lender-style pre-qualified)</li>
+                  <li>• <strong>Ownerfi provides buyer leads</strong> — pre-screened buyers interested in owner-financed properties (not lender-style pre-qualified)</li>
                   <li>• <strong>You pay a 30% referral fee</strong> of your commission at closing (only when you close)</li>
                   <li>• <strong>You must sign a referral agreement</strong> to receive buyer contact information</li>
                   <li>• <strong>Agreements are valid for 180 days</strong> and extend through closing</li>
                   <li>• <strong>You can re-refer leads</strong> to other agents if you cannot service them</li>
                   <li>• <strong>Lead quality is not guaranteed</strong> — buyers may become unresponsive</li>
                   <li>• <strong>You must maintain an active real estate license</strong> in good standing</li>
-                  <li>• <strong>OwnerFi is not responsible</strong> for buyer behavior or transaction outcomes</li>
+                  <li>• <strong>Ownerfi is not responsible</strong> for buyer behavior or transaction outcomes</li>
                   <li>• <strong>Digital signatures are binding</strong> — you agree to pay the referral fee at closing</li>
                 </ul>
               </div>
@@ -343,7 +343,7 @@ export default function TermsOfService() {
                 <section>
                   <h2 className="text-2xl font-semibold text-primary-text mb-4">1. Platform Overview for Real Estate Agents</h2>
                   <p className="mb-4">
-                    OwnerFi operates a <strong>real estate lead generation and referral platform</strong> that connects licensed real estate agents with pre-screened buyer leads interested in owner-financed properties.
+                    Ownerfi operates a <strong>real estate lead generation and referral platform</strong> that connects licensed real estate agents with pre-screened buyer leads interested in owner-financed properties.
                   </p>
                   <p className="mb-2">The platform provides:</p>
                   <ul className="list-disc ml-6 space-y-1 mb-4">
@@ -356,7 +356,7 @@ export default function TermsOfService() {
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                     <p className="font-bold text-blue-800 mb-2">Important Platform Clarification</p>
                     <p className="text-blue-700 text-sm mb-2">
-                      OwnerFi is a <strong>marketing and lead-generation platform</strong>. We are not a real estate brokerage and do not receive a commission split on your transactions.
+                      Ownerfi is a <strong>marketing and lead-generation platform</strong>. We are not a real estate brokerage and do not receive a commission split on your transactions.
                     </p>
                     <p className="text-blue-700 text-sm">
                       <strong>&quot;Pre-screened&quot; means:</strong> Buyers have provided contact information, location preferences, and budget range through our platform. We do not run credit checks or provide lender-style pre-qualification.
@@ -368,7 +368,7 @@ export default function TermsOfService() {
                   <h2 className="text-2xl font-semibold text-primary-text mb-4">2. Eligibility Requirements</h2>
                   <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
                     <p className="font-bold text-yellow-800 mb-2">License Requirements</p>
-                    <p className="text-yellow-700 mb-2">To use OwnerFi as a real estate agent, you must:</p>
+                    <p className="text-yellow-700 mb-2">To use Ownerfi as a real estate agent, you must:</p>
                     <ul className="list-disc ml-6 space-y-1 text-yellow-700">
                       <li>Hold an <strong>active real estate license</strong> in the state(s) where you operate</li>
                       <li>Be affiliated with a <strong>licensed real estate brokerage</strong></li>
@@ -378,15 +378,15 @@ export default function TermsOfService() {
                     </ul>
                   </div>
                   <p className="text-red-600 font-medium">
-                    By registering, you represent and warrant that you meet all eligibility requirements. OwnerFi reserves the right to verify your license status and terminate accounts for ineligible users.
+                    By registering, you represent and warrant that you meet all eligibility requirements. Ownerfi reserves the right to verify your license status and terminate accounts for ineligible users.
                   </p>
                 </section>
 
                 <section>
                   <h2 className="text-2xl font-semibold text-primary-text mb-4">3. Referral Fee Agreement</h2>
-                  <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-4">
-                    <p className="font-bold text-emerald-800 mb-2">💰 Fee Structure</p>
-                    <ul className="list-disc ml-6 space-y-2 text-emerald-700">
+                  <div className="bg-[#00BC7D]/5 border border-[#00BC7D]/30 rounded-lg p-4 mb-4">
+                    <p className="font-bold text-[#007A52] mb-2">💰 Fee Structure</p>
+                    <ul className="list-disc ml-6 space-y-2 text-[#009B66]">
                       <li><strong>Standard Referral Fee:</strong> 30% of the gross commission you receive at closing</li>
                       <li><strong>Payment Timing:</strong> Due within 7 calendar days of closing and receipt of commission</li>
                       <li><strong>No Upfront Costs:</strong> You pay nothing until a transaction closes</li>
@@ -394,7 +394,7 @@ export default function TermsOfService() {
                     </ul>
                   </div>
                   <p className="mb-4">
-                    By signing a referral agreement through the OwnerFi platform, you enter into a <strong>legally binding contract</strong> to pay the specified referral fee upon closing any transaction with the referred buyer.
+                    By signing a referral agreement through the Ownerfi platform, you enter into a <strong>legally binding contract</strong> to pay the specified referral fee upon closing any transaction with the referred buyer.
                   </p>
                 </section>
 
@@ -418,7 +418,7 @@ export default function TermsOfService() {
                   <h2 className="text-2xl font-semibold text-primary-text mb-4">5. Lead Quality & Disclaimers</h2>
                   <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
                     <p className="font-bold text-red-800 mb-2">⚠️ Important Disclaimers</p>
-                    <p className="text-red-700 mb-2">OwnerFi does NOT guarantee:</p>
+                    <p className="text-red-700 mb-2">Ownerfi does NOT guarantee:</p>
                     <ul className="list-disc ml-6 space-y-1 text-red-700">
                       <li>That any lead will result in a closed transaction</li>
                       <li>Lead responsiveness or availability</li>
@@ -444,7 +444,7 @@ export default function TermsOfService() {
                     <li><strong>Not Interested:</strong> Buyer explicitly states they are not interested in purchasing</li>
                   </ul>
                   <p className="text-slate-600 text-sm">
-                    Dispute decisions are made at OwnerFi's sole discretion. Approved disputes may result in lead credit or removal of referral fee obligation.
+                    Dispute decisions are made at Ownerfi's sole discretion. Approved disputes may result in lead credit or removal of referral fee obligation.
                   </p>
                 </section>
 
@@ -457,7 +457,7 @@ export default function TermsOfService() {
                     <p className="font-bold text-purple-800 mb-2">Re-Referral Terms</p>
                     <ul className="list-disc ml-6 space-y-1 text-purple-700">
                       <li>You set the referral fee percentage (typically 25% of the new agent's commission)</li>
-                      <li>The receiving agent becomes responsible for OwnerFi's original referral fee</li>
+                      <li>The receiving agent becomes responsible for Ownerfi's original referral fee</li>
                       <li>Re-referrals create a new agreement between you and the receiving agent</li>
                       <li>Leads can only be re-referred once</li>
                       <li>You earn your portion only if the re-referred agent closes the transaction</li>
@@ -486,7 +486,7 @@ export default function TermsOfService() {
                     <ul className="list-disc ml-6 space-y-1 text-red-700">
                       <li>Share lead information with unlicensed individuals</li>
                       <li>Use lead information for purposes other than real estate representation</li>
-                      <li>Contact leads to discourage them from working with OwnerFi agents</li>
+                      <li>Contact leads to discourage them from working with Ownerfi agents</li>
                       <li>Attempt to circumvent referral fee obligations</li>
                       <li>Misrepresent your license status or qualifications</li>
                       <li>Engage in dual agency without proper disclosure</li>
@@ -498,14 +498,14 @@ export default function TermsOfService() {
 
                 <section>
                   <h2 className="text-2xl font-semibold text-primary-text mb-4">10. Account Termination</h2>
-                  <p className="mb-3">OwnerFi may suspend or terminate your account for:</p>
+                  <p className="mb-3">Ownerfi may suspend or terminate your account for:</p>
                   <ul className="list-disc ml-6 space-y-1 mb-4">
                     <li>Violation of these Terms of Service</li>
                     <li>Failure to pay referral fees</li>
                     <li>License suspension, revocation, or expiration</li>
                     <li>Fraudulent activity or misrepresentation</li>
                     <li>Complaints from buyers or other agents</li>
-                    <li>Any other reason at OwnerFi's sole discretion</li>
+                    <li>Any other reason at Ownerfi's sole discretion</li>
                   </ul>
                   <p className="text-slate-600 text-sm">
                     Upon termination, you remain obligated to pay referral fees for any pending or closed transactions from leads received through the platform.
@@ -516,7 +516,7 @@ export default function TermsOfService() {
                   <h2 className="text-2xl font-semibold text-primary-text mb-4">11. Limitation of Liability</h2>
                   <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                     <p className="font-bold text-red-800 mb-2">⚠️ Liability Limitation</p>
-                    <p className="text-red-700 mb-2">OwnerFi is not liable for:</p>
+                    <p className="text-red-700 mb-2">Ownerfi is not liable for:</p>
                     <ul className="list-disc ml-6 space-y-1 text-red-700">
                       <li>Lead quality or conversion rates</li>
                       <li>Buyer behavior or transaction outcomes</li>
@@ -534,7 +534,7 @@ export default function TermsOfService() {
                 <section>
                   <h2 className="text-2xl font-semibold text-primary-text mb-4">12. Indemnification</h2>
                   <p className="mb-4">
-                    You agree to indemnify and hold harmless OwnerFi, its officers, employees, and affiliates from any claims, damages, or expenses arising from:
+                    You agree to indemnify and hold harmless Ownerfi, its officers, employees, and affiliates from any claims, damages, or expenses arising from:
                   </p>
                   <ul className="list-disc ml-6 space-y-1">
                     <li>Your use of the platform</li>
@@ -597,7 +597,7 @@ export default function TermsOfService() {
                       ✅ By Registering as an Agent, You Agree
                     </p>
                     <p className="text-blue-800 text-sm text-center">
-                      By registering and using the OwnerFi platform as a real estate agent, you acknowledge that you have read and agree to these Terms of Service. You confirm that: (1) you hold an active real estate license in good standing; (2) you have authority to enter into referral agreements; (3) you will pay the 30% referral fee at closing for all referred leads; (4) digital signatures on referral agreements are legally binding; (5) lead quality is not guaranteed; and (6) you will comply with all applicable laws and regulations.
+                      By registering and using the Ownerfi platform as a real estate agent, you acknowledge that you have read and agree to these Terms of Service. You confirm that: (1) you hold an active real estate license in good standing; (2) you have authority to enter into referral agreements; (3) you will pay the 30% referral fee at closing for all referred leads; (4) digital signatures on referral agreements are legally binding; (5) lead quality is not guaranteed; and (6) you will comply with all applicable laws and regulations.
                     </p>
                   </div>
                 </div>

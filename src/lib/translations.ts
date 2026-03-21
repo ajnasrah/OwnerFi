@@ -24,7 +24,7 @@ export const translations = {
 
     // Why Choose Us Section
     whyChoose: {
-      title: "Why Choose OwnerFi?",
+      title: "Why Choose Ownerfi?",
       subtitle: "The modern alternative to traditional home buying",
       benefit1Title: "Skip the Banks",
       benefit1Text: "Work directly with sellers for flexible financing",
@@ -52,13 +52,13 @@ export const translations = {
     testimonials: {
       title: "Real People, Real Homes",
       subtitle: "Join thousands who found their dream home",
-      testimonial1: "I was stuck renting for years because of my credit. OwnerFi showed me owner-finance homes I never knew existed. Now I'm a homeowner!",
+      testimonial1: "I was stuck renting for years because of my credit. Ownerfi showed me owner-finance homes I never knew existed. Now I'm a homeowner!",
       name1: "Sarah M.",
       location1: "Houston, TX",
       testimonial2: "The app is so easy to use. Swiping through houses felt natural and fun. Found my home in just 2 weeks!",
       name2: "Marcus T.",
       location2: "Atlanta, GA",
-      testimonial3: "Self-employed and couldn't get bank approval. Owner financing through OwnerFi was the perfect solution.",
+      testimonial3: "Self-employed and couldn't get bank approval. Owner financing through Ownerfi was the perfect solution.",
       name3: "Jennifer K.",
       location3: "Miami, FL",
       stat1: "Happy Homeowners",
@@ -149,7 +149,7 @@ export const translations = {
       createAccount: "Create Account",
       agentSignUp: "Agent Sign Up",
       dashboard: "Dashboard",
-      copyright: "© 2024 OwnerFi. All rights reserved.",
+      copyright: "© 2024 Ownerfi. All rights reserved.",
       terms: "Terms",
       privacy: "Privacy",
       tcpa: "TCPA Compliance",
@@ -181,7 +181,7 @@ export const translations = {
 
     // Sección Por Qué Elegirnos
     whyChoose: {
-      title: "¿Por Qué Elegir OwnerFi?",
+      title: "¿Por Qué Elegir Ownerfi?",
       subtitle: "La alternativa moderna a la compra tradicional de viviendas",
       benefit1Title: "Sin Bancos",
       benefit1Text: "Trabaja directamente con vendedores para financiamiento flexible",
@@ -209,13 +209,13 @@ export const translations = {
     testimonials: {
       title: "Gente Real, Casas Reales",
       subtitle: "Únete a miles que encontraron la casa de sus sueños",
-      testimonial1: "Estuve rentando por años debido a mi crédito. OwnerFi me ayudó a encontrar una casa que realmente podía comprar. ¡Ahora soy propietaria!",
+      testimonial1: "Estuve rentando por años debido a mi crédito. Ownerfi me ayudó a encontrar una casa que realmente podía comprar. ¡Ahora soy propietaria!",
       name1: "Sarah M.",
       location1: "Houston, TX",
       testimonial2: "¡La aplicación es tan fácil de usar! Deslizar por casas se sintió natural y divertido. ¡Encontré mi casa en solo 2 semanas!",
       name2: "Marcus T.",
       location2: "Atlanta, GA",
-      testimonial3: "Soy trabajador independiente y no pude obtener aprobación bancaria. El financiamiento del propietario a través de OwnerFi fue la solución perfecta.",
+      testimonial3: "Soy trabajador independiente y no pude obtener aprobación bancaria. El financiamiento del propietario a través de Ownerfi fue la solución perfecta.",
       name3: "Jennifer K.",
       location3: "Miami, FL",
       stat1: "Propietarios Felices",
@@ -306,7 +306,7 @@ export const translations = {
       createAccount: "Crear Cuenta",
       agentSignUp: "Registro de Agentes",
       dashboard: "Panel",
-      copyright: "© 2024 OwnerFi. Todos los derechos reservados.",
+      copyright: "© 2024 Ownerfi. Todos los derechos reservados.",
       terms: "Términos",
       privacy: "Privacidad",
       tcpa: "Cumplimiento TCPA",

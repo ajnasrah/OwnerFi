@@ -67,7 +67,7 @@ export default function CollapsibleFAQ() {
             <h3 className="text-blue-300 font-bold text-lg mb-2">Educational Information</h3>
             <p className="text-blue-100 text-sm leading-relaxed">
               This information is for educational purposes only and should not be considered legal, financial, or real estate advice.
-              OwnerFi does not provide recommendations or guidance on specific transactions. Always consult with qualified professionals
+              Ownerfi does not provide recommendations or guidance on specific transactions. Always consult with qualified professionals
               including real estate attorneys, financial advisors, and licensed real estate agents before making any property purchase decisions.
             </p>
           </div>
@@ -81,7 +81,7 @@ export default function CollapsibleFAQ() {
           <div>
             <h3 className="text-yellow-300 font-bold text-lg mb-2">CRITICAL: Buyer Verification Responsibility</h3>
             <div className="text-yellow-100 text-sm leading-relaxed space-y-2">
-              <p><strong>OwnerFi does NOT specify what type of deal each property listing represents.</strong></p>
+              <p><strong>Ownerfi does NOT specify what type of deal each property listing represents.</strong></p>
               <p>Properties on our platform may involve various financing arrangements: seller financing, subject-to, contract for deed, lease-to-own, or traditional financing.</p>
               <p className="font-semibold">It is YOUR responsibility as the buyer to verify:</p>
               <ul className="list-disc ml-4 space-y-1 text-xs">
@@ -285,7 +285,7 @@ export default function CollapsibleFAQ() {
           <div className="bg-red-600/20 border border-red-500/30 rounded-lg p-4 mt-4">
             <h5 className="text-red-300 font-semibold mb-2">🚨 BUYER VERIFICATION REQUIRED</h5>
             <div className="space-y-2 text-red-100 text-sm">
-              <p><strong>OwnerFi properties do NOT specify which type of deal is being offered.</strong> Each property may involve any of these arrangements or others.</p>
+              <p><strong>Ownerfi properties do NOT specify which type of deal is being offered.</strong> Each property may involve any of these arrangements or others.</p>
               <p><strong>Before contacting any seller or agent, YOU must verify:</strong></p>
               <ul className="list-disc ml-4 space-y-1 text-xs">
                 <li>What type of financing arrangement is actually being offered</li>
@@ -330,21 +330,21 @@ export default function CollapsibleFAQ() {
         <div className="grid md:grid-cols-2 gap-4">
           <div className="space-y-3">
             <div className="bg-slate-700/30 rounded-lg p-3">
-              <h5 className="text-emerald-300 font-semibold mb-1">💰 Earn Interest Income</h5>
+              <h5 className="text-[#00d68f] font-semibold mb-1">💰 Earn Interest Income</h5>
               <p className="text-slate-300 text-xs">They can charge interest and make extra money over time instead of getting paid all at once.</p>
             </div>
             <div className="bg-slate-700/30 rounded-lg p-3">
-              <h5 className="text-emerald-300 font-semibold mb-1">🏃‍♂️ Sell Faster</h5>
+              <h5 className="text-[#00d68f] font-semibold mb-1">🏃‍♂️ Sell Faster</h5>
               <p className="text-slate-300 text-xs">Expands the pool of potential buyers beyond those who qualify for traditional loans.</p>
             </div>
           </div>
           <div className="space-y-3">
             <div className="bg-slate-700/30 rounded-lg p-3">
-              <h5 className="text-emerald-300 font-semibold mb-1">📊 Tax Considerations</h5>
+              <h5 className="text-[#00d68f] font-semibold mb-1">📊 Tax Considerations</h5>
               <p className="text-slate-300 text-xs">May have tax advantages by receiving payments over time instead of one large payment.</p>
             </div>
             <div className="bg-slate-700/30 rounded-lg p-3">
-              <h5 className="text-emerald-300 font-semibold mb-1">🎯 Investment Strategy</h5>
+              <h5 className="text-[#00d68f] font-semibold mb-1">🎯 Investment Strategy</h5>
               <p className="text-slate-300 text-xs">Can be part of their investment or retirement income strategy.</p>
             </div>
           </div>
@@ -461,10 +461,10 @@ export default function CollapsibleFAQ() {
       <CollapsibleSection id="protect" question="How should I protect myself?" color="green">
         <div className="space-y-4">
           <div className="grid gap-4">
-            <div className="bg-emerald-500/10 border border-emerald-400/30 rounded-lg p-4">
-              <h5 className="text-emerald-300 font-semibold mb-2">🏘️ Hire a Buying Agent</h5>
+            <div className="bg-[#00BC7D]/10 border border-[#00BC7D]/30 rounded-lg p-4">
+              <h5 className="text-[#00d68f] font-semibold mb-2">🏘️ Hire a Buying Agent</h5>
               <p className="text-slate-300 text-sm mb-2">A licensed agent representing YOU can review contracts, research properties, and guide you through the process.</p>
-              <p className="text-emerald-300 text-xs">💡 Seller usually pays agent fees</p>
+              <p className="text-[#00d68f] text-xs">💡 Seller usually pays agent fees</p>
             </div>
 
             <div className="bg-blue-500/10 border border-blue-400/30 rounded-lg p-4">
@@ -553,14 +553,14 @@ export default function CollapsibleFAQ() {
           <div>
             <h4 className="font-bold mb-2">🏢 Platform Role</h4>
             <p>
-              <strong>OwnerFi is a marketing and lead-generation platform only.</strong> We are NOT a licensed real estate broker, agent, lender, title company, attorney, or financial advisor. We do not negotiate, structure, or close transactions. All decisions are your sole responsibility.
+              <strong>Ownerfi is a marketing and lead-generation platform only.</strong> We are NOT a licensed real estate broker, agent, lender, title company, attorney, or financial advisor. We do not negotiate, structure, or close transactions. All decisions are your sole responsibility.
             </p>
           </div>
 
           <div>
             <h4 className="font-bold mb-2">🚫 No Guarantee of Accuracy</h4>
             <p>
-              All property information and financial figures are provided by third parties. OwnerFi makes no warranty as to accuracy, completeness, or reliability. You must independently verify all property details, financing terms, taxes, insurance, and HOA fees.
+              All property information and financial figures are provided by third parties. Ownerfi makes no warranty as to accuracy, completeness, or reliability. You must independently verify all property details, financing terms, taxes, insurance, and HOA fees.
             </p>
           </div>
 
@@ -580,21 +580,21 @@ export default function CollapsibleFAQ() {
           <div>
             <h4 className="font-bold mb-2">🛡️ Limitation of Liability</h4>
             <p>
-              OwnerFi is not liable for losses, damages, or expenses from: inaccurate information, failed transactions, third-party actions, or your real estate/investment decisions.
+              Ownerfi is not liable for losses, damages, or expenses from: inaccurate information, failed transactions, third-party actions, or your real estate/investment decisions.
             </p>
           </div>
 
           <div>
             <h4 className="font-bold mb-2">🔒 Indemnification</h4>
             <p>
-              You agree to indemnify and hold harmless OwnerFi from claims arising from your use of the platform or participation in any transaction.
+              You agree to indemnify and hold harmless Ownerfi from claims arising from your use of the platform or participation in any transaction.
             </p>
           </div>
         </div>
 
         <div className="bg-yellow-100 border border-yellow-300 rounded-lg p-3 mt-4">
           <p className="text-yellow-800 text-xs leading-relaxed">
-            <strong>Plain English:</strong> OwnerFi is just a website that shows property information we found and refers you to licensed buying agents in your area. We're just letting you know what possible owner finance deals are out there - we don't guarantee these houses are still available or that sellers will actually offer owner financing. We don't guarantee anything is accurate. We're not your broker, lawyer, or lender. If something goes wrong with a property deal, that's between you and the people you're actually working with - not us. You're responsible for checking everything yourself and getting professional help.
+            <strong>Plain English:</strong> Ownerfi is just a website that shows property information we found and refers you to licensed buying agents in your area. We're just letting you know what possible owner finance deals are out there - we don't guarantee these houses are still available or that sellers will actually offer owner financing. We don't guarantee anything is accurate. We're not your broker, lawyer, or lender. If something goes wrong with a property deal, that's between you and the people you're actually working with - not us. You're responsible for checking everything yourself and getting professional help.
           </p>
         </div>
       </div>

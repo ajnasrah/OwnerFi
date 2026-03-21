@@ -13,10 +13,10 @@ export const metadata = {
 
 export default function AnalyticsDashboardPage() {
   return (
-    <div className="h-screen overflow-hidden bg-slate-900 flex flex-col">
+    <div className="h-screen overflow-hidden bg-[#111625] flex flex-col">
       <div className="flex-1 overflow-y-auto p-6">
         <div className="max-w-7xl mx-auto">
-        <Link href="/admin" className="text-emerald-400 hover:text-emerald-300 text-sm mb-4 inline-block">← Back to Admin</Link>
+        <Link href="/admin" className="text-[#00BC7D] hover:text-[#00d68f] text-sm mb-4 inline-block">← Back to Admin</Link>
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">📊 Platform Analytics Dashboard</h1>

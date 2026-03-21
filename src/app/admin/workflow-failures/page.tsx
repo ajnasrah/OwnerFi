@@ -79,10 +79,10 @@ export default function WorkflowFailuresPage() {
   };
 
   return (
-    <div className="h-screen overflow-hidden bg-slate-900 flex flex-col">
+    <div className="h-screen overflow-hidden bg-[#111625] flex flex-col">
       <div className="flex-1 overflow-y-auto p-6">
         <div className="max-w-7xl mx-auto">
-        <Link href="/admin" className="text-emerald-400 hover:text-emerald-300 text-sm mb-4 inline-block">← Back to Admin</Link>
+        <Link href="/admin" className="text-[#00BC7D] hover:text-[#00d68f] text-sm mb-4 inline-block">← Back to Admin</Link>
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
@@ -92,7 +92,7 @@ export default function WorkflowFailuresPage() {
             </div>
             <button
               onClick={fetchData}
-              className="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700"
+              className="px-4 py-2 bg-[#00BC7D] text-white rounded-md hover:bg-[#009B66]"
             >
               Refresh
             </button>
@@ -170,7 +170,7 @@ export default function WorkflowFailuresPage() {
                 onClick={() => setActiveTab('late')}
                 className={`${
                   activeTab === 'late'
-                    ? 'border-emerald-400 text-emerald-400'
+                    ? 'border-[#00BC7D] text-[#00BC7D]'
                     : 'border-transparent text-slate-400 hover:text-white hover:border-slate-500'
                 } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
               >
@@ -180,7 +180,7 @@ export default function WorkflowFailuresPage() {
                 onClick={() => setActiveTab('submagic')}
                 className={`${
                   activeTab === 'submagic'
-                    ? 'border-emerald-400 text-emerald-400'
+                    ? 'border-[#00BC7D] text-[#00BC7D]'
                     : 'border-transparent text-slate-400 hover:text-white hover:border-slate-500'
                 } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
               >
@@ -202,7 +202,7 @@ export default function WorkflowFailuresPage() {
               <div className="space-y-4">
                 {lateFailures.length === 0 ? (
                   <div className="bg-slate-800 rounded-lg border border-slate-700 p-8 text-center">
-                    <div className="text-emerald-400 font-medium">No Late posting failures! 🎉</div>
+                    <div className="text-[#00BC7D] font-medium">No Late posting failures! 🎉</div>
                   </div>
                 ) : (
                   lateFailures.map((failure) => {
@@ -258,7 +258,7 @@ export default function WorkflowFailuresPage() {
 
                           <Link
                             href={`/admin/late-failures`}
-                            className="ml-4 px-4 py-2 bg-emerald-600 text-white rounded-md text-sm hover:bg-emerald-700"
+                            className="ml-4 px-4 py-2 bg-[#00BC7D] text-white rounded-md text-sm hover:bg-[#009B66]"
                           >
                             View Details
                           </Link>
@@ -275,7 +275,7 @@ export default function WorkflowFailuresPage() {
               <div className="space-y-4">
                 {submagicJobs.length === 0 ? (
                   <div className="bg-slate-800 rounded-lg border border-slate-700 p-8 text-center">
-                    <div className="text-emerald-400 font-medium">No stuck Submagic jobs! 🎉</div>
+                    <div className="text-[#00BC7D] font-medium">No stuck Submagic jobs! 🎉</div>
                   </div>
                 ) : (
                   submagicJobs.map((job) => (
@@ -319,7 +319,7 @@ export default function WorkflowFailuresPage() {
                         <div className="ml-4 flex flex-col gap-2">
                           <button
                             onClick={() => window.open(`/api/workflow/retry-submagic?workflowId=${job.workflowId}`, '_blank')}
-                            className="px-4 py-2 bg-emerald-600 text-white rounded-md text-sm hover:bg-emerald-700"
+                            className="px-4 py-2 bg-[#00BC7D] text-white rounded-md text-sm hover:bg-[#009B66]"
                           >
                             Retry Submagic
                           </button>

@@ -70,7 +70,7 @@ export default async function BlogListPage({ params }: BlogListPageProps) {
   }
 
   const brandNames: Record<Brand, string> = {
-    ownerfi: 'OwnerFi',
+    ownerfi: 'Ownerfi',
     carz: 'Carz Inc',
     abdullah: 'Abdullah',
     benefit: 'Owner Finance Benefits',
@@ -81,14 +81,12 @@ export default async function BlogListPage({ params }: BlogListPageProps) {
   const brandName = brandNames[brand];
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white">
+    <div className="min-h-screen bg-[#111625] text-white">
       {/* Header */}
       <header className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 px-6 py-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">{brand[0].toUpperCase()}</span>
-            </div>
+            <img src="/logo.jpg" alt="Ownerfi" width={32} height={32} className="rounded-lg" />
             <span className="text-lg font-bold text-white">{brandName}</span>
           </Link>
           <nav>
@@ -126,7 +124,7 @@ export default async function BlogListPage({ params }: BlogListPageProps) {
               <Link
                 key={post.id}
                 href={`/${brand}/blog/${post.slug}`}
-                className="group bg-slate-800/50 border border-slate-700/50 rounded-xl overflow-hidden hover:border-emerald-500/50 transition-all duration-300 hover:scale-105"
+                className="group bg-slate-800/50 border border-slate-700/50 rounded-xl overflow-hidden hover:border-[#00BC7D]/50 transition-all duration-300 hover:scale-105"
               >
                 {/* OG Image */}
                 {post.seo?.ogImage && (
@@ -142,7 +140,7 @@ export default async function BlogListPage({ params }: BlogListPageProps) {
                 {/* Content */}
                 <div className="p-6">
                   <div className="flex items-center gap-2 mb-3">
-                    <span className="text-xs font-medium px-2 py-1 bg-emerald-500/20 text-emerald-400 rounded">
+                    <span className="text-xs font-medium px-2 py-1 bg-[#00BC7D]/20 text-[#00BC7D] rounded">
                       {post.pillar?.replace(/-/g, ' ').toUpperCase()}
                     </span>
                     <span className="text-xs text-slate-400">
@@ -150,7 +148,7 @@ export default async function BlogListPage({ params }: BlogListPageProps) {
                     </span>
                   </div>
 
-                  <h2 className="text-xl font-bold text-white mb-2 group-hover:text-emerald-400 transition-colors">
+                  <h2 className="text-xl font-bold text-white mb-2 group-hover:text-[#00BC7D] transition-colors">
                     {post.title}
                   </h2>
 

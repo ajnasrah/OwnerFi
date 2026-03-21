@@ -3,7 +3,7 @@ import { ApifyClient } from 'apify-client';
 import { getFirebaseAdmin, FieldValue } from '@/lib/scraper-v2/firebase-admin';
 import { transformProperty, validateProperty } from '@/lib/scraper-v2/property-transformer';
 import { withCronLock } from '@/lib/scraper-v2/cron-lock';
-import { hasStrictOwnerFinancing } from '@/lib/owner-financing-filter-strict';
+import { hasStrictOwnerfinancing } from '@/lib/owner-financing-filter-strict';
 
 export const maxDuration = 300;
 
@@ -228,7 +228,7 @@ export async function GET(request: NextRequest) {
         // Cash deals are for admin research only, saved via /api/cron/process-cash-deals-queue
 
         // ===== STRICT FILTER - ONLY SAVE IF PASSES =====
-        const filterResult = hasStrictOwnerFinancing(propertyData.description);
+        const filterResult = hasStrictOwnerfinancing(propertyData.description);
 
         // SKIP property if it doesn't pass strict filter
         if (!filterResult.passes) {

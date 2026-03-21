@@ -23,7 +23,7 @@ export interface BadgeConfig {
 
 export const OWNER_FINANCE_BADGE: BadgeConfig = {
   text: 'Owner Finance',
-  bg: 'bg-emerald-600',
+  bg: 'bg-[#00BC7D]',
   textColor: 'text-white',
   icon: '💰',
 };
@@ -37,7 +37,7 @@ export const CASH_DEAL_BADGE: BadgeConfig = {
 
 // Extended financing type badges (buyer swiper uses these)
 const FINANCING_BADGES: Record<string, BadgeConfig> = {
-  'Owner Finance':      { text: 'Owner Finance',      bg: 'bg-emerald-600', textColor: 'text-white', icon: '💰' },
+  'Owner Finance':      { text: 'Owner Finance',      bg: 'bg-[#00BC7D]', textColor: 'text-white', icon: '💰' },
   'Seller Finance':     { text: 'Seller Finance',     bg: 'bg-blue-600',    textColor: 'text-white', icon: '🤝' },
   'Rent to Own':        { text: 'Rent to Own',        bg: 'bg-purple-600',  textColor: 'text-white', icon: '🏠' },
   'Contract for Deed':  { text: 'Contract for Deed',  bg: 'bg-orange-600',  textColor: 'text-white', icon: '📜' },
@@ -87,10 +87,10 @@ export function getVideoBadgeCSS(dealTypes: string[]): {
   color: string;
   icon: string;
 } {
-  const isOwnerFinance = dealTypes.includes('owner_finance');
-  const isCashDealOnly = !isOwnerFinance && dealTypes.includes('cash_deal');
+  const isOwnerfinance = dealTypes.includes('owner_finance');
+  const isCashDealOnly = !isOwnerfinance && dealTypes.includes('cash_deal');
 
   return isCashDealOnly
     ? { text: 'Cash Deal',     bg: 'background: #eab308;', color: 'color: #000;', icon: '💵' }
-    : { text: 'Owner Finance', bg: 'background: #059669;', color: 'color: #fff;', icon: '💰' };
+    : { text: 'Owner Finance', bg: 'background: #00BC7D;', color: 'color: #fff;', icon: '💰' };
 }

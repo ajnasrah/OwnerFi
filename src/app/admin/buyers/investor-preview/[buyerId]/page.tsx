@@ -168,15 +168,15 @@ export default function InvestorPreview() {
 
   if (loading) {
     return (
-      <div className="h-screen bg-slate-900 flex items-center justify-center">
+      <div className="h-screen bg-[#111625] flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 mx-auto mb-4 relative">
-            <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-3xl animate-pulse" />
-            <div className="absolute inset-2 bg-slate-900 rounded-2xl flex items-center justify-center">
+            <div className="absolute inset-0 bg-gradient-to-br from-[#00BC7D] to-[#3B82F6] rounded-3xl animate-pulse" />
+            <div className="absolute inset-2 bg-[#111625] rounded-2xl flex items-center justify-center">
               <span className="text-2xl">📊</span>
             </div>
           </div>
-          <div className="w-12 h-12 border-4 border-slate-700 border-t-emerald-400 rounded-full animate-spin mx-auto mb-4" />
+          <div className="w-12 h-12 border-4 border-slate-700 border-t-[#00BC7D] rounded-full animate-spin mx-auto mb-4" />
           <h1 className="text-xl font-bold text-white mb-1">Loading Investor Preview</h1>
           <p className="text-slate-400 text-sm">Loading investor experience for {city || 'preview'}...</p>
         </div>
@@ -185,7 +185,7 @@ export default function InvestorPreview() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900">
+    <div className="min-h-screen bg-[#111625]">
       {/* Admin Preview Banner */}
       <div className="fixed top-0 left-0 right-0 z-[60] bg-yellow-500 text-black px-4 py-2 text-center font-bold text-sm">
         📊 ADMIN INVESTOR PREVIEW — Viewing as: {profile?.firstName} {profile?.lastName} ({city}, {state})
@@ -193,7 +193,7 @@ export default function InvestorPreview() {
       </div>
 
       {/* Header (offset for admin banner) */}
-      <header className="sticky top-10 z-50 bg-slate-900/90 backdrop-blur-xl border-b border-slate-700/50">
+      <header className="sticky top-10 z-50 bg-[#111625]/90 backdrop-blur-xl border-b border-slate-700/50">
         <div className="max-w-7xl mx-auto px-4 py-2.5">
           <div className="flex items-center justify-between">
             {/* Left: Location (disabled in preview) */}
@@ -204,7 +204,7 @@ export default function InvestorPreview() {
 
             {/* Center: Branding */}
             <div className="hidden sm:flex items-center gap-2">
-              <span className="text-emerald-400 font-black text-sm">INVESTOR</span>
+              <span className="text-[#00BC7D] font-black text-sm">INVESTOR</span>
               <span className="text-slate-500 text-xs">Preview</span>
             </div>
 
@@ -277,11 +277,11 @@ export default function InvestorPreview() {
             <div className="text-5xl mb-4">🏠</div>
             <h2 className="text-xl font-bold text-white mb-2">No Deals Found</h2>
             <p className="text-slate-400 mb-4">
-              No properties match the current filters in <span className="text-emerald-400">{city}</span>.
+              No properties match the current filters in <span className="text-[#00BC7D]">{city}</span>.
             </p>
             <button
               onClick={() => { setDealType('all'); setPriceFilter('none'); setCurrentPage(1); }}
-              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold rounded-lg transition-all"
+              className="px-4 py-2 bg-[#00BC7D] hover:bg-[#00BC7D]/50 text-white text-sm font-semibold rounded-lg transition-all"
             >
               Show All Deals
             </button>
@@ -321,7 +321,7 @@ export default function InvestorPreview() {
                   >
                     Prev
                   </button>
-                  <span className="px-3 py-1.5 text-xs text-white bg-emerald-600 rounded-lg font-semibold">
+                  <span className="px-3 py-1.5 text-xs text-white bg-[#00BC7D] rounded-lg font-semibold">
                     {currentPage} / {totalPages}
                   </span>
                   <button

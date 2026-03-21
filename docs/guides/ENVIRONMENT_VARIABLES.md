@@ -2,7 +2,7 @@
 
 ## 📋 Complete Environment Variables Reference
 
-This document lists all environment variables required for the OwnerFi platform with brand-specific webhook isolation.
+This document lists all environment variables required for the Ownerfi platform with brand-specific webhook isolation.
 
 ---
 
@@ -104,7 +104,7 @@ STRIPE_PUBLISHABLE_KEY=pk_live_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 ```
 
-### GoHighLevel Integration (OwnerFi Only)
+### GoHighLevel Integration (Ownerfi Only)
 
 ```bash
 # GoHighLevel API (if using)

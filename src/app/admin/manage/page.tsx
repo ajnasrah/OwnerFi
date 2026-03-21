@@ -809,9 +809,9 @@ export default function AdminDashboard() {
 
   if (status !== 'authenticated' || (session?.user as { role?: string })?.role !== 'admin') {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+      <div className="min-h-screen bg-[#111625] flex items-center justify-center">
         <div className="text-center">
-          <div className="w-8 h-8 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-8 h-8 border-2 border-[#00BC7D] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <div className="text-lg font-medium text-white">Loading Admin Dashboard</div>
         </div>
       </div>
@@ -819,18 +819,16 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="h-screen overflow-hidden bg-slate-900 flex flex-col md:flex-row">
+    <div className="h-screen overflow-hidden bg-[#111625] flex flex-col md:flex-row">
       {/* Mobile Dropdown Navigation */}
       <div className="md:hidden bg-slate-800 border-b border-slate-700 p-4">
-        <Link href="/admin" className="text-emerald-400 hover:text-emerald-300 text-sm mb-2 inline-flex items-center gap-1">
+        <Link href="/admin" className="text-[#00BC7D] hover:text-[#00d68f] text-sm mb-2 inline-flex items-center gap-1">
           ← Back to Hub
         </Link>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg flex items-center justify-center">
-              <div className="w-4 h-4 bg-slate-800 rounded-sm"></div>
-            </div>
-            <h1 className="text-lg font-bold text-white">OwnerFi Admin</h1>
+            <img src="/logo.jpg" alt="Ownerfi" width={32} height={32} className="rounded-lg" />
+            <h1 className="text-lg font-bold text-white">Ownerfi Admin</h1>
           </div>
           <button
             onClick={() => { trackEvent('auth_logout', { method: 'admin_manage' }); signOut({ callbackUrl: '/auth/signout' }); }}
@@ -845,7 +843,7 @@ export default function AdminDashboard() {
         <select
           value={activeTab}
           onChange={(e) => setActiveTab(e.target.value as 'overview' | 'properties' | 'upload' | 'disputes' | 'contacts' | 'buyers' | 'realtors' | 'social')}
-          className="w-full px-4 py-2 border border-slate-600 rounded-lg bg-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          className="w-full px-4 py-2 border border-slate-600 rounded-lg bg-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-[#00BC7D]"
         >
           <option value="overview">📊 Overview</option>
           <option value="properties">🏠 Properties {stats.totalProperties > 0 ? `(${stats.totalProperties})` : ''}</option>
@@ -862,15 +860,13 @@ export default function AdminDashboard() {
       <div className="hidden md:flex w-64 lg:w-72 bg-slate-800 shadow-xl border-r border-slate-700 flex-shrink-0 relative flex-col h-screen">
         {/* Logo Section */}
         <div className="p-6 border-b border-slate-700 flex-shrink-0">
-          <Link href="/admin" className="text-emerald-400 hover:text-emerald-300 text-sm mb-2 inline-flex items-center gap-1">
+          <Link href="/admin" className="text-[#00BC7D] hover:text-[#00d68f] text-sm mb-2 inline-flex items-center gap-1">
             ← Back to Hub
           </Link>
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
-              <div className="w-5 h-5 bg-slate-800 rounded-md"></div>
-            </div>
+            <img src="/logo.jpg" alt="Ownerfi" width={40} height={40} className="rounded-xl" />
             <div>
-              <h1 className="text-xl font-bold text-white">OwnerFi</h1>
+              <h1 className="text-xl font-bold text-white">Ownerfi</h1>
               <p className="text-sm text-slate-500">Admin Dashboard</p>
             </div>
           </div>
@@ -893,7 +889,7 @@ export default function AdminDashboard() {
               onClick={() => setActiveTab(tab.key as any)}
               className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-left transition-all duration-200 group ${
                 activeTab === tab.key
-                  ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg transform scale-[1.02]'
+                  ? 'bg-gradient-to-r from-[#00BC7D] to-[#009B66] text-white shadow-lg transform scale-[1.02]'
                   : 'text-slate-300 hover:bg-slate-700 hover:text-white'
               }`}
             >
@@ -1000,7 +996,7 @@ export default function AdminDashboard() {
                 <button
                   onClick={() => fetchProperties(undefined, false)}
                   disabled={loadingProperties}
-                  className="px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors disabled:bg-slate-600 shadow-sm"
+                  className="px-4 py-2 bg-[#00BC7D] text-white text-sm font-medium rounded-lg hover:bg-[#009B66] transition-colors disabled:bg-slate-600 shadow-sm"
                 >
                   {loadingProperties ? 'Refreshing...' : 'Refresh'}
                 </button>
@@ -1010,7 +1006,7 @@ export default function AdminDashboard() {
         </header>
 
         {/* Content Area */}
-        <main className="flex-1 p-4 md:p-6 lg:p-8 pb-20 md:pb-8 bg-slate-900 md:overflow-y-auto w-full">
+        <main className="flex-1 p-4 md:p-6 lg:p-8 pb-20 md:pb-8 bg-[#111625] md:overflow-y-auto w-full">
           {/* Overview Tab */}
           {activeTab === 'overview' && (
             <div className="space-y-6">
@@ -1060,7 +1056,7 @@ export default function AdminDashboard() {
                   <div className="p-5">
                     <div className="flex items-center">
                       <div className="flex-shrink-0">
-                        <div className="w-8 h-8 bg-emerald-900/300 rounded-md flex items-center justify-center">
+                        <div className="w-8 h-8 bg-[#004D33]/300 rounded-md flex items-center justify-center">
                           <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm3 2h6v4H7V6zm8 8v2h1v-2h-1zm-2-2H7v4h6v-4z" clipRule="evenodd" />
                           </svg>
@@ -1106,10 +1102,10 @@ export default function AdminDashboard() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     <button
                       onClick={() => setActiveTab('upload')}
-                      className="relative group bg-slate-700 p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-emerald-500 rounded-lg hover:bg-slate-600 transition-colors"
+                      className="relative group bg-slate-700 p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-[#00BC7D] rounded-lg hover:bg-slate-600 transition-colors"
                     >
                       <div>
-                        <span className="rounded-lg inline-flex p-3 bg-emerald-900/30 text-emerald-400 group-hover:bg-emerald-800">
+                        <span className="rounded-lg inline-flex p-3 bg-[#004D33]/30 text-[#00BC7D] group-hover:bg-[#007A52]">
                           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                           </svg>
@@ -1123,7 +1119,7 @@ export default function AdminDashboard() {
 
                     <button
                       onClick={() => setActiveTab('properties')}
-                      className="relative group bg-slate-700 p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-emerald-500 rounded-lg hover:bg-slate-600 transition-colors"
+                      className="relative group bg-slate-700 p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-[#00BC7D] rounded-lg hover:bg-slate-600 transition-colors"
                     >
                       <div>
                         <span className="rounded-lg inline-flex p-3 bg-green-900/30 text-green-400 group-hover:bg-green-800/50">
@@ -1140,7 +1136,7 @@ export default function AdminDashboard() {
 
                     <button
                       onClick={() => setActiveTab('disputes')}
-                      className="relative group bg-slate-700 p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-emerald-500 rounded-lg hover:bg-slate-600 transition-colors"
+                      className="relative group bg-slate-700 p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-[#00BC7D] rounded-lg hover:bg-slate-600 transition-colors"
                     >
                       <div>
                         <span className={`rounded-lg inline-flex p-3 ${
@@ -1223,7 +1219,7 @@ export default function AdminDashboard() {
                     onClick={() => { setUploadMode('csv'); setUploadResult(null); }}
                     className={`px-6 py-3 rounded-lg font-medium transition-colors ${
                       uploadMode === 'csv'
-                        ? 'bg-emerald-600 text-white'
+                        ? 'bg-[#00BC7D] text-white'
                         : 'bg-slate-100 text-slate-300 hover:bg-slate-200'
                     }`}
                   >
@@ -1233,7 +1229,7 @@ export default function AdminDashboard() {
                     onClick={() => { setUploadMode('scraper'); setUploadResult(null); }}
                     className={`px-6 py-3 rounded-lg font-medium transition-colors ${
                       uploadMode === 'scraper'
-                        ? 'bg-emerald-600 text-white'
+                        ? 'bg-[#00BC7D] text-white'
                         : 'bg-slate-100 text-slate-300 hover:bg-slate-200'
                     }`}
                   >
@@ -1243,7 +1239,7 @@ export default function AdminDashboard() {
                     onClick={() => { setUploadMode('new-properties'); setUploadResult(null); }}
                     className={`px-6 py-3 rounded-lg font-medium transition-colors ${
                       uploadMode === 'new-properties'
-                        ? 'bg-emerald-600 text-white'
+                        ? 'bg-[#00BC7D] text-white'
                         : 'bg-slate-100 text-slate-300 hover:bg-slate-200'
                     }`}
                   >
@@ -1253,7 +1249,7 @@ export default function AdminDashboard() {
                     onClick={() => { setUploadMode('manual'); setUploadResult(null); }}
                     className={`px-6 py-3 rounded-lg font-medium transition-colors ${
                       uploadMode === 'manual'
-                        ? 'bg-emerald-600 text-white'
+                        ? 'bg-[#00BC7D] text-white'
                         : 'bg-slate-100 text-slate-300 hover:bg-slate-200'
                     }`}
                   >
@@ -1274,7 +1270,7 @@ export default function AdminDashboard() {
                           <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                         <div className="flex text-sm text-slate-400">
-                          <label htmlFor="file-upload" className="relative cursor-pointer bg-slate-800 rounded-md font-medium text-emerald-400 hover:text-emerald-300 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
+                          <label htmlFor="file-upload" className="relative cursor-pointer bg-slate-800 rounded-md font-medium text-[#00BC7D] hover:text-[#00d68f] focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
                             <span>{file ? file.name : 'Upload a file'}</span>
                             <input
                               id="file-upload"
@@ -1296,7 +1292,7 @@ export default function AdminDashboard() {
                         <button
                           onClick={handleUpload}
                           disabled={uploading}
-                          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:bg-slate-600"
+                          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#00BC7D] hover:bg-[#009B66] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00BC7D] disabled:bg-slate-600"
                         >
                           {uploading ? 'Uploading...' : 'Upload Properties'}
                         </button>
@@ -1348,7 +1344,7 @@ export default function AdminDashboard() {
                       value={quickUrl}
                       onChange={(e) => setQuickUrl(e.target.value)}
                       placeholder="https://www.zillow.com/homedetails/123-Main-St/12345678_zpid/"
-                      className="w-full h-24 bg-slate-900 border border-slate-600 rounded-lg p-3 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 text-sm font-mono"
+                      className="w-full h-24 bg-[#111625] border border-slate-600 rounded-lg p-3 text-white placeholder-slate-500 focus:outline-none focus:border-[#00BC7D] text-sm font-mono"
                       disabled={quickAdding}
                     />
 
@@ -1359,7 +1355,7 @@ export default function AdminDashboard() {
                         className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
                           quickAdding || !quickUrl.trim()
                             ? 'bg-slate-700 text-slate-400 cursor-not-allowed'
-                            : 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                            : 'bg-[#00BC7D] hover:bg-[#00BC7D]/50 text-white'
                         }`}
                       >
                         {quickAdding ? 'Adding...' : 'Add to Queue'}
@@ -1381,7 +1377,7 @@ export default function AdminDashboard() {
                             key={idx}
                             className={`text-sm px-3 py-2 rounded flex items-center justify-between ${
                               result.status === 'added'
-                                ? 'bg-emerald-900/30 text-emerald-300'
+                                ? 'bg-[#004D33]/30 text-[#00d68f]'
                                 : result.status === 'exists'
                                 ? 'bg-yellow-900/30 text-yellow-300'
                                 : result.status === 'error'
@@ -1410,7 +1406,7 @@ export default function AdminDashboard() {
                       <div className="w-full border-t border-slate-700"></div>
                     </div>
                     <div className="relative flex justify-center">
-                      <span className="px-3 bg-slate-900 text-slate-500 text-sm">or upload a file</span>
+                      <span className="px-3 bg-[#111625] text-slate-500 text-sm">or upload a file</span>
                     </div>
                   </div>
 
@@ -1600,7 +1596,7 @@ export default function AdminDashboard() {
                     {/* Loading State */}
                     {loadingNewProperties && (
                       <div className="text-center py-12">
-                        <div className="animate-spin inline-block h-8 w-8 border-4 border-emerald-400 border-t-transparent rounded-full"></div>
+                        <div className="animate-spin inline-block h-8 w-8 border-4 border-[#00BC7D] border-t-transparent rounded-full"></div>
                         <p className="mt-4 text-gray-600">Loading failed properties...</p>
                       </div>
                     )}
@@ -1656,7 +1652,7 @@ export default function AdminDashboard() {
                                     href={property.url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-emerald-400 hover:text-emerald-300 hover:underline"
+                                    className="text-[#00BC7D] hover:text-[#00d68f] hover:underline"
                                   >
                                     {property.streetAddress || property.fullAddress || 'N/A'}
                                   </a>
@@ -1761,7 +1757,7 @@ export default function AdminDashboard() {
                               required
                               value={manualPropertyData.address || ''}
                               onChange={(e) => setManualPropertyData({ ...manualPropertyData, address: e.target.value })}
-                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#00BC7D] focus:border-[#00BC7D]"
                             />
                           </div>
                           <div>
@@ -1771,7 +1767,7 @@ export default function AdminDashboard() {
                               required
                               value={manualPropertyData.city || ''}
                               onChange={(e) => setManualPropertyData({ ...manualPropertyData, city: e.target.value })}
-                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#00BC7D] focus:border-[#00BC7D]"
                             />
                           </div>
                           <div>
@@ -1782,7 +1778,7 @@ export default function AdminDashboard() {
                               maxLength={2}
                               value={manualPropertyData.state || ''}
                               onChange={(e) => setManualPropertyData({ ...manualPropertyData, state: e.target.value.toUpperCase() })}
-                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#00BC7D] focus:border-[#00BC7D]"
                             />
                           </div>
                           <div>
@@ -1792,7 +1788,7 @@ export default function AdminDashboard() {
                               required
                               value={manualPropertyData.zipCode || ''}
                               onChange={(e) => setManualPropertyData({ ...manualPropertyData, zipCode: e.target.value })}
-                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#00BC7D] focus:border-[#00BC7D]"
                             />
                           </div>
                         </div>
@@ -1808,7 +1804,7 @@ export default function AdminDashboard() {
                               required
                               value={manualPropertyData.propertyType || 'single-family'}
                               onChange={(e) => setManualPropertyData({ ...manualPropertyData, propertyType: e.target.value })}
-                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#00BC7D] focus:border-[#00BC7D]"
                             >
                               <option value="single-family">Single Family</option>
                               <option value="condo">Condo</option>
@@ -1826,7 +1822,7 @@ export default function AdminDashboard() {
                               min="0"
                               value={manualPropertyData.bedrooms || ''}
                               onChange={(e) => setManualPropertyData({ ...manualPropertyData, bedrooms: e.target.value })}
-                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#00BC7D] focus:border-[#00BC7D]"
                             />
                           </div>
                           <div>
@@ -1838,7 +1834,7 @@ export default function AdminDashboard() {
                               step="0.5"
                               value={manualPropertyData.bathrooms || ''}
                               onChange={(e) => setManualPropertyData({ ...manualPropertyData, bathrooms: e.target.value })}
-                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#00BC7D] focus:border-[#00BC7D]"
                             />
                           </div>
                           <div>
@@ -1848,7 +1844,7 @@ export default function AdminDashboard() {
                               min="0"
                               value={manualPropertyData.squareFeet || ''}
                               onChange={(e) => setManualPropertyData({ ...manualPropertyData, squareFeet: e.target.value })}
-                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#00BC7D] focus:border-[#00BC7D]"
                             />
                           </div>
                           <div>
@@ -1859,7 +1855,7 @@ export default function AdminDashboard() {
                               max={new Date().getFullYear() + 1}
                               value={manualPropertyData.yearBuilt || ''}
                               onChange={(e) => setManualPropertyData({ ...manualPropertyData, yearBuilt: e.target.value })}
-                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#00BC7D] focus:border-[#00BC7D]"
                             />
                           </div>
                         </div>
@@ -1877,7 +1873,7 @@ export default function AdminDashboard() {
                               min="0"
                               value={manualPropertyData.listPrice || ''}
                               onChange={(e) => setManualPropertyData({ ...manualPropertyData, listPrice: e.target.value })}
-                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#00BC7D] focus:border-[#00BC7D]"
                             />
                           </div>
                           <div>
@@ -1888,7 +1884,7 @@ export default function AdminDashboard() {
                               min="0"
                               value={manualPropertyData.downPaymentAmount || ''}
                               onChange={(e) => setManualPropertyData({ ...manualPropertyData, downPaymentAmount: e.target.value })}
-                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#00BC7D] focus:border-[#00BC7D]"
                             />
                           </div>
                           <div>
@@ -1901,7 +1897,7 @@ export default function AdminDashboard() {
                               step="0.1"
                               value={manualPropertyData.downPaymentPercent || ''}
                               onChange={(e) => setManualPropertyData({ ...manualPropertyData, downPaymentPercent: e.target.value })}
-                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#00BC7D] focus:border-[#00BC7D]"
                             />
                           </div>
                           <div>
@@ -1912,7 +1908,7 @@ export default function AdminDashboard() {
                               min="0"
                               value={manualPropertyData.monthlyPayment || ''}
                               onChange={(e) => setManualPropertyData({ ...manualPropertyData, monthlyPayment: e.target.value })}
-                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#00BC7D] focus:border-[#00BC7D]"
                             />
                           </div>
                           <div>
@@ -1925,7 +1921,7 @@ export default function AdminDashboard() {
                               step="0.01"
                               value={manualPropertyData.interestRate || ''}
                               onChange={(e) => setManualPropertyData({ ...manualPropertyData, interestRate: e.target.value })}
-                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#00BC7D] focus:border-[#00BC7D]"
                             />
                           </div>
                           <div>
@@ -1937,7 +1933,7 @@ export default function AdminDashboard() {
                               max="50"
                               value={manualPropertyData.termYears || ''}
                               onChange={(e) => setManualPropertyData({ ...manualPropertyData, termYears: e.target.value })}
-                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#00BC7D] focus:border-[#00BC7D]"
                             />
                           </div>
                         </div>
@@ -1953,7 +1949,7 @@ export default function AdminDashboard() {
                               rows={4}
                               value={manualPropertyData.description || ''}
                               onChange={(e) => setManualPropertyData({ ...manualPropertyData, description: e.target.value })}
-                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#00BC7D] focus:border-[#00BC7D]"
                               placeholder="Property description..."
                             />
                           </div>
@@ -1963,7 +1959,7 @@ export default function AdminDashboard() {
                               rows={2}
                               value={manualPropertyData.imageUrls || ''}
                               onChange={(e) => setManualPropertyData({ ...manualPropertyData, imageUrls: e.target.value })}
-                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#00BC7D] focus:border-[#00BC7D]"
                               placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg"
                             />
                           </div>
@@ -1982,14 +1978,14 @@ export default function AdminDashboard() {
                               priority: 5
                             });
                           }}
-                          className="px-4 py-2 border border-slate-600 rounded-md shadow-sm text-sm font-medium text-slate-300 bg-slate-800 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+                          className="px-4 py-2 border border-slate-600 rounded-md shadow-sm text-sm font-medium text-slate-300 bg-slate-800 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00BC7D]"
                         >
                           Reset Form
                         </button>
                         <button
                           type="submit"
                           disabled={uploading}
-                          className="px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:bg-slate-600"
+                          className="px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#00BC7D] hover:bg-[#009B66] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00BC7D] disabled:bg-slate-600"
                         >
                           {uploading ? 'Creating...' : 'Create Property'}
                         </button>
@@ -2072,7 +2068,7 @@ export default function AdminDashboard() {
                           setCityFilter('');
                           setStateFilter('');
                         }}
-                        className="text-sm text-emerald-400 hover:text-emerald-400"
+                        className="text-sm text-[#00BC7D] hover:text-[#00BC7D]"
                       >
                         ✕ Clear filters
                       </button>
@@ -2094,7 +2090,7 @@ export default function AdminDashboard() {
                             setSelectedBuyers(filteredBuyers.map(b => b.userId));
                           }
                         }}
-                        className="h-4 w-4 rounded border-slate-600 text-emerald-400 focus:ring-indigo-500"
+                        className="h-4 w-4 rounded border-slate-600 text-[#00BC7D] focus:ring-indigo-500"
                       />
                       Select All
                     </label>
@@ -2138,7 +2134,7 @@ export default function AdminDashboard() {
                     <button
                       onClick={fetchBuyers}
                       disabled={loadingBuyers}
-                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:bg-slate-600"
+                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-[#00BC7D] hover:bg-[#009B66] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00BC7D] disabled:bg-slate-600"
                     >
                       {loadingBuyers ? 'Loading...' : 'Refresh'}
                     </button>
@@ -2292,7 +2288,7 @@ export default function AdminDashboard() {
                                   setSelectedBuyers(prev => [...prev, buyer.userId]);
                                 }
                               }}
-                              className="h-4 w-4 rounded border-slate-600 text-emerald-400 focus:ring-indigo-500"
+                              className="h-4 w-4 rounded border-slate-600 text-[#00BC7D] focus:ring-indigo-500"
                             />
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
@@ -2351,7 +2347,7 @@ export default function AdminDashboard() {
                   <button
                     onClick={fetchRealtors}
                     disabled={loadingRealtors}
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:bg-slate-600"
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-[#00BC7D] hover:bg-[#009B66] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00BC7D] disabled:bg-slate-600"
                   >
                     {loadingRealtors ? 'Loading...' : 'Refresh'}
                   </button>
@@ -2366,7 +2362,7 @@ export default function AdminDashboard() {
                             <div className="flex items-center">
                               <div className="flex-shrink-0">
                                 <div className="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
-                                  <span className="text-sm font-medium text-emerald-400">
+                                  <span className="text-sm font-medium text-[#00BC7D]">
                                     {realtor.name.charAt(0).toUpperCase()}
                                   </span>
                                 </div>
@@ -2375,7 +2371,7 @@ export default function AdminDashboard() {
                                 <div className="text-sm font-medium text-white">{realtor.name}</div>
                                 <div className="text-sm text-slate-400">{realtor.email}</div>
                                 {realtor.phone && (
-                                  <div className="text-sm text-emerald-400">{realtor.phone}</div>
+                                  <div className="text-sm text-[#00BC7D]">{realtor.phone}</div>
                                 )}
                                 {realtor.brokerage && <div className="text-sm text-slate-400">{realtor.brokerage}</div>}
                                 {realtor.city && realtor.state && (
@@ -2389,7 +2385,7 @@ export default function AdminDashboard() {
                                 <div className="flex items-center space-x-2">
                                   <a
                                     href={`tel:${realtor.phone}`}
-                                    className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/40 transition-colors"
+                                    className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#00BC7D]/20 text-[#00BC7D] hover:bg-[#00BC7D]/40 transition-colors"
                                     aria-label={`Call ${realtor.name}`}
                                     title={`Call ${realtor.name}`}
                                   >
@@ -2508,7 +2504,7 @@ export default function AdminDashboard() {
                     {dispute.status === 'pending' && (
                       <div className="border-t border-slate-700 pt-4">
                         <div className="flex items-center space-x-4">
-                          <select className="block w-40 pl-3 pr-10 py-2 text-base border-slate-600 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm rounded-md">
+                          <select className="block w-40 pl-3 pr-10 py-2 text-base border-slate-600 focus:outline-none focus:ring-[#00BC7D] focus:border-[#00BC7D] sm:text-sm rounded-md">
                             <option value="1">Refund 1 Credit</option>
                             <option value="2">Refund 2 Credits</option>
                             <option value="3">Refund 3 Credits</option>
@@ -2543,7 +2539,7 @@ export default function AdminDashboard() {
                   <button
                     onClick={fetchContacts}
                     disabled={loadingContacts}
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:bg-slate-600"
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-[#00BC7D] hover:bg-[#009B66] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00BC7D] disabled:bg-slate-600"
                   >
                     {loadingContacts ? 'Loading...' : 'Refresh'}
                   </button>
@@ -2640,7 +2636,7 @@ export default function AdminDashboard() {
                           type="text"
                           value={editForm.address || ''}
                           onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
-                          className="w-full px-4 py-3 border border-slate-600 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                          className="w-full px-4 py-3 border border-slate-600 rounded-xl focus:ring-2 focus:ring-[#00BC7D] focus:border-[#00BC7D] transition-colors"
                         />
                       </div>
 
@@ -2651,7 +2647,7 @@ export default function AdminDashboard() {
                             type="text"
                             value={editForm.city || ''}
                             onChange={(e) => setEditForm({ ...editForm, city: e.target.value })}
-                            className="w-full px-4 py-3 border border-slate-600 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                            className="w-full px-4 py-3 border border-slate-600 rounded-xl focus:ring-2 focus:ring-[#00BC7D] focus:border-[#00BC7D] transition-colors"
                           />
                         </div>
                         <div>
@@ -2660,7 +2656,7 @@ export default function AdminDashboard() {
                             type="text"
                             value={editForm.state || ''}
                             onChange={(e) => setEditForm({ ...editForm, state: e.target.value })}
-                            className="w-full px-4 py-3 border border-slate-600 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                            className="w-full px-4 py-3 border border-slate-600 rounded-xl focus:ring-2 focus:ring-[#00BC7D] focus:border-[#00BC7D] transition-colors"
                           />
                         </div>
                         <div>
@@ -2669,7 +2665,7 @@ export default function AdminDashboard() {
                             type="text"
                             value={editForm.zipCode || ''}
                             onChange={(e) => setEditForm({ ...editForm, zipCode: e.target.value })}
-                            className="w-full px-4 py-3 border border-slate-600 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                            className="w-full px-4 py-3 border border-slate-600 rounded-xl focus:ring-2 focus:ring-[#00BC7D] focus:border-[#00BC7D] transition-colors"
                           />
                         </div>
                       </div>
@@ -2681,7 +2677,7 @@ export default function AdminDashboard() {
                             type="number"
                             value={editForm.bedrooms || ''}
                             onChange={(e) => setEditForm({ ...editForm, bedrooms: parseInt(e.target.value) })}
-                            className="w-full px-4 py-3 border border-slate-600 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                            className="w-full px-4 py-3 border border-slate-600 rounded-xl focus:ring-2 focus:ring-[#00BC7D] focus:border-[#00BC7D] transition-colors"
                           />
                         </div>
                         <div>
@@ -2691,7 +2687,7 @@ export default function AdminDashboard() {
                             step="0.5"
                             value={editForm.bathrooms || ''}
                             onChange={(e) => setEditForm({ ...editForm, bathrooms: parseFloat(e.target.value) })}
-                            className="w-full px-4 py-3 border border-slate-600 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                            className="w-full px-4 py-3 border border-slate-600 rounded-xl focus:ring-2 focus:ring-[#00BC7D] focus:border-[#00BC7D] transition-colors"
                           />
                         </div>
                         <div>
@@ -2700,7 +2696,7 @@ export default function AdminDashboard() {
                             type="number"
                             value={editForm.squareFeet || ''}
                             onChange={(e) => setEditForm({ ...editForm, squareFeet: parseInt(e.target.value) })}
-                            className="w-full px-4 py-3 border border-slate-600 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                            className="w-full px-4 py-3 border border-slate-600 rounded-xl focus:ring-2 focus:ring-[#00BC7D] focus:border-[#00BC7D] transition-colors"
                           />
                         </div>
                       </div>
@@ -2725,7 +2721,7 @@ export default function AdminDashboard() {
                               handlePriceChange(newPrice);
                             }}
                             placeholder="169000"
-                            className="w-full pl-8 pr-4 py-3 border border-slate-600 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                            className="w-full pl-8 pr-4 py-3 border border-slate-600 rounded-xl focus:ring-2 focus:ring-[#00BC7D] focus:border-[#00BC7D] transition-colors"
                           />
                         </div>
                       </div>
@@ -2740,7 +2736,7 @@ export default function AdminDashboard() {
                               value={editForm.monthlyPayment || ''}
                               onChange={(e) => setEditForm({ ...editForm, monthlyPayment: parseFloat(e.target.value) })}
                               placeholder="1092"
-                              className="w-full pl-8 pr-4 py-3 border border-slate-600 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                              className="w-full pl-8 pr-4 py-3 border border-slate-600 rounded-xl focus:ring-2 focus:ring-[#00BC7D] focus:border-[#00BC7D] transition-colors"
                             />
                           </div>
                         </div>
@@ -2753,7 +2749,7 @@ export default function AdminDashboard() {
                               value={editForm.downPaymentAmount || ''}
                               onChange={(e) => setEditForm({ ...editForm, downPaymentAmount: parseFloat(e.target.value) })}
                               placeholder="16900"
-                              className="w-full pl-8 pr-4 py-3 border border-slate-600 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                              className="w-full pl-8 pr-4 py-3 border border-slate-600 rounded-xl focus:ring-2 focus:ring-[#00BC7D] focus:border-[#00BC7D] transition-colors"
                             />
                           </div>
                         </div>
@@ -2773,7 +2769,7 @@ export default function AdminDashboard() {
                                 handleInterestRateChange(newRate);
                               }}
                               placeholder="6.75"
-                              className="w-full pr-10 pl-4 py-3 border border-slate-600 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                              className="w-full pr-10 pl-4 py-3 border border-slate-600 rounded-xl focus:ring-2 focus:ring-[#00BC7D] focus:border-[#00BC7D] transition-colors"
                             />
                             <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-500 font-medium">%</span>
                           </div>
@@ -2790,7 +2786,7 @@ export default function AdminDashboard() {
                                 handleDownPaymentPercentChange(newPercent);
                               }}
                               placeholder="10"
-                              className="w-full pr-10 pl-4 py-3 border border-slate-600 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                              className="w-full pr-10 pl-4 py-3 border border-slate-600 rounded-xl focus:ring-2 focus:ring-[#00BC7D] focus:border-[#00BC7D] transition-colors"
                             />
                             <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-500 font-medium">%</span>
                           </div>
@@ -2809,7 +2805,7 @@ export default function AdminDashboard() {
                             value={editForm.termYears || ''}
                             onChange={(e) => setEditForm({ ...editForm, termYears: parseInt(e.target.value) || undefined })}
                             placeholder="Auto-calculated based on price"
-                            className="w-full pr-16 pl-4 py-3 border border-slate-600 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                            className="w-full pr-16 pl-4 py-3 border border-slate-600 rounded-xl focus:ring-2 focus:ring-[#00BC7D] focus:border-[#00BC7D] transition-colors"
                           />
                           <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-500 font-medium">years</span>
                         </div>
@@ -2828,7 +2824,7 @@ export default function AdminDashboard() {
                             value={editForm.balloonYears || ''}
                             onChange={(e) => setEditForm({ ...editForm, balloonYears: parseInt(e.target.value) || undefined })}
                             placeholder="5"
-                            className="w-full pr-16 pl-4 py-3 border border-slate-600 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                            className="w-full pr-16 pl-4 py-3 border border-slate-600 rounded-xl focus:ring-2 focus:ring-[#00BC7D] focus:border-[#00BC7D] transition-colors"
                           />
                           <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-500 font-medium">years</span>
                         </div>
@@ -2843,7 +2839,7 @@ export default function AdminDashboard() {
                           value={editForm.imageUrl || ''}
                           onChange={(e) => setEditForm({ ...editForm, imageUrl: e.target.value })}
                           placeholder="https://example.com/image.jpg"
-                          className="w-full px-4 py-3 border border-slate-600 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                          className="w-full px-4 py-3 border border-slate-600 rounded-xl focus:ring-2 focus:ring-[#00BC7D] focus:border-[#00BC7D] transition-colors"
                         />
                         {(editForm.imageUrl || editingProperty.imageUrl || (editingProperty as any).imageUrls?.[0]) && (
                           <div className="mt-3">
@@ -2869,7 +2865,7 @@ export default function AdminDashboard() {
               <div className="flex justify-end space-x-4 mt-8 pt-6 border-t border-slate-700">
                 <button
                   onClick={() => setEditingProperty(null)}
-                  className="px-6 py-3 border border-slate-600 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors"
+                  className="px-6 py-3 border border-slate-600 rounded-xl text-sm font-medium text-slate-300 hover:bg-[#111625] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00BC7D] transition-colors"
                 >
                   Cancel
                 </button>
@@ -2887,7 +2883,7 @@ export default function AdminDashboard() {
                     setEditingProperty(null);
                     fetchProperties(undefined, false);
                   }}
-                  className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl font-medium hover:from-indigo-600 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all transform hover:scale-105 shadow-lg"
+                  className="px-6 py-3 bg-gradient-to-r from-[#00BC7D] to-[#009B66] text-white rounded-xl font-medium hover:from-indigo-600 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00BC7D] transition-all transform hover:scale-105 shadow-lg"
                 >
                   Save Changes
                 </button>

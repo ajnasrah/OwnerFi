@@ -29,8 +29,8 @@ export default function RealtorDashboardHub() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-400"></div>
+      <div className="min-h-screen bg-[#111625] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00BC7D]"></div>
       </div>
     );
   }
@@ -43,15 +43,13 @@ export default function RealtorDashboardHub() {
       <header className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50">
         <div className="px-4 py-3 flex items-center justify-between max-w-6xl mx-auto">
           <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">O</span>
-            </div>
-            <span className="text-lg font-bold text-white">OwnerFi</span>
+            <img src="/logo.jpg" alt="Ownerfi" width={32} height={32} className="rounded-lg" />
+            <span className="text-lg font-bold text-white">Ownerfi</span>
           </Link>
 
           <div className="flex items-center gap-2">
             {(session as unknown as ExtendedSession)?.user?.role === 'admin' && (
-              <Link href="/admin" className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors mr-2">
+              <Link href="/admin" className="text-sm text-[#00BC7D] hover:text-[#00d68f] transition-colors mr-2">
                 ← Admin
               </Link>
             )}
@@ -89,10 +87,10 @@ export default function RealtorDashboardHub() {
           {/* View Buyer Leads */}
           <Link
             href="/realtor-dashboard/buyers"
-            className="group bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-8 hover:border-emerald-500/50 transition-all duration-300 hover:shadow-xl hover:shadow-emerald-500/10 hover:scale-[1.02]"
+            className="group bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-8 hover:border-[#00BC7D]/50 transition-all duration-300 hover:shadow-xl hover:shadow-[#00BC7D]/10 hover:scale-[1.02]"
           >
             <div className="text-center">
-              <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full flex items-center justify-center text-4xl group-hover:scale-110 transition-transform">
+              <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-[#00BC7D] to-[#00BC7D] rounded-full flex items-center justify-center text-4xl group-hover:scale-110 transition-transform">
                 👥
               </div>
               <h2 className="text-2xl font-bold text-white mb-3">
@@ -101,7 +99,7 @@ export default function RealtorDashboardHub() {
               <p className="text-slate-300 mb-4">
                 View available buyer leads in your area and manage your purchased leads
               </p>
-              <div className="inline-flex items-center gap-2 text-emerald-400 font-semibold">
+              <div className="inline-flex items-center gap-2 text-[#00BC7D] font-semibold">
                 <span>View Buyers</span>
                 <span className="group-hover:translate-x-1 transition-transform">→</span>
               </div>
@@ -158,7 +156,7 @@ export default function RealtorDashboardHub() {
         <div className="md:hidden mt-4 space-y-3">
           <Link
             href="/buy-credits"
-            className="block w-full text-center bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/30 text-emerald-400 px-6 py-3 rounded-xl font-semibold transition-all"
+            className="block w-full text-center bg-[#00BC7D]/20 hover:bg-[#00BC7D]/30 border border-[#00BC7D]/30 text-[#00BC7D] px-6 py-3 rounded-xl font-semibold transition-all"
           >
             Buy Credits
           </Link>
@@ -170,7 +168,7 @@ export default function RealtorDashboardHub() {
           <div className="flex justify-center">
             <Link
               href="/buy-credits"
-              className="bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/30 text-emerald-400 px-8 py-3 rounded-xl font-semibold transition-all hover:scale-105"
+              className="bg-[#00BC7D]/20 hover:bg-[#00BC7D]/30 border border-[#00BC7D]/30 text-[#00BC7D] px-8 py-3 rounded-xl font-semibold transition-all hover:scale-105"
             >
               Buy Credits
             </Link>

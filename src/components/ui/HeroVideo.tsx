@@ -45,11 +45,11 @@ export default function HeroVideo() {
           {/* Property Card Preview */}
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-white via-white to-transparent p-6">
             <div className="mb-3">
-              <div className="inline-block bg-emerald-500 text-white text-xs font-bold px-3 py-1 rounded-full mb-3">
+              <div className="inline-block bg-[#00BC7D]/50 text-white text-xs font-bold px-3 py-1 rounded-full mb-3">
                 Owner Finance
               </div>
               <div className="text-2xl font-black text-slate-900 mb-1">$285,000</div>
-              <div className="text-emerald-600 font-bold">$1,850/month</div>
+              <div className="text-[#00BC7D] font-bold">$1,850/month</div>
             </div>
             <div className="text-sm font-semibold text-slate-900 mb-1">123 Main Street</div>
             <div className="text-xs text-slate-600 mb-3">Austin, TX 78701</div>

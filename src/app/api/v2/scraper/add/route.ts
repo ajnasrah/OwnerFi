@@ -9,12 +9,12 @@
  * WHAT IT DOES:
  * 1. Accepts Zillow property URL(s)
  * 2. Immediately scrapes full details via Apify
- * 3. If forceOwnerFinance=true (default for manual adds): ALWAYS saves as owner finance
+ * 3. If forceOwnerfinance=true (default for manual adds): ALWAYS saves as owner finance
  * 4. Otherwise: Runs filters and only saves if passes
  *
  * COLLECTION: 'properties' (unified)
  * - Document ID: zpid_${zpid}
- * - isOwnerFinance: boolean
+ * - isOwnerfinance: boolean
  * - isCashDeal: boolean
  * - dealTypes: string[]
  *
@@ -45,7 +45,7 @@ export async function OPTIONS() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { url, urls, forceOwnerFinance = true } = body; // Default to true for manual adds
+    const { url, urls, forceOwnerfinance = true } = body; // Default to true for manual adds
 
     // Support single URL or array of URLs
     const urlsToProcess: string[] = urls || (url ? [url] : []);
@@ -169,21 +169,21 @@ export async function POST(request: NextRequest) {
         const savedTo: string[] = [];
         let filterResult: FilterResult;
 
-        if (forceOwnerFinance) {
+        if (forceOwnerfinance) {
           // MANUAL ADD: Always save as owner finance (realtor confirmed)
           console.log(`[ADD] Force owner finance mode - saving ${property.fullAddress}`);
 
           // Create a manual override filter result
           filterResult = {
-            passesOwnerFinance: true,
+            passesOwnerfinance: true,
             ownerFinanceKeywords: ['manually_added'],
-            primaryOwnerFinanceKeyword: 'manually_added',
+            primaryOwnerfinanceKeyword: 'manually_added',
             financingType: { financingType: 'owner_finance', allTypes: ['owner_finance'], displayLabel: 'Owner Finance' },
             passesCashDeal: false,
             needsWork: false,
             needsWorkKeywords: [],
             dealTypes: ['owner_finance'] as ('owner_finance' | 'cash_deal')[],
-            isOwnerFinance: true,
+            isOwnerfinance: true,
             isCashDeal: false,
             shouldSave: true,
             shouldSaveToZillowImports: true,
@@ -215,7 +215,7 @@ export async function POST(request: NextRequest) {
           }
 
           // Track what types it saved as
-          if (filterResult.isOwnerFinance) savedTo.push('owner_finance');
+          if (filterResult.isOwnerfinance) savedTo.push('owner_finance');
           if (filterResult.isCashDeal) savedTo.push('cash_deal');
         }
 

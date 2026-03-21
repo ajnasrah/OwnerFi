@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
 
     // Brand display names
     const brandNames: Record<string, string> = {
-      ownerfi: 'OwnerFi',
+      ownerfi: 'Ownerfi',
       carz: 'Carz Inc',
       abdullah: 'Abdullah',
       benefit: 'Benefit',

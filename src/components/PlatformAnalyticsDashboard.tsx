@@ -175,7 +175,7 @@ export default function PlatformAnalyticsDashboard() {
               onChange={(e) => setSelectedBrand(e.target.value)}
               className="border border-gray-300 rounded-lg px-4 py-2 bg-white"
             >
-              <option value="ownerfi">OwnerFi</option>
+              <option value="ownerfi">Ownerfi</option>
               <option value="carz">Carz Inc</option>
               <option value="benefit">Benefit</option>
               <option value="abdullah">Abdullah</option>

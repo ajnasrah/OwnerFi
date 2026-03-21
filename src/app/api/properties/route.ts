@@ -92,7 +92,7 @@ export async function GET(request: NextRequest) {
     const propertiesQuery = query(
       collection(db, 'properties'),
       where('isActive', '==', true),
-      where('isOwnerFinance', '==', true),
+      where('isOwnerfinance', '==', true),
       firestoreLimit(limit)
     );
 

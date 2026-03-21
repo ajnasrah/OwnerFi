@@ -2,7 +2,7 @@
  * ACCEPT REFERRAL API
  *
  * Agent B views and accepts a referral from Agent A.
- * Creates a new agreement between Agent B and Agent A (with OwnerFi getting their cut).
+ * Creates a new agreement between Agent B and Agent A (with Ownerfi getting their cut).
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -173,7 +173,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate OwnerFi Addendum acknowledgments
+    // Validate Ownerfi Addendum acknowledgments
     if (agreeTCPA !== true) {
       return NextResponse.json(
         { error: 'You must acknowledge the TCPA Compliance Agreement to proceed' },
@@ -386,7 +386,7 @@ export async function POST(request: NextRequest) {
       signatureIpAddress: (request.headers.get('x-forwarded-for') || 'unknown').split(',')[0].trim() || 'unknown',
       signatureUserAgent: request.headers.get('user-agent')?.trim() || 'unknown',
 
-      // OwnerFi Addendum Acknowledgments (Sections 8-12)
+      // Ownerfi Addendum Acknowledgments (Sections 8-12)
       acknowledgeTCPA: true,
       acknowledgeTCPAAt: now,
       acknowledgeCreativeFinance: true,

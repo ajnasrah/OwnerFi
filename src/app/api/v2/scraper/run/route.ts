@@ -14,7 +14,7 @@
  *
  * COLLECTION: 'properties' (unified)
  * - Document ID: zpid_${zpid}
- * - isOwnerFinance: boolean
+ * - isOwnerfinance: boolean
  * - isCashDeal: boolean
  * - dealTypes: string[]
  *
@@ -61,7 +61,7 @@ interface ScraperMetrics {
   duplicatesSkipped: number;
   // Unified collection metrics
   savedToProperties: number;
-  savedAsOwnerFinance: number;
+  savedAsOwnerfinance: number;
   savedAsCashDeal: number;
   savedAsBoth: number;
   filteredOut: number;
@@ -129,7 +129,7 @@ async function runUnifiedScraper(): Promise<{
     duplicatesSkipped: 0,
     // Unified collection metrics
     savedToProperties: 0,
-    savedAsOwnerFinance: 0,
+    savedAsOwnerfinance: 0,
     savedAsCashDeal: 0,
     savedAsBoth: 0,
     filteredOut: 0,
@@ -434,11 +434,11 @@ async function runUnifiedScraper(): Promise<{
 
         // Update metrics based on deal types
         metrics.savedToProperties++;
-        if (filterResult.isOwnerFinance && filterResult.isCashDeal) {
+        if (filterResult.isOwnerfinance && filterResult.isCashDeal) {
           metrics.savedAsBoth++;
         }
-        if (filterResult.isOwnerFinance) {
-          metrics.savedAsOwnerFinance++;
+        if (filterResult.isOwnerfinance) {
+          metrics.savedAsOwnerfinance++;
 
           // Collect for buyer notifications
           ownerFinancePropertiesForNotification.push({
@@ -544,16 +544,16 @@ async function runUnifiedScraper(): Promise<{
           yearBuilt: property.yearBuilt,
           listPrice: property.price || 0,
           zestimate: property.estimate,
-          dealType: filterResult.isOwnerFinance && filterResult.isCashDeal
+          dealType: filterResult.isOwnerfinance && filterResult.isCashDeal
             ? 'both'
-            : filterResult.isOwnerFinance ? 'owner_finance' : 'cash_deal',
+            : filterResult.isOwnerfinance ? 'owner_finance' : 'cash_deal',
           status: 'active',
           isActive: true,
           nearbyCities: property.nearbyCities || [],
-          ownerFinance: filterResult.isOwnerFinance ? {
+          ownerFinance: filterResult.isOwnerfinance ? {
             verified: true,
             financingType: 'owner_finance' as const,
-            primaryKeyword: filterResult.primaryOwnerFinanceKeyword || 'owner financing',
+            primaryKeyword: filterResult.primaryOwnerfinanceKeyword || 'owner financing',
             matchedKeywords: filterResult.ownerFinanceKeywords || [],
             monthlyPayment: (property as any).monthlyPayment,
             downPaymentAmount: (property as any).downPaymentAmount,
@@ -759,7 +759,7 @@ async function runUnifiedScraper(): Promise<{
     console.log(`Duplicates Skipped: ${metrics.duplicatesSkipped}`);
     console.log(`Filtered Out: ${metrics.filteredOut}`);
     console.log(`Saved to properties: ${metrics.savedToProperties}`);
-    console.log(`  - Owner Finance: ${metrics.savedAsOwnerFinance}`);
+    console.log(`  - Owner Finance: ${metrics.savedAsOwnerfinance}`);
     console.log(`  - Cash Deal: ${metrics.savedAsCashDeal}`);
     console.log(`  - Both: ${metrics.savedAsBoth}`);
     console.log(`Indexed to Typesense: ${metrics.indexedToTypesense}`);
@@ -773,7 +773,7 @@ async function runUnifiedScraper(): Promise<{
       success: true,
       duration,
       metrics,
-      message: `Scraped ${metrics.totalPropertiesFound} properties. Saved ${metrics.savedToProperties} to properties collection (${metrics.savedAsOwnerFinance} owner finance, ${metrics.savedAsCashDeal} cash deal, ${metrics.savedAsBoth} both). Indexed ${metrics.indexedToTypesense} to Typesense. Sent ${metrics.sentToGHL} regional properties to GHL.`,
+      message: `Scraped ${metrics.totalPropertiesFound} properties. Saved ${metrics.savedToProperties} to properties collection (${metrics.savedAsOwnerfinance} owner finance, ${metrics.savedAsCashDeal} cash deal, ${metrics.savedAsBoth} both). Indexed ${metrics.indexedToTypesense} to Typesense. Sent ${metrics.sentToGHL} regional properties to GHL.`,
     };
   } catch (error) {
     console.error('[SCRAPER] Fatal error:', error);

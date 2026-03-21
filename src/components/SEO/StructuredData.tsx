@@ -82,7 +82,7 @@ export function StructuredData({ type, data = {} }: StructuredDataProps) {
         const schema: Organization = {
           '@context': 'https://schema.org',
           '@type': 'Organization',
-          name: 'OwnerFi',
+          name: 'Ownerfi',
           url: baseUrl,
           logo: `${baseUrl}/logo.png`,
           sameAs: [
@@ -104,12 +104,12 @@ export function StructuredData({ type, data = {} }: StructuredDataProps) {
         const schema: WebPage = {
           '@context': 'https://schema.org',
           '@type': 'WebPage',
-          name: data.title || 'OwnerFi - Owner Financed Properties',
+          name: data.title || 'Ownerfi - Owner Financed Properties',
           description: data.description || 'Find owner financed homes with flexible financing.',
           url: data.url || baseUrl,
           publisher: {
             '@type': 'Organization',
-            name: 'OwnerFi',
+            name: 'Ownerfi',
             logo: {
               '@type': 'ImageObject',
               url: `${baseUrl}/logo.png`

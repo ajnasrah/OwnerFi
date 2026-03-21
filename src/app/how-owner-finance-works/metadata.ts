@@ -1,15 +1,15 @@
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'How Owner Financing Works | Complete Guide 2025 | OwnerFi',
+  title: 'How Owner Financing Works | Complete Guide 2025 | Ownerfi',
   description: 'Learn how owner financing works, understand seller financing, contract for deed, and subject-to deals. Discover how to buy a home without bank financing. Complete guide with FAQs.',
   keywords: 'how owner financing works, seller financing guide, owner finance explained, no bank home buying, contract for deed, subject to real estate, lease to own, owner will carry, creative financing, owner financed homes guide, seller financing process, owner finance vs bank loan, balloon payment explained, interest rate owner financing',
 
   openGraph: {
-    title: 'How Owner Financing Works - Complete Guide | OwnerFi',
+    title: 'How Owner Financing Works - Complete Guide | Ownerfi',
     description: 'Comprehensive guide to owner financing. Learn seller financing, understand the process, risks, and benefits. Buy homes without traditional bank loans.',
     url: 'https://ownerfi.ai/how-owner-finance-works',
-    siteName: 'OwnerFi',
+    siteName: 'Ownerfi',
     type: 'article',
     images: [
       {
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     locale: 'en_US',
     publishedTime: '2024-01-01T00:00:00Z',
     modifiedTime: new Date().toISOString(),
-    authors: ['OwnerFi'],
+    authors: ['Ownerfi'],
     tags: ['owner financing', 'seller financing', 'real estate', 'home buying', 'creative financing'],
   },
 
@@ -49,9 +49,9 @@ export const metadata: Metadata = {
     },
   },
 
-  authors: [{ name: 'OwnerFi', url: 'https://ownerfi.ai' }],
-  creator: 'OwnerFi',
-  publisher: 'OwnerFi',
+  authors: [{ name: 'Ownerfi', url: 'https://ownerfi.ai' }],
+  creator: 'Ownerfi',
+  publisher: 'Ownerfi',
 
   category: 'Real Estate Education',
 

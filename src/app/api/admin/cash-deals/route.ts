@@ -231,7 +231,7 @@ function normalizeProperty(doc: FirebaseFirestore.DocumentSnapshot, source: stri
     status: data.status || data.homeStatus,
     addedAt: data.addedAt || data.importedAt || data.scrapedAt,
     // Owner finance fields - check both old and new field names
-    ownerFinanceVerified: data.isOwnerFinance || data.ownerFinanceVerified || false,
+    ownerFinanceVerified: data.isOwnerfinance || data.ownerFinanceVerified || false,
     matchedKeywords: data.matchedKeywords,
     financingType: data.financingType,
     description: data.description,
@@ -583,9 +583,9 @@ export async function GET(request: NextRequest) {
 
         // Determine source tag for display (based on dealTypes)
         let source = 'unified';
-        if (data.isOwnerFinance && data.isCashDeal) {
+        if (data.isOwnerfinance && data.isCashDeal) {
           source = 'both';
-        } else if (data.isOwnerFinance) {
+        } else if (data.isOwnerfinance) {
           source = 'owner_finance';
         } else if (data.isCashDeal) {
           source = 'cash_deal';

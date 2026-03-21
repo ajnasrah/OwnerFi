@@ -4,14 +4,14 @@ import { db } from '@/lib/firebase'
 import { collection, query, where, getDocs } from 'firebase/firestore'
 
 export const metadata: Metadata = {
-  title: 'Owner Financing Austin | Rent to Own Alternative TX | Downtown, South Austin | OwnerFi',
+  title: 'Owner Financing Austin | Rent to Own Alternative TX | Downtown, South Austin | Ownerfi',
   description: 'Find owner financed homes in Austin - better than rent to own! Immediate ownership in Downtown, South Austin, East Austin, Westlake. No banks needed. Flexible credit options.',
   keywords: 'owner financing austin, owner financed homes austin, rent to own austin, rent to own texas, owner financing downtown austin, seller financing austin, no credit check homes austin, bad credit homes austin, austin real estate owner financing',
   openGraph: {
-    title: 'Owner Financed Homes in Austin - Better Than Rent to Own | OwnerFi',
+    title: 'Owner Financed Homes in Austin - Better Than Rent to Own | Ownerfi',
     description: 'Skip the banks! Find owner financed properties across Austin with immediate ownership. Serving Downtown, South Austin, East Austin and more.',
     url: 'https://ownerfi.ai/austin-owner-financing',
-    siteName: 'OwnerFi',
+    siteName: 'Ownerfi',
     type: 'website',
   },
   twitter: {
@@ -53,7 +53,7 @@ async function getAustinProperties() {
   }
 }
 
-export default async function OwnerFinancingAustin() {
+export default async function OwnerfinancingAustin() {
   const { areaCounts, totalCount } = await getAustinProperties()
 
   const faqSchema = {
@@ -98,7 +98,7 @@ export default async function OwnerFinancingAustin() {
   const localBusinessSchema = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
-    "name": "OwnerFi Austin - Owner Financed Homes",
+    "name": "Ownerfi Austin - Owner Financed Homes",
     "description": "Find owner financed homes throughout Austin. Better than rent to own with immediate ownership.",
     "url": "https://ownerfi.ai/austin-owner-financing",
     "areaServed": {
@@ -150,7 +150,7 @@ export default async function OwnerFinancingAustin() {
             </p>
 
             <div className="grid md:grid-cols-3 gap-6 mb-8">
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-xl border border-green-200">
+              <div className="bg-gradient-to-br from-green-50 to-[#00BC7D]/5 p-6 rounded-xl border border-green-200">
                 <h3 className="font-bold text-green-900 mb-2">Immediate Austin Ownership</h3>
                 <p className="text-green-800">Get the deed right away, unlike rent to own</p>
               </div>

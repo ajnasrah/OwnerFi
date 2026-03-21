@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_US',
     url: 'https://ownerfi.ai/owner-financing-alabama',
-    siteName: 'OwnerFi',
+    siteName: 'Ownerfi',
     title: 'Owner Financing Alabama - Seller Financed Homes',
     description: 'Browse owner financed properties across Alabama. No bank needed, flexible terms available.',
     images: [{
@@ -32,7 +32,7 @@ function generateLocalBusinessSchema() {
   return {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
-    "name": "OwnerFi Alabama",
+    "name": "Ownerfi Alabama",
     "description": "Discover owner financed properties in Alabama",
     "url": "https://ownerfi.ai/owner-financing-alabama",
     "areaServed": {
@@ -88,7 +88,7 @@ function generateFAQSchema() {
   }
 }
 
-export default function OwnerFinancingAlabama() {
+export default function OwnerfinancingAlabama() {
   return (
     <>
       <Script
@@ -102,20 +102,18 @@ export default function OwnerFinancingAlabama() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(generateFAQSchema()) }}
       />
 
-      <div className="min-h-screen bg-slate-900 text-white">
+      <div className="min-h-screen bg-[#111625] text-white">
         {/* Header */}
         <header className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 px-6 py-4">
           <div className="max-w-6xl mx-auto flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">O</span>
-              </div>
-              <span className="text-lg font-bold text-white">OwnerFi</span>
+              <img src="/logo.jpg" alt="Ownerfi" width={32} height={32} className="rounded-lg" />
+              <span className="text-lg font-bold text-white">Ownerfi</span>
             </Link>
             <nav className="flex items-center gap-4">
               <Link href="/" className="text-slate-300 hover:text-white text-sm">Home</Link>
               <Link href="/how-owner-finance-works" className="text-slate-300 hover:text-white text-sm">How It Works</Link>
-              <Link href="/auth" className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
+              <Link href="/auth" className="bg-[#00BC7D]/50 hover:bg-[#00BC7D] text-white px-4 py-2 rounded-lg text-sm font-medium">
                 Browse Properties
               </Link>
             </nav>
@@ -155,7 +153,7 @@ export default function OwnerFinancingAlabama() {
                   <div className="text-slate-300 mt-2">Alabama Properties</div>
                 </div>
                 <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 text-center border border-slate-700/50">
-                  <div className="text-3xl font-bold text-emerald-400">5%</div>
+                  <div className="text-3xl font-bold text-[#00BC7D]">5%</div>
                   <div className="text-slate-300 mt-2">Min Down Payment</div>
                 </div>
                 <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 text-center border border-slate-700/50">
@@ -171,7 +169,7 @@ export default function OwnerFinancingAlabama() {
           </section>
 
           {/* Call to Action Section */}
-          <section className="py-12 px-6 bg-gradient-to-r from-emerald-900/30 to-blue-900/30">
+          <section className="py-12 px-6 bg-gradient-to-r from-[#004D33]/30 to-blue-900/30">
             <div className="max-w-4xl mx-auto text-center">
               <h2 className="text-3xl font-bold text-white mb-4">
                 Ready to Find Your Alabama Home?
@@ -182,7 +180,7 @@ export default function OwnerFinancingAlabama() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link href="/auth">
-                  <button className="bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white py-4 px-8 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-[1.02] shadow-lg hover:shadow-xl">
+                  <button className="bg-gradient-to-r from-[#00BC7D] to-[#00BC7D]/50 hover:from-[#00BC7D]/50 hover:to-[#00d68f] text-white py-4 px-8 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-[1.02] shadow-lg hover:shadow-xl">
                     🏠 Browse Alabama Properties
                   </button>
                 </Link>
@@ -205,32 +203,32 @@ export default function OwnerFinancingAlabama() {
                 Owner Financed Homes by Alabama City
               </h2>
               <div className="grid md:grid-cols-3 gap-6">
-                <div className="bg-slate-900/50 border border-slate-700/50 rounded-xl p-6 hover:border-emerald-400/50 transition-all">
-                  <h3 className="text-xl font-bold text-emerald-400 mb-2">Birmingham</h3>
+                <div className="bg-[#111625]/50 border border-slate-700/50 rounded-xl p-6 hover:border-[#00BC7D]/50 transition-all">
+                  <h3 className="text-xl font-bold text-[#00BC7D] mb-2">Birmingham</h3>
                   <p className="text-slate-300 text-sm mb-3">Alabama</p>
-                  <p className="text-emerald-400 text-sm mt-3">Properties Available →</p>
+                  <p className="text-[#00BC7D] text-sm mt-3">Properties Available →</p>
                 </div>
-                <div className="bg-slate-900/50 border border-slate-700/50 rounded-xl p-6 hover:border-blue-400/50 transition-all">
+                <div className="bg-[#111625]/50 border border-slate-700/50 rounded-xl p-6 hover:border-blue-400/50 transition-all">
                   <h3 className="text-xl font-bold text-blue-400 mb-2">Montgomery</h3>
                   <p className="text-slate-300 text-sm mb-3">Alabama</p>
                   <p className="text-blue-400 text-sm mt-3">Properties Available →</p>
                 </div>
-                <div className="bg-slate-900/50 border border-slate-700/50 rounded-xl p-6 hover:border-purple-400/50 transition-all">
+                <div className="bg-[#111625]/50 border border-slate-700/50 rounded-xl p-6 hover:border-purple-400/50 transition-all">
                   <h3 className="text-xl font-bold text-purple-400 mb-2">Mobile</h3>
                   <p className="text-slate-300 text-sm mb-3">Alabama</p>
                   <p className="text-purple-400 text-sm mt-3">Properties Available →</p>
                 </div>
-                <div className="bg-slate-900/50 border border-slate-700/50 rounded-xl p-6 hover:border-yellow-400/50 transition-all">
+                <div className="bg-[#111625]/50 border border-slate-700/50 rounded-xl p-6 hover:border-yellow-400/50 transition-all">
                   <h3 className="text-xl font-bold text-yellow-400 mb-2">Huntsville</h3>
                   <p className="text-slate-300 text-sm mb-3">Alabama</p>
                   <p className="text-yellow-400 text-sm mt-3">Properties Available →</p>
                 </div>
-                <div className="bg-slate-900/50 border border-slate-700/50 rounded-xl p-6 hover:border-orange-400/50 transition-all">
+                <div className="bg-[#111625]/50 border border-slate-700/50 rounded-xl p-6 hover:border-orange-400/50 transition-all">
                   <h3 className="text-xl font-bold text-orange-400 mb-2">Tuscaloosa</h3>
                   <p className="text-slate-300 text-sm mb-3">Alabama</p>
                   <p className="text-orange-400 text-sm mt-3">Properties Available →</p>
                 </div>
-                <div className="bg-slate-900/50 border border-slate-700/50 rounded-xl p-6 hover:border-cyan-400/50 transition-all">
+                <div className="bg-[#111625]/50 border border-slate-700/50 rounded-xl p-6 hover:border-cyan-400/50 transition-all">
                   <h3 className="text-xl font-bold text-cyan-400 mb-2">Auburn</h3>
                   <p className="text-slate-300 text-sm mb-3">Alabama</p>
                   <p className="text-cyan-400 text-sm mt-3">Properties Available →</p>
@@ -252,7 +250,7 @@ export default function OwnerFinancingAlabama() {
                   <p className="text-slate-300">Get the deed immediately with owner financing, unlike rent-to-own where you don't own until the very end.</p>
                 </div>
                 <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border border-slate-700/50">
-                  <div className="text-emerald-400 text-3xl mb-4">📈</div>
+                  <div className="text-[#00BC7D] text-3xl mb-4">📈</div>
                   <h3 className="text-xl font-semibold text-white mb-3">Build Equity from Day One</h3>
                   <p className="text-slate-300">Every payment builds equity in your home, unlike rent-to-own where early payments often don't count toward ownership.</p>
                 </div>
@@ -287,23 +285,23 @@ export default function OwnerFinancingAlabama() {
                 Alabama Owner Financing FAQs
               </h2>
               <div className="space-y-6">
-                <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
+                <div className="bg-[#111625]/50 rounded-xl p-6 border border-slate-700/50">
                   <h3 className="text-xl font-semibold text-white mb-3">Is owner financing legal in Alabama?</h3>
                   <p className="text-slate-300">Yes, owner financing is completely legal in Alabama. The state allows sellers to finance their property sales with proper documentation and compliance with Alabama real estate laws.</p>
                 </div>
-                <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
+                <div className="bg-[#111625]/50 rounded-xl p-6 border border-slate-700/50">
                   <h3 className="text-xl font-semibold text-white mb-3">How is owner financing better than rent-to-own?</h3>
                   <p className="text-slate-300">Owner financing is superior because you get the deed immediately, build equity from day one, can make improvements, and have legal ownership rights. Rent-to-own often has higher costs and you don't own until the end.</p>
                 </div>
-                <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
+                <div className="bg-[#111625]/50 rounded-xl p-6 border border-slate-700/50">
                   <h3 className="text-xl font-semibold text-white mb-3">What are typical down payments in Alabama?</h3>
                   <p className="text-slate-300">Down payments typically range from 5% to 20% of the purchase price. The exact amount is negotiable between buyer and seller based on the property and your financial situation.</p>
                 </div>
-                <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
+                <div className="bg-[#111625]/50 rounded-xl p-6 border border-slate-700/50">
                   <h3 className="text-xl font-semibold text-white mb-3">Do credit requirements vary by seller?</h3>
                   <p className="text-slate-300">Yes, credit requirements vary significantly by seller in Alabama. Many sellers are more flexible than banks and focus on your down payment and ability to make monthly payments rather than just credit scores.</p>
                 </div>
-                <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
+                <div className="bg-[#111625]/50 rounded-xl p-6 border border-slate-700/50">
                   <h3 className="text-xl font-semibold text-white mb-3">What Alabama cities have the most owner financed homes?</h3>
                   <p className="text-slate-300">Birmingham, Montgomery, Mobile have the most owner financed properties, but you can find seller financing options throughout Alabama, including smaller cities and rural areas.</p>
                 </div>

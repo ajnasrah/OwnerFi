@@ -39,7 +39,7 @@ export function AgreementModal({ modal, onUpdateField, onSign, onRetry, onClose 
           {/* Loading State */}
           {modal.step === 'loading' && (
             <div className="text-center py-12">
-              <div className="w-12 h-12 border-4 border-emerald-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <div className="w-12 h-12 border-4 border-[#00BC7D] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
               <p className="text-slate-400">Generating agreement...</p>
             </div>
           )}
@@ -77,7 +77,7 @@ export function AgreementModal({ modal, onUpdateField, onSign, onRetry, onClose 
                 <div className="bg-slate-700/50 rounded-lg p-4 mb-6">
                   <h4 className="text-white font-semibold mb-2">Key Terms</h4>
                   <ul className="text-slate-300 text-sm space-y-1">
-                    <li>Referral Fee: <span className="text-emerald-400 font-medium">{modal.terms.referralFeePercent}%</span> of your commission</li>
+                    <li>Referral Fee: <span className="text-[#00BC7D] font-medium">{modal.terms.referralFeePercent}%</span> of your commission</li>
                     <li>Agreement Valid For: <span className="text-white font-medium">{modal.terms.agreementTermDays} days</span></li>
                     <li>Expires: <span className="text-white font-medium">{new Date(modal.terms.expirationDate).toLocaleDateString()}</span></li>
                   </ul>
@@ -98,7 +98,7 @@ export function AgreementModal({ modal, onUpdateField, onSign, onRetry, onClose 
                       value={modal.typedName}
                       onChange={(e) => onUpdateField({ typedName: e.target.value })}
                       placeholder="Your Full Legal Name"
-                      className="w-full bg-slate-700/50 border border-slate-600 rounded-lg p-3 text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
+                      className="w-full bg-slate-700/50 border border-slate-600 rounded-lg p-3 text-white placeholder-slate-500 focus:border-[#00BC7D] focus:outline-none"
                     />
                   </div>
 
@@ -107,7 +107,7 @@ export function AgreementModal({ modal, onUpdateField, onSign, onRetry, onClose 
                       type="checkbox"
                       checked={modal.agreeToTerms}
                       onChange={(e) => onUpdateField({ agreeToTerms: e.target.checked })}
-                      className="mt-1 w-5 h-5 rounded border-slate-600 bg-slate-700 text-emerald-500 focus:ring-emerald-500"
+                      className="mt-1 w-5 h-5 rounded border-slate-600 bg-slate-700 text-[#00BC7D] focus:ring-[#00BC7D]"
                     />
                     <span className="text-slate-300 text-sm">
                       I have read and agree to the terms of this Referral Agreement. I understand that by typing my name above and checking this box, I am electronically signing this agreement.
@@ -119,10 +119,10 @@ export function AgreementModal({ modal, onUpdateField, onSign, onRetry, onClose 
                       type="checkbox"
                       checked={modal.agreeTCPA}
                       onChange={(e) => onUpdateField({ agreeTCPA: e.target.checked })}
-                      className="mt-1 w-5 h-5 rounded border-slate-600 bg-slate-700 text-emerald-500 focus:ring-emerald-500"
+                      className="mt-1 w-5 h-5 rounded border-slate-600 bg-slate-700 text-[#00BC7D] focus:ring-[#00BC7D]"
                     />
                     <span className="text-slate-300 text-sm">
-                      I acknowledge and agree to OwnerFi&apos;s <a href="/tcpa-compliance" target="_blank" className="text-emerald-400 hover:underline">TCPA Compliance Agreement</a>. I will comply with all telemarketing laws and honor opt-out requests within 24 hours.
+                      I acknowledge and agree to Ownerfi&apos;s <a href="/tcpa-compliance" target="_blank" className="text-[#00BC7D] hover:underline">TCPA Compliance Agreement</a>. I will comply with all telemarketing laws and honor opt-out requests within 24 hours.
                     </span>
                   </label>
 
@@ -131,10 +131,10 @@ export function AgreementModal({ modal, onUpdateField, onSign, onRetry, onClose 
                       type="checkbox"
                       checked={modal.agreeCreativeFinance}
                       onChange={(e) => onUpdateField({ agreeCreativeFinance: e.target.checked })}
-                      className="mt-1 w-5 h-5 rounded border-slate-600 bg-slate-700 text-emerald-500 focus:ring-emerald-500"
+                      className="mt-1 w-5 h-5 rounded border-slate-600 bg-slate-700 text-[#00BC7D] focus:ring-[#00BC7D]"
                     />
                     <span className="text-slate-300 text-sm">
-                      I acknowledge OwnerFi&apos;s <a href="/creative-finance-disclaimer" target="_blank" className="text-emerald-400 hover:underline">Creative Finance Disclaimer</a>. I understand referred buyers may seek owner-financed properties and will direct them to verify all data with licensed professionals.
+                      I acknowledge Ownerfi&apos;s <a href="/creative-finance-disclaimer" target="_blank" className="text-[#00BC7D] hover:underline">Creative Finance Disclaimer</a>. I understand referred buyers may seek owner-financed properties and will direct them to verify all data with licensed professionals.
                     </span>
                   </label>
 
@@ -143,10 +143,10 @@ export function AgreementModal({ modal, onUpdateField, onSign, onRetry, onClose 
                       type="checkbox"
                       checked={modal.agreeDataAsIs}
                       onChange={(e) => onUpdateField({ agreeDataAsIs: e.target.checked })}
-                      className="mt-1 w-5 h-5 rounded border-slate-600 bg-slate-700 text-emerald-500 focus:ring-emerald-500"
+                      className="mt-1 w-5 h-5 rounded border-slate-600 bg-slate-700 text-[#00BC7D] focus:ring-[#00BC7D]"
                     />
                     <span className="text-slate-300 text-sm">
-                      I accept that lead contact information is provided &quot;as-is&quot; without verification by OwnerFi. I will independently confirm all lead details before proceeding.
+                      I accept that lead contact information is provided &quot;as-is&quot; without verification by Ownerfi. I will independently confirm all lead details before proceeding.
                     </span>
                   </label>
                 </div>
@@ -157,7 +157,7 @@ export function AgreementModal({ modal, onUpdateField, onSign, onRetry, onClose 
           {/* Signing State */}
           {modal.step === 'signing' && (
             <div className="text-center py-12">
-              <div className="w-12 h-12 border-4 border-emerald-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <div className="w-12 h-12 border-4 border-[#00BC7D] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
               <p className="text-slate-400">Processing signature...</p>
             </div>
           )}
@@ -165,8 +165,8 @@ export function AgreementModal({ modal, onUpdateField, onSign, onRetry, onClose 
           {/* Success State */}
           {modal.step === 'success' && modal.buyerDetails && (
             <div className="text-center py-8">
-              <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-3xl text-emerald-400">&#10003;</span>
+              <div className="w-16 h-16 bg-[#00BC7D]/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-3xl text-[#00BC7D]">&#10003;</span>
               </div>
               <h4 className="text-xl font-bold text-white mb-2">Agreement Signed!</h4>
               <p className="text-slate-400 mb-6">Here is your lead&apos;s contact information:</p>
@@ -181,11 +181,11 @@ export function AgreementModal({ modal, onUpdateField, onSign, onRetry, onClose 
                   </div>
                   <div>
                     <span className="text-slate-400 text-sm">Phone</span>
-                    <p className="text-emerald-400 font-medium">{modal.buyerDetails.phone}</p>
+                    <p className="text-[#00BC7D] font-medium">{modal.buyerDetails.phone}</p>
                   </div>
                   <div>
                     <span className="text-slate-400 text-sm">Email</span>
-                    <p className="text-emerald-400 font-medium">{modal.buyerDetails.email}</p>
+                    <p className="text-[#00BC7D] font-medium">{modal.buyerDetails.email}</p>
                   </div>
                   <div>
                     <span className="text-slate-400 text-sm">Location</span>
@@ -197,7 +197,7 @@ export function AgreementModal({ modal, onUpdateField, onSign, onRetry, onClose 
 
                 <div className="flex gap-2 mt-6">
                   <a
-                    href={`sms:${modal.buyerDetails.phone}?body=${encodeURIComponent("Hi, I see you're interested in owner finance properties through OwnerFi. I'd love to help you with your home search and represent you!")}`}
+                    href={`sms:${modal.buyerDetails.phone}?body=${encodeURIComponent("Hi, I see you're interested in owner finance properties through Ownerfi. I'd love to help you with your home search and represent you!")}`}
                     className="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg font-medium transition-colors text-center"
                   >
                     Text Now
@@ -227,7 +227,7 @@ export function AgreementModal({ modal, onUpdateField, onSign, onRetry, onClose 
               <button
                 onClick={onSign}
                 disabled={!modal.typedName || !modal.agreeToTerms || !modal.agreeTCPA || !modal.agreeCreativeFinance || !modal.agreeDataAsIs}
-                className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-3 px-4 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 bg-[#00BC7D]/50 hover:bg-[#00BC7D] text-white py-3 px-4 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Sign & Accept Lead
               </button>
@@ -239,7 +239,7 @@ export function AgreementModal({ modal, onUpdateField, onSign, onRetry, onClose 
           <div className="p-4 border-t border-slate-700">
             <button
               onClick={onClose}
-              className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-3 px-4 rounded-lg font-medium transition-colors"
+              className="w-full bg-[#00BC7D]/50 hover:bg-[#00BC7D] text-white py-3 px-4 rounded-lg font-medium transition-colors"
             >
               Done
             </button>

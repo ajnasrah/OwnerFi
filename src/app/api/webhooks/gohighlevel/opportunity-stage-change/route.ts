@@ -117,8 +117,8 @@ export async function POST(request: NextRequest) {
         if (propDoc.exists) {
           await propRef.update({
             ownerFinanceVerified: true,
-            agentConfirmedOwnerFinance: true,
-            isOwnerFinance: true,
+            agentConfirmedOwnerfinance: true,
+            isOwnerfinance: true,
             agentConfirmedAt: new Date(),
             updatedAt: new Date(),
           });
@@ -159,8 +159,8 @@ export async function POST(request: NextRequest) {
             allFinancingTypes: financingTypeResult.allTypes.length > 0 ? financingTypeResult.allTypes : ['Owner Finance'],
             financingTypeLabel: financingTypeResult.displayLabel || 'Owner Finance',
             ownerFinanceVerified: true,
-            agentConfirmedOwnerFinance: true,
-            isOwnerFinance: true,
+            agentConfirmedOwnerfinance: true,
+            isOwnerfinance: true,
             isCashDeal: false,
             dealTypes: ['owner_finance'],
             isActive: true,
@@ -216,7 +216,7 @@ export async function POST(request: NextRequest) {
         if (propDoc.exists) {
           await propRef.update({
             ownerFinanceVerified: false,
-            agentConfirmedOwnerFinance: false,
+            agentConfirmedOwnerfinance: false,
             agentRejectedAt: new Date(),
             agentRejectionNote: note || 'Marked not interested via GHL stage change',
             updatedAt: new Date(),

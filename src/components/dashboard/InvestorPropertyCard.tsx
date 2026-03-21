@@ -313,7 +313,7 @@ export function InvestorPropertyCard({ deal, isLiked, onToggleLike, onHide, isPr
           </div>
           {/* Key metric right under price for at-a-glance driving */}
           {deal.dealType === 'owner_finance' && deal.monthlyPayment != null && (
-            <div className="text-sm font-bold text-emerald-400 drop-shadow-lg">
+            <div className="text-sm font-bold text-[#00BC7D] drop-shadow-lg">
               ${deal.monthlyPayment.toLocaleString()}/mo
             </div>
           )}
@@ -388,7 +388,7 @@ export function InvestorPropertyCard({ deal, isLiked, onToggleLike, onHide, isPr
           {deal.dealType === 'owner_finance' ? (
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
               {deal.monthlyPayment != null && (
-                <span className="text-emerald-400 font-bold">${deal.monthlyPayment.toLocaleString()}/mo</span>
+                <span className="text-[#00BC7D] font-bold">${deal.monthlyPayment.toLocaleString()}/mo</span>
               )}
               {deal.downPaymentAmount != null && (
                 <span className="text-slate-300">
@@ -409,12 +409,12 @@ export function InvestorPropertyCard({ deal, isLiked, onToggleLike, onHide, isPr
           ) : (
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
               {deal.percentOfArv != null && (
-                <span className={`font-bold ${deal.percentOfArv <= 60 ? 'text-green-400' : deal.percentOfArv <= 70 ? 'text-emerald-400' : deal.percentOfArv <= 85 ? 'text-amber-400' : deal.percentOfArv <= 100 ? 'text-orange-400' : 'text-red-400'}`}>
+                <span className={`font-bold ${deal.percentOfArv <= 60 ? 'text-green-400' : deal.percentOfArv <= 70 ? 'text-[#00BC7D]' : deal.percentOfArv <= 85 ? 'text-amber-400' : deal.percentOfArv <= 100 ? 'text-orange-400' : 'text-red-400'}`}>
                   {deal.percentOfArv}% of Zest
                 </span>
               )}
               {deal.discount && deal.discount > 0 && (
-                <span className="text-emerald-300">${(deal.discount / 1000).toFixed(0)}K below Zest</span>
+                <span className="text-[#00d68f]">${(deal.discount / 1000).toFixed(0)}K below Zest</span>
               )}
               {deal.arv && (
                 <span className="text-slate-400">Zest ${(deal.arv / 1000).toFixed(0)}K</span>
@@ -432,7 +432,7 @@ export function InvestorPropertyCard({ deal, isLiked, onToggleLike, onHide, isPr
           target="_blank"
           rel="noopener noreferrer"
           onClick={handleMoreInfoClick}
-          className="block w-full mt-3 px-3 py-3 bg-emerald-600/80 hover:bg-emerald-500/90 text-white text-sm font-bold rounded-xl transition-all text-center cursor-pointer select-none active:scale-[0.98]"
+          className="block w-full mt-3 px-3 py-3 bg-[#00BC7D]/80 hover:bg-[#00BC7D]/50/90 text-white text-sm font-bold rounded-xl transition-all text-center cursor-pointer select-none active:scale-[0.98]"
         >
           View on Zillow
           <svg className="w-3.5 h-3.5 ml-1.5 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">

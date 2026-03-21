@@ -5,8 +5,8 @@ import { generateAgreementHTML, REFERRING_COMPANY_DEFAULTS, calculateExpirationD
 
 // Note: Metadata moved to separate file or handled differently for client components
 
-const pageTitle = 'Sample RF-701 Referral Agreement | OwnerFi For Realtors'
-const pageDescription = 'View a sample RF-701 Referral Agreement used by OwnerFi. Tennessee Association of REALTORS standard form with 30% referral fee and 180-day term.'
+const pageTitle = 'Sample RF-701 Referral Agreement | Ownerfi For Realtors'
+const pageDescription = 'View a sample RF-701 Referral Agreement used by Ownerfi. Tennessee Association of REALTORS standard form with 30% referral fee and 180-day term.'
 
 // Metadata cannot be exported from client components, so we set document title in useEffect
 // For now, the parent layout handles base metadata
@@ -19,7 +19,7 @@ export default function SampleAgreementPage() {
     expirationDate: calculateExpirationDate(180),
     timeZone: REFERRING_COMPANY_DEFAULTS.TIME_ZONE,
 
-    // Section 1: Referring Company (OwnerFi - finds and refers the buyer)
+    // Section 1: Referring Company (Ownerfi - finds and refers the buyer)
     referringCompanyName: REFERRING_COMPANY_DEFAULTS.COMPANY_NAME,
     referringCompanyAddress: REFERRING_COMPANY_DEFAULTS.COMPANY_ADDRESS,
     referringCompanyPhone: REFERRING_COMPANY_DEFAULTS.COMPANY_PHONE,
@@ -65,15 +65,13 @@ export default function SampleAgreementPage() {
   const agreementHTML = generateAgreementHTML(sampleAgreementData)
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white">
+    <div className="min-h-screen bg-[#111625] text-white">
       {/* Header */}
       <header className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 px-6 py-4 sticky top-0 z-50">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">O</span>
-            </div>
-            <span className="text-lg font-bold text-white">OwnerFi</span>
+            <img src="/logo.jpg" alt="Ownerfi" width={32} height={32} className="rounded-lg" />
+            <span className="text-lg font-bold text-white">Ownerfi</span>
           </Link>
           <nav className="flex items-center gap-4">
             <Link href="/for-realtors" className="text-slate-300 hover:text-white text-sm">
@@ -81,7 +79,7 @@ export default function SampleAgreementPage() {
             </Link>
             <Link
               href="/auth?role=realtor"
-              className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all"
+              className="bg-[#00BC7D]/50 hover:bg-[#00BC7D] text-white px-4 py-2 rounded-lg text-sm font-medium transition-all"
             >
               Join Free
             </Link>
@@ -97,7 +95,7 @@ export default function SampleAgreementPage() {
               Sample RF-701 Referral Agreement
             </h1>
             <p className="text-slate-400 max-w-2xl mx-auto">
-              This is the Tennessee Association of REALTORS® standard referral agreement you&apos;ll sign when accepting a lead through OwnerFi.
+              This is the Tennessee Association of REALTORS® standard referral agreement you&apos;ll sign when accepting a lead through Ownerfi.
             </p>
           </div>
 
@@ -106,7 +104,7 @@ export default function SampleAgreementPage() {
             <h2 className="text-lg font-semibold text-white mb-4">Quick Summary</h2>
             <div className="grid md:grid-cols-3 gap-4 text-sm">
               <div className="flex items-center gap-3">
-                <span className="text-emerald-400">💰</span>
+                <span className="text-[#00BC7D]">💰</span>
                 <div>
                   <div className="text-white font-medium">30% Referral Fee</div>
                   <div className="text-slate-400">Paid at closing only</div>
@@ -129,16 +127,16 @@ export default function SampleAgreementPage() {
             </div>
           </div>
 
-          {/* OwnerFi Addendum Notice */}
+          {/* Ownerfi Addendum Notice */}
           <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-6 mb-8">
-            <h2 className="text-lg font-semibold text-red-400 mb-3">OwnerFi Addendum (Sections 8-12)</h2>
+            <h2 className="text-lg font-semibold text-red-400 mb-3">Ownerfi Addendum (Sections 8-12)</h2>
             <p className="text-slate-300 text-sm mb-4">
               This agreement includes additional liability and compliance provisions. When signing, you&apos;ll acknowledge:
             </p>
             <div className="grid md:grid-cols-2 gap-3 text-sm">
               <div className="flex items-start gap-2">
                 <span className="text-red-400 mt-0.5">✓</span>
-                <span className="text-slate-300"><strong className="text-white">Indemnification</strong> - Hold OwnerFi harmless from claims</span>
+                <span className="text-slate-300"><strong className="text-white">Indemnification</strong> - Hold Ownerfi harmless from claims</span>
               </div>
               <div className="flex items-start gap-2">
                 <span className="text-red-400 mt-0.5">✓</span>
@@ -184,9 +182,9 @@ export default function SampleAgreementPage() {
             </button>
             <Link
               href="/auth?role=realtor"
-              className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-3 rounded-xl font-medium transition-all"
+              className="bg-[#00BC7D]/50 hover:bg-[#00BC7D] text-white px-6 py-3 rounded-xl font-medium transition-all"
             >
-              Join OwnerFi Free →
+              Join Ownerfi Free →
             </Link>
           </div>
 
@@ -199,11 +197,11 @@ export default function SampleAgreementPage() {
                 It&apos;s widely recognized and accepted across the real estate industry.
               </p>
               <p>
-                <strong className="text-white">OwnerFi Addendum:</strong> Sections 8-12 include additional liability protections including indemnification,
+                <strong className="text-white">Ownerfi Addendum:</strong> Sections 8-12 include additional liability protections including indemnification,
                 TCPA compliance, RESPA compliance, creative finance acknowledgment, and data disclaimer provisions.
               </p>
               <p>
-                <strong className="text-white">Digital Signing:</strong> When you accept a lead through OwnerFi, you&apos;ll sign this agreement digitally
+                <strong className="text-white">Digital Signing:</strong> When you accept a lead through Ownerfi, you&apos;ll sign this agreement digitally
                 by typing your legal name and checking confirmation boxes for the agreement terms, TCPA compliance, creative finance acknowledgment, and data acceptance.
               </p>
               <p>
@@ -214,8 +212,8 @@ export default function SampleAgreementPage() {
               </p>
               <p>
                 <strong className="text-white">Related Documents:</strong> By signing, you acknowledge review of our{' '}
-                <a href="/tcpa-compliance" className="text-emerald-400 hover:underline">TCPA Compliance Agreement</a> and{' '}
-                <a href="/creative-finance-disclaimer" className="text-emerald-400 hover:underline">Creative Finance Disclaimer</a>.
+                <a href="/tcpa-compliance" className="text-[#00BC7D] hover:underline">TCPA Compliance Agreement</a> and{' '}
+                <a href="/creative-finance-disclaimer" className="text-[#00BC7D] hover:underline">Creative Finance Disclaimer</a>.
               </p>
             </div>
           </div>

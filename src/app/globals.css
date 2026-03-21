@@ -4,11 +4,11 @@
 
 /* CSS Variables - Keep for theming */
 :root {
-  /* Primary Blue/Black Palette */
-  --primary: #1e40af;           /* Deep blue */
-  --primary-light: #3b82f6;     /* Bright blue */
-  --primary-dark: #1e3a8a;      /* Darker blue */
-  --primary-bg: #eff6ff;        /* Very light blue background */
+  /* Primary Brand Palette */
+  --primary: #00BC7D;           /* Cash Green */
+  --primary-light: #3B82F6;     /* Blue Ocean */
+  --primary-dark: #009B66;      /* Darker Cash Green */
+  --primary-bg: #e6f9f1;        /* Light green background */
 
   /* Blue/Black Neutrals */
   --white: #ffffff;
@@ -121,7 +121,7 @@ body {
   margin: 0;
   padding: 0;
   height: 100%;
-  background-color: #0f172a;
+  background-color: #111625;
   /* Consolidated overflow settings */
   overflow-x: hidden;
   overscroll-behavior: none;

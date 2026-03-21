@@ -259,7 +259,7 @@ These endpoints receive data FROM GoHighLevel.
 1. Fetches property from `agent_outreach_queue`
 2. Adds to `properties` collection with:
    - `ownerFinanceVerified: true`
-   - `isOwnerFinance: true`
+   - `isOwnerfinance: true`
    - `dealTypes: ['owner_finance']`
 3. Indexes to Typesense
 4. Updates queue status to `agent_yes`

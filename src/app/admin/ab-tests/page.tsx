@@ -165,7 +165,7 @@ export default function ABTestsPage() {
                   : 'bg-white text-slate-600 hover:bg-slate-50'
               }`}
             >
-              {brand === 'carz' ? 'Carz Inc' : brand === 'ownerfi' ? 'OwnerFi' : brand === 'benefit' ? 'Benefit' : brand === 'abdullah' ? 'Abdullah' : brand === 'gaza' ? 'Gaza' : 'Realtors'}
+              {brand === 'carz' ? 'Carz Inc' : brand === 'ownerfi' ? 'Ownerfi' : brand === 'benefit' ? 'Benefit' : brand === 'abdullah' ? 'Abdullah' : brand === 'gaza' ? 'Gaza' : 'Realtors'}
             </button>
           ))}
         </div>

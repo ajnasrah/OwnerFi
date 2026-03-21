@@ -71,7 +71,7 @@ export default function BlogAdminPage() {
   }
 
   return (
-    <div className="h-screen overflow-hidden bg-slate-900 text-white flex flex-col">
+    <div className="h-screen overflow-hidden bg-[#111625] text-white flex flex-col">
       <div className="flex-1 overflow-y-auto p-6">
         <div className="max-w-7xl mx-auto">
         {/* Header */}
@@ -82,7 +82,7 @@ export default function BlogAdminPage() {
           </div>
           <Link
             href="/admin/blog/create"
-            className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 hover:scale-105"
+            className="bg-gradient-to-r from-[#00BC7D] to-[#009B66] hover:from-[#00d68f] hover:to-[#00BC7D] text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 hover:scale-105"
           >
             + Create New Post
           </Link>
@@ -96,11 +96,11 @@ export default function BlogAdminPage() {
               onClick={() => setSelectedBrand(brand)}
               className={`px-4 py-2 font-medium transition-colors ${
                 selectedBrand === brand
-                  ? 'text-emerald-400 border-b-2 border-emerald-400'
+                  ? 'text-[#00BC7D] border-b-2 border-[#00BC7D]'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
-              {brand === 'ownerfi' && 'OwnerFi'}
+              {brand === 'ownerfi' && 'Ownerfi'}
               {brand === 'carz' && 'Carz Inc'}
               {brand === 'abdullah' && 'Abdullah'}
               {brand === 'benefit' && 'Benefit'}
@@ -112,7 +112,7 @@ export default function BlogAdminPage() {
         {/* Posts List */}
         {loading ? (
           <div className="text-center py-20">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-500"></div>
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#00BC7D]"></div>
             <p className="mt-4 text-slate-400">Loading posts...</p>
           </div>
         ) : posts.length === 0 ? (
@@ -120,7 +120,7 @@ export default function BlogAdminPage() {
             <p className="text-slate-400 text-lg mb-4">No blog posts yet for {selectedBrand}</p>
             <Link
               href="/admin/blog/create"
-              className="inline-block text-emerald-400 hover:text-emerald-300 font-medium"
+              className="inline-block text-[#00BC7D] hover:text-[#00d68f] font-medium"
             >
               Create your first post →
             </Link>
@@ -159,7 +159,7 @@ export default function BlogAdminPage() {
                     </td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        post.status === 'published' ? 'bg-emerald-500/20 text-emerald-400' :
+                        post.status === 'published' ? 'bg-[#00BC7D]/20 text-[#00BC7D]' :
                         post.status === 'draft' ? 'bg-yellow-500/20 text-yellow-400' :
                         'bg-slate-500/20 text-slate-400'
                       }`}>
@@ -192,7 +192,7 @@ export default function BlogAdminPage() {
                         </Link>
                         <Link
                           href={`/admin/blog/edit/${post.id}?brand=${selectedBrand}`}
-                          className="text-emerald-400 hover:text-emerald-300"
+                          className="text-[#00BC7D] hover:text-[#00d68f]"
                         >
                           Edit
                         </Link>

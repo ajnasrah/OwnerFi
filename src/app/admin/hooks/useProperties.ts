@@ -36,7 +36,7 @@ export interface AdminProperty {
   description?: string;
   sentToGHL?: string;
   source?: string;
-  agentConfirmedOwnerFinance?: boolean;
+  agentConfirmedOwnerfinance?: boolean;
   // Agent contact info
   agentName?: string | null;
   agentPhone?: string | null;

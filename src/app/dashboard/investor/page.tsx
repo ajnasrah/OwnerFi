@@ -400,14 +400,14 @@ export default function InvestorDashboard() {
   // Error state
   if (error) {
     return (
-      <div className="fixed inset-0 bg-slate-900 flex items-center justify-center">
+      <div className="fixed inset-0 bg-[#111625] flex items-center justify-center">
         <div className="text-center max-w-md px-4">
           <div className="text-5xl mb-4">⚠️</div>
           <h1 className="text-xl font-bold text-white mb-2">Something went wrong</h1>
           <p className="text-slate-400 text-sm mb-6">{error}</p>
           <button
             onClick={() => { setError(null); setLoading(true); loadProfile(); }}
-            className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold rounded-lg transition-all"
+            className="px-6 py-2.5 bg-[#00BC7D] hover:bg-[#00BC7D]/50 text-white text-sm font-semibold rounded-lg transition-all"
           >
             Try Again
           </button>
@@ -419,15 +419,15 @@ export default function InvestorDashboard() {
   // Loading state
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-slate-900 flex items-center justify-center">
+      <div className="fixed inset-0 bg-[#111625] flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 mx-auto mb-4 relative">
-            <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-3xl animate-pulse" />
-            <div className="absolute inset-2 bg-slate-900 rounded-2xl flex items-center justify-center">
+            <div className="absolute inset-0 bg-gradient-to-br from-[#00BC7D] to-blue-500 rounded-3xl animate-pulse" />
+            <div className="absolute inset-2 bg-[#111625] rounded-2xl flex items-center justify-center">
               <span className="text-2xl">📊</span>
             </div>
           </div>
-          <div className="w-12 h-12 border-4 border-slate-700 border-t-emerald-400 rounded-full animate-spin mx-auto mb-4" />
+          <div className="w-12 h-12 border-4 border-slate-700 border-t-[#00BC7D] rounded-full animate-spin mx-auto mb-4" />
           <h1 className="text-xl font-bold text-white mb-1">Loading Investor Dashboard</h1>
           <p className="text-slate-400 text-sm">Finding deals in {profile?.city || 'your area'}...</p>
         </div>
@@ -436,9 +436,9 @@ export default function InvestorDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900">
+    <div className="min-h-screen bg-[#111625]">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-slate-900/90 backdrop-blur-xl border-b border-slate-700/50">
+      <header className="sticky top-0 z-50 bg-[#111625]/90 backdrop-blur-xl border-b border-slate-700/50">
         <div className="max-w-7xl mx-auto px-4 py-2.5">
           <div className="flex items-center justify-between">
             {/* Left: Location */}
@@ -452,7 +452,7 @@ export default function InvestorDashboard() {
 
             {/* Center: Branding */}
             <div className="hidden sm:flex items-center gap-2">
-              <span className="text-emerald-400 font-black text-sm">INVESTOR</span>
+              <span className="text-[#00BC7D] font-black text-sm">INVESTOR</span>
               <span className="text-slate-500 text-xs">Dashboard</span>
             </div>
 
@@ -483,13 +483,13 @@ export default function InvestorDashboard() {
               {(session as unknown as ExtendedSession)?.user?.role === 'realtor' && (
                 <Link
                   href="/realtor-dashboard/buyers"
-                  className="px-2.5 py-1 bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/30 rounded-lg flex items-center gap-1 transition-all"
+                  className="px-2.5 py-1 bg-[#00BC7D]/20 hover:bg-[#00BC7D]/30 border border-[#00BC7D]/30 rounded-lg flex items-center gap-1 transition-all"
                   title="Buyer Leads"
                 >
-                  <svg className="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3 h-3 text-[#00BC7D]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
-                  <span className="text-emerald-400 text-[10px] font-bold">LEADS</span>
+                  <span className="text-[#00BC7D] text-[10px] font-bold">LEADS</span>
                 </Link>
               )}
               <Link
@@ -536,18 +536,18 @@ export default function InvestorDashboard() {
         {/* Deal Alert Subscription Card */}
         {profile?.dealAlertStatus === 'active' ? (
           /* ── Active subscription ── */
-          <div className="mb-4 bg-gradient-to-r from-emerald-900/30 to-slate-800/50 border border-emerald-500/30 rounded-xl p-4">
+          <div className="mb-4 bg-gradient-to-r from-[#004D33]/30 to-slate-800/50 border border-[#00BC7D]/30 rounded-xl p-4">
             {subscriptionSuccess && (
-              <div className="mb-3 bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-2.5 flex items-center justify-between">
-                <span className="text-emerald-400 text-xs font-semibold">Deal Alert SMS activated! You&apos;ll receive texts when new deals appear.</span>
-                <button onClick={() => setSubscriptionSuccess(false)} className="text-emerald-400/60 hover:text-emerald-400 text-xs ml-2">✕</button>
+              <div className="mb-3 bg-[#00BC7D]/10 border border-[#00BC7D]/30 rounded-lg p-2.5 flex items-center justify-between">
+                <span className="text-[#00BC7D] text-xs font-semibold">Deal Alert SMS activated! You&apos;ll receive texts when new deals appear.</span>
+                <button onClick={() => setSubscriptionSuccess(false)} className="text-[#00BC7D]/60 hover:text-[#00BC7D] text-xs ml-2">✕</button>
               </div>
             )}
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <h3 className="text-white font-bold text-sm flex items-center gap-2">
                   Deal Alert SMS
-                  <span className="bg-emerald-500/20 text-emerald-400 text-[10px] px-2 py-0.5 rounded-full font-semibold">ACTIVE</span>
+                  <span className="bg-[#00BC7D]/20 text-[#00BC7D] text-[10px] px-2 py-0.5 rounded-full font-semibold">ACTIVE</span>
                 </h3>
                 <p className="text-slate-400 text-xs mt-1">
                   You&apos;ll get an SMS when deals under <span className="text-white font-medium">{profile?.arvThreshold || 85}% of ARV</span> appear in <span className="text-white font-medium">{profile?.city}</span>.
@@ -625,7 +625,7 @@ export default function InvestorDashboard() {
               <button
                 onClick={handleSubscribe}
                 disabled={subscribing}
-                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-lg transition-all disabled:opacity-50"
+                className="px-3 py-1.5 bg-[#00BC7D] hover:bg-[#00BC7D]/50 text-white text-xs font-semibold rounded-lg transition-all disabled:opacity-50"
               >
                 {subscribing ? 'Loading...' : 'Resubscribe'}
               </button>
@@ -633,10 +633,10 @@ export default function InvestorDashboard() {
           </div>
         ) : (
           /* ── Not subscribed ── */
-          <div className="mb-4 bg-gradient-to-r from-emerald-900/30 to-slate-800/50 border border-emerald-500/30 rounded-xl p-4">
+          <div className="mb-4 bg-gradient-to-r from-[#004D33]/30 to-slate-800/50 border border-[#00BC7D]/30 rounded-xl p-4">
             {subscriptionSuccess && (
-              <div className="mb-3 bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-2.5">
-                <span className="text-emerald-400 text-xs font-semibold animate-pulse">Activating your subscription...</span>
+              <div className="mb-3 bg-[#00BC7D]/10 border border-[#00BC7D]/30 rounded-lg p-2.5">
+                <span className="text-[#00BC7D] text-xs font-semibold animate-pulse">Activating your subscription...</span>
               </div>
             )}
             <div className="flex items-center justify-between">
@@ -645,14 +645,14 @@ export default function InvestorDashboard() {
                 <p className="text-slate-400 text-xs mt-0.5">Get instant SMS alerts when investment deals below your ARV threshold appear</p>
               </div>
               {subscriptionSuccess ? (
-                <span className="px-3 py-1.5 text-emerald-400 text-xs font-semibold animate-pulse">
+                <span className="px-3 py-1.5 text-[#00BC7D] text-xs font-semibold animate-pulse">
                   Activating...
                 </span>
               ) : (
                 <button
                   onClick={handleSubscribe}
                   disabled={subscribing}
-                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-lg transition-all disabled:opacity-50"
+                  className="px-3 py-1.5 bg-[#00BC7D] hover:bg-[#00BC7D]/50 text-white text-xs font-semibold rounded-lg transition-all disabled:opacity-50"
                 >
                   {subscribing ? 'Loading...' : '$5/mo'}
                 </button>
@@ -706,7 +706,7 @@ export default function InvestorDashboard() {
                 </p>
                 <button
                   onClick={() => { setDealsError(false); setCurrentPage(1); setFetchKey(k => k + 1); }}
-                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold rounded-lg transition-all"
+                  className="px-4 py-2 bg-[#00BC7D] hover:bg-[#00BC7D]/50 text-white text-sm font-semibold rounded-lg transition-all"
                 >
                   Retry
                 </button>
@@ -720,7 +720,7 @@ export default function InvestorDashboard() {
                 </p>
                 <button
                   onClick={() => { setShowHidden(false); setCurrentPage(1); }}
-                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold rounded-lg transition-all"
+                  className="px-4 py-2 bg-[#00BC7D] hover:bg-[#00BC7D]/50 text-white text-sm font-semibold rounded-lg transition-all"
                 >
                   Back to Deals
                 </button>
@@ -730,12 +730,12 @@ export default function InvestorDashboard() {
                 <div className="text-5xl mb-4">🏠</div>
                 <h2 className="text-xl font-bold text-white mb-2">No Deals Found</h2>
                 <p className="text-slate-400 mb-4">
-                  No properties match your current filters in <span className="text-emerald-400">{profile?.city}</span>.
+                  No properties match your current filters in <span className="text-[#00BC7D]">{profile?.city}</span>.
                 </p>
                 <div className="flex items-center justify-center gap-3">
                   <button
                     onClick={() => { setDealType('all'); setPriceFilter('none'); setCurrentPage(1); }}
-                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold rounded-lg transition-all"
+                    className="px-4 py-2 bg-[#00BC7D] hover:bg-[#00BC7D]/50 text-white text-sm font-semibold rounded-lg transition-all"
                   >
                     Show All Deals
                   </button>
@@ -785,7 +785,7 @@ export default function InvestorDashboard() {
                   >
                     Prev
                   </button>
-                  <span className="px-3 py-1.5 text-xs text-white bg-emerald-600 rounded-lg font-semibold">
+                  <span className="px-3 py-1.5 text-xs text-white bg-[#00BC7D] rounded-lg font-semibold">
                     {currentPage} / {totalPages}
                   </span>
                   <button

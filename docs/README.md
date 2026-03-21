@@ -1,6 +1,6 @@
-# OwnerFi Documentation
+# Ownerfi Documentation
 
-Complete documentation for the OwnerFi owner financing platform.
+Complete documentation for the Ownerfi owner financing platform.
 
 ## Directory Structure
 

@@ -15,7 +15,7 @@ export const LEGAL_DISCLAIMERS = {
   FINANCING_TERMS: 'Agent-reported estimates • Subject to change • Seller determines final terms',
 
   // Property information disclaimers
-  PROPERTY_DESCRIPTION: 'Description provided by listing agent. OwnerFi does not verify accuracy. Verify all information with seller.',
+  PROPERTY_DESCRIPTION: 'Description provided by listing agent. Ownerfi does not verify accuracy. Verify all information with seller.',
   INVESTMENT_INFO: 'Third-party rental estimate • Not investment advice • Does not include vacancy, maintenance, or other costs • Consult financial advisor',
 
   // Badge/status disclaimers

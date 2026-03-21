@@ -1,4 +1,4 @@
-# OwnerFi Platform Updates - January 14, 2026
+# Ownerfi Platform Updates - January 14, 2026
 
 ## Overview
 
@@ -36,7 +36,7 @@ We now have comprehensive analytics tracking across the entire platform.
 ### How to View Analytics
 
 1. Go to [Google Analytics](https://analytics.google.com)
-2. Select the OwnerFi property
+2. Select the Ownerfi property
 3. **Realtime** → See live users on the site right now
 4. **Reports** → Historical data (takes 24-48 hours to populate)
 
@@ -125,7 +125,7 @@ Example: $10,000 commission on sale
 Agent A sets 20% referral fee:
 - Agent B gets: $8,000 (80%)
 - Agent A gets: $2,000 (20%)
-- OwnerFi gets: $600 (30% of Agent A's cut)
+- Ownerfi gets: $600 (30% of Agent A's cut)
 
 Agent A's net: $1,400
 ```
@@ -133,9 +133,9 @@ Agent A's net: $1,400
 ### Rules
 
 - No triple referrals (a re-referred lead cannot be referred again)
-- Agent B must have an OwnerFi account
+- Agent B must have an Ownerfi account
 - Referral fee range: 1-50%
-- OwnerFi always gets 30% of the referring agent's cut
+- Ownerfi always gets 30% of the referring agent's cut
 
 ### New API Endpoints
 

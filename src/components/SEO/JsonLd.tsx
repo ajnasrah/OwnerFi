@@ -19,7 +19,7 @@ export function RealEstateWebsiteSchema() {
   const schema = {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
-    "name": "OwnerFi",
+    "name": "Ownerfi",
     "description": "Find owner financed homes with flexible financing options. No bank required, direct seller financing available.",
     "url": "https://ownerfi.ai",
     "logo": "https://ownerfi.ai/logo.png",
@@ -88,12 +88,12 @@ export function WebPageSchema({ title, description, url, breadcrumbs }: WebPageS
     "inLanguage": "en-US",
     "isPartOf": {
       "@type": "WebSite",
-      "name": "OwnerFi",
+      "name": "Ownerfi",
       "url": "https://ownerfi.ai"
     },
     "publisher": {
       "@type": "Organization",
-      "name": "OwnerFi",
+      "name": "Ownerfi",
       "logo": {
         "@type": "ImageObject",
         "url": "https://ownerfi.ai/logo.png"
@@ -151,7 +151,7 @@ export function PropertySchema({ property }: PropertySchemaProps) {
       "availability": "https://schema.org/InStock",
       "seller": {
         "@type": "Organization",
-        "name": "OwnerFi"
+        "name": "Ownerfi"
       }
     },
     "numberOfRooms": property.bedrooms,

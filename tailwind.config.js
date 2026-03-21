@@ -9,31 +9,45 @@ module.exports = {
     extend: {
       colors: {
         primary: {
-          DEFAULT: '#1e40af',
-          light: '#3b82f6',
-          dark: '#1e3a8a',
-          bg: '#eff6ff',
-          text: '#1e3a8a',
+          DEFAULT: '#00BC7D',      // Cash Green
+          light: '#3B82F6',        // Blue Ocean
+          dark: '#009B66',         // Darker Cash Green
+          bg: '#e6f9f1',          // Light green background
+          text: '#009B66',
         },
-        // Full blue scale matching CSS variables
-        blue: {
+        // Brand colors
+        'cash-green': {
+          DEFAULT: '#00BC7D',
+          50: '#e6f9f1',
+          100: '#b3ecd6',
+          200: '#80dfbb',
+          300: '#4dd2a0',
+          400: '#26c88c',
+          500: '#00BC7D',
+          600: '#009B66',
+          700: '#007A50',
+          800: '#005A3B',
+          900: '#003A26',
+        },
+        'blue-ocean': {
+          DEFAULT: '#3B82F6',
           50: '#eff6ff',
           100: '#dbeafe',
           200: '#bfdbfe',
           300: '#93c5fd',
           400: '#60a5fa',
-          500: '#3b82f6',
+          500: '#3B82F6',
           600: '#2563eb',
           700: '#1d4ed8',
           800: '#1e40af',
           900: '#1e3a8a',
-          950: '#172554',
         },
+        'base-black': '#111625',
         // Accent colors for UI components
         accent: {
-          primary: '#1e40af',      // Deep blue (primary actions)
-          hover: '#1e3a8a',        // Darker blue on hover
-          light: '#bfdbfe',        // Light blue for subtle backgrounds
+          primary: '#00BC7D',      // Cash Green (primary actions)
+          hover: '#009B66',        // Darker green on hover
+          light: '#b3ecd6',        // Light green for subtle backgrounds
           warm: '#f59e0b',         // Amber/orange for secondary actions
           'warm-hover': '#d97706', // Darker amber on hover
           orange: '#f59e0b',       // Orange for required indicators
@@ -41,7 +55,7 @@ module.exports = {
         // Surface colors for backgrounds
         surface: {
           bg: '#ffffff',           // White background
-          dark: '#0f172a',         // Dark slate background
+          dark: '#111625',         // Base Black background
         },
       },
       fontFamily: {

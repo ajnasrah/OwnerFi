@@ -1,6 +1,6 @@
 // RSS Feed Source Configuration - VERIFIED WORKING FEEDS 2025
 // All feeds tested and verified with excellent content quality
-// Total: 38 enabled feeds (OwnerFi: 19, Carz: 10, Gaza: 6)
+// Total: 38 enabled feeds (Ownerfi: 19, Carz: 10, Gaza: 6)
 
 import { addFeedSource as addFeedSourceFirestore, type FeedSource, getAllFeedSources } from '@/lib/feed-store-firestore';
 
@@ -448,7 +448,7 @@ export async function initializeFeedSources() {
     totalCount++;
   }
 
-  // Add OwnerFi feeds
+  // Add Ownerfi feeds
   for (const feed of OWNERFI_FEEDS) {
     await addFeedSourceFirestore(feed);
     totalCount++;
@@ -461,7 +461,7 @@ export async function initializeFeedSources() {
   }
 
   console.log(`\n✅ Initialized ${CARZ_FEEDS.length} Carz feeds - expanded coverage with major EV news sources`);
-  console.log(`✅ Initialized ${OWNERFI_FEEDS.length} OwnerFi feeds - comprehensive real estate & mortgage coverage`);
+  console.log(`✅ Initialized ${OWNERFI_FEEDS.length} Ownerfi feeds - comprehensive real estate & mortgage coverage`);
   console.log(`✅ Initialized ${GAZA_FEEDS.length} Gaza feeds - pro-Palestine humanitarian news sources`);
   console.log(`📊 Total: ${totalCount} feed sources (TESTED & VERIFIED 2025)\n`);
 }

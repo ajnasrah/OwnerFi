@@ -4,14 +4,14 @@ import { db } from '@/lib/firebase'
 import { collection, query, where, getDocs } from 'firebase/firestore'
 
 export const metadata: Metadata = {
-  title: 'Owner Financing Miami | Rent to Own Alternative FL | South Beach, Brickell | OwnerFi',
+  title: 'Owner Financing Miami | Rent to Own Alternative FL | South Beach, Brickell | Ownerfi',
   description: 'Find owner financed homes in Miami - better than rent to own! Immediate ownership in South Beach, Brickell, Wynwood, Coral Gables. No banks needed. Flexible credit options.',
   keywords: 'owner financing miami, owner financed homes miami, rent to own miami, rent to own florida, owner financing south beach, seller financing miami, no credit check homes miami, bad credit homes miami, miami real estate owner financing',
   openGraph: {
-    title: 'Owner Financed Homes in Miami - Better Than Rent to Own | OwnerFi',
+    title: 'Owner Financed Homes in Miami - Better Than Rent to Own | Ownerfi',
     description: 'Skip the banks! Find owner financed properties across Miami with immediate ownership. Serving South Beach, Brickell, Wynwood and more.',
     url: 'https://ownerfi.ai/miami-owner-financing',
-    siteName: 'OwnerFi',
+    siteName: 'Ownerfi',
     type: 'website',
   },
   twitter: {
@@ -53,7 +53,7 @@ async function getMiamiProperties() {
   }
 }
 
-export default async function OwnerFinancingMiami() {
+export default async function OwnerfinancingMiami() {
   const { areaCounts, totalCount } = await getMiamiProperties()
 
   const faqSchema = {
@@ -98,7 +98,7 @@ export default async function OwnerFinancingMiami() {
   const localBusinessSchema = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
-    "name": "OwnerFi Miami - Owner Financed Homes",
+    "name": "Ownerfi Miami - Owner Financed Homes",
     "description": "Find owner financed homes throughout Miami. Better than rent to own with immediate ownership.",
     "url": "https://ownerfi.ai/miami-owner-financing",
     "areaServed": {
@@ -150,7 +150,7 @@ export default async function OwnerFinancingMiami() {
             </p>
 
             <div className="grid md:grid-cols-3 gap-6 mb-8">
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-xl border border-green-200">
+              <div className="bg-gradient-to-br from-green-50 to-[#00BC7D]/5 p-6 rounded-xl border border-green-200">
                 <h3 className="font-bold text-green-900 mb-2">Immediate Miami Ownership</h3>
                 <p className="text-green-800">Get the deed right away, unlike rent to own</p>
               </div>
@@ -251,17 +251,17 @@ export default async function OwnerFinancingMiami() {
                 </p>
               </div>
 
-              <div className="p-6 bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl border-2 border-emerald-200">
-                <h3 className="text-xl font-bold text-emerald-900 mb-2">
+              <div className="p-6 bg-gradient-to-br from-[#00BC7D]/5 to-green-50 rounded-xl border-2 border-[#00BC7D]/30">
+                <h3 className="text-xl font-bold text-[#004D33] mb-2">
                   Coral Gables
                 </h3>
-                <p className="text-emerald-700 mb-2">
+                <p className="text-[#009B66] mb-2">
                   {areaCounts['Coral Gables'] || 'Prestigious'} owner financed properties
                 </p>
-                <p className="text-sm text-emerald-600 mb-3">
+                <p className="text-sm text-[#00BC7D] mb-3">
                   Mediterranean architecture, tree-lined streets, upscale shopping
                 </p>
-                <p className="text-xs text-emerald-500">
+                <p className="text-xs text-[#00BC7D]">
                   Historic charm, excellent schools, family-friendly
                 </p>
               </div>

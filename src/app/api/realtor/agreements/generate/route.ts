@@ -195,7 +195,7 @@ export async function POST(request: NextRequest) {
       expirationDate,
       timeZone: REFERRING_COMPANY_DEFAULTS.TIME_ZONE,
 
-      // Section 1: COMPANY REFERRING THE BUYER OR SELLER (OwnerFi - finds and refers the buyer)
+      // Section 1: COMPANY REFERRING THE BUYER OR SELLER (Ownerfi - finds and refers the buyer)
       referringCompanyName: REFERRING_COMPANY_DEFAULTS.COMPANY_NAME,
       referringCompanyAddress: REFERRING_COMPANY_DEFAULTS.COMPANY_ADDRESS,
       referringCompanyPhone: REFERRING_COMPANY_DEFAULTS.COMPANY_PHONE,
@@ -235,7 +235,7 @@ export async function POST(request: NextRequest) {
       prospectEmail: '', // Hidden until signed
       prospectBestTimeToCall: '',
       prospectRemarks: '',
-      otherTerms: 'Owner Finance Property Buyer Lead via OwnerFi.com'
+      otherTerms: 'Owner Finance Property Buyer Lead via Ownerfi.com'
     };
 
     // Create agreement document in Firestore
@@ -244,7 +244,7 @@ export async function POST(request: NextRequest) {
       realtorUserId: session.user.id,
       buyerId: leadId,
 
-      // Section 1: Referring Company (OwnerFi - finds and refers the buyer)
+      // Section 1: Referring Company (Ownerfi - finds and refers the buyer)
       referringCompanyName: REFERRING_COMPANY_DEFAULTS.COMPANY_NAME,
       referringCompanyAddress: REFERRING_COMPANY_DEFAULTS.COMPANY_ADDRESS,
       referringCompanyPhone: REFERRING_COMPANY_DEFAULTS.COMPANY_PHONE,

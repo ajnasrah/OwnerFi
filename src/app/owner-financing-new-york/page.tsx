@@ -4,14 +4,14 @@ import { db } from '@/lib/firebase'
 import { collection, query, where, getDocs } from 'firebase/firestore'
 
 export const metadata: Metadata = {
-  title: 'Owner Financing New York | Rent to Own Alternative | NYC, Buffalo & More | OwnerFi',
+  title: 'Owner Financing New York | Rent to Own Alternative | NYC, Buffalo & More | Ownerfi',
   description: 'Find owner financed homes in New York - better than rent to own! Immediate ownership in NYC, Buffalo, Rochester, Syracuse. No banks needed. Flexible credit options available.',
   keywords: 'owner financing new york, owner financed homes new york, rent to own homes new york, rent to own nyc, owner financing brooklyn, seller financing new york, no credit check homes new york, bad credit homes new york, new york real estate owner financing',
   openGraph: {
-    title: 'Owner Financed Homes in New York - Better Than Rent to Own | OwnerFi',
+    title: 'Owner Financed Homes in New York - Better Than Rent to Own | Ownerfi',
     description: 'Skip the banks! Find owner financed properties across New York with immediate ownership. Serving NYC, Buffalo, Rochester, Syracuse and more.',
     url: 'https://ownerfi.ai/owner-financing-new-york',
-    siteName: 'OwnerFi',
+    siteName: 'Ownerfi',
     type: 'website',
   },
   twitter: {
@@ -53,7 +53,7 @@ async function getNewYorkProperties() {
   }
 }
 
-export default async function OwnerFinancingNewYork() {
+export default async function OwnerfinancingNewYork() {
   const { cityCounts, totalCount } = await getNewYorkProperties()
   const cities = Object.entries(cityCounts).sort((a, b) => b[1] - a[1])
 
@@ -99,7 +99,7 @@ export default async function OwnerFinancingNewYork() {
   const localBusinessSchema = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
-    "name": "OwnerFi New York - Owner Financed Homes",
+    "name": "Ownerfi New York - Owner Financed Homes",
     "description": "Find owner financed homes throughout New York. Better than rent to own with immediate ownership.",
     "url": "https://ownerfi.ai/owner-financing-new-york",
     "areaServed": {
@@ -149,7 +149,7 @@ export default async function OwnerFinancingNewYork() {
             </p>
 
             <div className="grid md:grid-cols-3 gap-6 mb-8">
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-xl border border-green-200">
+              <div className="bg-gradient-to-br from-green-50 to-[#00BC7D]/5 p-6 rounded-xl border border-green-200">
                 <h3 className="font-bold text-green-900 mb-2">Immediate Ownership</h3>
                 <p className="text-green-800">Get the deed right away, unlike rent to own</p>
               </div>
@@ -171,7 +171,7 @@ export default async function OwnerFinancingNewYork() {
           </div>
 
           {/* Call to Action Section */}
-          <section className="py-12 px-6 bg-gradient-to-r from-emerald-900/30 to-blue-900/30 rounded-2xl mb-12">
+          <section className="py-12 px-6 bg-gradient-to-r from-[#004D33]/30 to-blue-900/30 rounded-2xl mb-12">
             <div className="max-w-4xl mx-auto text-center">
               <h2 className="text-3xl font-bold text-white mb-4">
                 Ready to Find Your New York Home?
@@ -182,7 +182,7 @@ export default async function OwnerFinancingNewYork() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link href="/auth">
-                  <button className="bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white py-4 px-8 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-[1.02] shadow-lg hover:shadow-xl">
+                  <button className="bg-gradient-to-r from-[#00BC7D] to-[#00BC7D]/50 hover:from-[#00BC7D]/50 hover:to-[#00d68f] text-white py-4 px-8 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-[1.02] shadow-lg hover:shadow-xl">
                     🏠 Browse New York Properties
                   </button>
                 </Link>

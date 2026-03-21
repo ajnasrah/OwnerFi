@@ -381,7 +381,7 @@ export default function PropertiesTab({ setEditingProperty, setEditForm }: Prope
                     <div className="ml-2">
                       <div className="flex items-center gap-1">
                         <div className="text-xs md:text-sm font-medium text-gray-900 truncate max-w-[200px] md:max-w-none">{property.address}</div>
-                        {((property as any).source === 'agent_outreach' || (property as any).agentConfirmedOwnerFinance) && (
+                        {((property as any).source === 'agent_outreach' || (property as any).agentConfirmedOwnerfinance) && (
                           <span
                             className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800 flex-shrink-0"
                             title="Agent confirmed owner financing via GHL"
@@ -389,7 +389,7 @@ export default function PropertiesTab({ setEditingProperty, setEditForm }: Prope
                             GHL Verified
                           </span>
                         )}
-                        {(property as any).sentToGHL && !(property as any).source && !(property as any).agentConfirmedOwnerFinance && (
+                        {(property as any).sentToGHL && !(property as any).source && !(property as any).agentConfirmedOwnerfinance && (
                           <span
                             className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 flex-shrink-0"
                             title={`Sent to GHL: ${new Date((property as any).sentToGHL).toLocaleString()}`}
@@ -428,7 +428,7 @@ export default function PropertiesTab({ setEditingProperty, setEditForm }: Prope
                       <div className="text-xs font-medium mt-0.5" style={{
                         color: property.listPrice && (property as any).estimatedValue
                           ? (property.listPrice / (property as any).estimatedValue) <= 0.95
-                            ? '#10b981' // green if price is 95% or less of estimate
+                            ? '#00BC7D' // green if price is 95% or less of estimate
                             : (property.listPrice / (property as any).estimatedValue) >= 1.05
                             ? '#ef4444' // red if price is 105% or more of estimate
                             : '#6b7280' // gray if within 5%

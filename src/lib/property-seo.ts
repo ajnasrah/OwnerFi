@@ -3,7 +3,7 @@
  *
  * Handles fetching properties from unified properties collection for SEO purposes.
  * All property types (owner finance, cash deals) are in the unified 'properties' collection
- * with flags: isOwnerFinance, isCashDeal, dealTypes[]
+ * with flags: isOwnerfinance, isCashDeal, dealTypes[]
  *
  * Generates SEO-friendly slugs and canonical URLs
  */

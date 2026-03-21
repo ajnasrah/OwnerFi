@@ -1,4 +1,4 @@
-// Comprehensive Property Database Schema for OwnerFi Platform
+// Comprehensive Property Database Schema for Ownerfi Platform
 
 export interface PropertyListing {
   // Core Identification

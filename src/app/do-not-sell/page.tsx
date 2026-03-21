@@ -53,7 +53,7 @@ export default function DoNotSellPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 py-12 px-4">
+    <div className="min-h-screen bg-[#111625] py-12 px-4">
       <div className="max-w-2xl mx-auto">
         <Link href="/" className="text-orange-400 hover:text-orange-300 mb-8 inline-block">
           &larr; Back to Home

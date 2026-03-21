@@ -1,7 +1,7 @@
 /**
  * Realtor Lead Demo Screen Generator
  *
- * Generates 5 x 1080x1920 screenshots showing the OwnerFi lead referral flow:
+ * Generates 5 x 1080x1920 screenshots showing the Ownerfi lead referral flow:
  *   1. Available Leads dashboard (John Doe visible)
  *   2. John Doe card highlighted — about to accept
  *   3. Agreement modal — signing the referral agreement
@@ -87,7 +87,7 @@ const SHARED_CSS = `
     height: 1920px;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     overflow: hidden;
-    background: #0f172a;
+    background: #111625;
     color: #fff;
   }
   .header {
@@ -154,7 +154,7 @@ const SHARED_CSS = `
     color: #cbd5e1;
   }
   .tab.active {
-    background: #10b981;
+    background: #00BC7D;
     color: #fff;
     box-shadow: 0 6px 20px rgba(16,185,129,0.4);
   }
@@ -292,7 +292,7 @@ const SHARED_CSS = `
   }
   .accept-btn {
     width: 100%;
-    background: #10b981;
+    background: #00BC7D;
     color: #fff;
     padding: 20px;
     border-radius: 14px;
@@ -320,7 +320,7 @@ const SHARED_CSS = `
     font-size: 96px;
     font-weight: 900;
     letter-spacing: 4px;
-    background: linear-gradient(135deg, #10b981, #3b82f6);
+    background: linear-gradient(135deg, #00BC7D, #3b82f6);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -391,7 +391,7 @@ const SHARED_CSS = `
   }
   .modal-footer .btn-sign {
     flex: 1;
-    background: #10b981;
+    background: #00BC7D;
     color: #fff;
     padding: 22px;
     border-radius: 14px;
@@ -401,7 +401,7 @@ const SHARED_CSS = `
   }
   .modal-footer .btn-done {
     width: 100%;
-    background: #10b981;
+    background: #00BC7D;
     color: #fff;
     padding: 22px;
     border-radius: 14px;
@@ -499,7 +499,7 @@ const SHARED_CSS = `
     font-size: 22px;
   }
   .checkbox.checked {
-    background: #10b981;
+    background: #00BC7D;
     color: #fff;
   }
   .checkbox.unchecked {
@@ -660,7 +660,7 @@ function buildHeader(agentName: string = 'Agent'): string {
       <div class="header-top">
         <div class="logo-area">
           <div class="logo-icon">O</div>
-          <span class="logo-text">OwnerFi</span>
+          <span class="logo-text">Ownerfi</span>
         </div>
         <div class="header-links">
           <span>Profile</span>
@@ -827,9 +827,9 @@ function buildScreen3_AgreementModal(): string {
         <div class="modal-body">
           <div class="agreement-preview">
             <h3>REAL ESTATE BUYER REFERRAL AGREEMENT</h3>
-            <p><b>Form RF-701</b> &mdash; OwnerFi Standard Referral Agreement</p>
+            <p><b>Form RF-701</b> &mdash; Ownerfi Standard Referral Agreement</p>
             <p>This Referral Agreement ("Agreement") is entered into as of ${today.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} between the Referring Party and Receiving Party identified below.</p>
-            <p><b>Section 1. Referring Party:</b> OwnerFi, Inc.</p>
+            <p><b>Section 1. Referring Party:</b> Ownerfi, Inc.</p>
             <p><b>Section 2. Receiving Party:</b> [Your name and brokerage]</p>
             <p><b>Section 3. Referred Prospect:</b> John Doe &mdash; Houston, TX</p>
             <p><b>Section 4. Referral Fee:</b> 30% of the Receiving Party's gross commission...</p>
@@ -855,15 +855,15 @@ function buildScreen3_AgreementModal(): string {
             </div>
             <div class="checkbox-row">
               <div class="checkbox checked">&#10003;</div>
-              <span class="checkbox-text">I acknowledge and agree to OwnerFi's <a>TCPA Compliance Agreement</a>.</span>
+              <span class="checkbox-text">I acknowledge and agree to Ownerfi's <a>TCPA Compliance Agreement</a>.</span>
             </div>
             <div class="checkbox-row">
               <div class="checkbox checked">&#10003;</div>
-              <span class="checkbox-text">I acknowledge OwnerFi's <a>Creative Finance Disclaimer</a>.</span>
+              <span class="checkbox-text">I acknowledge Ownerfi's <a>Creative Finance Disclaimer</a>.</span>
             </div>
             <div class="checkbox-row">
               <div class="checkbox checked">&#10003;</div>
-              <span class="checkbox-text">I accept that lead contact information is provided "as-is" without verification by OwnerFi.</span>
+              <span class="checkbox-text">I accept that lead contact information is provided "as-is" without verification by Ownerfi.</span>
             </div>
           </div>
         </div>

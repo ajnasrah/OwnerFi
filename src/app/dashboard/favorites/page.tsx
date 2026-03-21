@@ -145,7 +145,7 @@ export default function FavoritesPage() {
                     <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-lg text-xs font-bold">
                       {formatPropertyType(property.propertyType)}
                     </span>
-                    <span className="bg-emerald-100 text-emerald-700 px-2 py-1 rounded-lg text-xs font-bold">
+                    <span className="bg-[#00BC7D]/10 text-[#009B66] px-2 py-1 rounded-lg text-xs font-bold">
                       Owner Finance
                     </span>
                   </div>
@@ -288,7 +288,7 @@ export default function FavoritesPage() {
                 {/* Disclaimer */}
                 <div className="bg-amber-50 border border-amber-300 rounded-lg p-2 mb-4">
                   <p className="text-[9px] text-amber-900 font-semibold text-center">
-                    Property info from listing agent • OwnerFi does not verify • Conduct your own due diligence
+                    Property info from listing agent • Ownerfi does not verify • Conduct your own due diligence
                   </p>
                 </div>
 
@@ -297,7 +297,7 @@ export default function FavoritesPage() {
                   <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
                     <h4 className="font-semibold text-slate-800 mb-1 text-sm">Description</h4>
                     <p className="text-[9px] text-slate-500 mb-2 italic">
-                      Description from listing agent. OwnerFi does not verify accuracy.
+                      Description from listing agent. Ownerfi does not verify accuracy.
                     </p>
                     <p className="text-slate-700 leading-relaxed text-sm">{property.description}</p>
                   </div>
@@ -424,7 +424,7 @@ export default function FavoritesPage() {
                     <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-lg text-xs font-bold">
                       {formatPropertyType(selectedProperty.propertyType)}
                     </span>
-                    <span className="bg-emerald-100 text-emerald-700 px-2 py-1 rounded-lg text-xs font-bold">
+                    <span className="bg-[#00BC7D]/10 text-[#009B66] px-2 py-1 rounded-lg text-xs font-bold">
                       Owner Finance
                     </span>
                   </div>
@@ -559,7 +559,7 @@ export default function FavoritesPage() {
 
                 <div className="bg-amber-50 border border-amber-300 rounded-lg p-2">
                   <p className="text-[9px] text-amber-900 font-semibold text-center">
-                    Property info from listing agent • OwnerFi does not verify • Conduct your own due diligence
+                    Property info from listing agent • Ownerfi does not verify • Conduct your own due diligence
                   </p>
                 </div>
 
@@ -567,7 +567,7 @@ export default function FavoritesPage() {
                   <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
                     <h4 className="font-semibold text-slate-800 mb-1 text-sm">Description</h4>
                     <p className="text-[9px] text-slate-500 mb-2 italic">
-                      Description from listing agent. OwnerFi does not verify accuracy.
+                      Description from listing agent. Ownerfi does not verify accuracy.
                     </p>
                     <p className="text-slate-700 leading-relaxed text-sm">{selectedProperty.description}</p>
                   </div>

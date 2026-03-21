@@ -101,17 +101,17 @@ export default function CREAnalysisPage() {
 
   if (status !== 'authenticated' || (session?.user as { role?: string })?.role !== 'admin') {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-400"></div>
+      <div className="min-h-screen bg-[#111625] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00BC7D]"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-900">
+    <div className="min-h-screen bg-[#111625]">
       <div className="max-w-7xl mx-auto p-6">
         {/* Header */}
-        <Link href="/admin" className="text-emerald-400 hover:text-emerald-300 text-sm mb-4 inline-block">
+        <Link href="/admin" className="text-[#00BC7D] hover:text-[#00d68f] text-sm mb-4 inline-block">
           ← Back to Admin
         </Link>
 
@@ -128,7 +128,7 @@ export default function CREAnalysisPage() {
             onClick={() => setActiveTab('analyze')}
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
               activeTab === 'analyze'
-                ? 'bg-emerald-600 text-white'
+                ? 'bg-[#00BC7D] text-white'
                 : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
             }`}
           >
@@ -138,7 +138,7 @@ export default function CREAnalysisPage() {
             onClick={() => setActiveTab('history')}
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
               activeTab === 'history'
-                ? 'bg-emerald-600 text-white'
+                ? 'bg-[#00BC7D] text-white'
                 : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
             }`}
           >
@@ -160,12 +160,12 @@ export default function CREAnalysisPage() {
                   onChange={(e) => setAddress(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && runAnalysis()}
                   placeholder="123 Main St, Dallas, TX 75201"
-                  className="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:border-emerald-500"
+                  className="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:border-[#00BC7D]"
                 />
                 <button
                   onClick={() => runAnalysis()}
                   disabled={isAnalyzing || !address.trim()}
-                  className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-700 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
+                  className="px-6 py-3 bg-[#00BC7D] hover:bg-[#009B66] disabled:bg-slate-700 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
                 >
                   {isAnalyzing ? 'Analyzing...' : 'Analyze'}
                 </button>
@@ -175,7 +175,7 @@ export default function CREAnalysisPage() {
                   <span className="text-xs text-slate-400">Loaded from cache</span>
                   <button
                     onClick={() => runAnalysis(true)}
-                    className="text-xs text-emerald-400 hover:text-emerald-300"
+                    className="text-xs text-[#00BC7D] hover:text-[#00d68f]"
                   >
                     Refresh
                   </button>
@@ -193,7 +193,7 @@ export default function CREAnalysisPage() {
             {/* Loading State */}
             {isAnalyzing && (
               <div className="bg-slate-800 rounded-lg border border-slate-700 p-8 text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-400 mx-auto mb-4"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00BC7D] mx-auto mb-4"></div>
                 <p className="text-slate-300">Analyzing address...</p>
                 <p className="text-slate-500 text-sm mt-1">This may take 10-20 seconds</p>
               </div>
@@ -317,7 +317,7 @@ export default function CREAnalysisPage() {
                       <span>🎯</span> Highest & Best Use Recommendation
                     </h3>
                     <div className="flex items-center gap-4 mb-4">
-                      <span className="px-4 py-2 bg-emerald-600 rounded-lg text-white font-bold uppercase">
+                      <span className="px-4 py-2 bg-[#00BC7D] rounded-lg text-white font-bold uppercase">
                         {analysis.highestBestUse.recommendation}
                       </span>
                       <span className={`px-3 py-1 rounded-full text-sm ${
@@ -382,7 +382,7 @@ export default function CREAnalysisPage() {
           <div className="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden">
             {historyLoading ? (
               <div className="p-8 text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-400 mx-auto"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#00BC7D] mx-auto"></div>
               </div>
             ) : history.length === 0 ? (
               <div className="p-8 text-center">
@@ -407,7 +407,7 @@ export default function CREAnalysisPage() {
                       </td>
                       <td className="px-4 py-3">
                         {item.highestBestUse ? (
-                          <span className="px-2 py-1 bg-emerald-600/20 text-emerald-400 rounded text-xs uppercase">
+                          <span className="px-2 py-1 bg-[#00BC7D]/20 text-[#00BC7D] rounded text-xs uppercase">
                             {item.highestBestUse.recommendation}
                           </span>
                         ) : (
@@ -431,7 +431,7 @@ export default function CREAnalysisPage() {
                       <td className="px-4 py-3">
                         <button
                           onClick={() => loadFromHistory(item)}
-                          className="text-emerald-400 hover:text-emerald-300 text-sm"
+                          className="text-[#00BC7D] hover:text-[#00d68f] text-sm"
                         >
                           View
                         </button>

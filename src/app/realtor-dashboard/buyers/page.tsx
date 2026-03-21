@@ -205,9 +205,9 @@ export default function RealtorDashboard() {
 
   const sendShareEmail = useCallback(() => {
     if (!referralModal.inviteUrl || !referralModal.shareEmail) return;
-    const subject = encodeURIComponent('Lead Referral from OwnerFi');
+    const subject = encodeURIComponent('Lead Referral from Ownerfi');
     const body = encodeURIComponent(
-      `I'm referring a buyer lead to you through OwnerFi.\n\nClick this link to view the lead details and accept the referral:\n${referralModal.inviteUrl}\n\nYou'll earn commission when you close this deal!`
+      `I'm referring a buyer lead to you through Ownerfi.\n\nClick this link to view the lead details and accept the referral:\n${referralModal.inviteUrl}\n\nYou'll earn commission when you close this deal!`
     );
     window.location.href = `mailto:${referralModal.shareEmail}?subject=${subject}&body=${body}`;
   }, [referralModal.inviteUrl, referralModal.shareEmail]);
@@ -215,7 +215,7 @@ export default function RealtorDashboard() {
   const sendShareText = useCallback(() => {
     if (!referralModal.inviteUrl || !referralModal.sharePhone) return;
     const body = encodeURIComponent(
-      `I'm referring a buyer lead to you through OwnerFi. Accept it here: ${referralModal.inviteUrl}`
+      `I'm referring a buyer lead to you through Ownerfi. Accept it here: ${referralModal.inviteUrl}`
     );
     window.location.href = `sms:${referralModal.sharePhone}?body=${body}`;
   }, [referralModal.inviteUrl, referralModal.sharePhone]);
@@ -223,7 +223,7 @@ export default function RealtorDashboard() {
   // Initial loading state
   if ((status === 'loading') || (isReady && dashboard.isLoading && !dashboard.data)) {
     return (
-      <div className="min-h-screen bg-slate-900 overflow-y-auto pb-20">
+      <div className="min-h-screen bg-[#111625] overflow-y-auto pb-20">
         <header className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50">
           <div className="px-4 py-3">
             <div className="h-5 w-40 bg-slate-700 rounded animate-pulse" />
@@ -251,7 +251,7 @@ export default function RealtorDashboard() {
   // Error state
   if (dashboard.error && !dashboard.data) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+      <div className="min-h-screen bg-[#111625] flex items-center justify-center">
         <div className="text-center">
           <div className="text-red-400 text-xl mb-4">!</div>
           <div className="text-white font-medium">
@@ -259,7 +259,7 @@ export default function RealtorDashboard() {
           </div>
           <button
             onClick={() => dashboard.refetch()}
-            className="mt-4 bg-emerald-500 text-white px-4 py-2 rounded-lg hover:bg-emerald-600"
+            className="mt-4 bg-[#00BC7D]/50 text-white px-4 py-2 rounded-lg hover:bg-[#00BC7D]"
           >
             Retry
           </button>
@@ -272,7 +272,7 @@ export default function RealtorDashboard() {
   if (!dashboardData) return null;
 
   return (
-    <div className="min-h-screen bg-slate-900 overflow-y-auto pb-20">
+    <div className="min-h-screen bg-[#111625] overflow-y-auto pb-20">
       {/* Header */}
       <header className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50">
         <div className="px-4 py-3 flex items-center justify-between">
@@ -281,16 +281,14 @@ export default function RealtorDashboard() {
               Back to Hub
             </Link>
             <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-              <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">O</span>
-              </div>
-              <span className="text-lg font-bold text-white">OwnerFi</span>
+              <img src="/logo.jpg" alt="Ownerfi" width={32} height={32} className="rounded-lg" />
+              <span className="text-lg font-bold text-white">Ownerfi</span>
             </Link>
           </div>
 
           <div className="flex items-center gap-2">
             {role === 'admin' && (
-              <Link href="/admin" className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors">
+              <Link href="/admin" className="text-sm text-[#00BC7D] hover:text-[#00d68f] transition-colors">
                 &larr; Admin
               </Link>
             )}
@@ -329,7 +327,7 @@ export default function RealtorDashboard() {
               onClick={() => setActiveTab('available')}
               className={`flex-1 text-center py-2 px-2 rounded-lg text-xs font-medium transition-all ${
                 activeTab === 'available'
-                  ? 'bg-emerald-500 text-white shadow-lg'
+                  ? 'bg-[#00BC7D]/50 text-white shadow-lg'
                   : 'text-slate-300 hover:text-white'
               }`}
             >
@@ -339,7 +337,7 @@ export default function RealtorDashboard() {
               onClick={() => setActiveTab('agreements')}
               className={`flex-1 text-center py-2 px-2 rounded-lg text-xs font-medium transition-all ${
                 activeTab === 'agreements'
-                  ? 'bg-emerald-500 text-white shadow-lg'
+                  ? 'bg-[#00BC7D]/50 text-white shadow-lg'
                   : 'text-slate-300 hover:text-white'
               }`}
             >
@@ -354,7 +352,7 @@ export default function RealtorDashboard() {
               onClick={() => setActiveTab('owned')}
               className={`flex-1 text-center py-2 px-2 rounded-lg text-xs font-medium transition-all ${
                 activeTab === 'owned'
-                  ? 'bg-emerald-500 text-white shadow-lg'
+                  ? 'bg-[#00BC7D]/50 text-white shadow-lg'
                   : 'text-slate-300 hover:text-white'
               }`}
             >
@@ -364,7 +362,7 @@ export default function RealtorDashboard() {
               onClick={() => setActiveTab('transactions')}
               className={`flex-1 text-center py-2 px-2 rounded-lg text-xs font-medium transition-all ${
                 activeTab === 'transactions'
-                  ? 'bg-emerald-500 text-white shadow-lg'
+                  ? 'bg-[#00BC7D]/50 text-white shadow-lg'
                   : 'text-slate-300 hover:text-white'
               }`}
             >

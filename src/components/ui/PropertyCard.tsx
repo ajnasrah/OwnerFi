@@ -61,12 +61,12 @@ export const PropertyCard = React.memo(function PropertyCard({ property, isFavor
       className="absolute inset-0 w-full h-full"
       style={style}
     >
-      <div className="relative w-full h-full bg-gradient-to-br from-slate-50 via-blue-50 to-emerald-50 rounded-3xl shadow-2xl overflow-hidden">
+      <div className="relative w-full h-full bg-gradient-to-br from-slate-50 via-blue-50 to-[#00BC7D]/5 rounded-3xl shadow-2xl overflow-hidden">
         {/* Property Image - Full Screen Background */}
-        <div className="absolute inset-0 overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-emerald-50">
+        <div className="absolute inset-0 overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-[#00BC7D]/5">
           {imageLoading && (
             <div className="absolute inset-0 flex items-center justify-center bg-slate-200">
-              <div className="w-16 h-16 border-4 border-emerald-300 border-t-emerald-600 rounded-full animate-spin"></div>
+              <div className="w-16 h-16 border-4 border-[#00BC7D]/50 border-t-[#00BC7D] rounded-full animate-spin"></div>
             </div>
           )}
 
@@ -189,7 +189,7 @@ export const PropertyCard = React.memo(function PropertyCard({ property, isFavor
                 <div className="w-full h-full bg-gradient-to-r from-slate-400 to-slate-500 rounded-full" />
               </div>
               {!showDetails && (
-                <div className="inline-flex items-center gap-1.5 bg-emerald-500 text-white px-4 py-2 rounded-full shadow-lg">
+                <div className="inline-flex items-center gap-1.5 bg-[#00BC7D]/50 text-white px-4 py-2 rounded-full shadow-lg">
                   <svg className="w-4 h-4 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 15l7-7 7 7" />
                   </svg>
@@ -302,7 +302,7 @@ export const PropertyCard = React.memo(function PropertyCard({ property, isFavor
                           <span>Market Estimates</span>
                         </h3>
                         <p className="text-[9px] text-purple-700 mb-3 leading-tight bg-purple-100 rounded-lg p-2">
-                          ⚠️ These estimates are provided by third-party data sources (Zillow). OwnerFi does not calculate or verify these values. Use for reference only.
+                          ⚠️ These estimates are provided by third-party data sources (Zillow). Ownerfi does not calculate or verify these values. Use for reference only.
                         </p>
                         <div className="grid grid-cols-2 gap-3">
                           {zest && zest > 0 && (
@@ -477,19 +477,19 @@ export const PropertyCard = React.memo(function PropertyCard({ property, isFavor
 
                   {/* Features */}
                   {property.features && property.features.length > 0 && (
-                    <div className="bg-emerald-50 rounded-2xl p-4 border border-emerald-200">
-                      <h3 className="font-bold text-emerald-900 mb-3 flex items-center gap-2 text-sm">
+                    <div className="bg-[#00BC7D]/5 rounded-2xl p-4 border border-[#00BC7D]/30">
+                      <h3 className="font-bold text-[#004D33] mb-3 flex items-center gap-2 text-sm">
                         <span>✨</span>
                         <span>Features</span>
                       </h3>
                       <div className="flex flex-wrap gap-2">
                         {property.features.slice(0, 12).map((feature, idx) => (
-                          <span key={idx} className="bg-emerald-100 text-emerald-800 px-2 py-1 rounded-lg text-xs font-medium">
+                          <span key={idx} className="bg-[#00BC7D]/10 text-[#007A52] px-2 py-1 rounded-lg text-xs font-medium">
                             {feature}
                           </span>
                         ))}
                         {property.features.length > 12 && (
-                          <span className="text-emerald-600 text-xs px-2 py-1">
+                          <span className="text-[#00BC7D] text-xs px-2 py-1">
                             +{property.features.length - 12} more
                           </span>
                         )}
@@ -533,7 +533,7 @@ export const PropertyCard = React.memo(function PropertyCard({ property, isFavor
                   {/* General Disclaimer */}
                   <div className={`${LEGAL_COLORS.WARNING_BG} border ${LEGAL_COLORS.WARNING_BORDER} rounded-xl p-3`}>
                     <p className={`text-xs ${LEGAL_COLORS.WARNING_TEXT} font-medium`}>
-                      ⚠️ Property information provided by listing agent. OwnerFi does not verify accuracy. Always conduct your own due diligence before making any decisions.
+                      ⚠️ Property information provided by listing agent. Ownerfi does not verify accuracy. Always conduct your own due diligence before making any decisions.
                     </p>
                   </div>
 
@@ -554,10 +554,10 @@ export const PropertyCard = React.memo(function PropertyCard({ property, isFavor
                     </a>
 
                     <a
-                      href={property.agentPhone ? `sms:${property.agentPhone}&body=${encodeURIComponent(`I'm interested in the property at ${property.address}, ${property.city}, ${property.state}. Found through OwnerFi.`)}` : `https://www.zillow.com/homedetails/${property.id}_zpid/`}
+                      href={property.agentPhone ? `sms:${property.agentPhone}&body=${encodeURIComponent(`I'm interested in the property at ${property.address}, ${property.city}, ${property.state}. Found through Ownerfi.`)}` : `https://www.zillow.com/homedetails/${property.id}_zpid/`}
                       target={property.agentPhone ? '_self' : '_blank'}
                       rel={property.agentPhone ? undefined : 'noopener noreferrer'}
-                      className="block w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white py-2.5 px-3 rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-95 transition-all"
+                      className="block w-full bg-gradient-to-r from-[#00BC7D]/50 to-[#00BC7D] hover:from-[#00BC7D] hover:to-[#009B66] text-white py-2.5 px-3 rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-95 transition-all"
                       title={AGENT_CONTACT_DISCLAIMER}
                     >
                       <div className="flex items-center justify-center gap-1.5">
@@ -612,8 +612,8 @@ export const PropertyCard = React.memo(function PropertyCard({ property, isFavor
           className="fixed top-20 left-1/2 -translate-x-1/2 z-[100]"
           style={{ animation: 'fadeInDown 0.3s ease-out' }}
         >
-          <div className="bg-slate-900 text-white px-4 py-2.5 rounded-full shadow-2xl flex items-center gap-2 border border-slate-700">
-            <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="bg-[#111625] text-white px-4 py-2.5 rounded-full shadow-2xl flex items-center gap-2 border border-slate-700">
+            <svg className="w-5 h-5 text-[#00BC7D]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
             </svg>
             <span className="text-sm font-semibold">Address copied!</span>

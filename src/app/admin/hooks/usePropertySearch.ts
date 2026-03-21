@@ -35,7 +35,7 @@ export interface AdminProperty {
   description?: string;
   sentToGHL?: string;
   source?: string;
-  agentConfirmedOwnerFinance?: boolean;
+  agentConfirmedOwnerfinance?: boolean;
   agentName?: string | null;
   agentPhone?: string | null;
   agentEmail?: string | null;
@@ -81,7 +81,7 @@ function transformToAdminProperty(doc: any): AdminProperty {
     estimatedValue: doc.zestimate,
     ownerFinanceVerified: doc.ownerFinanceVerified,
     source: doc.sourceType,
-    agentConfirmedOwnerFinance: doc.manuallyVerified,
+    agentConfirmedOwnerfinance: doc.manuallyVerified,
     monthlyPayment: doc.monthlyPayment,
     downPaymentAmount: doc.downPaymentAmount,
     downPaymentPercent: doc.downPaymentPercent,

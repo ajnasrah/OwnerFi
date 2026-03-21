@@ -86,7 +86,7 @@ export default function CashDealsPage() {
   const [minPrice, setMinPrice] = useState<number | ''>('');
   const [maxPrice, setMaxPrice] = useState<number | ''>('');
   const [maxArv, setMaxArv] = useState<number | ''>('');
-  const [ownerFinanceOnly, setOwnerFinanceOnly] = useState(false);
+  const [ownerFinanceOnly, setOwnerfinanceOnly] = useState(false);
   const [activeQuickFilter, setActiveQuickFilter] = useState<QuickFilterKey>('ownerFinance');
   const [showAdvanced, setShowAdvanced] = useState(false);
 
@@ -309,13 +309,13 @@ export default function CashDealsPage() {
     setMinPrice('');
     setMaxPrice('');
     setMaxArv('');
-    setOwnerFinanceOnly(false);
+    setOwnerfinanceOnly(false);
 
     // Apply preset filters
     if ('maxArv' in filter) setMaxArv(filter.maxArv!);
     if ('minPrice' in filter) setMinPrice(filter.minPrice!);
     if ('maxPrice' in filter) setMaxPrice(filter.maxPrice!);
-    if ('ownerFinanceOnly' in filter) setOwnerFinanceOnly(filter.ownerFinanceOnly!);
+    if ('ownerFinanceOnly' in filter) setOwnerfinanceOnly(filter.ownerFinanceOnly!);
   };
 
   // Client-side filtered and sorted deals
@@ -401,7 +401,7 @@ export default function CashDealsPage() {
     setMinPrice('');
     setMaxPrice('');
     setMaxArv('');
-    setOwnerFinanceOnly(false);
+    setOwnerfinanceOnly(false);
     setActiveQuickFilter('allDeals');
     setSortBy('price');
     setSortOrder('asc');
@@ -497,13 +497,13 @@ export default function CashDealsPage() {
 
 
   return (
-    <div className="h-screen overflow-hidden bg-slate-900 flex flex-col">
+    <div className="h-screen overflow-hidden bg-[#111625] flex flex-col">
       <div className="flex-1 overflow-y-auto overflow-x-hidden p-4">
         <div className="max-w-[1600px] mx-auto overflow-x-hidden">
           {/* Header with Stats */}
           <div className="flex justify-between items-start mb-4">
             <div>
-              <Link href="/admin" className="text-emerald-400 hover:text-emerald-300 text-sm mb-1 inline-block">← Back</Link>
+              <Link href="/admin" className="text-[#00BC7D] hover:text-[#00d68f] text-sm mb-1 inline-block">← Back</Link>
               <div className="flex items-center gap-3">
                 <h1 className="text-2xl font-bold text-white">Cash Deals Finder</h1>
               </div>
@@ -522,7 +522,7 @@ export default function CashDealsPage() {
               </button>
               <div className="flex gap-6 text-right">
                 <div>
-                  <div className="text-2xl font-bold text-emerald-400">{stats.total}</div>
+                  <div className="text-2xl font-bold text-[#00BC7D]">{stats.total}</div>
                   <div className="text-xs text-slate-400">Matches</div>
                 </div>
                 <div>
@@ -554,7 +554,7 @@ export default function CashDealsPage() {
                       updateURL({ address: e.target.value });
                     }}
                     placeholder="Search by address..."
-                    className="bg-slate-700 border border-slate-600 rounded pl-9 pr-3 py-2 w-full text-sm text-white placeholder-slate-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                    className="bg-slate-700 border border-slate-600 rounded pl-9 pr-3 py-2 w-full text-sm text-white placeholder-slate-500 focus:border-[#00BC7D] focus:ring-1 focus:ring-[#00BC7D]"
                   />
                 </div>
               </div>
@@ -565,7 +565,7 @@ export default function CashDealsPage() {
                   value={citySearch}
                   onChange={(e) => setCitySearch(e.target.value)}
                   placeholder="City name..."
-                  className="bg-slate-700 border border-slate-600 rounded px-3 py-2 w-full text-sm text-white placeholder-slate-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                  className="bg-slate-700 border border-slate-600 rounded px-3 py-2 w-full text-sm text-white placeholder-slate-500 focus:border-[#00BC7D] focus:ring-1 focus:ring-[#00BC7D]"
                 />
               </div>
               <div className="w-[100px]">
@@ -573,7 +573,7 @@ export default function CashDealsPage() {
                 <select
                   value={stateFilter}
                   onChange={(e) => setStateFilter(e.target.value)}
-                  className="bg-slate-700 border border-slate-600 rounded px-2 py-2 w-full text-sm text-white focus:border-emerald-500"
+                  className="bg-slate-700 border border-slate-600 rounded px-2 py-2 w-full text-sm text-white focus:border-[#00BC7D]"
                 >
                   <option value="">All</option>
                   {states.map(state => (
@@ -586,7 +586,7 @@ export default function CashDealsPage() {
                 <select
                   value={radius}
                   onChange={(e) => setRadius(parseInt(e.target.value))}
-                  className="bg-slate-700 border border-slate-600 rounded px-2 py-2 w-full text-sm text-white focus:border-emerald-500"
+                  className="bg-slate-700 border border-slate-600 rounded px-2 py-2 w-full text-sm text-white focus:border-[#00BC7D]"
                 >
                   <option value="0">Exact city</option>
                   <option value="10">10 miles</option>
@@ -625,7 +625,7 @@ export default function CashDealsPage() {
                 onClick={() => applyQuickFilter(key as QuickFilterKey)}
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
                   activeQuickFilter === key
-                    ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30'
+                    ? 'bg-[#00BC7D] text-white shadow-lg shadow-[#00BC7D]/30'
                     : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
                 }`}
               >
@@ -725,7 +725,7 @@ export default function CashDealsPage() {
           {/* Results Table */}
           {loading ? (
             <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-400 mx-auto"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00BC7D] mx-auto"></div>
               <p className="mt-4 text-slate-400">Loading deals...</p>
             </div>
           ) : error ? (
@@ -739,7 +739,7 @@ export default function CashDealsPage() {
           ) : filteredDeals.length === 0 ? (
             <div className="text-center py-12 bg-slate-800 rounded-lg border border-slate-700">
               <p className="text-slate-400">No deals match your filters</p>
-              <button onClick={clearAllFilters} className="mt-3 text-emerald-400 hover:text-emerald-300 text-sm">
+              <button onClick={clearAllFilters} className="mt-3 text-[#00BC7D] hover:text-[#00d68f] text-sm">
                 Clear filters
               </button>
             </div>
@@ -755,13 +755,13 @@ export default function CashDealsPage() {
                           type="checkbox"
                           checked={paginatedDeals.length > 0 && paginatedDeals.every(d => selectedDeals.has(d.id))}
                           onChange={toggleSelectAll}
-                          className="w-4 h-4 rounded border-slate-500 bg-slate-600 text-emerald-500 focus:ring-emerald-500"
+                          className="w-4 h-4 rounded border-slate-500 bg-slate-600 text-[#00BC7D] focus:ring-[#00BC7D]"
                         />
                       </th>
                       <th className="px-1.5 py-2 text-left text-slate-300 text-xs font-semibold">Property</th>
                       <th className="px-1.5 py-2 text-left text-slate-300 text-xs font-semibold">Location</th>
-                      <th className="px-1.5 py-2 text-left text-slate-300 text-xs font-semibold cursor-pointer hover:text-emerald-400" onClick={() => handleSort('price')}>Price {sortBy === 'price' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
-                      <th className="px-1.5 py-2 text-left text-slate-300 text-xs font-semibold cursor-pointer hover:text-emerald-400" onClick={() => handleSort('percentOfArv')}>%Zest {sortBy === 'percentOfArv' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
+                      <th className="px-1.5 py-2 text-left text-slate-300 text-xs font-semibold cursor-pointer hover:text-[#00BC7D]" onClick={() => handleSort('price')}>Price {sortBy === 'price' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
+                      <th className="px-1.5 py-2 text-left text-slate-300 text-xs font-semibold cursor-pointer hover:text-[#00BC7D]" onClick={() => handleSort('percentOfArv')}>%Zest {sortBy === 'percentOfArv' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
                       <th className="px-1.5 py-2 text-left text-slate-300 text-xs font-semibold">Specs</th>
                       <th className="px-1.5 py-2 text-center text-slate-300 text-xs font-semibold w-16">Seen</th>
                     </tr>
@@ -774,7 +774,7 @@ export default function CashDealsPage() {
                       return (
                         <tr
                           key={deal.id}
-                          className={`hover:bg-slate-700/50 ${isTopDeal ? 'bg-emerald-900/20' : ''} ${isSelected ? 'bg-red-900/20' : ''}`}
+                          className={`hover:bg-slate-700/50 ${isTopDeal ? 'bg-[#004D33]/20' : ''} ${isSelected ? 'bg-red-900/20' : ''}`}
                         >
                           <td className="px-2 py-2">
                             <button
@@ -782,7 +782,7 @@ export default function CashDealsPage() {
                               className={`inline-flex items-center justify-center px-3 py-2 min-w-[60px] min-h-[44px] text-white text-sm font-medium rounded-lg transition-colors touch-manipulation ${
                                 deal.reviewedAt
                                   ? 'bg-slate-600 hover:bg-slate-500'
-                                  : 'bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700'
+                                  : 'bg-[#00BC7D] hover:bg-[#00BC7D]/50 active:bg-[#009B66]'
                               }`}
                             >
                               View
@@ -793,7 +793,7 @@ export default function CashDealsPage() {
                               type="checkbox"
                               checked={isSelected}
                               onChange={() => toggleSelection(deal.id)}
-                              className="w-4 h-4 rounded border-slate-500 bg-slate-600 text-emerald-500 focus:ring-emerald-500"
+                              className="w-4 h-4 rounded border-slate-500 bg-slate-600 text-[#00BC7D] focus:ring-[#00BC7D]"
                             />
                           </td>
                           <td className="px-1.5 py-2">
@@ -839,7 +839,7 @@ export default function CashDealsPage() {
                                   </button>
                                 </div>
                                 <div className="flex gap-1 mt-0.5">
-                                  {isTopDeal && <span className="px-1 py-0.5 text-[10px] font-bold bg-emerald-600 text-white rounded">TOP</span>}
+                                  {isTopDeal && <span className="px-1 py-0.5 text-[10px] font-bold bg-[#00BC7D] text-white rounded">TOP</span>}
                                   {deal.ownerFinanceVerified && <span className="px-1 py-0.5 text-[10px] font-semibold bg-blue-600 text-white rounded">OF</span>}
                                 </div>
                               </div>
@@ -901,7 +901,7 @@ export default function CashDealsPage() {
                     >
                       Prev
                     </button>
-                    <span className="px-3 py-1 text-sm text-white bg-emerald-600 rounded">
+                    <span className="px-3 py-1 text-sm text-white bg-[#00BC7D] rounded">
                       {currentPage} / {totalPages}
                     </span>
                     <button

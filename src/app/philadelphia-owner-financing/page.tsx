@@ -4,14 +4,14 @@ import { db } from '@/lib/firebase'
 import { collection, query, where, getDocs } from 'firebase/firestore'
 
 export const metadata: Metadata = {
-  title: 'Owner Financing Philadelphia | Rent to Own Alternative PA | Center City, Society Hill | OwnerFi',
+  title: 'Owner Financing Philadelphia | Rent to Own Alternative PA | Center City, Society Hill | Ownerfi',
   description: 'Find owner financed homes in Philadelphia - better than rent to own! Immediate ownership in Center City, Society Hill, Northern Liberties, Fishtown. No banks needed. Flexible credit options.',
   keywords: 'owner financing philadelphia, owner financed homes philadelphia, rent to own philadelphia, rent to own pennsylvania, owner financing center city, seller financing philadelphia, no credit check homes philadelphia, bad credit homes philadelphia, philadelphia real estate owner financing',
   openGraph: {
-    title: 'Owner Financed Homes in Philadelphia - Better Than Rent to Own | OwnerFi',
+    title: 'Owner Financed Homes in Philadelphia - Better Than Rent to Own | Ownerfi',
     description: 'Skip the banks! Find owner financed properties across Philadelphia with immediate ownership. Serving Center City, Society Hill, Fishtown and more.',
     url: 'https://ownerfi.ai/philadelphia-owner-financing',
-    siteName: 'OwnerFi',
+    siteName: 'Ownerfi',
     type: 'website',
   },
   twitter: {
@@ -53,7 +53,7 @@ async function getPhiladelphiaProperties() {
   }
 }
 
-export default async function OwnerFinancingPhiladelphia() {
+export default async function OwnerfinancingPhiladelphia() {
   const { areaCounts, totalCount } = await getPhiladelphiaProperties()
 
   const faqSchema = {
@@ -98,7 +98,7 @@ export default async function OwnerFinancingPhiladelphia() {
   const localBusinessSchema = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
-    "name": "OwnerFi Philadelphia - Owner Financed Homes",
+    "name": "Ownerfi Philadelphia - Owner Financed Homes",
     "description": "Find owner financed homes throughout Philadelphia. Better than rent to own with immediate ownership.",
     "url": "https://ownerfi.ai/philadelphia-owner-financing",
     "areaServed": {
@@ -150,7 +150,7 @@ export default async function OwnerFinancingPhiladelphia() {
             </p>
 
             <div className="grid md:grid-cols-3 gap-6 mb-8">
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-xl border border-green-200">
+              <div className="bg-gradient-to-br from-green-50 to-[#00BC7D]/5 p-6 rounded-xl border border-green-200">
                 <h3 className="font-bold text-green-900 mb-2">Immediate Philly Ownership</h3>
                 <p className="text-green-800">Get the deed right away, unlike rent to own</p>
               </div>
@@ -208,7 +208,7 @@ export default async function OwnerFinancingPhiladelphia() {
                 </p>
               </div>
 
-              <div className="p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border-2 border-green-200">
+              <div className="p-6 bg-gradient-to-br from-green-50 to-[#00BC7D]/5 rounded-xl border-2 border-green-200">
                 <h3 className="text-xl font-bold text-green-900 mb-2">
                   Northern Liberties
                 </h3>

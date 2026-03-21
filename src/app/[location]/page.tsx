@@ -56,7 +56,7 @@ export async function generateMetadata({ params }: { params: Promise<{ location:
       type: 'website',
       locale: 'en_US',
       url: `https://ownerfi.ai/${location}`,
-      siteName: 'OwnerFi',
+      siteName: 'Ownerfi',
       title: title.split('|')[0].trim(),
       description,
       images: [{
@@ -201,7 +201,7 @@ function generateFAQSchema(location: LocationData) {
     },
     {
       question: `How many owner financed properties are available in ${location.displayName}?`,
-      answer: `Currently, there are ${location.propertyCount}+ owner financed properties available in ${location.displayName} through OwnerFi.`
+      answer: `Currently, there are ${location.propertyCount}+ owner financed properties available in ${location.displayName} through Ownerfi.`
     }
   ] : [
     {
@@ -241,7 +241,7 @@ function generateLocalBusinessSchema(location: LocationData) {
   return {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
-    "name": `OwnerFi ${location.displayName}`,
+    "name": `Ownerfi ${location.displayName}`,
     "description": `Discover owner financed properties in ${location.displayName}`,
     "url": `https://ownerfi.ai/${location.name}`,
     "areaServed": location.type === 'state' ? {
@@ -282,20 +282,18 @@ export default async function LocationPage({ params }: { params: Promise<{ locat
         dangerouslySetInnerHTML={{ __html: JSON.stringify(generateLocalBusinessSchema(locationData)) }}
       />
 
-      <div className="min-h-screen bg-slate-900 text-white">
+      <div className="min-h-screen bg-[#111625] text-white">
         {/* Header */}
         <header className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 px-6 py-4">
           <div className="max-w-6xl mx-auto flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">O</span>
-              </div>
-              <span className="text-lg font-bold text-white">OwnerFi</span>
+              <img src="/logo.jpg" alt="Ownerfi" width={32} height={32} className="rounded-lg" />
+              <span className="text-lg font-bold text-white">Ownerfi</span>
             </Link>
             <nav className="flex items-center gap-4">
               <Link href="/" className="text-slate-300 hover:text-white text-sm">Home</Link>
               <Link href="/how-owner-finance-works" className="text-slate-300 hover:text-white text-sm">How It Works</Link>
-              <Link href="/auth" className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
+              <Link href="/auth" className="bg-[#00BC7D]/50 hover:bg-[#00BC7D] text-white px-4 py-2 rounded-lg text-sm font-medium">
                 Browse Properties
               </Link>
             </nav>
@@ -308,7 +306,7 @@ export default async function LocationPage({ params }: { params: Promise<{ locat
             <div className="max-w-6xl mx-auto">
               <div className="text-center mb-12">
                 <h1 className="text-5xl font-bold text-white mb-6">
-                  Owner Financing in <span className="text-emerald-400">{locationData.displayName}</span>
+                  Owner Financing in <span className="text-[#00BC7D]">{locationData.displayName}</span>
                   {!isState && locationData.state && (
                     <span className="block text-3xl mt-4 text-slate-300">{locationData.state}</span>
                   )}
@@ -326,7 +324,7 @@ export default async function LocationPage({ params }: { params: Promise<{ locat
               <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
                 <Link
                   href="/auth"
-                  className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all"
+                  className="bg-[#00BC7D]/50 hover:bg-[#00BC7D] text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all"
                 >
                   Browse {locationData.displayName} Properties
                 </Link>
@@ -341,7 +339,7 @@ export default async function LocationPage({ params }: { params: Promise<{ locat
               {/* Stats */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                 <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 text-center border border-slate-700/50">
-                  <div className="text-3xl font-bold text-emerald-400">{locationData.propertyCount}+</div>
+                  <div className="text-3xl font-bold text-[#00BC7D]">{locationData.propertyCount}+</div>
                   <div className="text-slate-300 mt-2">Properties</div>
                 </div>
                 <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 text-center border border-slate-700/50">
@@ -372,10 +370,10 @@ export default async function LocationPage({ params }: { params: Promise<{ locat
                     <Link
                       key={nearby}
                       href={`/${nearby.toLowerCase().replace(/\s+/g, '-')}`}
-                      className="bg-slate-900/50 border border-slate-700/50 rounded-lg p-4 hover:border-emerald-400/50 transition-all text-center"
+                      className="bg-[#111625]/50 border border-slate-700/50 rounded-lg p-4 hover:border-[#00BC7D]/50 transition-all text-center"
                     >
                       <h3 className="text-white font-semibold">{nearby}</h3>
-                      <p className="text-emerald-400 text-sm mt-1">View Properties →</p>
+                      <p className="text-[#00BC7D] text-sm mt-1">View Properties →</p>
                     </Link>
                   ))}
                 </div>
@@ -391,7 +389,7 @@ export default async function LocationPage({ params }: { params: Promise<{ locat
               </h2>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                 <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border border-slate-700/50">
-                  <div className="text-emerald-400 text-3xl mb-4">🏠</div>
+                  <div className="text-[#00BC7D] text-3xl mb-4">🏠</div>
                   <h3 className="text-xl font-semibold text-white mb-3">No Bank Required</h3>
                   <p className="text-slate-300">Skip traditional mortgage requirements and lengthy bank approval processes.</p>
                 </div>
@@ -431,8 +429,8 @@ export default async function LocationPage({ params }: { params: Promise<{ locat
                 Owner Financing vs Rent-to-Own in {locationData.displayName}
               </h2>
               <div className="grid md:grid-cols-2 gap-8">
-                <div className="bg-gradient-to-br from-emerald-900/30 to-emerald-800/30 rounded-xl p-6 border border-emerald-500/30">
-                  <h3 className="text-xl font-bold text-emerald-400 mb-4">✅ Owner Financing (Better Option)</h3>
+                <div className="bg-gradient-to-br from-[#004D33]/30 to-[#007A52]/30 rounded-xl p-6 border border-[#00BC7D]/30">
+                  <h3 className="text-xl font-bold text-[#00BC7D] mb-4">✅ Owner Financing (Better Option)</h3>
                   <ul className="space-y-2 text-slate-300">
                     <li>• You get the deed immediately</li>
                     <li>• Legal homeowner from day one</li>
@@ -463,7 +461,7 @@ export default async function LocationPage({ params }: { params: Promise<{ locat
               </h2>
               <div className="space-y-6">
                 {generateFAQSchema(locationData)["mainEntity"].map((faq: { name: string; acceptedAnswer: { text: string } }, i: number) => (
-                  <div key={i} className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
+                  <div key={i} className="bg-[#111625]/50 rounded-xl p-6 border border-slate-700/50">
                     <h3 className="text-xl font-semibold text-white mb-3">{faq.name}</h3>
                     <p className="text-slate-300">{faq.acceptedAnswer.text}</p>
                   </div>
@@ -484,7 +482,7 @@ export default async function LocationPage({ params }: { params: Promise<{ locat
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link
                   href="/auth"
-                  className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all"
+                  className="bg-[#00BC7D]/50 hover:bg-[#00BC7D] text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all"
                 >
                   Browse {locationData.displayName} Properties
                 </Link>

@@ -199,10 +199,10 @@ export default function ScraperPage() {
   });
 
   return (
-    <div className="h-screen overflow-hidden bg-slate-900 flex flex-col">
+    <div className="h-screen overflow-hidden bg-[#111625] flex flex-col">
       <div className="flex-1 overflow-y-auto p-6">
         <div className="max-w-4xl mx-auto">
-      <Link href="/admin" className="text-emerald-400 hover:text-emerald-300 text-sm mb-4 inline-block">← Back to Admin</Link>
+      <Link href="/admin" className="text-[#00BC7D] hover:text-[#00d68f] text-sm mb-4 inline-block">← Back to Admin</Link>
       <h1 className="text-3xl font-bold mb-2 text-white">Zillow Property Scraper</h1>
       <p className="text-slate-400 mb-8">
         Add Zillow URLs to queue for scraping and GHL agent outreach
@@ -217,7 +217,7 @@ export default function ScraperPage() {
           value={quickUrl}
           onChange={(e) => setQuickUrl(e.target.value)}
           placeholder="https://www.zillow.com/homedetails/123-Main-St/12345678_zpid/"
-          className="w-full h-24 bg-slate-900 border border-slate-600 rounded-lg p-3 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 text-sm font-mono"
+          className="w-full h-24 bg-[#111625] border border-slate-600 rounded-lg p-3 text-white placeholder-slate-500 focus:outline-none focus:border-[#00BC7D] text-sm font-mono"
           disabled={quickAdding}
         />
 
@@ -228,7 +228,7 @@ export default function ScraperPage() {
             className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
               quickAdding || !quickUrl.trim()
                 ? 'bg-slate-700 text-slate-400 cursor-not-allowed'
-                : 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                : 'bg-[#00BC7D] hover:bg-[#00BC7D]/50 text-white'
             }`}
           >
             {quickAdding ? 'Adding...' : 'Add to Queue'}
@@ -250,7 +250,7 @@ export default function ScraperPage() {
                 key={idx}
                 className={`text-sm px-3 py-2 rounded flex items-center justify-between ${
                   result.status === 'added'
-                    ? 'bg-emerald-900/30 text-emerald-300'
+                    ? 'bg-[#004D33]/30 text-[#00d68f]'
                     : result.status === 'exists'
                     ? 'bg-yellow-900/30 text-yellow-300'
                     : result.status === 'error'
@@ -278,7 +278,7 @@ export default function ScraperPage() {
           <div className="w-full border-t border-slate-700"></div>
         </div>
         <div className="relative flex justify-center">
-          <span className="px-3 bg-slate-900 text-slate-500 text-sm">or upload a file</span>
+          <span className="px-3 bg-[#111625] text-slate-500 text-sm">or upload a file</span>
         </div>
       </div>
 
@@ -286,7 +286,7 @@ export default function ScraperPage() {
       <div
         {...getRootProps()}
         className={`border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-colors
-          ${isDragActive ? 'border-emerald-500 bg-emerald-900/20' : 'border-slate-600 hover:border-slate-500'}
+          ${isDragActive ? 'border-[#00BC7D] bg-[#004D33]/20' : 'border-slate-600 hover:border-slate-500'}
           ${progress.status === 'uploading' || progress.status === 'scraping' ? 'opacity-50 pointer-events-none' : ''}
         `}
       >
@@ -309,7 +309,7 @@ export default function ScraperPage() {
         </div>
 
         {isDragActive ? (
-          <p className="text-lg text-emerald-400">Drop the file here...</p>
+          <p className="text-lg text-[#00BC7D]">Drop the file here...</p>
         ) : (
           <div>
             <p className="text-lg mb-2 text-white">Drag & drop an Excel or CSV file here</p>
@@ -326,18 +326,18 @@ export default function ScraperPage() {
               progress.status === 'error'
                 ? 'bg-red-900/30 border-red-700'
                 : progress.status === 'complete'
-                ? 'bg-emerald-900/30 border-emerald-700'
+                ? 'bg-[#004D33]/30 border-[#009B66]'
                 : 'bg-blue-900/30 border-blue-700'
             }`}
           >
             <div className="flex items-start">
               {progress.status === 'uploading' || progress.status === 'scraping' ? (
                 <div className="mr-3">
-                  <div className="animate-spin h-6 w-6 border-2 border-emerald-400 border-t-transparent rounded-full"></div>
+                  <div className="animate-spin h-6 w-6 border-2 border-[#00BC7D] border-t-transparent rounded-full"></div>
                 </div>
               ) : progress.status === 'complete' ? (
                 <svg
-                  className="h-6 w-6 text-emerald-400 mr-3"
+                  className="h-6 w-6 text-[#00BC7D] mr-3"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -388,7 +388,7 @@ export default function ScraperPage() {
                   )}
 
                   {progress.newProperties !== undefined && (
-                    <p className="text-sm text-emerald-400 font-medium">
+                    <p className="text-sm text-[#00BC7D] font-medium">
                       <span>New properties:</span> {progress.newProperties}
                     </p>
                   )}
@@ -414,13 +414,13 @@ export default function ScraperPage() {
           <li>The system automatically removes duplicates within the file</li>
           <li>Checks against existing properties in the database</li>
           <li>Only new properties are sent to Apify for scraping</li>
-          <li>All data is saved to the <code className="bg-slate-700 px-2 py-1 rounded text-emerald-400">zillow_imports</code> collection</li>
+          <li>All data is saved to the <code className="bg-slate-700 px-2 py-1 rounded text-[#00BC7D]">zillow_imports</code> collection</li>
           <li>Review imported properties in Firebase before moving to production</li>
         </ol>
 
-        <div className="mt-4 p-4 bg-emerald-900/30 border border-emerald-700 rounded">
-          <p className="text-sm font-medium text-emerald-300 mb-1">✓ Duplicate Protection</p>
-          <p className="text-sm text-emerald-200">
+        <div className="mt-4 p-4 bg-[#004D33]/30 border border-[#009B66] rounded">
+          <p className="text-sm font-medium text-[#00d68f] mb-1">✓ Duplicate Protection</p>
+          <p className="text-sm text-[#66E0B8]">
             The scraper automatically prevents importing duplicate properties. It checks both within your file and against existing database records.
           </p>
         </div>

@@ -132,7 +132,7 @@ export async function fetchRSSFeed(url: string): Promise<RSSFeed> {
       // Add proper headers to avoid 403 Forbidden / 404 errors from RSS feeds
       const response = await fetchWithTimeout(url, {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (compatible; OwnerFi/1.0; +https://ownerfi.ai)',
+          'User-Agent': 'Mozilla/5.0 (compatible; Ownerfi/1.0; +https://ownerfi.ai)',
           'Accept': 'application/rss+xml, application/xml, text/xml, */*',
           'Accept-Language': 'en-US,en;q=0.9',
           'Cache-Control': 'no-cache'

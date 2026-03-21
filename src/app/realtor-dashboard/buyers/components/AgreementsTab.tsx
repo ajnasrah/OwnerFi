@@ -23,7 +23,7 @@ async function openAgreementInNewTab(agreementId: string) {
     alert('Please allow pop-ups to view the agreement.');
     return;
   }
-  win.document.write(`<!DOCTYPE html><html><head><title>Referral Agreement</title><style>body{font-family:Arial,sans-serif;max-width:800px;margin:0 auto;padding:20px}@media print{button{display:none!important}}</style></head><body>${data.agreementHTML}<div style="text-align:center;margin-top:24px"><button onclick="window.print()" style="padding:10px 24px;font-size:16px;cursor:pointer;background:#10b981;color:white;border:none;border-radius:8px">Print / Save as PDF</button></div></body></html>`);
+  win.document.write(`<!DOCTYPE html><html><head><title>Referral Agreement</title><style>body{font-family:Arial,sans-serif;max-width:800px;margin:0 auto;padding:20px}@media print{button{display:none!important}}</style></head><body>${data.agreementHTML}<div style="text-align:center;margin-top:24px"><button onclick="window.print()" style="padding:10px 24px;font-size:16px;cursor:pointer;background:#00BC7D;color:white;border:none;border-radius:8px">Print / Save as PDF</button></div></body></html>`);
   win.document.close();
 }
 
@@ -81,10 +81,10 @@ export function AgreementsTab({
       {/* Signed Agreements */}
       {signedAgreements.length > 0 && (
         <div>
-          <h3 className="text-emerald-400 font-semibold mb-3">Active Agreements</h3>
+          <h3 className="text-[#00BC7D] font-semibold mb-3">Active Agreements</h3>
           <div className="grid gap-4 md:grid-cols-2">
             {signedAgreements.map((agreement) => (
-              <div key={agreement.id} className="bg-slate-800/50 border border-emerald-500/30 rounded-lg p-4">
+              <div key={agreement.id} className="bg-slate-800/50 border border-[#00BC7D]/30 rounded-lg p-4">
                 <div className="flex items-start justify-between mb-2">
                   <div>
                     <h4 className="text-white font-bold">
@@ -92,13 +92,13 @@ export function AgreementsTab({
                     </h4>
                     <p className="text-slate-400 text-sm">{agreement.buyerCity}, {agreement.buyerState}</p>
                     {agreement.buyerPhone && (
-                      <p className="text-emerald-400 text-sm font-medium">{agreement.buyerPhone}</p>
+                      <p className="text-[#00BC7D] text-sm font-medium">{agreement.buyerPhone}</p>
                     )}
                     {agreement.buyerEmail && (
-                      <p className="text-emerald-400 text-sm">{agreement.buyerEmail}</p>
+                      <p className="text-[#00BC7D] text-sm">{agreement.buyerEmail}</p>
                     )}
                   </div>
-                  <span className="bg-emerald-500/20 text-emerald-400 px-2 py-1 rounded text-xs font-medium">
+                  <span className="bg-[#00BC7D]/20 text-[#00BC7D] px-2 py-1 rounded text-xs font-medium">
                     Active
                   </span>
                 </div>
@@ -110,7 +110,7 @@ export function AgreementsTab({
                   <div className="flex gap-2 mt-3">
                     {agreement.buyerPhone && (
                       <a
-                        href={`sms:${agreement.buyerPhone}?body=${encodeURIComponent("Hi, I see you're interested in owner finance properties through OwnerFi, how is everything going so far?")}`}
+                        href={`sms:${agreement.buyerPhone}?body=${encodeURIComponent("Hi, I see you're interested in owner finance properties through Ownerfi, how is everything going so far?")}`}
                         className="flex-1 bg-green-500/20 hover:bg-green-500/30 text-green-400 py-2 px-3 rounded-lg text-sm font-medium transition-colors text-center"
                       >
                         Text
@@ -159,7 +159,7 @@ export function AgreementsTab({
                   </div>
                 )}
                 {!agreement.isReReferral && agreement.canBeReReferred === false && (
-                  <div className="mt-2 text-xs text-emerald-500 text-center">
+                  <div className="mt-2 text-xs text-[#00BC7D] text-center">
                     Already referred to another agent
                   </div>
                 )}

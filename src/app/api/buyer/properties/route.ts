@@ -376,7 +376,7 @@ export async function GET(request: NextRequest) {
       const propertiesDirectQuery = query(
         collection(db, 'properties'),
         where('isActive', '==', true),
-        where('isOwnerFinance', '==', true),
+        where('isOwnerfinance', '==', true),
         where('state', '==', searchState),
         limit(fetchLimit)
       );
@@ -385,7 +385,7 @@ export async function GET(request: NextRequest) {
       const propertiesNearbyQuery = query(
         collection(db, 'properties'),
         where('isActive', '==', true),
-        where('isOwnerFinance', '==', true),
+        where('isOwnerfinance', '==', true),
         where('nearbyCities', 'array-contains', searchCity),
         limit(fetchLimit)
       );

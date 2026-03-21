@@ -76,7 +76,7 @@ export function CashDeals() {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-slate-700 border-t-emerald-400 rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-12 h-12 border-4 border-slate-700 border-t-[#00BC7D] rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-slate-400">Finding cash deals in your area...</p>
         </div>
       </div>
@@ -91,7 +91,7 @@ export function CashDeals() {
           <p className="text-red-400">{error}</p>
           <button
             onClick={fetchDeals}
-            className="mt-4 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700"
+            className="mt-4 px-4 py-2 bg-[#00BC7D] text-white rounded-lg hover:bg-[#009B66]"
           >
             Try Again
           </button>
@@ -108,7 +108,7 @@ export function CashDeals() {
           <p className="text-slate-300">{message}</p>
           <Link
             href="/dashboard/settings"
-            className="mt-4 inline-block px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700"
+            className="mt-4 inline-block px-4 py-2 bg-[#00BC7D] text-white rounded-lg hover:bg-[#009B66]"
           >
             Update Profile
           </Link>
@@ -125,7 +125,7 @@ export function CashDeals() {
           <h3 className="text-xl font-bold text-white mb-2">No Cash Deals Found</h3>
           <p className="text-slate-400">
             No properties under 80% ARV in{' '}
-            <span className="text-emerald-400">
+            <span className="text-[#00BC7D]">
               {filters?.city}, {filters?.state}
             </span>
             {filters?.maxPrice && (
@@ -151,10 +151,10 @@ export function CashDeals() {
         <p className="text-slate-400 text-sm">
           {deals.length} cash deal{deals.length !== 1 ? 's' : ''} under 80% Zestimate
           {filters?.city && (
-            <span> near <span className="text-emerald-400">{filters.city}</span></span>
+            <span> near <span className="text-[#00BC7D]">{filters.city}</span></span>
           )}
           {filters?.maxPrice && (
-            <span> under <span className="text-emerald-400">${filters.maxPrice.toLocaleString()}</span></span>
+            <span> under <span className="text-[#00BC7D]">${filters.maxPrice.toLocaleString()}</span></span>
           )}
         </p>
       </div>
@@ -167,7 +167,7 @@ export function CashDeals() {
             href={deal.url || `https://www.zillow.com/homes/${deal.address.replace(/\s+/g, '-')}_rb/`}
             target="_blank"
             rel="noopener noreferrer"
-            className="bg-slate-800 rounded-xl overflow-hidden border border-slate-700 hover:border-emerald-500/50 transition-all"
+            className="bg-slate-800 rounded-xl overflow-hidden border border-slate-700 hover:border-[#00BC7D]/50 transition-all"
           >
             {/* Image */}
             <div className="relative h-40">
@@ -184,7 +184,7 @@ export function CashDeals() {
                 </div>
               )}
               {/* Discount Badge */}
-              <div className="absolute top-2 left-2 bg-emerald-600 text-white px-2 py-1 rounded-lg text-sm font-bold">
+              <div className="absolute top-2 left-2 bg-[#00BC7D] text-white px-2 py-1 rounded-lg text-sm font-bold">
                 {deal.percentOfArv != null ? `${deal.percentOfArv}% of Zestimate` : 'No Estimate'}
               </div>
             </div>
@@ -196,7 +196,7 @@ export function CashDeals() {
                 <div className="text-2xl font-bold text-white">
                   ${deal.price.toLocaleString()}
                 </div>
-                <div className="text-emerald-400 font-semibold">
+                <div className="text-[#00BC7D] font-semibold">
                   {deal.discount > 0 ? `$${deal.discount.toLocaleString()} below Zest` : ''}
                 </div>
               </div>
@@ -233,7 +233,7 @@ export function CashDeals() {
                 </div>
                 <div>
                   <span className="text-slate-400">Equity: </span>
-                  <span className="text-emerald-400 font-bold">{deal.percentOfArv != null ? `${100 - deal.percentOfArv}%` : 'N/A'}</span>
+                  <span className="text-[#00BC7D] font-bold">{deal.percentOfArv != null ? `${100 - deal.percentOfArv}%` : 'N/A'}</span>
                 </div>
               </div>
             </div>

@@ -122,7 +122,7 @@ export const PropertyListingSwiper = memo(function PropertyListingSwiper({ prope
           <div className="relative h-[55%] flex-shrink-0 bg-slate-200">
             {imageLoading && (
               <div className="absolute inset-0 flex items-center justify-center bg-slate-100">
-                <div className="w-12 h-12 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin"></div>
+                <div className="w-12 h-12 border-4 border-[#00BC7D]/30 border-t-[#00BC7D] rounded-full animate-spin"></div>
               </div>
             )}
 
@@ -201,14 +201,14 @@ export const PropertyListingSwiper = memo(function PropertyListingSwiper({ prope
 
                 {/* Monthly & Down Payment */}
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl p-4 border-2 border-emerald-200">
-                    <div className="text-[10px] font-semibold text-emerald-700 uppercase tracking-wide mb-1">{SAFE_UI_LABELS.MONTHLY_PAYMENT}</div>
-                    <div className="text-xl font-bold text-emerald-900">
+                  <div className="bg-gradient-to-br from-[#00BC7D]/5 to-[#B3F0DB] rounded-xl p-4 border-2 border-[#00BC7D]/30">
+                    <div className="text-[10px] font-semibold text-[#009B66] uppercase tracking-wide mb-1">{SAFE_UI_LABELS.MONTHLY_PAYMENT}</div>
+                    <div className="text-xl font-bold text-[#004D33]">
                       {currentPropertyListing.monthlyPayment && currentPropertyListing.monthlyPayment > 0
                         ? `$${currentPropertyListing.monthlyPayment.toLocaleString()}/mo`
                         : 'Contact Seller'}
                     </div>
-                    <div className="text-[8px] text-emerald-700 mt-1">{LEGAL_DISCLAIMERS.MONTHLY_PAYMENT}</div>
+                    <div className="text-[8px] text-[#009B66] mt-1">{LEGAL_DISCLAIMERS.MONTHLY_PAYMENT}</div>
                   </div>
                   <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border-2 border-blue-200">
                     <div className="text-[10px] font-semibold text-blue-700 uppercase tracking-wide mb-1">Down (est)</div>
@@ -251,7 +251,7 @@ export const PropertyListingSwiper = memo(function PropertyListingSwiper({ prope
                   href={`https://www.google.com/search?q=${encodeURIComponent(`${currentPropertyListing.address} ${currentPropertyListing.city}, ${currentPropertyListing.state} ${currentPropertyListing.zipCode}`)}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 text-emerald-600 hover:text-emerald-700 font-semibold transition-colors text-sm"
+                  className="inline-flex items-center gap-2 text-[#00BC7D] hover:text-[#009B66] font-semibold transition-colors text-sm"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -302,7 +302,7 @@ export const PropertyListingSwiper = memo(function PropertyListingSwiper({ prope
                     ? 'bg-green-500 text-white scale-95'
                     : isFavorited
                     ? 'bg-gradient-to-r from-pink-500 to-pink-600 text-white hover:from-pink-600 hover:to-pink-700 active:scale-95'
-                    : 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white hover:from-emerald-600 hover:to-emerald-700 active:scale-95'
+                    : 'bg-gradient-to-r from-[#00BC7D]/50 to-[#00BC7D] text-white hover:from-[#00BC7D] hover:to-[#009B66] active:scale-95'
                 }`}
               >
                 <span className="text-2xl">{isFavorited ? '❤️' : '💚'}</span> {isFavorited ? 'Saved' : 'Like'}
@@ -334,7 +334,7 @@ export const PropertyListingSwiper = memo(function PropertyListingSwiper({ prope
       {showToast.show && (
         <div className={`fixed top-8 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-full text-white font-bold shadow-2xl z-overlay transition-all animate-bounce ${
           showToast.type === 'saved'
-            ? 'bg-gradient-to-r from-green-500 to-emerald-600'
+            ? 'bg-gradient-to-r from-green-500 to-[#00BC7D]'
             : 'bg-gradient-to-r from-red-500 to-red-600'
         }`}>
           {showToast.type === 'saved' ? '✅ Property Saved!' : '❌ Property Passed'}

@@ -63,7 +63,7 @@ function getBrandTone(brand: Brand): 'professional' | 'casual' | 'educational' {
 function getBrandContext(brand: Brand): string {
   switch (brand) {
     case 'ownerfi':
-      return 'OwnerFi is a platform for owner-financed real estate. We help buyers with bad credit find homes through seller financing, subject-to deals, and contract-for-deed arrangements. Our audience is primarily credit-challenged buyers looking for alternative home financing in Texas, Florida, and Georgia.';
+      return 'Ownerfi is a platform for owner-financed real estate. We help buyers with bad credit find homes through seller financing, subject-to deals, and contract-for-deed arrangements. Our audience is primarily credit-challenged buyers looking for alternative home financing in Texas, Florida, and Georgia.';
     case 'carz':
       return 'Carz Inc is a wholesale car dealership. We share insider tips about car buying, auction secrets, and how wholesale pricing really works. Our audience includes car buyers looking to save money and people interested in car flipping as a side hustle.';
     case 'abdullah':
@@ -75,7 +75,7 @@ function getBrandContext(brand: Brand): string {
     case 'gaza':
       return 'Gaza humanitarian news coverage providing updates on the humanitarian situation in Gaza.';
     case 'realtors':
-      return 'OwnerFi for Realtors targets real estate agents with educational content about owner financing. We offer pre-screened buyer leads with no upfront cost - agents only pay a 30% referral fee at closing. Our audience is real estate agents looking for qualified buyer leads and wanting to learn about creative financing options.';
+      return 'Ownerfi for Realtors targets real estate agents with educational content about owner financing. We offer pre-screened buyer leads with no upfront cost - agents only pay a 30% referral fee at closing. Our audience is real estate agents looking for qualified buyer leads and wanting to learn about creative financing options.';
     default:
       return '';
   }
@@ -139,7 +139,7 @@ Structure it in exactly 6 sections:
 
 5. FAQ (Common Questions) - Answer 3-5 frequently asked questions. Be direct and helpful.
 
-6. CTA (Next Steps) - Clear call to action that directs readers to ${brand === 'ownerfi' ? 'OwnerFi.ai to browse properties' : brand === 'carz' ? 'our wholesale inventory' : brand === 'abdullah' ? 'follow for more content' : 'our platform'}.
+6. CTA (Next Steps) - Clear call to action that directs readers to ${brand === 'ownerfi' ? 'Ownerfi.ai to browse properties' : brand === 'carz' ? 'our wholesale inventory' : brand === 'abdullah' ? 'follow for more content' : 'our platform'}.
 
 Format your response as JSON:
 {
@@ -234,10 +234,10 @@ Format your response as JSON:
 
     // Determine author
     const authors: Record<string, string> = {
-      ownerfi: 'OwnerFi Team',
+      ownerfi: 'Ownerfi Team',
       carz: 'Carz Inc Team',
       abdullah: 'Abdullah',
-      benefit: 'OwnerFi Team',
+      benefit: 'Ownerfi Team',
       personal: 'Abdullah',
       gaza: 'Gaza Relief Team',
     };

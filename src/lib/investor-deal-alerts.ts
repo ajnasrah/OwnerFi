@@ -98,7 +98,7 @@ async function sendAlertToSubscriber(
 
   const percentOfArv = Math.round((deal.askingPrice / deal.zestimate) * 100);
 
-  // Build OwnerFi property link
+  // Build Ownerfi property link
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://ownerfi.ai';
   const addressSlug = (deal.streetAddress || '')
     .toLowerCase()

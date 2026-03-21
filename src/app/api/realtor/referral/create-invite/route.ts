@@ -13,7 +13,7 @@ import { Timestamp } from 'firebase/firestore';
 import { logInfo, logError } from '@/lib/logger';
 import crypto from 'crypto';
 
-const OWNERFI_CUT_PERCENT = 30; // OwnerFi gets 30% of what referring agent makes
+const OWNERFI_CUT_PERCENT = 30; // Ownerfi gets 30% of what referring agent makes
 const INVITE_EXPIRY_DAYS = 30; // Invite link valid for 30 days
 
 export async function POST(request: NextRequest) {

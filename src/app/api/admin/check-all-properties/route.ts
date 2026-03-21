@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ApifyClient } from 'apify-client';
 import { getFirebaseAdmin } from '@/lib/scraper-v2/firebase-admin';
 import { sanitizeDescription } from '@/lib/description-sanitizer';
-import { hasStrictOwnerFinancing } from '@/lib/owner-financing-filter-strict';
+import { hasStrictOwnerfinancing } from '@/lib/owner-financing-filter-strict';
 
 /**
  * Admin endpoint to check ALL properties against Zillow.
@@ -89,8 +89,8 @@ export async function POST(request: NextRequest) {
       address: string;
       currentStatus: string;
       lastCheck: Date | null;
-      isOwnerFinance: boolean;
-      agentConfirmedOwnerFinance?: boolean;
+      isOwnerfinance: boolean;
+      agentConfirmedOwnerfinance?: boolean;
       source?: string;
     }> = [];
 
@@ -104,8 +104,8 @@ export async function POST(request: NextRequest) {
         address: data.fullAddress || data.streetAddress || data.address || 'Unknown',
         currentStatus: data.homeStatus || 'UNKNOWN',
         lastCheck: data.lastStatusCheck?.toDate?.() || null,
-        isOwnerFinance: data.isOwnerFinance || false,
-        agentConfirmedOwnerFinance: data.agentConfirmedOwnerFinance,
+        isOwnerfinance: data.isOwnerfinance || false,
+        agentConfirmedOwnerfinance: data.agentConfirmedOwnerfinance,
         source: data.source,
       });
     }
@@ -203,13 +203,13 @@ export async function POST(request: NextRequest) {
       }
 
       // Check owner financing
-      if (prop.isOwnerFinance) {
+      if (prop.isOwnerfinance) {
         const manualSources = ['manual-add-v2', 'manual-add', 'admin-upload', 'manual', 'bookmarklet'];
-        const isTrusted = manualSources.includes(prop.source || '') || prop.agentConfirmedOwnerFinance || prop.source === 'agent_outreach';
+        const isTrusted = manualSources.includes(prop.source || '') || prop.agentConfirmedOwnerfinance || prop.source === 'agent_outreach';
 
-        if (!hasStrictOwnerFinancing(result.description).passes && !isTrusted) {
+        if (!hasStrictOwnerfinancing(result.description).passes && !isTrusted) {
           batch.update(docRef, {
-            isOwnerFinance: false,
+            isOwnerfinance: false,
             isActive: false,
             offMarketReason: 'Owner financing removed from listing',
             lastStatusCheck: new Date(),

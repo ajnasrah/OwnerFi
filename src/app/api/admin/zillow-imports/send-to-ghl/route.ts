@@ -5,7 +5,7 @@ import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { ExtendedSession } from '@/types/session';
 import { sanitizeDescription } from '@/lib/description-sanitizer';
-import { filterPropertiesForOwnerFinancing, getFilterExplanation } from '@/lib/owner-financing-filter';
+import { filterPropertiesForOwnerfinancing, getFilterExplanation } from '@/lib/owner-financing-filter';
 
 // Initialize Firebase Admin (if not already initialized)
 if (!getApps().length) {
@@ -73,14 +73,14 @@ export async function POST(request: NextRequest) {
 
     // OWNER FINANCING FILTER
     // Only send properties that mention owner financing in their description
-    const { filtered: allProperties, stats: filterStats } = filterPropertiesForOwnerFinancing(
+    const { filtered: allProperties, stats: filterStats } = filterPropertiesForOwnerfinancing(
       propertiesWithContact
     );
 
     console.log(`\n🏦 OWNER FINANCING FILTER:`);
     console.log(`   Before: ${filterStats.total} properties`);
-    console.log(`   ✅ With owner financing: ${filterStats.withOwnerFinancing}`);
-    console.log(`   ❌ Without owner financing: ${filterStats.withoutOwnerFinancing}`);
+    console.log(`   ✅ With owner financing: ${filterStats.withOwnerfinancing}`);
+    console.log(`   ❌ Without owner financing: ${filterStats.withoutOwnerfinancing}`);
     console.log(`   📝 No description: ${filterStats.noDescription}`);
     console.log(`   🚫 Explicitly rejected: ${filterStats.explicitlyRejected}`);
     console.log(`   After: ${allProperties.length} properties\n`);
@@ -246,11 +246,11 @@ export async function POST(request: NextRequest) {
       stats: {
         totalWithContact: filterStats.total,
         ownerFinancingFilter: {
-          withFinancing: filterStats.withOwnerFinancing,
-          withoutFinancing: filterStats.withoutOwnerFinancing,
+          withFinancing: filterStats.withOwnerfinancing,
+          withoutFinancing: filterStats.withoutOwnerfinancing,
           noDescription: filterStats.noDescription,
           explicitlyRejected: filterStats.explicitlyRejected,
-          successRate: `${((filterStats.withOwnerFinancing / filterStats.total) * 100).toFixed(1)}%`,
+          successRate: `${((filterStats.withOwnerfinancing / filterStats.total) * 100).toFixed(1)}%`,
         },
         afterZPIDDedup: zpidMap.size,
         uniqueContacts: contactsProcessed,

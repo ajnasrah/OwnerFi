@@ -95,7 +95,7 @@ YOUR VIBE:
 - NO exclamation marks.
 
 WHAT YOU'RE SHOWING:
-This app called OwnerFi gives you buyer leads for FREE. Real people who are actively browsing homes on the app right now. You sign a referral agreement (30% fee only if you close) and you get their phone number and email INSTANTLY. No cold calling. No paying per lead.
+This app called Ownerfi gives you buyer leads for FREE. Real people who are actively browsing homes on the app right now. You sign a referral agreement (30% fee only if you close) and you get their phone number and email INSTANTLY. No cold calling. No paying per lead.
 
 THE 5 SCREENS YOU'RE NARRATING (keep each under 20 words):
 1. Your dashboard — you see 4 active buyers right now, with match scores
@@ -119,7 +119,7 @@ OUTPUT (JSON):
   "postTitle": "Under 100 chars. Curiosity gap — they have to click. No hashtags."
 }`;
 
-  const userPrompt = `Generate a script for a product demo video showing how realtors get free buyer leads on OwnerFi. The demo walks through accepting a lead named John Doe from Houston, TX, signing the referral agreement, and getting his contact info.`;
+  const userPrompt = `Generate a script for a product demo video showing how realtors get free buyer leads on Ownerfi. The demo walks through accepting a lead named John Doe from Houston, TX, signing the referral agreement, and getting his contact info.`;
 
   const res = await openai.chat.completions.create({
     model: 'gpt-4o-mini', temperature: 0.9, max_tokens: 500,
@@ -171,7 +171,7 @@ function buildScenes(screens: ScreenData[], script: VideoScript): any[] {
   scenes.push({
     character: { type: 'avatar', avatar_id: AVATAR_ID, avatar_style: 'normal', scale: 0.75, offset: { x: 0.35, y: 0.38 } },
     voice: { type: 'text', input_text: script.hook, voice_id: VOICE_ID, volume: 0.85 },
-    caption_setting: { style: 'shout-block', font_family: 'Montserrat', font_size: 80, text_color: '#FFFFFFFF', highlight_text_color: '#10B981FF', offset: { x: 0.0, y: 0.25 }, hidden: false, override_visual_style: true },
+    caption_setting: { style: 'shout-block', font_family: 'Montserrat', font_size: 80, text_color: '#FFFFFFFF', highlight_text_color: '#00BC7DFF', offset: { x: 0.0, y: 0.25 }, hidden: false, override_visual_style: true },
     background: { type: 'image', url: screens[0].screenImageUrl, fit: 'contain' },
   });
 
@@ -181,7 +181,7 @@ function buildScenes(screens: ScreenData[], script: VideoScript): any[] {
     scenes.push({
       character: { type: 'avatar', avatar_id: AVATAR_ID, avatar_style: 'normal', scale: 0.75, offset: { x: 0.35, y: 0.38 } },
       voice: { type: 'text', input_text: script.screenNarrations[i], voice_id: VOICE_ID, volume: 0.85 },
-      caption_setting: { style: 'shout-block', font_family: 'Montserrat', font_size: 80, text_color: '#FFFFFFFF', highlight_text_color: '#10B981FF', offset: { x: 0.0, y: 0.25 }, hidden: false, override_visual_style: true },
+      caption_setting: { style: 'shout-block', font_family: 'Montserrat', font_size: 80, text_color: '#FFFFFFFF', highlight_text_color: '#00BC7DFF', offset: { x: 0.0, y: 0.25 }, hidden: false, override_visual_style: true },
       background: { type: 'image', url: screen.screenImageUrl, fit: 'contain' },
       transition_effect: { transition_in: transitions[i % transitions.length] },
     });
@@ -191,7 +191,7 @@ function buildScenes(screens: ScreenData[], script: VideoScript): any[] {
   scenes.push({
     character: { type: 'avatar', avatar_id: AVATAR_ID, avatar_style: 'normal', scale: 0.75, offset: { x: 0.35, y: 0.38 } },
     voice: { type: 'text', input_text: script.cta, voice_id: VOICE_ID, volume: 0.85 },
-    caption_setting: { style: 'shout-block', font_family: 'Montserrat', font_size: 80, text_color: '#FFFFFFFF', highlight_text_color: '#10B981FF', offset: { x: 0.0, y: 0.25 }, hidden: false, override_visual_style: true },
+    caption_setting: { style: 'shout-block', font_family: 'Montserrat', font_size: 80, text_color: '#FFFFFFFF', highlight_text_color: '#00BC7DFF', offset: { x: 0.0, y: 0.25 }, hidden: false, override_visual_style: true },
     background: { type: 'image', url: screens[screens.length - 1].screenImageUrl, fit: 'contain' },
     transition_effect: { transition_in: 'fade' },
   });

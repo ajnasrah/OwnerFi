@@ -119,8 +119,8 @@ export default function AdminLogsPage() {
 
   if (status !== 'authenticated' || (session?.user as { role?: string })?.role !== 'admin') {
     return (
-      <div className="h-screen bg-slate-900 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-400"></div>
+      <div className="h-screen bg-[#111625] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00BC7D]"></div>
       </div>
     );
   }
@@ -129,10 +129,10 @@ export default function AdminLogsPage() {
   const insertErrors = logs.filter(log => log.context?.action === 'insert_property' && log.level === 'error');
 
   return (
-    <div className="h-screen overflow-hidden bg-slate-900 flex flex-col">
+    <div className="h-screen overflow-hidden bg-[#111625] flex flex-col">
       <div className="flex-1 overflow-y-auto p-6">
         <div className="max-w-6xl mx-auto">
-          <Link href="/admin" className="text-emerald-400 hover:text-emerald-300 text-sm mb-4 inline-block">← Back to Admin</Link>
+          <Link href="/admin" className="text-[#00BC7D] hover:text-[#00d68f] text-sm mb-4 inline-block">← Back to Admin</Link>
           <div className="flex items-center justify-between mb-8">
             <div>
               <h1 className="text-3xl font-bold text-white mb-2">System Logs</h1>
@@ -151,7 +151,7 @@ export default function AdminLogsPage() {
               <button
                 onClick={fetchLogs}
                 disabled={loading}
-                className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors disabled:bg-slate-600"
+                className="px-4 py-2 bg-[#00BC7D] text-white rounded-lg hover:bg-[#009B66] transition-colors disabled:bg-slate-600"
               >
                 {loading ? 'Loading...' : 'Refresh'}
               </button>
@@ -200,7 +200,7 @@ export default function AdminLogsPage() {
                         </div>
                         <div>
                           <span className="font-medium text-slate-300">Successful:</span>
-                          <p className="text-emerald-400 font-medium">{(log.context.metadata.successfulInserts as string) || 'Unknown'}</p>
+                          <p className="text-[#00BC7D] font-medium">{(log.context.metadata.successfulInserts as string) || 'Unknown'}</p>
                         </div>
                         <div>
                           <span className="font-medium text-slate-300">Errors:</span>
@@ -281,7 +281,7 @@ export default function AdminLogsPage() {
               </h2>
               {loading ? (
                 <div className="text-center py-12">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-400 mx-auto"></div>
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00BC7D] mx-auto"></div>
                   <p className="mt-4 text-slate-400">Loading logs...</p>
                 </div>
               ) : logs.length === 0 ? (
@@ -328,7 +328,7 @@ export default function AdminLogsPage() {
                           <summary className="cursor-pointer text-slate-300 font-medium text-sm">
                             Stack Trace
                           </summary>
-                          <pre className="mt-2 text-xs text-slate-400 bg-slate-900 p-2 rounded overflow-x-auto">
+                          <pre className="mt-2 text-xs text-slate-400 bg-[#111625] p-2 rounded overflow-x-auto">
                             {log.stackTrace}
                           </pre>
                         </details>

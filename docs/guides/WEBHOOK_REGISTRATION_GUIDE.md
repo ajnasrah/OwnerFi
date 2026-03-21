@@ -116,7 +116,7 @@ curl -X POST https://ownerfi.ai/api/workflow/complete-viral \
   }'
 ```
 
-### Test OwnerFi
+### Test Ownerfi
 ```bash
 curl -X POST https://ownerfi.ai/api/workflow/complete-viral \
   -H "Content-Type: application/json" \
@@ -254,7 +254,7 @@ curl --location --request DELETE 'https://api.heygen.com/v1/webhook/endpoint.del
 
 After webhook registration:
 
-1. [ ] Test brand isolation (Carz failure doesn't affect OwnerFi)
+1. [ ] Test brand isolation (Carz failure doesn't affect Ownerfi)
 2. [ ] Monitor DLQ for any failures
 3. [ ] Set up alerting for webhook failures
 4. [ ] Create admin dashboard for webhook management

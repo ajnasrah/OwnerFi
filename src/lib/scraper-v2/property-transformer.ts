@@ -378,7 +378,7 @@ export function createZillowImportsDoc(
     // Owner Finance Fields
     ownerFinanceVerified: true,
     matchedKeywords: filterResult.ownerFinanceKeywords,
-    primaryKeyword: filterResult.primaryOwnerFinanceKeyword,
+    primaryKeyword: filterResult.primaryOwnerfinanceKeyword,
 
     // Financing Type
     financingType: filterResult.financingType.financingType,
@@ -446,13 +446,13 @@ export function createUnifiedPropertyDoc(
 
     // ===== UNIFIED DEAL TYPE TAGS =====
     dealTypes: filterResult.dealTypes,
-    isOwnerFinance: filterResult.isOwnerFinance,
+    isOwnerfinance: filterResult.isOwnerfinance,
     isCashDeal: filterResult.isCashDeal,
 
     // ===== OWNER FINANCE FIELDS (if applicable) =====
-    ownerFinanceVerified: filterResult.isOwnerFinance,
+    ownerFinanceVerified: filterResult.isOwnerfinance,
     matchedKeywords: filterResult.ownerFinanceKeywords || [],
-    primaryKeyword: filterResult.primaryOwnerFinanceKeyword || null,
+    primaryKeyword: filterResult.primaryOwnerfinanceKeyword || null,
     financingType: filterResult.financingType?.financingType || null,
     allFinancingTypes: filterResult.financingType?.allTypes || [],
     financingTypeLabel: filterResult.financingType?.displayLabel || null,

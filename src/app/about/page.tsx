@@ -4,15 +4,13 @@ import Link from 'next/link';
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-slate-900 text-white">
+    <div className="min-h-screen bg-[#111625] text-white">
       {/* Header */}
       <nav className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 px-4 py-4">
         <div className="flex justify-between items-center max-w-6xl mx-auto">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">O</span>
-            </div>
-            <span className="text-lg font-bold text-white">OwnerFi</span>
+            <img src="/logo.jpg" alt="Ownerfi" width={32} height={32} className="rounded-lg" />
+            <span className="text-lg font-bold text-white">Ownerfi</span>
           </Link>
           <Link
             href="/"
@@ -28,7 +26,7 @@ export default function AboutPage() {
         
         {/* Hero Section */}
         <div className="text-center mb-16">
-          <h1 className="text-4xl font-bold text-white mb-6">About OwnerFi</h1>
+          <h1 className="text-4xl font-bold text-white mb-6">About Ownerfi</h1>
           <p className="text-xl text-slate-300 leading-relaxed max-w-3xl mx-auto">
             We&apos;re bridging the gap between families who deserve homeownership and property owners willing to offer creative financing solutions.
           </p>
@@ -36,7 +34,7 @@ export default function AboutPage() {
 
         {/* Mission Section */}
         <div className="mb-16">
-          <div className="bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border border-emerald-400/20 rounded-3xl p-8">
+          <div className="bg-gradient-to-br from-[#00BC7D]/10 to-[#00BC7D]/5 border border-[#00BC7D]/20 rounded-3xl p-8">
             <h2 className="text-3xl font-bold text-white mb-6">Our Mission</h2>
             <p className="text-slate-300 text-lg leading-relaxed mb-6">
               Traditional lending has failed millions of good families. Self-employed entrepreneurs, people with medical debt, 
@@ -44,7 +42,7 @@ export default function AboutPage() {
             </p>
             <p className="text-slate-300 text-lg leading-relaxed">
               We believe homeownership shouldn&apos;t be limited to those with perfect credit scores.
-              OwnerFi connects these deserving families with property owners who are willing to offer direct financing, 
+              Ownerfi connects these deserving families with property owners who are willing to offer direct financing, 
               creating win-win opportunities for everyone involved.
             </p>
           </div>
@@ -56,22 +54,22 @@ export default function AboutPage() {
           
           <div className="grid md:grid-cols-2 gap-8">
             <div className="bg-slate-800/30 border border-slate-700/50 rounded-2xl p-6">
-              <h3 className="text-xl font-semibold text-emerald-400 mb-4">For Families Seeking Homes</h3>
+              <h3 className="text-xl font-semibold text-[#00BC7D] mb-4">For Families Seeking Homes</h3>
               <ul className="space-y-3 text-slate-300">
                 <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-emerald-400 rounded-full mt-2 flex-shrink-0"></div>
+                  <div className="w-2 h-2 bg-[#00BC7D] rounded-full mt-2 flex-shrink-0"></div>
                   <span>Connect with property owners offering direct financing</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-emerald-400 rounded-full mt-2 flex-shrink-0"></div>
+                  <div className="w-2 h-2 bg-[#00BC7D] rounded-full mt-2 flex-shrink-0"></div>
                   <span>No credit checks or bank applications required</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-emerald-400 rounded-full mt-2 flex-shrink-0"></div>
+                  <div className="w-2 h-2 bg-[#00BC7D] rounded-full mt-2 flex-shrink-0"></div>
                   <span>Negotiate flexible terms that work for your situation</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-emerald-400 rounded-full mt-2 flex-shrink-0"></div>
+                  <div className="w-2 h-2 bg-[#00BC7D] rounded-full mt-2 flex-shrink-0"></div>
                   <span>Faster closings without traditional lending delays</span>
                 </li>
               </ul>
@@ -137,8 +135,8 @@ export default function AboutPage() {
           
           <div className="space-y-8">
             <div className="flex items-start gap-6">
-              <div className="w-12 h-12 bg-emerald-500/20 border-2 border-emerald-400 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-emerald-400 text-xl">🏠</span>
+              <div className="w-12 h-12 bg-[#00BC7D]/20 border-2 border-[#00BC7D] rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-[#00BC7D] text-xl">🏠</span>
               </div>
               <div>
                 <h3 className="text-xl font-semibold text-white mb-3">Human-Centered Lending</h3>
@@ -182,10 +180,10 @@ export default function AboutPage() {
         <div className="mb-16">
           <h2 className="text-3xl font-bold text-white mb-8 text-center">Our Impact</h2>
           
-          <div className="bg-gradient-to-r from-emerald-500/10 to-blue-500/10 border border-slate-600/30 rounded-2xl p-8">
+          <div className="bg-gradient-to-r from-[#00BC7D]/10 to-blue-500/10 border border-slate-600/30 rounded-2xl p-8">
             <div className="grid md:grid-cols-3 gap-8 text-center">
               <div>
-                <div className="text-3xl font-bold text-emerald-400 mb-2">1,200+</div>
+                <div className="text-3xl font-bold text-[#00BC7D] mb-2">1,200+</div>
                 <p className="text-slate-300 text-sm">Families helped into homeownership</p>
               </div>
               <div>
@@ -205,13 +203,13 @@ export default function AboutPage() {
           <h2 className="text-3xl font-bold text-white mb-6">Ready to Be Part of the Solution?</h2>
           <p className="text-slate-300 text-lg mb-8 max-w-2xl mx-auto">
             Whether you&apos;re a family seeking homeownership or a real estate professional looking to help more clients,
-            OwnerFi provides the tools and connections you need.
+            Ownerfi provides the tools and connections you need.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Link
               href="/auth"
-              className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white py-4 px-8 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-[1.02] shadow-lg"
+              className="bg-gradient-to-r from-[#00BC7D]/50 to-[#00BC7D] hover:from-[#00BC7D] hover:to-[#00BC7D]/50 text-white py-4 px-8 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-[1.02] shadow-lg"
             >
               Find Your Dream Home
             </Link>
@@ -231,21 +229,21 @@ export default function AboutPage() {
       <footer className="bg-slate-800/30 border-t border-slate-700/50 py-8">
         <div className="max-w-4xl mx-auto px-6 text-center">
           <div className="flex justify-center gap-8 text-sm mb-4">
-            <Link href="/" className="text-slate-400 hover:text-emerald-400 transition-colors">
+            <Link href="/" className="text-slate-400 hover:text-[#00BC7D] transition-colors">
               Home
             </Link>
-            <Link href="/terms" className="text-slate-400 hover:text-emerald-400 transition-colors">
+            <Link href="/terms" className="text-slate-400 hover:text-[#00BC7D] transition-colors">
               Terms
             </Link>
-            <Link href="/privacy" className="text-slate-400 hover:text-emerald-400 transition-colors">
+            <Link href="/privacy" className="text-slate-400 hover:text-[#00BC7D] transition-colors">
               Privacy
             </Link>
-            <a href="mailto:support@ownerfi.com" className="text-slate-400 hover:text-emerald-400 transition-colors">
+            <a href="mailto:support@ownerfi.com" className="text-slate-400 hover:text-[#00BC7D] transition-colors">
               Contact
             </a>
           </div>
           <p className="text-xs text-slate-500">
-            &copy; 2025 OwnerFi. Empowering homeownership through innovative financing solutions.
+            &copy; 2025 Ownerfi. Empowering homeownership through innovative financing solutions.
           </p>
         </div>
       </footer>

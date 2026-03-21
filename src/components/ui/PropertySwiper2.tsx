@@ -231,17 +231,17 @@ export const PropertySwiper2 = memo(function PropertySwiper2({
   // Loading state
   if (isLoading) {
     return (
-      <div className={`fixed top-14 left-0 right-0 ${bottomOffset} bg-slate-900 flex items-center justify-center p-6 z-50`}>
+      <div className={`fixed top-14 left-0 right-0 ${bottomOffset} bg-[#111625] flex items-center justify-center p-6 z-50`}>
         <div className="text-center max-w-sm">
           <div className="mb-6">
             <div className="w-20 h-20 mx-auto mb-4 relative">
-              <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-2xl animate-pulse"></div>
-              <div className="absolute inset-2 bg-slate-900 rounded-xl flex items-center justify-center">
+              <div className="absolute inset-0 bg-gradient-to-br from-[#00BC7D] to-blue-500 rounded-2xl animate-pulse"></div>
+              <div className="absolute inset-2 bg-[#111625] rounded-xl flex items-center justify-center">
                 <span className="text-3xl">🏠</span>
               </div>
             </div>
             <div className="flex justify-center">
-              <div className="w-16 h-16 border-4 border-slate-700 border-t-emerald-400 rounded-full animate-spin"></div>
+              <div className="w-16 h-16 border-4 border-slate-700 border-t-[#00BC7D] rounded-full animate-spin"></div>
             </div>
           </div>
           <h2 className="text-2xl font-black text-white mb-3 animate-pulse">
@@ -269,7 +269,7 @@ export const PropertySwiper2 = memo(function PropertySwiper2({
           </p>
           <Link
             href="/dashboard/settings"
-            className="inline-block bg-gradient-to-r from-emerald-500 to-blue-500 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all"
+            className="inline-block bg-gradient-to-r from-[#00BC7D]/50 to-blue-500 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all"
           >
             Adjust Search Settings
           </Link>
@@ -283,7 +283,7 @@ export const PropertySwiper2 = memo(function PropertySwiper2({
   return (
     <div
       ref={containerRef}
-      className={`fixed top-14 left-0 right-0 ${bottomOffset} bg-gradient-to-br from-indigo-950 via-slate-900 to-emerald-950 overflow-hidden z-40`}
+      className={`fixed top-14 left-0 right-0 ${bottomOffset} bg-gradient-to-br from-indigo-950 via-slate-900 to-[#003322] overflow-hidden z-40`}
       onTouchStart={handleStart}
       onTouchMove={handleMove}
       onTouchEnd={handleEnd}
@@ -340,7 +340,7 @@ export const PropertySwiper2 = memo(function PropertySwiper2({
             className={`w-14 h-14 ${
               isFavorited
                 ? 'bg-gradient-to-br from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700'
-                : 'bg-gradient-to-br from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700'
+                : 'bg-gradient-to-br from-[#00BC7D]/50 to-[#00BC7D] hover:from-[#00BC7D] hover:to-[#009B66]'
             } disabled:from-slate-600 disabled:to-slate-700 text-white rounded-full shadow-xl flex items-center justify-center transform hover:scale-110 active:scale-95 transition-all disabled:opacity-50`}
             aria-label="Like"
           >

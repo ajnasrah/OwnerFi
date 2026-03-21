@@ -12,7 +12,7 @@ const ATTENTION_QUESTIONS = [
   "$0 bank fees — really",
   "See flexible payment options",
   "Browse homes for free",
-  "Ask me anything about OwnerFi",
+  "Ask me anything about Ownerfi",
 ];
 
 interface FloatingChatbotButtonProps {
@@ -67,7 +67,7 @@ export default function FloatingChatbotButton({ onClick, bottomClass }: Floating
     <div className={`fixed ${bottomClass || 'bottom-6'} right-6 z-floating-button`}>
       {/* Chat Bubble — always rendered, visibility controlled by CSS for smooth transitions */}
       <div
-        className={`absolute bottom-16 right-0 w-fit min-w-[170px] max-w-[250px] bg-emerald-600 text-white px-4 py-2.5 rounded-xl shadow-lg cursor-pointer transition-all duration-300 ${
+        className={`absolute bottom-16 right-0 w-fit min-w-[170px] max-w-[250px] bg-[#00BC7D] text-white px-4 py-2.5 rounded-xl shadow-lg cursor-pointer transition-all duration-300 ${
           bubbleVisible
             ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto'
             : 'opacity-0 translate-y-2 scale-95 pointer-events-none'
@@ -87,17 +87,17 @@ export default function FloatingChatbotButton({ onClick, bottomClass }: Floating
           </button>
         </div>
         <div className="text-sm leading-snug font-medium">{ATTENTION_QUESTIONS[currentQuestion]}</div>
-        <div className="absolute -bottom-1 right-4 w-3 h-3 bg-emerald-600 transform rotate-45"></div>
+        <div className="absolute -bottom-1 right-4 w-3 h-3 bg-[#00BC7D] transform rotate-45"></div>
       </div>
 
       {/* Floating Button */}
       <button
         onClick={() => onClick()}
-        className={`relative group bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white p-4 rounded-full shadow-2xl transform transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-emerald-500/30 ${
+        className={`relative group bg-gradient-to-r from-[#00BC7D] to-[#009B66] hover:from-[#00d68f] hover:to-[#00BC7D] text-white p-4 rounded-full shadow-2xl transform transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-[#00BC7D]/30 ${
           isAnimating ? 'animate-bounce' : ''
         }`}
       >
-        <div className={`absolute inset-0 rounded-full bg-emerald-500/30 animate-ping ${isAnimating ? 'opacity-100' : 'opacity-0'}`}></div>
+        <div className={`absolute inset-0 rounded-full bg-[#00BC7D]/30 animate-ping ${isAnimating ? 'opacity-100' : 'opacity-0'}`}></div>
         <svg className="w-6 h-6 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
         </svg>

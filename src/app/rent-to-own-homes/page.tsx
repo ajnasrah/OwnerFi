@@ -12,14 +12,14 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_US',
     url: 'https://ownerfi.ai/rent-to-own-homes',
-    siteName: 'OwnerFi',
+    siteName: 'Ownerfi',
     title: 'Rent to Own Homes - Owner Financed Properties Available',
     description: 'Browse thousands of rent to own and owner financed homes. No bank needed, bad credit OK, flexible terms.',
     images: [{
       url: 'https://ownerfi.ai/og-rent-to-own.png',
       width: 1200,
       height: 630,
-      alt: 'Rent to Own Homes - OwnerFi',
+      alt: 'Rent to Own Homes - Ownerfi',
     }],
   },
 
@@ -32,7 +32,7 @@ function generateFAQSchema() {
   const faqs = [
     {
       question: "What is rent to own?",
-      answer: "Rent to own, also called lease-to-own or lease-purchase, is when you rent a home with the option to buy it later. With OwnerFi, we focus on owner financing which gives you immediate ownership benefits unlike traditional rent-to-own."
+      answer: "Rent to own, also called lease-to-own or lease-purchase, is when you rent a home with the option to buy it later. With Ownerfi, we focus on owner financing which gives you immediate ownership benefits unlike traditional rent-to-own."
     },
     {
       question: "Is owner financing better than rent to own?",
@@ -48,7 +48,7 @@ function generateFAQSchema() {
     },
     {
       question: "What states offer rent to own homes?",
-      answer: "OwnerFi currently has owner financed and rent-to-own properties in Texas, Florida, and Georgia, with more states coming soon."
+      answer: "Ownerfi currently has owner financed and rent-to-own properties in Texas, Florida, and Georgia, with more states coming soon."
     }
   ]
 
@@ -73,7 +73,7 @@ function generateServiceSchema() {
     "name": "Rent to Own Home Discovery Platform",
     "provider": {
       "@type": "Organization",
-      "name": "OwnerFi"
+      "name": "Ownerfi"
     },
     "serviceType": "Real Estate Discovery Platform",
     "areaServed": "United States",
@@ -113,19 +113,17 @@ export default function RentToOwnHomes() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(generateServiceSchema()) }}
       />
 
-      <div className="min-h-screen bg-slate-900 text-white">
+      <div className="min-h-screen bg-[#111625] text-white">
         {/* Header */}
         <header className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 px-6 py-4">
           <div className="max-w-6xl mx-auto flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">O</span>
-              </div>
-              <span className="text-lg font-bold text-white">OwnerFi</span>
+              <img src="/logo.jpg" alt="Ownerfi" width={32} height={32} className="rounded-lg" />
+              <span className="text-lg font-bold text-white">Ownerfi</span>
             </Link>
             <nav className="flex items-center gap-4">
               <Link href="/how-owner-finance-works" className="text-slate-300 hover:text-white text-sm">How It Works</Link>
-              <Link href="/auth" className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
+              <Link href="/auth" className="bg-[#00BC7D]/50 hover:bg-[#00BC7D] text-white px-4 py-2 rounded-lg text-sm font-medium">
                 Get Started
               </Link>
             </nav>
@@ -137,7 +135,7 @@ export default function RentToOwnHomes() {
           <section className="py-20 px-6 bg-gradient-to-b from-slate-800 to-slate-900">
             <div className="max-w-6xl mx-auto text-center">
               <h1 className="text-5xl md:text-6xl font-bold text-white mb-6">
-                Rent to Own Homes <span className="text-emerald-400">No Bank Needed</span>
+                Rent to Own Homes <span className="text-[#00BC7D]">No Bank Needed</span>
               </h1>
               <p className="text-xl text-slate-300 max-w-3xl mx-auto mb-8">
                 Skip traditional financing with owner financed and rent-to-own properties.
@@ -151,9 +149,9 @@ export default function RentToOwnHomes() {
                     <input
                       type="text"
                       placeholder="Enter city or state..."
-                      className="flex-1 bg-slate-800 text-white px-6 py-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                      className="flex-1 bg-slate-800 text-white px-6 py-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#00BC7D]"
                     />
-                    <Link href="/auth" className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-4 rounded-xl font-semibold transition-all">
+                    <Link href="/auth" className="bg-[#00BC7D]/50 hover:bg-[#00BC7D] text-white px-8 py-4 rounded-xl font-semibold transition-all">
                       Search Properties
                     </Link>
                   </div>
@@ -163,7 +161,7 @@ export default function RentToOwnHomes() {
               {/* Stats */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
                 <div className="bg-slate-800/50 backdrop-blur rounded-xl p-4 border border-slate-700/50">
-                  <div className="text-3xl font-bold text-emerald-400">500+</div>
+                  <div className="text-3xl font-bold text-[#00BC7D]">500+</div>
                   <div className="text-slate-300 text-sm">Properties</div>
                 </div>
                 <div className="bg-slate-800/50 backdrop-blur rounded-xl p-4 border border-slate-700/50">
@@ -198,27 +196,27 @@ export default function RentToOwnHomes() {
                 Why Owner Financing Beats Traditional Rent-to-Own
               </h2>
               <div className="grid md:grid-cols-2 gap-8">
-                <div className="bg-gradient-to-br from-emerald-900/30 to-emerald-800/30 rounded-xl p-8 border border-emerald-500/30">
-                  <h3 className="text-2xl font-bold text-emerald-400 mb-4">✅ Owner Financing (Better)</h3>
+                <div className="bg-gradient-to-br from-[#004D33]/30 to-[#007A52]/30 rounded-xl p-8 border border-[#00BC7D]/30">
+                  <h3 className="text-2xl font-bold text-[#00BC7D] mb-4">✅ Owner Financing (Better)</h3>
                   <ul className="space-y-3 text-slate-300">
                     <li className="flex items-start gap-2">
-                      <span className="text-emerald-400 mt-1">✓</span>
+                      <span className="text-[#00BC7D] mt-1">✓</span>
                       <span>You get the deed immediately - you're the owner</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <span className="text-emerald-400 mt-1">✓</span>
+                      <span className="text-[#00BC7D] mt-1">✓</span>
                       <span>Build equity from day one</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <span className="text-emerald-400 mt-1">✓</span>
+                      <span className="text-[#00BC7D] mt-1">✓</span>
                       <span>Tax benefits as a homeowner</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <span className="text-emerald-400 mt-1">✓</span>
+                      <span className="text-[#00BC7D] mt-1">✓</span>
                       <span>Can modify or improve property</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <span className="text-emerald-400 mt-1">✓</span>
+                      <span className="text-[#00BC7D] mt-1">✓</span>
                       <span>Protected by real estate laws</span>
                     </li>
                   </ul>
@@ -250,7 +248,7 @@ export default function RentToOwnHomes() {
                 </div>
               </div>
               <div className="text-center mt-8">
-                <Link href="/how-owner-finance-works" className="text-emerald-400 hover:text-emerald-300 font-semibold text-lg">
+                <Link href="/how-owner-finance-works" className="text-[#00BC7D] hover:text-[#00d68f] font-semibold text-lg">
                   Learn More About Owner Financing →
                 </Link>
               </div>
@@ -272,12 +270,12 @@ export default function RentToOwnHomes() {
                   <Link
                     key={state.slug}
                     href={`/owner-financing-${state.slug}`}
-                    className="group bg-slate-800/50 backdrop-blur rounded-lg p-4 border border-slate-700/50 hover:border-emerald-400/50 transition-all hover:scale-[1.02]"
+                    className="group bg-slate-800/50 backdrop-blur rounded-lg p-4 border border-slate-700/50 hover:border-[#00BC7D]/50 transition-all hover:scale-[1.02]"
                   >
-                    <h3 className="font-semibold text-white group-hover:text-emerald-400 transition-colors">
+                    <h3 className="font-semibold text-white group-hover:text-[#00BC7D] transition-colors">
                       {state.name}
                     </h3>
-                    <p className="text-emerald-400 text-sm mt-1">{state.count} properties</p>
+                    <p className="text-[#00BC7D] text-sm mt-1">{state.count} properties</p>
                   </Link>
                 ))}
               </div>
@@ -341,7 +339,7 @@ export default function RentToOwnHomes() {
                   <Link
                     key={city}
                     href={`/owner-financing-${city.toLowerCase().replace(/, /, '-').replace(' ', '-')}`}
-                    className="bg-slate-800/50 backdrop-blur rounded-lg px-4 py-3 border border-slate-700/50 hover:border-emerald-400/50 transition-all text-slate-300 hover:text-white text-center"
+                    className="bg-slate-800/50 backdrop-blur rounded-lg px-4 py-3 border border-slate-700/50 hover:border-[#00BC7D]/50 transition-all text-slate-300 hover:text-white text-center"
                   >
                     {city}
                   </Link>
@@ -357,23 +355,23 @@ export default function RentToOwnHomes() {
                 Frequently Asked Questions
               </h2>
               <div className="space-y-6">
-                <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
+                <div className="bg-[#111625]/50 rounded-xl p-6 border border-slate-700/50">
                   <h3 className="text-xl font-semibold text-white mb-3">What is rent to own?</h3>
-                  <p className="text-slate-300">Rent to own, also called lease-to-own or lease-purchase, is when you rent a home with the option to buy it later. With OwnerFi, we focus on owner financing which gives you immediate ownership benefits unlike traditional rent-to-own.</p>
+                  <p className="text-slate-300">Rent to own, also called lease-to-own or lease-purchase, is when you rent a home with the option to buy it later. With Ownerfi, we focus on owner financing which gives you immediate ownership benefits unlike traditional rent-to-own.</p>
                 </div>
-                <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
+                <div className="bg-[#111625]/50 rounded-xl p-6 border border-slate-700/50">
                   <h3 className="text-xl font-semibold text-white mb-3">Is owner financing better than rent to own?</h3>
                   <p className="text-slate-300">Yes, owner financing is typically better because you get the deed immediately and start building equity from day one. Rent-to-own means you're still a renter until you exercise the purchase option.</p>
                 </div>
-                <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
+                <div className="bg-[#111625]/50 rounded-xl p-6 border border-slate-700/50">
                   <h3 className="text-xl font-semibold text-white mb-3">Can I get rent to own with bad credit?</h3>
                   <p className="text-slate-300">Yes, many sellers offering owner financing and rent-to-own options work with buyers who have bad credit, focusing instead on down payment and monthly payment ability.</p>
                 </div>
-                <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
+                <div className="bg-[#111625]/50 rounded-xl p-6 border border-slate-700/50">
                   <h3 className="text-xl font-semibold text-white mb-3">What states offer rent to own homes?</h3>
-                  <p className="text-slate-300">OwnerFi currently has owner financed and rent-to-own properties in Texas, Florida, and Georgia, with more states coming soon.</p>
+                  <p className="text-slate-300">Ownerfi currently has owner financed and rent-to-own properties in Texas, Florida, and Georgia, with more states coming soon.</p>
                 </div>
-                <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
+                <div className="bg-[#111625]/50 rounded-xl p-6 border border-slate-700/50">
                   <h3 className="text-xl font-semibold text-white mb-3">How much down payment do I need?</h3>
                   <p className="text-slate-300">Down payments typically range from 3% to 10% for owner financed properties, much less than the 20% banks require. Some programs start with just first and last month's rent.</p>
                 </div>
@@ -391,7 +389,7 @@ export default function RentToOwnHomes() {
                 Browse thousands of owner financed and rent-to-own properties. No bank needed, bad credit OK.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link href="/auth" className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all">
+                <Link href="/auth" className="bg-[#00BC7D]/50 hover:bg-[#00BC7D] text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all">
                   Browse All Properties
                 </Link>
                 <Link href="/how-owner-finance-works" className="bg-slate-700 hover:bg-slate-600 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all">

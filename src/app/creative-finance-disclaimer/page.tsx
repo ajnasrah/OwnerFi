@@ -24,7 +24,7 @@ export default function CreativeFinanceDisclaimer() {
               🚨 CRITICAL WARNING - READ BEFORE PROCEEDING
             </h2>
             <p className="text-red-800 text-center font-semibold">
-              OwnerFi does NOT review, inspect, verify, structure, advise on, or guarantee the legality, compliance, or risk associated with ANY creative financing technique. You proceed entirely at your own risk.
+              Ownerfi does NOT review, inspect, verify, structure, advise on, or guarantee the legality, compliance, or risk associated with ANY creative financing technique. You proceed entirely at your own risk.
             </p>
           </div>
 
@@ -32,10 +32,10 @@ export default function CreativeFinanceDisclaimer() {
 
             <section>
               <h2 className="text-2xl font-semibold text-primary-text mb-4">
-                What OwnerFi Does NOT Do
+                What Ownerfi Does NOT Do
               </h2>
               <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-                <p className="font-bold text-red-800 mb-4">OwnerFi Does NOT:</p>
+                <p className="font-bold text-red-800 mb-4">Ownerfi Does NOT:</p>
                 <ul className="space-y-2 text-red-700">
                   <li className="flex items-start gap-2">
                     <span className="text-red-500 mt-1">✗</span>
@@ -90,7 +90,7 @@ export default function CreativeFinanceDisclaimer() {
                   Any reference to seller financing, subject-to transactions, wraparound mortgages, lease options, or any creative finance structure originates SOLELY from the listing agent or seller.
                 </p>
                 <p className="text-orange-700">
-                  OwnerFi is a platform that displays property information as provided by third parties. We do not:
+                  Ownerfi is a platform that displays property information as provided by third parties. We do not:
                 </p>
                 <ul className="list-disc ml-6 mt-2 space-y-1 text-orange-700">
                   <li>Verify the accuracy of creative finance terms</li>
@@ -221,7 +221,7 @@ export default function CreativeFinanceDisclaimer() {
 
             <section>
               <h2 className="text-2xl font-semibold text-primary-text mb-4">
-                OwnerFi Liability Disclaimer
+                Ownerfi Liability Disclaimer
               </h2>
               <div className="bg-red-100 border-2 border-red-400 rounded-lg p-6">
                 <h3 className="font-bold text-red-900 text-xl mb-4 text-center">
@@ -229,7 +229,7 @@ export default function CreativeFinanceDisclaimer() {
                 </h3>
                 <div className="space-y-3 text-red-800">
                   <p className="font-semibold">
-                    OwnerFi bears ZERO liability for any consequences arising from creative finance transactions, including but not limited to:
+                    Ownerfi bears ZERO liability for any consequences arising from creative finance transactions, including but not limited to:
                   </p>
                   <ul className="grid md:grid-cols-2 gap-2 text-sm">
                     <li>• Due-on-sale clause triggers</li>
@@ -302,7 +302,7 @@ export default function CreativeFinanceDisclaimer() {
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
                 <p className="text-yellow-900 font-bold mb-2">Final Warning:</p>
                 <p className="text-yellow-800 text-sm">
-                  By using OwnerFi, you acknowledge that you have been warned about the risks of creative finance, understand that OwnerFi provides no verification or guidance on creative finance structures, and agree to independently verify all information with licensed professionals before proceeding with any transaction. You accept full responsibility for all consequences of creative finance decisions.
+                  By using Ownerfi, you acknowledge that you have been warned about the risks of creative finance, understand that Ownerfi provides no verification or guidance on creative finance structures, and agree to independently verify all information with licensed professionals before proceeding with any transaction. You accept full responsibility for all consequences of creative finance decisions.
                 </p>
               </div>
             </div>

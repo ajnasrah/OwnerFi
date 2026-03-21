@@ -51,15 +51,13 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white">
+    <div className="min-h-screen bg-[#111625] text-white">
       {/* Header */}
       <nav className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 px-4 py-4">
         <div className="flex justify-between items-center max-w-6xl mx-auto">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">O</span>
-            </div>
-            <span className="text-lg font-bold text-white">OwnerFi</span>
+            <img src="/logo.jpg" alt="Ownerfi" width={32} height={32} className="rounded-lg" />
+            <span className="text-lg font-bold text-white">Ownerfi</span>
           </Link>
           <Link
             href="/"
@@ -84,8 +82,8 @@ export default function ContactPage() {
           <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-8">
             {success ? (
               <div className="text-center py-8">
-                <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-16 h-16 bg-[#00BC7D]/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-[#00BC7D]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
@@ -96,7 +94,7 @@ export default function ContactPage() {
                     setSuccess(false);
                     resetFormTracking();
                   }}
-                  className="text-emerald-400 hover:text-emerald-300 font-medium"
+                  className="text-[#00BC7D] hover:text-[#00d68f] font-medium"
                 >
                   Send another message
                 </button>
@@ -117,7 +115,7 @@ export default function ContactPage() {
                     value={formData.name}
                     onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                     onFocus={trackFormStart}
-                    className="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-white placeholder-slate-500"
+                    className="w-full px-4 py-3 bg-[#111625]/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00BC7D] text-white placeholder-slate-500"
                     placeholder="Your name"
                   />
                 </div>
@@ -129,7 +127,7 @@ export default function ContactPage() {
                     required
                     value={formData.email}
                     onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                    className="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-white placeholder-slate-500"
+                    className="w-full px-4 py-3 bg-[#111625]/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00BC7D] text-white placeholder-slate-500"
                     placeholder="you@example.com"
                   />
                 </div>
@@ -140,7 +138,7 @@ export default function ContactPage() {
                     type="tel"
                     value={formData.phone}
                     onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                    className="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-white placeholder-slate-500"
+                    className="w-full px-4 py-3 bg-[#111625]/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00BC7D] text-white placeholder-slate-500"
                     placeholder="(555) 123-4567"
                   />
                 </div>
@@ -151,7 +149,7 @@ export default function ContactPage() {
                     required
                     value={formData.subject}
                     onChange={(e) => setFormData(prev => ({ ...prev, subject: e.target.value }))}
-                    className="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-white"
+                    className="w-full px-4 py-3 bg-[#111625]/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00BC7D] text-white"
                   >
                     <option value="">Select a topic</option>
                     <option value="general">General Question</option>
@@ -170,7 +168,7 @@ export default function ContactPage() {
                     rows={5}
                     value={formData.message}
                     onChange={(e) => setFormData(prev => ({ ...prev, message: e.target.value }))}
-                    className="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-white placeholder-slate-500 resize-none"
+                    className="w-full px-4 py-3 bg-[#111625]/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00BC7D] text-white placeholder-slate-500 resize-none"
                     placeholder="How can we help you?"
                   />
                 </div>
@@ -178,7 +176,7 @@ export default function ContactPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white py-3 px-4 rounded-lg font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-gradient-to-r from-[#00BC7D] to-[#009B66] hover:from-[#00BC7D] hover:to-[#009B66] text-white py-3 px-4 rounded-lg font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? 'Sending...' : 'Send Message'}
                 </button>
@@ -192,14 +190,14 @@ export default function ContactPage() {
               <h3 className="text-xl font-bold text-white mb-4">Other Ways to Reach Us</h3>
               <div className="space-y-4">
                 <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-10 h-10 bg-[#00BC7D]/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <svg className="w-5 h-5 text-[#00BC7D]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
                   </div>
                   <div>
                     <p className="text-slate-400 text-sm">Email</p>
-                    <a href="mailto:support@ownerfi.ai" className="text-white hover:text-emerald-400 transition-colors">
+                    <a href="mailto:support@ownerfi.ai" className="text-white hover:text-[#00BC7D] transition-colors">
                       support@ownerfi.ai
                     </a>
                   </div>
@@ -219,14 +217,14 @@ export default function ContactPage() {
               </div>
             </div>
 
-            <div className="bg-gradient-to-br from-emerald-500/10 to-blue-500/10 border border-emerald-500/30 rounded-xl p-6">
+            <div className="bg-gradient-to-br from-[#00BC7D]/10 to-blue-500/10 border border-[#00BC7D]/30 rounded-xl p-6">
               <h4 className="text-lg font-bold text-white mb-3">Looking for Properties?</h4>
               <p className="text-slate-300 text-sm mb-4">
                 Skip the contact form and start browsing owner-financed homes right now.
               </p>
               <Link
                 href="/auth"
-                className="inline-block bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
+                className="inline-block bg-[#00BC7D]/50 hover:bg-[#00BC7D] text-white px-6 py-2 rounded-lg font-semibold transition-colors"
               >
                 Browse Homes
               </Link>
@@ -239,7 +237,7 @@ export default function ContactPage() {
               </p>
               <Link
                 href="/auth"
-                className="text-emerald-400 hover:text-emerald-300 font-medium"
+                className="text-[#00BC7D] hover:text-[#00d68f] font-medium"
               >
                 Learn about partnerships
               </Link>
@@ -252,21 +250,21 @@ export default function ContactPage() {
       <footer className="bg-slate-800/30 border-t border-slate-700/50 py-8">
         <div className="max-w-4xl mx-auto px-6 text-center">
           <div className="flex justify-center gap-8 text-sm mb-4">
-            <Link href="/" className="text-slate-400 hover:text-emerald-400 transition-colors">
+            <Link href="/" className="text-slate-400 hover:text-[#00BC7D] transition-colors">
               Home
             </Link>
-            <Link href="/about" className="text-slate-400 hover:text-emerald-400 transition-colors">
+            <Link href="/about" className="text-slate-400 hover:text-[#00BC7D] transition-colors">
               About
             </Link>
-            <Link href="/terms" className="text-slate-400 hover:text-emerald-400 transition-colors">
+            <Link href="/terms" className="text-slate-400 hover:text-[#00BC7D] transition-colors">
               Terms
             </Link>
-            <Link href="/privacy" className="text-slate-400 hover:text-emerald-400 transition-colors">
+            <Link href="/privacy" className="text-slate-400 hover:text-[#00BC7D] transition-colors">
               Privacy
             </Link>
           </div>
           <p className="text-xs text-slate-500">
-            &copy; 2025 OwnerFi. Empowering homeownership through innovative financing solutions.
+            &copy; 2025 Ownerfi. Empowering homeownership through innovative financing solutions.
           </p>
         </div>
       </footer>

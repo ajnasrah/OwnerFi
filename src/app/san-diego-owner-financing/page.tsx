@@ -4,14 +4,14 @@ import { db } from '@/lib/firebase'
 import { collection, query, where, getDocs } from 'firebase/firestore'
 
 export const metadata: Metadata = {
-  title: 'Owner Financing San Diego | Rent to Own Alternative CA | La Jolla, Mission Beach | OwnerFi',
+  title: 'Owner Financing San Diego | Rent to Own Alternative CA | La Jolla, Mission Beach | Ownerfi',
   description: 'Find owner financed homes in San Diego - better than rent to own! Immediate ownership in La Jolla, Mission Beach, Gaslamp Quarter, Pacific Beach. No banks needed. Flexible credit options.',
   keywords: 'owner financing san diego, owner financed homes san diego, rent to own san diego, rent to own california, owner financing la jolla, seller financing san diego, no credit check homes san diego, bad credit homes san diego, san diego real estate owner financing',
   openGraph: {
-    title: 'Owner Financed Homes in San Diego - Better Than Rent to Own | OwnerFi',
+    title: 'Owner Financed Homes in San Diego - Better Than Rent to Own | Ownerfi',
     description: 'Skip the banks! Find owner financed properties across San Diego with immediate ownership. Serving La Jolla, Mission Beach, Pacific Beach and more.',
     url: 'https://ownerfi.ai/san-diego-owner-financing',
-    siteName: 'OwnerFi',
+    siteName: 'Ownerfi',
     type: 'website',
   },
   twitter: {
@@ -53,7 +53,7 @@ async function getSanDiegoProperties() {
   }
 }
 
-export default async function OwnerFinancingSanDiego() {
+export default async function OwnerfinancingSanDiego() {
   const { areaCounts, totalCount } = await getSanDiegoProperties()
 
   const faqSchema = {
@@ -98,7 +98,7 @@ export default async function OwnerFinancingSanDiego() {
   const localBusinessSchema = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
-    "name": "OwnerFi San Diego - Owner Financed Homes",
+    "name": "Ownerfi San Diego - Owner Financed Homes",
     "description": "Find owner financed homes throughout San Diego. Better than rent to own with immediate ownership.",
     "url": "https://ownerfi.ai/san-diego-owner-financing",
     "areaServed": {
@@ -150,7 +150,7 @@ export default async function OwnerFinancingSanDiego() {
             </p>
 
             <div className="grid md:grid-cols-3 gap-6 mb-8">
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-xl border border-green-200">
+              <div className="bg-gradient-to-br from-green-50 to-[#00BC7D]/5 p-6 rounded-xl border border-green-200">
                 <h3 className="font-bold text-green-900 mb-2">Immediate San Diego Ownership</h3>
                 <p className="text-green-800">Get the deed right away, unlike rent to own</p>
               </div>

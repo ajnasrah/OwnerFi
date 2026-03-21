@@ -12,7 +12,7 @@ export function LegalDisclaimers({ type = 'general', compact = false, state }: L
       return (
         <div className="bg-yellow-100 border border-yellow-300 rounded p-2">
           <p className="text-xs text-yellow-800 text-center">
-            ⚠️ Estimates only. Not guaranteed. No escrow account - you pay taxes/insurance/HOA directly. Properties may not be available or offer owner financing. Sellers may credit check. Balloon payments may apply. Seller discretion reserved. Not a loan offer. We're just letting you know what's out there. OwnerFi not licensed broker.
+            ⚠️ Estimates only. Not guaranteed. No escrow account - you pay taxes/insurance/HOA directly. Properties may not be available or offer owner financing. Sellers may credit check. Balloon payments may apply. Seller discretion reserved. Not a loan offer. We're just letting you know what's out there. Ownerfi not licensed broker.
           </p>
         </div>
       );
@@ -33,7 +33,7 @@ export function LegalDisclaimers({ type = 'general', compact = false, state }: L
               <p>• <strong>Balloon payments may apply</strong> - Balance may be due at 3-5 years</p>
               <p>• <strong>Availability not guaranteed</strong> - Properties may no longer be available or offer owner financing</p>
               <p>• <strong>Seller discretion reserved</strong> - Right to accept/deny any offer</p>
-              <p>• <strong>OwnerFi not licensed broker</strong> - We're just letting you know what's out there</p>
+              <p>• <strong>Ownerfi not licensed broker</strong> - We're just letting you know what's out there</p>
             </div>
           </div>
         </div>
@@ -49,7 +49,7 @@ export function LegalDisclaimers({ type = 'general', compact = false, state }: L
           <div className="text-xs text-red-800">
             <p className="font-semibold mb-1">Investment/Financial Disclaimer:</p>
             <p>
-              OwnerFi does not provide financial, investment, or lending advice. All financial projections, payment estimates, 
+              Ownerfi does not provide financial, investment, or lending advice. All financial projections, payment estimates, 
               and investment returns are for informational purposes only and not guaranteed. Real estate investments involve 
               significant risk. Consult licensed financial advisors, CPAs, and real estate attorneys before making any 
               financial or investment decisions.
@@ -86,13 +86,13 @@ export function LegalDisclaimers({ type = 'general', compact = false, state }: L
 
   if (type === 'state-specific') {
     const getStateDisclaimer = (stateCode?: string) => {
-      const baseDisclaimer = "OwnerFi is not licensed to provide real estate brokerage services in any state.";
+      const baseDisclaimer = "Ownerfi is not licensed to provide real estate brokerage services in any state.";
       
       switch(stateCode?.toUpperCase()) {
         case 'CA':
-          return `${baseDisclaimer} California Real Estate Law requires all real estate transactions to be handled by licensed professionals. OwnerFi License Disclosure: Not licensed in California. California Bureau of Real Estate License #: N/A.`;
+          return `${baseDisclaimer} California Real Estate Law requires all real estate transactions to be handled by licensed professionals. Ownerfi License Disclosure: Not licensed in California. California Bureau of Real Estate License #: N/A.`;
         case 'TX':
-          return `${baseDisclaimer} Texas Real Estate License Disclosure: OwnerFi is not licensed by the Texas Real Estate Commission (TREC). All Texas real estate transactions must comply with TREC regulations.`;
+          return `${baseDisclaimer} Texas Real Estate License Disclosure: Ownerfi is not licensed by the Texas Real Estate Commission (TREC). All Texas real estate transactions must comply with TREC regulations.`;
         case 'FL':
           return `${baseDisclaimer} Florida Real Estate License Disclosure: Not licensed by the Florida Department of Business and Professional Regulation. All Florida transactions require licensed representation.`;
         case 'NY':
@@ -117,7 +117,7 @@ export function LegalDisclaimers({ type = 'general', compact = false, state }: L
     return (
       <div className="bg-gray-100 border border-gray-300 rounded p-2">
         <p className="text-xs text-gray-700">
-          ⚠️ OwnerFi is not a licensed real estate broker. Information not guaranteed. Consult licensed professionals.
+          ⚠️ Ownerfi is not a licensed real estate broker. Information not guaranteed. Consult licensed professionals.
         </p>
       </div>
     );
@@ -129,7 +129,7 @@ export function LegalDisclaimers({ type = 'general', compact = false, state }: L
         <p className="font-semibold mb-2">⚠️ Important Legal Disclaimers</p>
         <div className="space-y-2">
           <p>
-            <strong>Not Licensed Professionals:</strong> OwnerFi is not a licensed real estate broker, agent, or lender. 
+            <strong>Not Licensed Professionals:</strong> Ownerfi is not a licensed real estate broker, agent, or lender. 
             We are solely a lead generation and marketing platform.
           </p>
           <p>

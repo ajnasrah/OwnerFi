@@ -73,7 +73,7 @@ export function InvestorFilterBar({
               aria-pressed={isActive}
               className={`px-2 py-2 rounded-xl text-center transition-all ${
                 isActive
-                  ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/25'
+                  ? 'bg-[#00BC7D] text-white shadow-lg shadow-[#00BC7D]/25'
                   : 'bg-slate-800/60 text-slate-300 hover:bg-slate-700/60 border border-slate-700/50'
               }`}
             >
@@ -81,7 +81,7 @@ export function InvestorFilterBar({
                 <span className="sm:hidden">{option.shortLabel}</span>
                 <span className="hidden sm:inline">{option.label}</span>
               </div>
-              <div className={`text-[11px] mt-0.5 ${isActive ? 'text-emerald-100' : 'text-slate-500'}`}>
+              <div className={`text-[11px] mt-0.5 ${isActive ? 'text-[#B3F0DB]' : 'text-slate-500'}`}>
                 {count} deals
               </div>
             </button>
@@ -100,7 +100,7 @@ export function InvestorFilterBar({
               aria-pressed={isActive}
               className={`flex-shrink-0 px-3 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap ${
                 isActive
-                  ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/25'
+                  ? 'bg-[#00BC7D] text-white shadow-lg shadow-[#00BC7D]/25'
                   : 'bg-slate-700/60 text-slate-300 hover:bg-slate-600/60 border border-slate-600/50'
               }`}
             >
@@ -151,7 +151,7 @@ export function InvestorFilterBar({
           value={sortBy}
           onChange={(e) => onSortChange(e.target.value as SortField, sortOrder)}
           aria-label="Sort by"
-          className="bg-slate-700/60 border border-slate-600/50 rounded-xl px-3 py-2 text-xs text-white focus:border-emerald-500 focus:outline-none"
+          className="bg-slate-700/60 border border-slate-600/50 rounded-xl px-3 py-2 text-xs text-white focus:border-[#00BC7D] focus:outline-none"
         >
           {SORT_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>Sort: {option.label}</option>

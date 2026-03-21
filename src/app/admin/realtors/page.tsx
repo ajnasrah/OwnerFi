@@ -143,19 +143,19 @@ export default function AdminRealtors() {
 
   if (status !== 'authenticated' || (session?.user as { role?: string })?.role !== 'admin' || loading) {
     return (
-      <div className="min-h-screen bg-slate-900 p-8 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-400"></div>
+      <div className="min-h-screen bg-[#111625] p-8 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00BC7D]"></div>
       </div>
     );
   }
 
   return (
-    <div className="h-screen overflow-hidden bg-slate-900 flex flex-col">
+    <div className="h-screen overflow-hidden bg-[#111625] flex flex-col">
       <div className="flex-1 overflow-y-auto p-6">
         <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6">
-          <Link href="/admin" className="text-emerald-400 hover:text-emerald-300 mb-4 inline-block">
+          <Link href="/admin" className="text-[#00BC7D] hover:text-[#00d68f] mb-4 inline-block">
             ← Back to Admin Dashboard
           </Link>
           <h1 className="text-3xl font-bold text-white mb-2">Manage Realtors</h1>
@@ -179,7 +179,7 @@ export default function AdminRealtors() {
               }}
               className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
                 activeTab === tab.key
-                  ? 'bg-emerald-600 text-white'
+                  ? 'bg-[#00BC7D] text-white'
                   : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
               }`}
             >
@@ -196,7 +196,7 @@ export default function AdminRealtors() {
                 type="checkbox"
                 checked={selectAll}
                 onChange={handleSelectAll}
-                className="w-5 h-5 rounded border-slate-600 bg-slate-700 text-emerald-500 focus:ring-emerald-500"
+                className="w-5 h-5 rounded border-slate-600 bg-slate-700 text-[#00BC7D] focus:ring-[#00BC7D]"
               />
               <span>Select All</span>
             </label>
@@ -229,7 +229,7 @@ export default function AdminRealtors() {
                       type="checkbox"
                       checked={selectAll}
                       onChange={handleSelectAll}
-                      className="w-5 h-5 rounded border-slate-600 bg-slate-700 text-emerald-500 focus:ring-emerald-500"
+                      className="w-5 h-5 rounded border-slate-600 bg-slate-700 text-[#00BC7D] focus:ring-[#00BC7D]"
                     />
                   </th>
                   <th className="p-3 text-left">Name</th>
@@ -250,7 +250,7 @@ export default function AdminRealtors() {
                         type="checkbox"
                         checked={selectedRealtors.has(realtor.id)}
                         onChange={() => toggleSelectRealtor(realtor.id)}
-                        className="w-5 h-5 rounded border-slate-600 bg-slate-700 text-emerald-500 focus:ring-emerald-500"
+                        className="w-5 h-5 rounded border-slate-600 bg-slate-700 text-[#00BC7D] focus:ring-[#00BC7D]"
                       />
                     </td>
                     <td className="p-3 text-white">
@@ -277,7 +277,7 @@ export default function AdminRealtors() {
                     </td>
                     <td className="p-3 text-center">
                       {(realtor.signedAgreements || 0) > 0 ? (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/20 text-emerald-400">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#00BC7D]/20 text-[#00BC7D]">
                           {realtor.signedAgreements}
                         </span>
                       ) : (

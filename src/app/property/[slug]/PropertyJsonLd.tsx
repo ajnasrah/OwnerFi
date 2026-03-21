@@ -92,7 +92,7 @@ export default function PropertyJsonLd({ property, slug }: PropertyJsonLdProps) 
         : 'https://schema.org/OutOfStock',
       seller: {
         '@type': 'Organization',
-        name: 'OwnerFi',
+        name: 'Ownerfi',
         url: 'https://ownerfi.ai',
       },
     },
@@ -157,8 +157,8 @@ export default function PropertyJsonLd({ property, slug }: PropertyJsonLdProps) 
         acceptedAnswer: {
           '@type': 'Answer',
           text: property.downPaymentAmount
-            ? `The down payment for this property is $${property.downPaymentAmount.toLocaleString()}${property.downPaymentPercent ? ` (${property.downPaymentPercent}% of the purchase price)` : ''}. Contact OwnerFi to discuss flexible down payment options.`
-            : `Down payment terms are negotiable. Sign up for free at OwnerFi to get the specific financing details for this ${property.city} property.`,
+            ? `The down payment for this property is $${property.downPaymentAmount.toLocaleString()}${property.downPaymentPercent ? ` (${property.downPaymentPercent}% of the purchase price)` : ''}. Contact Ownerfi to discuss flexible down payment options.`
+            : `Down payment terms are negotiable. Sign up for free at Ownerfi to get the specific financing details for this ${property.city} property.`,
         },
       },
     ],
@@ -200,7 +200,7 @@ export default function PropertyJsonLd({ property, slug }: PropertyJsonLdProps) 
     image: imageUrl,
     brand: {
       '@type': 'Organization',
-      name: 'OwnerFi',
+      name: 'Ownerfi',
     },
     offers: {
       '@type': 'Offer',
@@ -212,7 +212,7 @@ export default function PropertyJsonLd({ property, slug }: PropertyJsonLdProps) 
         : 'https://schema.org/OutOfStock',
       seller: {
         '@type': 'Organization',
-        name: 'OwnerFi',
+        name: 'Ownerfi',
       },
     },
   });

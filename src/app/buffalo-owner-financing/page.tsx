@@ -4,14 +4,14 @@ import { db } from '@/lib/firebase'
 import { collection, query, where, getDocs } from 'firebase/firestore'
 
 export const metadata: Metadata = {
-  title: 'Owner Financing Buffalo | Rent to Own Alternative NY | Downtown, Elmwood Village | OwnerFi',
+  title: 'Owner Financing Buffalo | Rent to Own Alternative NY | Downtown, Elmwood Village | Ownerfi',
   description: 'Find owner financed homes in Buffalo - better than rent to own! Immediate ownership in Downtown, Elmwood Village, Allentown. No banks needed. Flexible credit options.',
   keywords: 'owner financing buffalo, owner financed homes buffalo, rent to own buffalo, rent to own new york, seller financing buffalo, no credit check homes buffalo, bad credit homes buffalo, buffalo real estate owner financing',
   openGraph: {
-    title: 'Owner Financed Homes in Buffalo - Better Than Rent to Own | OwnerFi',
+    title: 'Owner Financed Homes in Buffalo - Better Than Rent to Own | Ownerfi',
     description: 'Skip the banks! Find owner financed properties across Buffalo with immediate ownership. Serving Downtown, Elmwood Village, Allentown and more.',
     url: 'https://ownerfi.ai/buffalo-owner-financing',
-    siteName: 'OwnerFi',
+    siteName: 'Ownerfi',
     type: 'website',
   },
   twitter: {
@@ -53,7 +53,7 @@ async function getBuffaloProperties() {
   }
 }
 
-export default async function OwnerFinancingBuffalo() {
+export default async function OwnerfinancingBuffalo() {
   const { areaCounts, totalCount } = await getBuffaloProperties()
 
   const faqSchema = {
@@ -98,7 +98,7 @@ export default async function OwnerFinancingBuffalo() {
   const localBusinessSchema = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
-    "name": "OwnerFi Buffalo - Owner Financed Homes",
+    "name": "Ownerfi Buffalo - Owner Financed Homes",
     "description": "Find owner financed homes throughout Buffalo. Better than rent to own with immediate ownership.",
     "url": "https://ownerfi.ai/buffalo-owner-financing",
     "areaServed": {
@@ -149,7 +149,7 @@ export default async function OwnerFinancingBuffalo() {
             </p>
 
             <div className="grid md:grid-cols-3 gap-6 mb-8">
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-xl border border-green-200">
+              <div className="bg-gradient-to-br from-green-50 to-[#00BC7D]/5 p-6 rounded-xl border border-green-200">
                 <h3 className="font-bold text-green-900 mb-2">Immediate Buffalo Ownership</h3>
                 <p className="text-green-800">Get the deed right away, unlike rent to own</p>
               </div>
@@ -238,14 +238,14 @@ export default async function OwnerFinancingBuffalo() {
                   Great neighborhood with owner financing options
                 </p>
               </div>
-              <div className="p-6 bg-gradient-to-br from-emerald-50 to-emerald-50 rounded-xl border-2 border-emerald-200">
-                <h3 className="text-xl font-bold text-emerald-900 mb-2">
+              <div className="p-6 bg-gradient-to-br from-[#00BC7D]/5 to-[#00BC7D]/5 rounded-xl border-2 border-[#00BC7D]/30">
+                <h3 className="text-xl font-bold text-[#004D33] mb-2">
                   North Buffalo
                 </h3>
-                <p className="text-emerald-700 mb-2">
+                <p className="text-[#009B66] mb-2">
                   {areaCounts['North Buffalo'] || 'Premium'} owner financed properties
                 </p>
-                <p className="text-sm text-emerald-600 mb-3">
+                <p className="text-sm text-[#00BC7D] mb-3">
                   Great neighborhood with owner financing options
                 </p>
               </div>

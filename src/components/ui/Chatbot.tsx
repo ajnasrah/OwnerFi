@@ -62,13 +62,13 @@ function renderMessageContent(text: string): React.ReactNode[] {
     const email = match[2];
     if (path) {
       parts.push(
-        <Link key={match.index} href={path} className="text-emerald-600 underline underline-offset-2 hover:text-emerald-700 font-medium" onClick={(e) => e.stopPropagation()}>
+        <Link key={match.index} href={path} className="text-[#00BC7D] underline underline-offset-2 hover:text-[#009B66] font-medium" onClick={(e) => e.stopPropagation()}>
           {path}
         </Link>
       );
     } else if (email) {
       parts.push(
-        <a key={match.index} href={`mailto:${email}`} className="text-emerald-600 underline underline-offset-2 hover:text-emerald-700 font-medium" onClick={(e) => e.stopPropagation()}>
+        <a key={match.index} href={`mailto:${email}`} className="text-[#00BC7D] underline underline-offset-2 hover:text-[#009B66] font-medium" onClick={(e) => e.stopPropagation()}>
           {email}
         </a>
       );
@@ -148,7 +148,7 @@ function clearSession() {
 function buildTranscript(messages: Message[]): string {
   return messages.map(m => {
     const time = new Date(m.timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-    const who = m.role === 'user' ? 'You' : 'Sarah (OwnerFi)';
+    const who = m.role === 'user' ? 'You' : 'Sarah (Ownerfi)';
     return `[${time}] ${who}: ${m.content}`;
   }).join('\n\n');
 }
@@ -271,7 +271,7 @@ export default function Chatbot({ isOpen, onClose, bottomClass, initialMessage }
     const timeGreeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
     setMessages([{
       role: 'assistant',
-      content: `${timeGreeting}! I'm Sarah, your OwnerFi guide. Whether you're looking to buy a home without a bank loan or just exploring — I'm here to help. What can I tell you?`,
+      content: `${timeGreeting}! I'm Sarah, your Ownerfi guide. Whether you're looking to buy a home without a bank loan or just exploring — I'm here to help. What can I tell you?`,
       timestamp: Date.now()
     }]);
     setSuggestions(getStarterQuestions(pathname));
@@ -329,8 +329,8 @@ export default function Chatbot({ isOpen, onClose, bottomClass, initialMessage }
 
   const emailTranscript = () => {
     const transcript = buildTranscript(messages);
-    const subject = encodeURIComponent('My OwnerFi Chat Transcript');
-    const body = encodeURIComponent(`Here's my conversation with Sarah from OwnerFi:\n\n${transcript}\n\n---\nOwnerFi — Skip the Bank. Buy Direct.\nhttps://ownerfi.com`);
+    const subject = encodeURIComponent('My Ownerfi Chat Transcript');
+    const body = encodeURIComponent(`Here's my conversation with Sarah from Ownerfi:\n\n${transcript}\n\n---\nOwnerfi — Skip the Bank. Buy Direct.\nhttps://ownerfi.com`);
     window.open(`mailto:?subject=${subject}&body=${body}`, '_self');
     trackEvent('chatbot_email_transcript', { message_count: messages.length });
   };
@@ -447,7 +447,7 @@ export default function Chatbot({ isOpen, onClose, bottomClass, initialMessage }
       <div className="bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-slate-200" style={{ height: 'min(580px, 78vh)' }}>
 
         {/* Header */}
-        <div className="bg-gradient-to-r from-emerald-600 to-emerald-500 px-4 py-3 flex items-center justify-between flex-shrink-0">
+        <div className="bg-gradient-to-r from-[#00BC7D] to-[#009B66] px-4 py-3 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 bg-white rounded-full flex items-center justify-center flex-shrink-0 shadow-sm">
               <span className="text-base">👩</span>
@@ -460,7 +460,7 @@ export default function Chatbot({ isOpen, onClose, bottomClass, initialMessage }
                   <span className="text-[10px] text-white/90 font-medium">{isOnline ? 'ONLINE' : 'OFFLINE'}</span>
                 </div>
               </div>
-              <p className="text-white/80 text-xs">OwnerFi Property Specialist</p>
+              <p className="text-white/80 text-xs">Ownerfi Property Specialist</p>
             </div>
           </div>
           <div className="flex items-center gap-0.5">
@@ -481,28 +481,28 @@ export default function Chatbot({ isOpen, onClose, bottomClass, initialMessage }
           {messages.map((message, index) => (
             <div key={`${message.timestamp}-${index}`} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               {message.role === 'assistant' && (
-                <div className="w-6 h-6 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0 mr-2 mt-1"><span className="text-xs">👩</span></div>
+                <div className="w-6 h-6 bg-[#00BC7D]/10 rounded-full flex items-center justify-center flex-shrink-0 mr-2 mt-1"><span className="text-xs">👩</span></div>
               )}
               <div className="flex flex-col max-w-[80%]">
                 <div className={`px-3.5 py-2.5 break-words ${
                   message.role === 'user'
-                    ? 'bg-emerald-600 text-white rounded-2xl rounded-br-md'
+                    ? 'bg-[#00BC7D] text-white rounded-2xl rounded-br-md'
                     : 'bg-white text-slate-800 border border-slate-100 rounded-2xl rounded-bl-md shadow-sm'
                 }`}>
                   <p className="text-[13px] leading-relaxed whitespace-pre-wrap">
                     {message.role === 'assistant' ? renderMessageContent(message.content) : message.content}
-                    {message.isStreaming && <span className="inline-block w-1.5 h-4 bg-emerald-500 ml-0.5 animate-pulse rounded-sm" />}
+                    {message.isStreaming && <span className="inline-block w-1.5 h-4 bg-[#00BC7D] ml-0.5 animate-pulse rounded-sm" />}
                   </p>
                   {message.role === 'assistant' && !message.isStreaming && message.content && (
                     <div className="flex items-center gap-3 mt-1.5 pt-1.5 border-t border-slate-100">
-                      <button onClick={() => speakText(message.content)} disabled={isSpeaking} className="text-[11px] text-slate-400 hover:text-emerald-600 transition-colors flex items-center gap-1">
+                      <button onClick={() => speakText(message.content)} disabled={isSpeaking} className="text-[11px] text-slate-400 hover:text-[#00BC7D] transition-colors flex items-center gap-1">
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728" /></svg>
                         {isSpeaking ? 'Speaking...' : 'Listen'}
                       </button>
                       {isSpeaking && <button onClick={stopSpeaking} className="text-[11px] text-red-400 hover:text-red-500">Stop</button>}
                       {/* Feedback */}
                       <div className="flex items-center gap-1 ml-auto">
-                        <button onClick={() => handleFeedback(index, 'up')} className={`p-0.5 rounded transition-colors ${message.feedback === 'up' ? 'text-emerald-500' : 'text-slate-300 hover:text-emerald-500'}`} title="Helpful">
+                        <button onClick={() => handleFeedback(index, 'up')} className={`p-0.5 rounded transition-colors ${message.feedback === 'up' ? 'text-[#00BC7D]' : 'text-slate-300 hover:text-[#00BC7D]'}`} title="Helpful">
                           <svg className="w-3 h-3" fill={message.feedback === 'up' ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14z" /></svg>
                         </button>
                         <button onClick={() => handleFeedback(index, 'down')} className={`p-0.5 rounded transition-colors ${message.feedback === 'down' ? 'text-red-400' : 'text-slate-300 hover:text-red-400'}`} title="Not helpful">
@@ -522,13 +522,13 @@ export default function Chatbot({ isOpen, onClose, bottomClass, initialMessage }
           {/* Typing indicator */}
           {isLoading && (
             <div className="flex justify-start">
-              <div className="w-6 h-6 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0 mr-2 mt-1"><span className="text-xs">👩</span></div>
+              <div className="w-6 h-6 bg-[#00BC7D]/10 rounded-full flex items-center justify-center flex-shrink-0 mr-2 mt-1"><span className="text-xs">👩</span></div>
               <div className="bg-white text-slate-800 border border-slate-100 rounded-2xl rounded-bl-md px-3.5 py-2.5 shadow-sm">
                 <div className="flex items-center gap-2">
                   <div className="flex gap-1">
-                    <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-bounce"></div>
-                    <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-bounce" style={{ animationDelay: '0.15s' }}></div>
-                    <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-bounce" style={{ animationDelay: '0.3s' }}></div>
+                    <div className="w-1.5 h-1.5 bg-[#00BC7D] rounded-full animate-bounce"></div>
+                    <div className="w-1.5 h-1.5 bg-[#00BC7D] rounded-full animate-bounce" style={{ animationDelay: '0.15s' }}></div>
+                    <div className="w-1.5 h-1.5 bg-[#00BC7D] rounded-full animate-bounce" style={{ animationDelay: '0.3s' }}></div>
                   </div>
                   <span className="text-[11px] text-slate-400">Sarah is typing...</span>
                 </div>
@@ -541,7 +541,7 @@ export default function Chatbot({ isOpen, onClose, bottomClass, initialMessage }
             <div className="flex flex-wrap gap-1.5 pt-1">
               {suggestions.map((s, i) => (
                 <button key={i} onClick={() => { trackEvent('chatbot_suggestion', { text: s }); sendMessage(s); }} disabled={isLoading}
-                  className="text-[12px] px-3 py-1.5 bg-white border border-emerald-200 text-emerald-700 rounded-full hover:bg-emerald-50 hover:border-emerald-300 transition-all shadow-sm active:scale-95">
+                  className="text-[12px] px-3 py-1.5 bg-white border border-[#00BC7D]/30 text-[#009B66] rounded-full hover:bg-[#00BC7D]/5 hover:border-[#00BC7D]/50 transition-all shadow-sm active:scale-95">
                   {s}
                 </button>
               ))}
@@ -561,19 +561,19 @@ export default function Chatbot({ isOpen, onClose, bottomClass, initialMessage }
         <div className="p-3 bg-white border-t border-slate-200 flex-shrink-0">
           <div className="flex items-center gap-2">
             <div className="flex-1">
-              <div className="flex items-center bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus-within:border-emerald-400 focus-within:ring-1 focus-within:ring-emerald-400 transition-all">
+              <div className="flex items-center bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus-within:border-[#00BC7D] focus-within:ring-1 focus-within:ring-[#00BC7D] transition-all">
                 <input ref={inputRef} type="text" value={inputMessage} onChange={(e) => setInputMessage(e.target.value.slice(0, MAX_INPUT_LENGTH))}
-                  onKeyDown={handleKeyDown} placeholder="Ask me anything about OwnerFi..." className="flex-1 bg-transparent text-sm text-slate-800 placeholder-slate-400 outline-none"
+                  onKeyDown={handleKeyDown} placeholder="Ask me anything about Ownerfi..." className="flex-1 bg-transparent text-sm text-slate-800 placeholder-slate-400 outline-none"
                   disabled={isLoading} maxLength={MAX_INPUT_LENGTH} />
                 <button onClick={startListening} disabled={isListening || isLoading}
-                  className={`ml-1 p-1.5 rounded-lg transition-colors ${isListening ? 'text-red-500 bg-red-50' : 'text-slate-400 hover:text-emerald-600 hover:bg-emerald-50'}`}
+                  className={`ml-1 p-1.5 rounded-lg transition-colors ${isListening ? 'text-red-500 bg-red-50' : 'text-slate-400 hover:text-[#00BC7D] hover:bg-[#00BC7D]/5'}`}
                   title="Voice input — sends automatically">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
                 </button>
               </div>
             </div>
             <button onClick={() => sendMessage()} disabled={!inputMessage.trim() || isLoading}
-              className="w-10 h-10 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 disabled:from-slate-300 disabled:to-slate-300 text-white rounded-xl flex items-center justify-center transition-all flex-shrink-0 shadow-sm active:scale-95">
+              className="w-10 h-10 bg-gradient-to-r from-[#00BC7D] to-[#009B66] hover:from-[#00d68f] hover:to-[#00BC7D] disabled:from-slate-300 disabled:to-slate-300 text-white rounded-xl flex items-center justify-center transition-all flex-shrink-0 shadow-sm active:scale-95">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
             </button>
           </div>

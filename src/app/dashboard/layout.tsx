@@ -34,7 +34,7 @@ function HelpBanner({ onOpenChat }: { onOpenChat: () => void }) {
 
   return (
     <div className="fixed top-14 left-0 right-0 z-[45] px-3 pt-2 md:px-0">
-      <div className="max-w-md mx-auto bg-emerald-600/95 backdrop-blur-sm rounded-xl px-3 py-2.5 flex items-center gap-2.5 shadow-lg border border-emerald-500/30 animate-fadeInScale">
+      <div className="max-w-md mx-auto bg-[#00BC7D]/95 backdrop-blur-sm rounded-xl px-3 py-2.5 flex items-center gap-2.5 shadow-lg border border-[#00BC7D]/30 animate-fadeInScale">
         <div className="flex-shrink-0 text-base">👩</div>
         <div className="flex-1 min-w-0">
           <p className="text-white text-[13px] font-medium leading-snug">

@@ -12,7 +12,7 @@ export default function SignOutPage() {
           <div className="bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 rounded-2xl p-12 text-center shadow-2xl">
             {/* Success Icon */}
             <div className="flex justify-center mb-6">
-              <div className="w-20 h-20 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-full flex items-center justify-center shadow-2xl">
+              <div className="w-20 h-20 bg-gradient-to-br from-[#00BC7D] to-[#3B82F6] rounded-full flex items-center justify-center shadow-2xl">
                 <CheckCircle className="w-12 h-12 text-white" />
               </div>
             </div>
@@ -39,7 +39,7 @@ export default function SignOutPage() {
               {/* Home Button */}
               <Link
                 href="/"
-                className="block w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 hover:scale-105 shadow-xl shadow-emerald-500/25 group"
+                className="block w-full bg-gradient-to-r from-[#00BC7D] to-[#009B66] hover:from-[#00d68f] hover:to-[#00BC7D] text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 hover:scale-105 shadow-xl shadow-[#00BC7D]/25 group"
               >
                 <div className="flex items-center justify-center space-x-3">
                   <Home className="w-6 h-6 group-hover:scale-110 transition-transform" />
@@ -76,7 +76,7 @@ export default function SignOutPage() {
                 Need to sign back in?{' '}
                 <Link
                   href="/auth"
-                  className="text-emerald-400 hover:text-emerald-300 font-bold underline decoration-2 underline-offset-2 transition-colors"
+                  className="text-[#00BC7D] hover:text-[#00d68f] font-bold underline decoration-2 underline-offset-2 transition-colors"
                 >
                   Click here
                 </Link>
@@ -87,7 +87,7 @@ export default function SignOutPage() {
           {/* Additional Info Card */}
           <div className="mt-8 bg-slate-800/30 backdrop-blur-lg border border-slate-700/30 rounded-xl p-6 text-center">
             <p className="text-slate-400 text-sm">
-              <span className="font-bold text-emerald-400">OwnerFi</span> - Your trusted platform for owner-financed properties
+              <span className="font-bold text-[#00BC7D]">Ownerfi</span> - Your trusted platform for owner-financed properties
             </p>
           </div>
         </div>

@@ -55,8 +55,8 @@ export default function BuyCreditsPage() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-400"></div>
+      <div className="min-h-screen bg-[#111625] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00BC7D]"></div>
       </div>
     );
   }
@@ -70,10 +70,8 @@ export default function BuyCreditsPage() {
             ← Back to Dashboard
           </Link>
           <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">O</span>
-            </div>
-            <span className="text-lg font-bold text-white">OwnerFi</span>
+            <img src="/logo.jpg" alt="Ownerfi" width={32} height={32} className="rounded-lg" />
+            <span className="text-lg font-bold text-white">Ownerfi</span>
           </Link>
         </div>
       </header>
@@ -101,12 +99,12 @@ export default function BuyCreditsPage() {
             <div
               key={pkg.id}
               className={`relative bg-slate-800/50 backdrop-blur-xl border ${
-                pkg.popular ? 'border-emerald-500/50' : 'border-slate-700/50'
+                pkg.popular ? 'border-[#00BC7D]/50' : 'border-slate-700/50'
               } rounded-2xl p-6 hover:scale-105 transition-transform`}
             >
               {pkg.popular && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <span className="bg-emerald-500 text-white px-3 py-1 rounded-full text-xs font-bold">
+                  <span className="bg-[#00BC7D]/50 text-white px-3 py-1 rounded-full text-xs font-bold">
                     POPULAR
                   </span>
                 </div>
@@ -128,20 +126,20 @@ export default function BuyCreditsPage() {
 
               <ul className="space-y-3 mb-6">
                 <li className="flex items-start gap-2 text-slate-300 text-sm">
-                  <span className="text-emerald-400 mt-0.5">✓</span>
+                  <span className="text-[#00BC7D] mt-0.5">✓</span>
                   <span>Full buyer contact info</span>
                 </li>
                 <li className="flex items-start gap-2 text-slate-300 text-sm">
-                  <span className="text-emerald-400 mt-0.5">✓</span>
+                  <span className="text-[#00BC7D] mt-0.5">✓</span>
                   <span>Pre-screened leads</span>
                 </li>
                 <li className="flex items-start gap-2 text-slate-300 text-sm">
-                  <span className="text-emerald-400 mt-0.5">✓</span>
+                  <span className="text-[#00BC7D] mt-0.5">✓</span>
                   <span>In your service area</span>
                 </li>
                 {pkg.recurring && (
                   <li className="flex items-start gap-2 text-slate-300 text-sm">
-                    <span className="text-emerald-400 mt-0.5">✓</span>
+                    <span className="text-[#00BC7D] mt-0.5">✓</span>
                     <span>Renews automatically</span>
                   </li>
                 )}
@@ -152,7 +150,7 @@ export default function BuyCreditsPage() {
                 disabled={loading === pkg.id}
                 className={`w-full ${
                   pkg.popular
-                    ? 'bg-emerald-500 hover:bg-emerald-600'
+                    ? 'bg-[#00BC7D]/50 hover:bg-[#00BC7D]'
                     : 'bg-slate-700 hover:bg-slate-600'
                 } text-white py-3 rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
               >

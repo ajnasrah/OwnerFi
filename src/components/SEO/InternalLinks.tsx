@@ -126,7 +126,7 @@ export function SEOFooter() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Company */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">OwnerFi</h3>
+            <h3 className="text-lg font-semibold mb-4">Ownerfi</h3>
             <ul className="space-y-2">
               <li><Link href="/about" className="hover:text-blue-400">About Us</Link></li>
               <li><Link href="/contact" className="hover:text-blue-400">Contact</Link></li>
@@ -173,7 +173,7 @@ export function SEOFooter() {
         {/* Bottom section */}
         <div className="border-t border-gray-800 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
           <div className="text-sm text-gray-400">
-            © 2024 OwnerFi. All rights reserved.
+            © 2024 Ownerfi. All rights reserved.
           </div>
           <div className="flex space-x-6 mt-4 md:mt-0">
             <Link href="/privacy" className="text-sm text-gray-400 hover:text-blue-400">Privacy Policy</Link>

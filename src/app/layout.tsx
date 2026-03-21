@@ -20,12 +20,12 @@ export const dynamicParams = true;
 export const revalidate = 0;
 
 export const metadata: Metadata = {
-  title: "OwnerFi - Owner Financed Properties | No Bank Financing Needed",
+  title: "Ownerfi - Owner Financed Properties | No Bank Financing Needed",
   description: "Find owner financed homes in Texas, Florida, and Georgia. Skip the bank, buy directly from owners with flexible financing. Low down payments, no credit checks required.",
   keywords: "owner financing, owner financed homes, seller financing, no bank financing, buy house without bank, owner finance texas, owner finance florida, owner finance georgia, creative financing, rent to own homes",
-  authors: [{ name: "OwnerFi" }],
-  creator: "OwnerFi",
-  publisher: "OwnerFi",
+  authors: [{ name: "Ownerfi" }],
+  creator: "Ownerfi",
+  publisher: "Ownerfi",
   robots: {
     index: true,
     follow: true,
@@ -41,21 +41,21 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_US',
     url: 'https://ownerfi.ai',
-    siteName: 'OwnerFi',
-    title: 'OwnerFi - Owner Financed Properties | No Bank Financing Needed',
+    siteName: 'Ownerfi',
+    title: 'Ownerfi - Owner Financed Properties | No Bank Financing Needed',
     description: 'Find owner financed homes in Texas, Florida, and Georgia. Skip the bank with flexible seller financing options.',
     images: [
       {
         url: 'https://ownerfi.ai/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'OwnerFi - Owner Financed Properties',
+        alt: 'Ownerfi - Owner Financed Properties',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'OwnerFi - Owner Financed Properties',
+    title: 'Ownerfi - Owner Financed Properties',
     description: 'Find owner financed homes with flexible financing. No bank needed.',
     images: ['https://ownerfi.ai/og-image.png'],
   },
@@ -65,7 +65,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "OwnerFi"
+    title: "Ownerfi"
   },
   other: {
     'mobile-web-app-capable': 'yes'
@@ -84,7 +84,7 @@ export const viewport: Viewport = {
   initialScale: 1.0,
   maximumScale: 1.0, // Prevent zoom for fixed layout
   userScalable: false, // Prevent user zoom for app-like experience
-  themeColor: '#2563EB',
+  themeColor: '#00BC7D',
   viewportFit: 'cover',
   interactiveWidget: 'resizes-content' // Handle mobile keyboards properly
 };
@@ -128,7 +128,7 @@ export default function RootLayout({
         )}
       </head>
       <body
-        className={`${inter.variable} antialiased bg-slate-900 h-full`}
+        className={`${inter.variable} antialiased bg-[#111625] h-full`}
       >
         <AnalyticsScripts
           ga4Id={process.env.NEXT_PUBLIC_GA4_ID}

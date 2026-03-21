@@ -157,7 +157,7 @@ completed
 
 **Collection**: `carz_workflow_queue`
 
-### 2. OwnerFi (Real Estate/Owner Financing)
+### 2. Ownerfi (Real Estate/Owner Financing)
 - **Source**: RSS feeds from real estate blogs
 - **Frequency**: 5x daily
 - **Platforms**: Instagram Reels, TikTok, YouTube Shorts, Facebook
@@ -349,7 +349,7 @@ completed
 2. Configure brand-specific features:
    - Template: "Hormozi 2" (professional captions)
    - Magic Zooms: Enabled for all brands
-   - B-rolls: Enabled for Carz/OwnerFi, **disabled for Property/Podcast**
+   - B-rolls: Enabled for Carz/Ownerfi, **disabled for Property/Podcast**
    - Silence Removal: Enabled except for Property (keeps full script)
 3. Webhook URL: `/api/webhooks/submagic/[brand]`
 4. Submagic generates captions (30-60 seconds)
@@ -891,7 +891,7 @@ export async function alertWorkflowFailure(
 4. **Legal Disclaimers**:
    - "Prices and terms may change anytime"
    - "Estimated before taxes and insurance"
-   - "Visit OwnerFi.ai for more details"
+   - "Visit Ownerfi.ai for more details"
 
 **System Prompt** (GPT-4o-mini):
 - Abdullah voice: Friendly, goofy, confident
@@ -950,7 +950,7 @@ Hook (3s) → Education (18s) → CTA (5s) → Question (4s)
 
 ---
 
-### Article-Based Generators (Carz, OwnerFi, VassDistro)
+### Article-Based Generators (Carz, Ownerfi, VassDistro)
 
 **Process**:
 1. Fetch articles from RSS feeds
@@ -974,7 +974,7 @@ Hook (3s) → Education (18s) → CTA (5s) → Question (4s)
 
 | Cron Job | Schedule | Purpose |
 |----------|----------|---------|
-| **generate-video** | 5x daily (9am, 12pm, 3pm, 6pm, 9pm) | Generate Carz/OwnerFi videos |
+| **generate-video** | 5x daily (9am, 12pm, 3pm, 6pm, 9pm) | Generate Carz/Ownerfi videos |
 | **generate-abdullah-daily** | Daily 6am ET | Generate 5 Abdullah videos |
 | **generate-video-vassdistro** | Custom | Generate VassDistro videos |
 | **check-stuck-posting** | Every 10 min | Failsafe for posting/video_processing |
@@ -1015,7 +1015,7 @@ if (authHeader !== `Bearer ${CRON_SECRET}` && !isVercelCron) {
 
 ### Workflow Document Schema
 
-**Used By**: Carz, OwnerFi, VassDistro, Abdullah
+**Used By**: Carz, Ownerfi, VassDistro, Abdullah
 
 ```typescript
 interface Workflow {
@@ -1416,7 +1416,7 @@ ENFORCE_WEBHOOK_VERIFICATION=false # Set to true in production
 ```typescript
 export const BRAND_CONFIGS = {
   ownerfi: {
-    displayName: 'OwnerFi',
+    displayName: 'Ownerfi',
     platforms: ['instagram', 'tiktok', 'youtube', 'facebook'],
     webhooks: {
       heygen: 'https://ownerfi.ai/api/webhooks/heygen/ownerfi',

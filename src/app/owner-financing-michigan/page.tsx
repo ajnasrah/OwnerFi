@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_US',
     url: 'https://ownerfi.ai/owner-financing-michigan',
-    siteName: 'OwnerFi',
+    siteName: 'Ownerfi',
     title: 'Owner Financing Michigan - Seller Financed Homes',
     description: 'Browse owner financed properties across Michigan. No bank needed, flexible terms available.',
     images: [{
@@ -32,7 +32,7 @@ function generateLocalBusinessSchema() {
   return {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
-    "name": "OwnerFi Michigan",
+    "name": "Ownerfi Michigan",
     "description": "Discover owner financed properties in Michigan",
     "url": "https://ownerfi.ai/owner-financing-michigan",
     "areaServed": {
@@ -88,7 +88,7 @@ function generateFAQSchema() {
   }
 }
 
-export default function OwnerFinancingMichigan() {
+export default function OwnerfinancingMichigan() {
   return (
     <>
       <Script
@@ -102,20 +102,18 @@ export default function OwnerFinancingMichigan() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(generateFAQSchema()) }}
       />
 
-      <div className="min-h-screen bg-slate-900 text-white">
+      <div className="min-h-screen bg-[#111625] text-white">
         {/* Header */}
         <header className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 px-6 py-4">
           <div className="max-w-6xl mx-auto flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">O</span>
-              </div>
-              <span className="text-lg font-bold text-white">OwnerFi</span>
+              <img src="/logo.jpg" alt="Ownerfi" width={32} height={32} className="rounded-lg" />
+              <span className="text-lg font-bold text-white">Ownerfi</span>
             </Link>
             <nav className="flex items-center gap-4">
               <Link href="/" className="text-slate-300 hover:text-white text-sm">Home</Link>
               <Link href="/how-owner-finance-works" className="text-slate-300 hover:text-white text-sm">How It Works</Link>
-              <Link href="/auth" className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
+              <Link href="/auth" className="bg-[#00BC7D]/50 hover:bg-[#00BC7D] text-white px-4 py-2 rounded-lg text-sm font-medium">
                 Browse Properties
               </Link>
             </nav>
@@ -124,11 +122,11 @@ export default function OwnerFinancingMichigan() {
 
         <main>
           {/* Hero Section */}
-          <section className="relative py-20 px-6 bg-gradient-to-b from-emerald-900/20 to-slate-900">
+          <section className="relative py-20 px-6 bg-gradient-to-b from-[#004D33]/20 to-slate-900">
             <div className="max-w-6xl mx-auto">
               <div className="text-center mb-12">
                 <h1 className="text-5xl font-bold text-white mb-6">
-                  Owner Financing in <span className="text-emerald-400">Michigan</span>
+                  Owner Financing in <span className="text-[#00BC7D]">Michigan</span>
                   <span className="block text-3xl mt-4 text-slate-300">Better Than Rent-to-Own</span>
                 </h1>
                 <p className="text-xl text-slate-300 max-w-3xl mx-auto">
@@ -140,7 +138,7 @@ export default function OwnerFinancingMichigan() {
 
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-                <Link href="/auth" className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all">
+                <Link href="/auth" className="bg-[#00BC7D]/50 hover:bg-[#00BC7D] text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all">
                   Browse Michigan Properties
                 </Link>
                 <Link href="/how-owner-finance-works" className="bg-slate-700 hover:bg-slate-600 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all">
@@ -151,11 +149,11 @@ export default function OwnerFinancingMichigan() {
               {/* Stats */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                 <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 text-center border border-slate-700/50">
-                  <div className="text-3xl font-bold text-emerald-400">320+</div>
+                  <div className="text-3xl font-bold text-[#00BC7D]">320+</div>
                   <div className="text-slate-300 mt-2">Michigan Properties</div>
                 </div>
                 <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 text-center border border-slate-700/50">
-                  <div className="text-3xl font-bold text-emerald-400">5%</div>
+                  <div className="text-3xl font-bold text-[#00BC7D]">5%</div>
                   <div className="text-slate-300 mt-2">Min Down Payment</div>
                 </div>
                 <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 text-center border border-slate-700/50">
@@ -177,32 +175,32 @@ export default function OwnerFinancingMichigan() {
                 Owner Financed Homes by Michigan City
               </h2>
               <div className="grid md:grid-cols-3 gap-6">
-                <div className="bg-slate-900/50 border border-slate-700/50 rounded-xl p-6 hover:border-emerald-400/50 transition-all">
-                  <h3 className="text-xl font-bold text-emerald-400 mb-2">Detroit</h3>
+                <div className="bg-[#111625]/50 border border-slate-700/50 rounded-xl p-6 hover:border-[#00BC7D]/50 transition-all">
+                  <h3 className="text-xl font-bold text-[#00BC7D] mb-2">Detroit</h3>
                   <p className="text-slate-300 text-sm mb-3">Michigan</p>
-                  <p className="text-emerald-400 text-sm mt-3">Properties Available →</p>
+                  <p className="text-[#00BC7D] text-sm mt-3">Properties Available →</p>
                 </div>
-                <div className="bg-slate-900/50 border border-slate-700/50 rounded-xl p-6 hover:border-blue-400/50 transition-all">
+                <div className="bg-[#111625]/50 border border-slate-700/50 rounded-xl p-6 hover:border-blue-400/50 transition-all">
                   <h3 className="text-xl font-bold text-blue-400 mb-2">Grand Rapids</h3>
                   <p className="text-slate-300 text-sm mb-3">Michigan</p>
                   <p className="text-blue-400 text-sm mt-3">Properties Available →</p>
                 </div>
-                <div className="bg-slate-900/50 border border-slate-700/50 rounded-xl p-6 hover:border-purple-400/50 transition-all">
+                <div className="bg-[#111625]/50 border border-slate-700/50 rounded-xl p-6 hover:border-purple-400/50 transition-all">
                   <h3 className="text-xl font-bold text-purple-400 mb-2">Warren</h3>
                   <p className="text-slate-300 text-sm mb-3">Michigan</p>
                   <p className="text-purple-400 text-sm mt-3">Properties Available →</p>
                 </div>
-                <div className="bg-slate-900/50 border border-slate-700/50 rounded-xl p-6 hover:border-yellow-400/50 transition-all">
+                <div className="bg-[#111625]/50 border border-slate-700/50 rounded-xl p-6 hover:border-yellow-400/50 transition-all">
                   <h3 className="text-xl font-bold text-yellow-400 mb-2">Sterling Heights</h3>
                   <p className="text-slate-300 text-sm mb-3">Michigan</p>
                   <p className="text-yellow-400 text-sm mt-3">Properties Available →</p>
                 </div>
-                <div className="bg-slate-900/50 border border-slate-700/50 rounded-xl p-6 hover:border-orange-400/50 transition-all">
+                <div className="bg-[#111625]/50 border border-slate-700/50 rounded-xl p-6 hover:border-orange-400/50 transition-all">
                   <h3 className="text-xl font-bold text-orange-400 mb-2">Lansing</h3>
                   <p className="text-slate-300 text-sm mb-3">Michigan</p>
                   <p className="text-orange-400 text-sm mt-3">Properties Available →</p>
                 </div>
-                <div className="bg-slate-900/50 border border-slate-700/50 rounded-xl p-6 hover:border-cyan-400/50 transition-all">
+                <div className="bg-[#111625]/50 border border-slate-700/50 rounded-xl p-6 hover:border-cyan-400/50 transition-all">
                   <h3 className="text-xl font-bold text-cyan-400 mb-2">Ann Arbor</h3>
                   <p className="text-slate-300 text-sm mb-3">Michigan</p>
                   <p className="text-cyan-400 text-sm mt-3">Properties Available →</p>
@@ -219,12 +217,12 @@ export default function OwnerFinancingMichigan() {
               </h2>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                 <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border border-slate-700/50">
-                  <div className="text-emerald-400 text-3xl mb-4">🏠</div>
+                  <div className="text-[#00BC7D] text-3xl mb-4">🏠</div>
                   <h3 className="text-xl font-semibold text-white mb-3">Immediate Ownership</h3>
                   <p className="text-slate-300">Get the deed immediately with owner financing, unlike rent-to-own where you don't own until the very end.</p>
                 </div>
                 <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border border-slate-700/50">
-                  <div className="text-emerald-400 text-3xl mb-4">📈</div>
+                  <div className="text-[#00BC7D] text-3xl mb-4">📈</div>
                   <h3 className="text-xl font-semibold text-white mb-3">Build Equity from Day One</h3>
                   <p className="text-slate-300">Every payment builds equity in your home, unlike rent-to-own where early payments often don't count toward ownership.</p>
                 </div>
@@ -259,23 +257,23 @@ export default function OwnerFinancingMichigan() {
                 Michigan Owner Financing FAQs
               </h2>
               <div className="space-y-6">
-                <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
+                <div className="bg-[#111625]/50 rounded-xl p-6 border border-slate-700/50">
                   <h3 className="text-xl font-semibold text-white mb-3">Is owner financing legal in Michigan?</h3>
                   <p className="text-slate-300">Yes, owner financing is completely legal in Michigan. The state allows sellers to finance their property sales with proper documentation and compliance with Michigan real estate laws.</p>
                 </div>
-                <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
+                <div className="bg-[#111625]/50 rounded-xl p-6 border border-slate-700/50">
                   <h3 className="text-xl font-semibold text-white mb-3">How is owner financing better than rent-to-own?</h3>
                   <p className="text-slate-300">Owner financing is superior because you get the deed immediately, build equity from day one, can make improvements, and have legal ownership rights. Rent-to-own often has higher costs and you don't own until the end.</p>
                 </div>
-                <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
+                <div className="bg-[#111625]/50 rounded-xl p-6 border border-slate-700/50">
                   <h3 className="text-xl font-semibold text-white mb-3">What are typical down payments in Michigan?</h3>
                   <p className="text-slate-300">Down payments typically range from 5% to 20% of the purchase price. The exact amount is negotiable between buyer and seller based on the property and your financial situation.</p>
                 </div>
-                <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
+                <div className="bg-[#111625]/50 rounded-xl p-6 border border-slate-700/50">
                   <h3 className="text-xl font-semibold text-white mb-3">Do credit requirements vary by seller?</h3>
                   <p className="text-slate-300">Yes, credit requirements vary significantly by seller in Michigan. Many sellers are more flexible than banks and focus on your down payment and ability to make monthly payments rather than just credit scores.</p>
                 </div>
-                <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
+                <div className="bg-[#111625]/50 rounded-xl p-6 border border-slate-700/50">
                   <h3 className="text-xl font-semibold text-white mb-3">What Michigan cities have the most owner financed homes?</h3>
                   <p className="text-slate-300">Detroit, Grand Rapids, Warren have the most owner financed properties, but you can find seller financing options throughout Michigan, including smaller cities and rural areas.</p>
                 </div>
@@ -294,7 +292,7 @@ export default function OwnerFinancingMichigan() {
                 no banks needed, and you own immediately.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link href="/auth" className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all">
+                <Link href="/auth" className="bg-[#00BC7D]/50 hover:bg-[#00BC7D] text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all">
                   Browse Michigan Properties Now
                 </Link>
                 <Link href="/rent-to-own-homes" className="bg-slate-700 hover:bg-slate-600 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all">

@@ -92,9 +92,9 @@ Visit www.ownerfi.ai to view owner finance properties in your area.
 ### SYSTEM PROMPT (DROP-IN)
 
 ```
-You are the OwnerFi short-form video generator.
+You are the Ownerfi short-form video generator.
 
-OwnerFi helps people discover homes they can buy without a traditional mortgage through seller financing, rent-to-own, and alternative paths to ownership.
+Ownerfi helps people discover homes they can buy without a traditional mortgage through seller financing, rent-to-own, and alternative paths to ownership.
 
 GOAL:
 Drive traffic to www.ownerfi.ai and spark comments, saves, and shares.
@@ -114,7 +114,7 @@ Hook → relatable pain → clear alternative → CTA
 
 CTA (rotate naturally):
 - "Save this and check options."
-- "Follow OwnerFi for real home paths."
+- "Follow Ownerfi for real home paths."
 - "Visit Owner-Fy dot A Eye."
 
 PRONUNCIATION:
@@ -135,7 +135,7 @@ FIRST COMMENT:
 # BRAND 2 — PROPERTY VIDEOS (LISTINGS)
 
 ```
-You generate property showcase videos for OwnerFi.
+You generate property showcase videos for Ownerfi.
 
 INPUTS:
 City, State, Price, Beds, Baths, Sqft, Estimated Monthly Payment, Highlight
@@ -275,7 +275,7 @@ CTA:
 
 ## WHAT THIS FIXES
 
-* OwnerFi compliance failures → **solved**
+* Ownerfi compliance failures → **solved**
 * "No bank" messaging → **rewritten safely**
 * Caption + title rules → **data-driven**
 * Every output is **post-ready**

@@ -160,9 +160,9 @@ export default function GoHighLevelLogsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+      <div className="min-h-screen bg-[#111625] flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-emerald-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-16 h-16 border-4 border-[#00BC7D] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-white text-lg">Loading webhook logs...</p>
         </div>
       </div>
@@ -170,10 +170,10 @@ export default function GoHighLevelLogsPage() {
   }
 
   return (
-    <div className="h-screen overflow-hidden bg-slate-900 flex flex-col">
+    <div className="h-screen overflow-hidden bg-[#111625] flex flex-col">
       <div className="flex-1 overflow-y-auto p-6">
         <div className="max-w-7xl mx-auto">
-        <Link href="/admin" className="text-emerald-400 hover:text-emerald-300 text-sm mb-4 inline-block">← Back to Admin</Link>
+        <Link href="/admin" className="text-[#00BC7D] hover:text-[#00d68f] text-sm mb-4 inline-block">← Back to Admin</Link>
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
@@ -183,7 +183,7 @@ export default function GoHighLevelLogsPage() {
             </div>
             <button
               onClick={loadLogs}
-              className="bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded-lg font-semibold transition-colors"
+              className="bg-[#00BC7D] hover:bg-[#00BC7D]/50 px-4 py-2 rounded-lg font-semibold transition-colors"
             >
               🔄 Refresh
             </button>
@@ -192,7 +192,7 @@ export default function GoHighLevelLogsPage() {
           {/* Stats */}
           <div className="grid grid-cols-3 gap-4 mt-6">
             <div className="bg-slate-800 rounded-lg p-4 border border-slate-700">
-              <div className="text-3xl font-bold text-emerald-400">{logs.length}</div>
+              <div className="text-3xl font-bold text-[#00BC7D]">{logs.length}</div>
               <div className="text-slate-400 text-sm mt-1">Total Notifications</div>
             </div>
             <div className="bg-slate-800 rounded-lg p-4 border border-slate-700">

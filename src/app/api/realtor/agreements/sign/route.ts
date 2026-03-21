@@ -225,7 +225,7 @@ export async function POST(request: NextRequest) {
       signatureIpAddress: ipAddress,
       signatureUserAgent: userAgent,
 
-      // OwnerFi Addendum Acknowledgments (Sections 8-12)
+      // Ownerfi Addendum Acknowledgments (Sections 8-12)
       acknowledgeTCPA: true,              // Section 9: TCPA & Contact Compliance
       acknowledgeTCPAAt: signedAt,
       acknowledgeCreativeFinance: true,   // Section 11: Creative Finance Disclaimer

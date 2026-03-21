@@ -50,7 +50,7 @@ export function PropertySchema({ property, url }: PropertySchemaProps) {
       availability: 'https://schema.org/InStock',
       seller: {
         '@type': 'Organization',
-        name: 'OwnerFi',
+        name: 'Ownerfi',
         url: 'https://ownerfi.ai',
       },
       ...(property.monthlyPayment && property.monthlyPayment > 0 ? {

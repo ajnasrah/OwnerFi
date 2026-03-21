@@ -4,14 +4,14 @@ import { db } from '@/lib/firebase'
 import { collection, query, where, getDocs } from 'firebase/firestore'
 
 export const metadata: Metadata = {
-  title: 'Owner Financing Atlanta | Rent to Own Alternative GA | Downtown, Buckhead | OwnerFi',
+  title: 'Owner Financing Atlanta | Rent to Own Alternative GA | Downtown, Buckhead | Ownerfi',
   description: 'Find owner financed homes in Atlanta - better than rent to own! Immediate ownership in Downtown, Buckhead, Midtown. No banks needed. Flexible credit options.',
   keywords: 'owner financing atlanta, owner financed homes atlanta, rent to own atlanta, rent to own georgia, seller financing atlanta, no credit check homes atlanta, bad credit homes atlanta, atlanta real estate owner financing',
   openGraph: {
-    title: 'Owner Financed Homes in Atlanta - Better Than Rent to Own | OwnerFi',
+    title: 'Owner Financed Homes in Atlanta - Better Than Rent to Own | Ownerfi',
     description: 'Skip the banks! Find owner financed properties across Atlanta with immediate ownership. Serving Downtown, Buckhead, Midtown and more.',
     url: 'https://ownerfi.ai/atlanta-owner-financing',
-    siteName: 'OwnerFi',
+    siteName: 'Ownerfi',
     type: 'website',
   },
   twitter: {
@@ -53,7 +53,7 @@ async function getAtlantaProperties() {
   }
 }
 
-export default async function OwnerFinancingAtlanta() {
+export default async function OwnerfinancingAtlanta() {
   const { areaCounts, totalCount } = await getAtlantaProperties()
 
   const faqSchema = {
@@ -98,7 +98,7 @@ export default async function OwnerFinancingAtlanta() {
   const localBusinessSchema = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
-    "name": "OwnerFi Atlanta - Owner Financed Homes",
+    "name": "Ownerfi Atlanta - Owner Financed Homes",
     "description": "Find owner financed homes throughout Atlanta. Better than rent to own with immediate ownership.",
     "url": "https://ownerfi.ai/atlanta-owner-financing",
     "areaServed": {
@@ -149,7 +149,7 @@ export default async function OwnerFinancingAtlanta() {
             </p>
 
             <div className="grid md:grid-cols-3 gap-6 mb-8">
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-xl border border-green-200">
+              <div className="bg-gradient-to-br from-green-50 to-[#00BC7D]/5 p-6 rounded-xl border border-green-200">
                 <h3 className="font-bold text-green-900 mb-2">Immediate Atlanta Ownership</h3>
                 <p className="text-green-800">Get the deed right away, unlike rent to own</p>
               </div>
@@ -238,14 +238,14 @@ export default async function OwnerFinancingAtlanta() {
                   Great neighborhood with owner financing options
                 </p>
               </div>
-              <div className="p-6 bg-gradient-to-br from-emerald-50 to-emerald-50 rounded-xl border-2 border-emerald-200">
-                <h3 className="text-xl font-bold text-emerald-900 mb-2">
+              <div className="p-6 bg-gradient-to-br from-[#00BC7D]/5 to-[#00BC7D]/5 rounded-xl border-2 border-[#00BC7D]/30">
+                <h3 className="text-xl font-bold text-[#004D33] mb-2">
                   Virginia Highland
                 </h3>
-                <p className="text-emerald-700 mb-2">
+                <p className="text-[#009B66] mb-2">
                   {areaCounts['Virginia Highland'] || 'Premium'} owner financed properties
                 </p>
-                <p className="text-sm text-emerald-600 mb-3">
+                <p className="text-sm text-[#00BC7D] mb-3">
                   Great neighborhood with owner financing options
                 </p>
               </div>

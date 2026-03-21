@@ -93,7 +93,7 @@ const POSITIVE_PATTERNS = [
  * @param description - The property description text
  * @returns FilterResult with decision and reasoning
  */
-export function hasOwnerFinancing(description: string | null | undefined): FilterResult {
+export function hasOwnerfinancing(description: string | null | undefined): FilterResult {
   // No description means we can't determine
   if (!description || description.trim().length === 0) {
     return {
@@ -138,14 +138,14 @@ export function hasOwnerFinancing(description: string | null | undefined): Filte
  * @param properties - Array of properties with description field
  * @returns Filtered array and stats
  */
-export function filterPropertiesForOwnerFinancing<T extends { description?: string | null }>(
+export function filterPropertiesForOwnerfinancing<T extends { description?: string | null }>(
   properties: T[]
 ): {
   filtered: T[];
   stats: {
     total: number;
-    withOwnerFinancing: number;
-    withoutOwnerFinancing: number;
+    withOwnerfinancing: number;
+    withoutOwnerfinancing: number;
     noDescription: number;
     explicitlyRejected: number;
   };
@@ -153,20 +153,20 @@ export function filterPropertiesForOwnerFinancing<T extends { description?: stri
   const filtered: T[] = [];
   const stats = {
     total: properties.length,
-    withOwnerFinancing: 0,
-    withoutOwnerFinancing: 0,
+    withOwnerfinancing: 0,
+    withoutOwnerfinancing: 0,
     noDescription: 0,
     explicitlyRejected: 0,
   };
 
   for (const property of properties) {
-    const result = hasOwnerFinancing(property.description);
+    const result = hasOwnerfinancing(property.description);
 
     if (result.shouldSend) {
       filtered.push(property);
-      stats.withOwnerFinancing++;
+      stats.withOwnerfinancing++;
     } else {
-      stats.withoutOwnerFinancing++;
+      stats.withoutOwnerfinancing++;
       if (result.reason === 'No description available') {
         stats.noDescription++;
       } else if (result.reason === 'Explicitly states NO owner financing') {
@@ -185,7 +185,7 @@ export function filterPropertiesForOwnerFinancing<T extends { description?: stri
  * @returns Detailed explanation string
  */
 export function getFilterExplanation(description: string | null | undefined): string {
-  const result = hasOwnerFinancing(description);
+  const result = hasOwnerfinancing(description);
 
   if (!description || description.trim().length === 0) {
     return '❌ FILTERED: No description to analyze';

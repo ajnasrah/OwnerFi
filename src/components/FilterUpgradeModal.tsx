@@ -40,11 +40,7 @@ export function FilterUpgradeModal({ onClose, onUpgrade }: FilterUpgradeModalPro
         {/* Compact Header */}
         <div className="p-4 border-b border-slate-700/50">
           <div className="flex items-start gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            </div>
+            <img src="/logo.jpg" alt="Ownerfi" width={40} height={40} className="rounded-lg flex-shrink-0" />
             <div className="flex-1 pr-6">
               <h2 className="text-lg font-bold text-white mb-1">
                 New Filter Options Available!
@@ -60,24 +56,24 @@ export function FilterUpgradeModal({ onClose, onUpgrade }: FilterUpgradeModalPro
         <div className="p-4 space-y-3">
           <div className="bg-slate-700/30 rounded-lg p-3 border border-slate-600/30">
             <h3 className="text-white font-semibold text-sm mb-2 flex items-center gap-1.5">
-              <span className="text-emerald-400 text-base">✨</span>
+              <span className="text-[#00BC7D] text-base">✨</span>
               What's New:
             </h3>
             <ul className="space-y-1.5 text-slate-300 text-xs">
               <li className="flex items-start gap-1.5">
-                <span className="text-emerald-400 mt-0.5">•</span>
+                <span className="text-[#00BC7D] mt-0.5">•</span>
                 <span><strong className="text-white">Bedroom Range:</strong> Set min/max bedrooms (e.g., 3-4 bedrooms)</span>
               </li>
               <li className="flex items-start gap-1.5">
-                <span className="text-emerald-400 mt-0.5">•</span>
+                <span className="text-[#00BC7D] mt-0.5">•</span>
                 <span><strong className="text-white">Bathroom Range:</strong> Filter by number of bathrooms</span>
               </li>
               <li className="flex items-start gap-1.5">
-                <span className="text-emerald-400 mt-0.5">•</span>
+                <span className="text-[#00BC7D] mt-0.5">•</span>
                 <span><strong className="text-white">Square Footage:</strong> Set your ideal home size range</span>
               </li>
               <li className="flex items-start gap-1.5">
-                <span className="text-emerald-400 mt-0.5">•</span>
+                <span className="text-[#00BC7D] mt-0.5">•</span>
                 <span><strong className="text-white">Asking Price:</strong> Filter by property listing price</span>
               </li>
             </ul>
@@ -99,7 +95,7 @@ export function FilterUpgradeModal({ onClose, onUpgrade }: FilterUpgradeModalPro
         <div className="p-4 border-t border-slate-700/50 flex flex-col gap-2">
           <button
             onClick={handleUpgrade}
-            className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white py-2.5 px-4 rounded-lg font-semibold text-sm transition-all duration-300 hover:scale-[1.02] shadow-lg shadow-emerald-500/25"
+            className="w-full bg-gradient-to-r from-[#00BC7D]/50 to-[#00BC7D] hover:from-[#00BC7D] hover:to-[#00BC7D]/50 text-white py-2.5 px-4 rounded-lg font-semibold text-sm transition-all duration-300 hover:scale-[1.02] shadow-lg shadow-[#00BC7D]/25"
           >
             Set Up Filters
           </button>

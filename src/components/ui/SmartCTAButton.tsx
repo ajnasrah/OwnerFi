@@ -36,8 +36,8 @@ export function SmartCTAButton({ children, className = '', variant = 'primary' }
     }
   };
 
-  const defaultPrimaryClass = "inline-block bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white py-4 px-8 rounded-xl font-bold text-lg transition-all duration-300 hover:scale-[1.02] shadow-xl";
-  const defaultSecondaryClass = "inline-block bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white py-4 px-8 rounded-xl font-bold text-lg transition-all duration-300 hover:scale-[1.02] shadow-xl";
+  const defaultPrimaryClass = "inline-block bg-gradient-to-r from-[#00BC7D] to-[#009B66] hover:from-[#00d68f] hover:to-[#00BC7D] text-white py-4 px-8 rounded-xl font-bold text-lg transition-all duration-300 hover:scale-[1.02] shadow-xl";
+  const defaultSecondaryClass = "inline-block bg-gradient-to-r from-[#3B82F6] to-[#2563eb] hover:from-[#60a5fa] hover:to-[#3B82F6] text-white py-4 px-8 rounded-xl font-bold text-lg transition-all duration-300 hover:scale-[1.02] shadow-xl";
 
   return (
     <button

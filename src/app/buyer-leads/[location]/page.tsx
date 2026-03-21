@@ -12,7 +12,7 @@ export async function generateMetadata({ params }: { params: Promise<{ location:
 
   if (!locationData) {
     return {
-      title: 'Buyer Leads for Realtors | OwnerFi',
+      title: 'Buyer Leads for Realtors | Ownerfi',
       description: 'Get pre-screened buyer leads in your area.',
     }
   }
@@ -25,11 +25,11 @@ export async function generateMetadata({ params }: { params: Promise<{ location:
   const fullLocation = isState ? stateData.name : `${cityData.name}, ${cityData.stateCode}`
 
   const title = isState
-    ? `Buyer Leads for Realtors in ${locationName} | Real Estate Referrals | OwnerFi`
-    : `Buyer Leads ${cityData.name} ${cityData.stateCode} | Real Estate Agent Leads | OwnerFi`
+    ? `Buyer Leads for Realtors in ${locationName} | Real Estate Referrals | Ownerfi`
+    : `Buyer Leads ${cityData.name} ${cityData.stateCode} | Real Estate Agent Leads | Ownerfi`
 
   const description = isState
-    ? `Get pre-screened buyer leads in ${locationName}. Join OwnerFi's realtor referral network. 1 free lead per month, only pay 30% at closing.`
+    ? `Get pre-screened buyer leads in ${locationName}. Join Ownerfi's realtor referral network. 1 free lead per month, only pay 30% at closing.`
     : `Real estate buyer leads in ${fullLocation}. Pre-screened buyers looking for homes. Free to join, 30% referral fee at closing only.`
 
   const keywords = isState
@@ -44,7 +44,7 @@ export async function generateMetadata({ params }: { params: Promise<{ location:
       title: title.split('|')[0].trim(),
       description,
       url: `https://ownerfi.ai/buyer-leads/${location}`,
-      siteName: 'OwnerFi',
+      siteName: 'Ownerfi',
       type: 'website',
     },
     twitter: {
@@ -63,15 +63,15 @@ function generateFAQSchema(locationName: string, isState: boolean) {
   const faqs = [
     {
       question: `How do I get buyer leads in ${locationName}?`,
-      answer: `Join OwnerFi's realtor referral network for free. Set ${locationName} as your service area and start receiving pre-screened buyer leads. You get 1 free lead per month and only pay a 30% referral fee when deals close.`
+      answer: `Join Ownerfi's realtor referral network for free. Set ${locationName} as your service area and start receiving pre-screened buyer leads. You get 1 free lead per month and only pay a 30% referral fee when deals close.`
     },
     {
       question: `What types of buyer leads are available in ${locationName}?`,
-      answer: `OwnerFi provides pre-screened buyers interested in owner-financed properties in ${locationName}. These buyers have already provided their contact information, location preferences, and budget range through our platform. Note: We do not run credit checks or provide lender-style pre-qualification.`
+      answer: `Ownerfi provides pre-screened buyers interested in owner-financed properties in ${locationName}. These buyers have already provided their contact information, location preferences, and budget range through our platform. Note: We do not run credit checks or provide lender-style pre-qualification.`
     },
     {
       question: `How much do buyer leads cost in ${locationName}?`,
-      answer: `Joining OwnerFi is free. You get 1 free buyer lead per month in ${locationName}. The only cost is a 30% referral fee paid at closing - if the lead doesn't close, you owe nothing.`
+      answer: `Joining Ownerfi is free. You get 1 free buyer lead per month in ${locationName}. The only cost is a 30% referral fee paid at closing - if the lead doesn't close, you owe nothing.`
     },
     {
       question: `Are the buyer leads in ${locationName} exclusive?`,
@@ -82,8 +82,8 @@ function generateFAQSchema(locationName: string, isState: boolean) {
         ? `Which cities in ${locationName} have buyer leads available?`
         : `Are there buyer leads available near ${locationName}?`,
       answer: isState
-        ? `OwnerFi has buyer leads throughout ${locationName} including all major cities and surrounding suburbs. When you join, you can set your service area within a 30-mile radius of your primary city.`
-        : `Yes, OwnerFi has buyer leads throughout the area. Your service area covers a 30-mile radius from ${locationName}, so you'll see leads from nearby cities and suburbs as well.`
+        ? `Ownerfi has buyer leads throughout ${locationName} including all major cities and surrounding suburbs. When you join, you can set your service area within a 30-mile radius of your primary city.`
+        : `Yes, Ownerfi has buyer leads throughout the area. Your service area covers a 30-mile radius from ${locationName}, so you'll see leads from nearby cities and suburbs as well.`
     }
   ]
 
@@ -106,7 +106,7 @@ function generateLocalBusinessSchema(locationName: string, slug: string) {
   return {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
-    "name": `OwnerFi Buyer Leads - ${locationName}`,
+    "name": `Ownerfi Buyer Leads - ${locationName}`,
     "description": `Pre-screened buyer leads for real estate agents in ${locationName}`,
     "url": `https://ownerfi.ai/buyer-leads/${slug}`,
     "areaServed": {
@@ -192,21 +192,19 @@ export default async function BuyerLeadsLocationPage({ params }: { params: Promi
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
 
-      <div className="min-h-screen bg-slate-900 text-white">
+      <div className="min-h-screen bg-[#111625] text-white">
         {/* Header */}
         <header className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 px-6 py-4 sticky top-0 z-50">
           <div className="max-w-6xl mx-auto flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">O</span>
-              </div>
-              <span className="text-lg font-bold text-white">OwnerFi</span>
+              <img src="/logo.jpg" alt="Ownerfi" width={32} height={32} className="rounded-lg" />
+              <span className="text-lg font-bold text-white">Ownerfi</span>
             </Link>
             <nav className="flex items-center gap-4">
               <Link href="/for-realtors" className="hidden sm:block text-slate-300 hover:text-white text-sm">For Realtors</Link>
               <Link
                 href="/auth?role=realtor"
-                className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all"
+                className="bg-[#00BC7D]/50 hover:bg-[#00BC7D] text-white px-4 py-2 rounded-lg text-sm font-medium transition-all"
               >
                 Join Free
               </Link>
@@ -237,20 +235,20 @@ export default async function BuyerLeadsLocationPage({ params }: { params: Promi
           {/* Hero Section */}
           <section className="py-16 px-6 bg-gradient-to-b from-slate-800 to-slate-900">
             <div className="max-w-6xl mx-auto text-center">
-              <div className="inline-block px-4 py-2 bg-emerald-500/20 rounded-full text-emerald-400 text-sm font-medium mb-6">
+              <div className="inline-block px-4 py-2 bg-[#00BC7D]/20 rounded-full text-[#00BC7D] text-sm font-medium mb-6">
                 Buyer Leads for Realtors
               </div>
               <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-                Buyer Leads in <span className="text-emerald-400">{fullLocation}</span>
+                Buyer Leads in <span className="text-[#00BC7D]">{fullLocation}</span>
               </h1>
               <p className="text-xl text-slate-300 max-w-3xl mx-auto mb-8">
-                Get pre-screened buyer leads in {locationName}. Join OwnerFi&apos;s referral network -
+                Get pre-screened buyer leads in {locationName}. Join Ownerfi&apos;s referral network -
                 1 free lead per month, only pay 30% when deals close.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link
                   href="/auth?role=realtor"
-                  className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all hover:scale-105"
+                  className="bg-[#00BC7D]/50 hover:bg-[#00BC7D] text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all hover:scale-105"
                 >
                   Get {locationName} Leads Free
                 </Link>
@@ -268,19 +266,19 @@ export default async function BuyerLeadsLocationPage({ params }: { params: Promi
           <section className="py-12 px-6 bg-slate-800/30">
             <div className="max-w-6xl mx-auto">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-                <div className="bg-slate-900/50 backdrop-blur rounded-xl p-6 text-center border border-slate-700/50">
-                  <div className="text-3xl font-bold text-emerald-400">Free</div>
+                <div className="bg-[#111625]/50 backdrop-blur rounded-xl p-6 text-center border border-slate-700/50">
+                  <div className="text-3xl font-bold text-[#00BC7D]">Free</div>
                   <div className="text-slate-300 mt-2">To Join</div>
                 </div>
-                <div className="bg-slate-900/50 backdrop-blur rounded-xl p-6 text-center border border-slate-700/50">
+                <div className="bg-[#111625]/50 backdrop-blur rounded-xl p-6 text-center border border-slate-700/50">
                   <div className="text-3xl font-bold text-blue-400">1 Lead</div>
                   <div className="text-slate-300 mt-2">Free/Month</div>
                 </div>
-                <div className="bg-slate-900/50 backdrop-blur rounded-xl p-6 text-center border border-slate-700/50">
+                <div className="bg-[#111625]/50 backdrop-blur rounded-xl p-6 text-center border border-slate-700/50">
                   <div className="text-3xl font-bold text-purple-400">30%</div>
                   <div className="text-slate-300 mt-2">At Closing</div>
                 </div>
-                <div className="bg-slate-900/50 backdrop-blur rounded-xl p-6 text-center border border-slate-700/50">
+                <div className="bg-[#111625]/50 backdrop-blur rounded-xl p-6 text-center border border-slate-700/50">
                   <div className="text-3xl font-bold text-yellow-400">180 Days</div>
                   <div className="text-slate-300 mt-2">Exclusive</div>
                 </div>
@@ -296,8 +294,8 @@ export default async function BuyerLeadsLocationPage({ params }: { params: Promi
               </h2>
               <div className="grid md:grid-cols-3 gap-8">
                 <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700/50">
-                  <div className="w-12 h-12 bg-emerald-500/20 rounded-full flex items-center justify-center mb-4">
-                    <span className="text-emerald-400 font-bold text-xl">1</span>
+                  <div className="w-12 h-12 bg-[#00BC7D]/20 rounded-full flex items-center justify-center mb-4">
+                    <span className="text-[#00BC7D] font-bold text-xl">1</span>
                   </div>
                   <h3 className="text-xl font-semibold text-white mb-3">Sign Up Free</h3>
                   <p className="text-slate-300">
@@ -330,35 +328,35 @@ export default async function BuyerLeadsLocationPage({ params }: { params: Promi
           <section className="py-16 px-6 bg-slate-800/30">
             <div className="max-w-6xl mx-auto">
               <h2 className="text-3xl font-bold text-white text-center mb-12">
-                Why {locationName} Realtors Choose OwnerFi
+                Why {locationName} Realtors Choose Ownerfi
               </h2>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
-                  <div className="text-emerald-400 text-2xl mb-3">💰</div>
+                <div className="bg-[#111625]/50 rounded-xl p-6 border border-slate-700/50">
+                  <div className="text-[#00BC7D] text-2xl mb-3">💰</div>
                   <h3 className="text-lg font-semibold text-white mb-2">No Upfront Cost</h3>
                   <p className="text-slate-400 text-sm">Free to join, 1 free lead per month. Only pay when deals close.</p>
                 </div>
-                <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
+                <div className="bg-[#111625]/50 rounded-xl p-6 border border-slate-700/50">
                   <div className="text-blue-400 text-2xl mb-3">✅</div>
                   <h3 className="text-lg font-semibold text-white mb-2">Pre-Screened Buyers</h3>
                   <p className="text-slate-400 text-sm">All leads have provided contact info, location, and budget preferences.</p>
                 </div>
-                <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
+                <div className="bg-[#111625]/50 rounded-xl p-6 border border-slate-700/50">
                   <div className="text-purple-400 text-2xl mb-3">🔒</div>
                   <h3 className="text-lg font-semibold text-white mb-2">Exclusive Leads</h3>
                   <p className="text-slate-400 text-sm">180-day exclusive agreement. The lead is yours until closing.</p>
                 </div>
-                <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
+                <div className="bg-[#111625]/50 rounded-xl p-6 border border-slate-700/50">
                   <div className="text-yellow-400 text-2xl mb-3">📝</div>
                   <h3 className="text-lg font-semibold text-white mb-2">Legal Protection</h3>
                   <p className="text-slate-400 text-sm">Standard RF-701 referral agreement protects both parties.</p>
                 </div>
-                <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
+                <div className="bg-[#111625]/50 rounded-xl p-6 border border-slate-700/50">
                   <div className="text-orange-400 text-2xl mb-3">🔄</div>
                   <h3 className="text-lg font-semibold text-white mb-2">Double Referral</h3>
                   <p className="text-slate-400 text-sm">Can&apos;t service a lead? Refer to another agent and earn a cut.</p>
                 </div>
-                <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
+                <div className="bg-[#111625]/50 rounded-xl p-6 border border-slate-700/50">
                   <div className="text-cyan-400 text-2xl mb-3">📍</div>
                   <h3 className="text-lg font-semibold text-white mb-2">Local Focus</h3>
                   <p className="text-slate-400 text-sm">Set your 30-mile service area to get leads where you work.</p>
@@ -379,10 +377,10 @@ export default async function BuyerLeadsLocationPage({ params }: { params: Promi
                     <Link
                       key={city.slug}
                       href={`/buyer-leads/${city.slug}`}
-                      className="bg-slate-800/50 border border-slate-700/50 rounded-lg p-4 hover:border-emerald-400/50 transition-all text-center"
+                      className="bg-slate-800/50 border border-slate-700/50 rounded-lg p-4 hover:border-[#00BC7D]/50 transition-all text-center"
                     >
                       <h3 className="text-white font-semibold">{city.name}</h3>
-                      <p className="text-emerald-400 text-sm mt-1">Get Leads →</p>
+                      <p className="text-[#00BC7D] text-sm mt-1">Get Leads →</p>
                     </Link>
                   ))}
                 </div>
@@ -390,7 +388,7 @@ export default async function BuyerLeadsLocationPage({ params }: { params: Promi
                   <div className="text-center mt-8">
                     <Link
                       href={`/buyer-leads/${stateSlug}`}
-                      className="text-emerald-400 hover:text-emerald-300 font-medium"
+                      className="text-[#00BC7D] hover:text-[#00d68f] font-medium"
                     >
                       View All {stateName} Cities →
                     </Link>
@@ -408,7 +406,7 @@ export default async function BuyerLeadsLocationPage({ params }: { params: Promi
               </h2>
               <div className="space-y-6">
                 {faqSchema.mainEntity.map((faq: { name: string; acceptedAnswer: { text: string } }, i: number) => (
-                  <div key={i} className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
+                  <div key={i} className="bg-[#111625]/50 rounded-xl p-6 border border-slate-700/50">
                     <h3 className="text-lg font-semibold text-white mb-3">{faq.name}</h3>
                     <p className="text-slate-300">{faq.acceptedAnswer.text}</p>
                   </div>
@@ -424,12 +422,12 @@ export default async function BuyerLeadsLocationPage({ params }: { params: Promi
                 Ready to Get Buyer Leads in {locationName}?
               </h2>
               <p className="text-xl text-slate-300 mb-8">
-                Join OwnerFi&apos;s realtor referral network today. 1 free lead per month, only pay when deals close.
+                Join Ownerfi&apos;s realtor referral network today. 1 free lead per month, only pay when deals close.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link
                   href="/auth?role=realtor"
-                  className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all hover:scale-105"
+                  className="bg-[#00BC7D]/50 hover:bg-[#00BC7D] text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all hover:scale-105"
                 >
                   Start Free Today
                 </Link>
@@ -454,7 +452,7 @@ export default async function BuyerLeadsLocationPage({ params }: { params: Promi
                   <Link
                     key={state.slug}
                     href={`/buyer-leads/${state.slug}`}
-                    className="text-slate-400 hover:text-emerald-400 transition-colors text-center"
+                    className="text-slate-400 hover:text-[#00BC7D] transition-colors text-center"
                   >
                     {state.code}
                   </Link>

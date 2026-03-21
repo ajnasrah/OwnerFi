@@ -143,16 +143,14 @@ export default function AcceptReferralPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+      <div className="min-h-screen bg-[#111625] flex items-center justify-center">
         <div className="text-center">
-          {/* OwnerFi Branding */}
+          {/* Ownerfi Branding */}
           <Link href="/" className="flex items-center justify-center gap-2 mb-6 hover:opacity-80 transition-opacity">
-            <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">O</span>
-            </div>
-            <span className="text-xl font-bold text-white">OwnerFi</span>
+            <img src="/logo.jpg" alt="Ownerfi" width={40} height={40} className="rounded-lg" />
+            <span className="text-xl font-bold text-white">Ownerfi</span>
           </Link>
-          <div className="w-8 h-8 border-4 border-emerald-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-8 h-8 border-4 border-[#00BC7D] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <div className="text-white text-lg">Loading referral...</div>
         </div>
       </div>
@@ -161,17 +159,15 @@ export default function AcceptReferralPage() {
 
   if (error && !referral) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#111625] flex items-center justify-center p-4">
         <div className="bg-slate-800 rounded-xl p-8 max-w-md w-full text-center">
-          {/* OwnerFi Branding */}
+          {/* Ownerfi Branding */}
           <Link href="/" className="flex items-center justify-center gap-2 mb-6 hover:opacity-80 transition-opacity">
-            <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">O</span>
-            </div>
-            <span className="text-xl font-bold text-white">OwnerFi</span>
+            <img src="/logo.jpg" alt="Ownerfi" width={40} height={40} className="rounded-lg" />
+            <span className="text-xl font-bold text-white">Ownerfi</span>
           </Link>
           <div className="text-red-400 text-xl mb-4">{error}</div>
-          <Link href="/" className="text-emerald-400 hover:text-emerald-300">
+          <Link href="/" className="text-[#00BC7D] hover:text-[#00d68f]">
             Go to Homepage
           </Link>
         </div>
@@ -181,18 +177,16 @@ export default function AcceptReferralPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#111625] flex items-center justify-center p-4">
         <div className="bg-slate-800 rounded-xl p-8 max-w-lg w-full">
-          {/* OwnerFi Branding */}
+          {/* Ownerfi Branding */}
           <Link href="/" className="flex items-center justify-center gap-2 mb-6 hover:opacity-80 transition-opacity">
-            <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">O</span>
-            </div>
-            <span className="text-xl font-bold text-white">OwnerFi</span>
+            <img src="/logo.jpg" alt="Ownerfi" width={40} height={40} className="rounded-lg" />
+            <span className="text-xl font-bold text-white">Ownerfi</span>
           </Link>
           <div className="text-center mb-6">
-            <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-3xl text-emerald-400">&#10003;</span>
+            <div className="w-16 h-16 bg-[#00BC7D]/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-3xl text-[#00BC7D]">&#10003;</span>
             </div>
             <h1 className="text-2xl font-bold text-white mb-2">Referral Accepted!</h1>
             <p className="text-slate-400">The lead has been added to your account.</p>
@@ -212,7 +206,7 @@ export default function AcceptReferralPage() {
 
           <Link
             href="/realtor-dashboard/buyers"
-            className="block w-full bg-emerald-600 hover:bg-emerald-700 text-white text-center py-3 rounded-lg font-semibold transition-colors"
+            className="block w-full bg-[#00BC7D] hover:bg-[#009B66] text-white text-center py-3 rounded-lg font-semibold transition-colors"
           >
             View My Leads
           </Link>
@@ -222,15 +216,13 @@ export default function AcceptReferralPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 py-8 px-4">
+    <div className="min-h-screen bg-[#111625] py-8 px-4">
       <div className="max-w-2xl mx-auto">
-        {/* OwnerFi Branding */}
+        {/* Ownerfi Branding */}
         <div className="flex justify-center mb-6">
           <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">O</span>
-            </div>
-            <span className="text-xl font-bold text-white">OwnerFi</span>
+            <img src="/logo.jpg" alt="Ownerfi" width={40} height={40} className="rounded-lg" />
+            <span className="text-xl font-bold text-white">Ownerfi</span>
           </Link>
         </div>
 
@@ -307,7 +299,7 @@ export default function AcceptReferralPage() {
             <div className="flex gap-4">
               <Link
                 href={`/auth?redirect=${encodeURIComponent(`/referral/accept/${token}`)}`}
-                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-center py-3 rounded-lg font-semibold transition-colors"
+                className="flex-1 bg-[#00BC7D] hover:bg-[#009B66] text-white text-center py-3 rounded-lg font-semibold transition-colors"
               >
                 Sign In
               </Link>
@@ -327,7 +319,7 @@ export default function AcceptReferralPage() {
             </p>
             <Link
               href={`/auth?type=realtor&redirect=${encodeURIComponent(`/referral/accept/${token}`)}`}
-              className="block w-full bg-emerald-600 hover:bg-emerald-700 text-white text-center py-3 rounded-lg font-semibold transition-colors"
+              className="block w-full bg-[#00BC7D] hover:bg-[#009B66] text-white text-center py-3 rounded-lg font-semibold transition-colors"
             >
               Sign Up as Realtor
             </Link>
@@ -352,7 +344,7 @@ export default function AcceptReferralPage() {
                 value={signatureName}
                 onChange={(e) => setSignatureName(e.target.value)}
                 placeholder="Your Full Name"
-                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:border-emerald-500"
+                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:border-[#00BC7D]"
               />
             </div>
 
@@ -362,7 +354,7 @@ export default function AcceptReferralPage() {
                   type="checkbox"
                   checked={agreeToTerms}
                   onChange={(e) => setAgreeToTerms(e.target.checked)}
-                  className="w-5 h-5 mt-0.5 rounded border-slate-600 bg-slate-700 text-emerald-500 focus:ring-emerald-500"
+                  className="w-5 h-5 mt-0.5 rounded border-slate-600 bg-slate-700 text-[#00BC7D] focus:ring-[#00BC7D]"
                 />
                 <span className="text-slate-300 text-sm">
                   I agree to the referral terms above and understand that I will pay {referral?.referralFeePercent ?? 25}%
@@ -375,10 +367,10 @@ export default function AcceptReferralPage() {
                   type="checkbox"
                   checked={agreeTCPA}
                   onChange={(e) => setAgreeTCPA(e.target.checked)}
-                  className="w-5 h-5 mt-0.5 rounded border-slate-600 bg-slate-700 text-emerald-500 focus:ring-emerald-500"
+                  className="w-5 h-5 mt-0.5 rounded border-slate-600 bg-slate-700 text-[#00BC7D] focus:ring-[#00BC7D]"
                 />
                 <span className="text-slate-300 text-sm">
-                  I acknowledge and agree to OwnerFi&apos;s <a href="/tcpa-compliance" target="_blank" className="text-emerald-400 hover:underline">TCPA Compliance Agreement</a>. I will comply with all telemarketing laws and honor opt-out requests within 24 hours.
+                  I acknowledge and agree to Ownerfi&apos;s <a href="/tcpa-compliance" target="_blank" className="text-[#00BC7D] hover:underline">TCPA Compliance Agreement</a>. I will comply with all telemarketing laws and honor opt-out requests within 24 hours.
                 </span>
               </label>
 
@@ -387,10 +379,10 @@ export default function AcceptReferralPage() {
                   type="checkbox"
                   checked={agreeCreativeFinance}
                   onChange={(e) => setAgreeCreativeFinance(e.target.checked)}
-                  className="w-5 h-5 mt-0.5 rounded border-slate-600 bg-slate-700 text-emerald-500 focus:ring-emerald-500"
+                  className="w-5 h-5 mt-0.5 rounded border-slate-600 bg-slate-700 text-[#00BC7D] focus:ring-[#00BC7D]"
                 />
                 <span className="text-slate-300 text-sm">
-                  I acknowledge OwnerFi&apos;s <a href="/creative-finance-disclaimer" target="_blank" className="text-emerald-400 hover:underline">Creative Finance Disclaimer</a>. I understand referred buyers may seek owner-financed properties and will direct them to verify all data with licensed professionals.
+                  I acknowledge Ownerfi&apos;s <a href="/creative-finance-disclaimer" target="_blank" className="text-[#00BC7D] hover:underline">Creative Finance Disclaimer</a>. I understand referred buyers may seek owner-financed properties and will direct them to verify all data with licensed professionals.
                 </span>
               </label>
 
@@ -399,10 +391,10 @@ export default function AcceptReferralPage() {
                   type="checkbox"
                   checked={agreeDataAsIs}
                   onChange={(e) => setAgreeDataAsIs(e.target.checked)}
-                  className="w-5 h-5 mt-0.5 rounded border-slate-600 bg-slate-700 text-emerald-500 focus:ring-emerald-500"
+                  className="w-5 h-5 mt-0.5 rounded border-slate-600 bg-slate-700 text-[#00BC7D] focus:ring-[#00BC7D]"
                 />
                 <span className="text-slate-300 text-sm">
-                  I accept that lead contact information is provided &quot;as-is&quot; without verification by OwnerFi. I will independently confirm all lead details before proceeding.
+                  I accept that lead contact information is provided &quot;as-is&quot; without verification by Ownerfi. I will independently confirm all lead details before proceeding.
                 </span>
               </label>
             </div>
@@ -413,7 +405,7 @@ export default function AcceptReferralPage() {
               className={`w-full py-3 rounded-lg font-semibold transition-colors ${
                 accepting || !signatureName.trim() || !agreeToTerms || !agreeTCPA || !agreeCreativeFinance || !agreeDataAsIs
                   ? 'bg-slate-700 text-slate-400 cursor-not-allowed'
-                  : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                  : 'bg-[#00BC7D] hover:bg-[#009B66] text-white'
               }`}
             >
               {accepting ? 'Accepting...' : 'Accept Referral & Sign Agreement'}

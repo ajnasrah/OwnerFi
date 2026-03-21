@@ -601,11 +601,11 @@ ${script.caption}`;
   }
 
   return (
-    <div className="h-screen overflow-hidden bg-slate-900 flex flex-col">
+    <div className="h-screen overflow-hidden bg-[#111625] flex flex-col">
       <div className="flex-1 overflow-y-auto p-6">
         <div className="max-w-7xl mx-auto">
         {/* Back to Hub */}
-        <Link href="/admin" className="text-emerald-400 hover:text-emerald-300 mb-4 inline-flex items-center gap-1">
+        <Link href="/admin" className="text-[#00BC7D] hover:text-[#00d68f] mb-4 inline-flex items-center gap-1">
           ← Back to Admin Hub
         </Link>
 
@@ -628,7 +628,7 @@ ${script.caption}`;
         <div className="flex space-x-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
           {[
             { key: 'carz', label: 'Carz Inc', icon: '🚗' },
-            { key: 'ownerfi', label: 'OwnerFi', icon: '🏠', hasSubtabs: true },
+            { key: 'ownerfi', label: 'Ownerfi', icon: '🏠', hasSubtabs: true },
             { key: 'abdullah', label: 'Abdullah', icon: '👤', hasSubtabs: true },
             { key: 'gaza', label: 'Gaza', icon: '🇵🇸' },
             { key: 'analytics', label: 'Analytics', icon: '📊' },
@@ -650,7 +650,7 @@ ${script.caption}`;
                 (activeSubTab === tab.key ||
                  (tab.key === 'ownerfi' && activeSubTab.startsWith('ownerfi')) ||
                  (tab.key === 'abdullah' && activeSubTab === 'abdullah'))
-                  ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg'
+                  ? 'bg-gradient-to-r from-[#00BC7D] to-[#009B66] text-white shadow-lg'
                   : 'bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700'
               }`}
             >
@@ -660,14 +660,14 @@ ${script.caption}`;
           ))}
         </div>
 
-        {/* Sub-tabs for OwnerFi */}
+        {/* Sub-tabs for Ownerfi */}
         {(activeSubTab.startsWith('ownerfi')) && (
           <div className="flex space-x-2 mb-6 ml-0 md:ml-4 overflow-x-auto pb-2 scrollbar-hide">
             <button
               onClick={() => setActiveSubTab('ownerfi')}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 ${
                 activeSubTab === 'ownerfi'
-                  ? 'bg-emerald-600 text-white'
+                  ? 'bg-[#00BC7D] text-white'
                   : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
               }`}
             >
@@ -677,7 +677,7 @@ ${script.caption}`;
               onClick={() => setActiveSubTab('ownerfi-benefits')}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 ${
                 activeSubTab === 'ownerfi-benefits'
-                  ? 'bg-emerald-600 text-white'
+                  ? 'bg-[#00BC7D] text-white'
                   : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
               }`}
             >
@@ -693,7 +693,7 @@ ${script.caption}`;
               onClick={() => setActiveSubTab('abdullah')}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 ${
                 activeSubTab === 'abdullah'
-                  ? 'bg-emerald-600 text-white'
+                  ? 'bg-[#00BC7D] text-white'
                   : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
               }`}
             >
@@ -727,7 +727,7 @@ ${script.caption}`;
                   {status?.feeds?.total || 0}
                 </div>
                 <div className="text-xs text-slate-500 mt-1">
-                  {status?.feeds?.carz || 0} Carz • {status?.feeds?.ownerfi || 0} OwnerFi
+                  {status?.feeds?.carz || 0} Carz • {status?.feeds?.ownerfi || 0} Ownerfi
                 </div>
               </div>
               <div className="w-12 h-12 bg-blue-900/30 rounded-full flex items-center justify-center">
@@ -744,7 +744,7 @@ ${script.caption}`;
                   {(status?.stats?.carz?.unprocessedArticles || 0) + (status?.stats?.ownerfi?.unprocessedArticles || 0)}
                 </div>
                 <div className="text-xs text-slate-500 mt-1">
-                  {status?.stats?.carz?.unprocessedArticles || 0} Carz • {status?.stats?.ownerfi?.unprocessedArticles || 0} OwnerFi
+                  {status?.stats?.carz?.unprocessedArticles || 0} Carz • {status?.stats?.ownerfi?.unprocessedArticles || 0} Ownerfi
                 </div>
               </div>
               <div className="w-12 h-12 bg-purple-900/30 rounded-full flex items-center justify-center">
@@ -763,7 +763,7 @@ ${script.caption}`;
                 <button
                   onClick={triggerCron}
                   disabled={triggeringViral}
-                  className="px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 disabled:bg-gray-400 transition-colors"
+                  className="px-4 py-2 bg-[#00BC7D] text-white text-sm font-medium rounded-lg hover:bg-[#009B66] disabled:bg-gray-400 transition-colors"
                 >
                   {triggeringViral ? 'Generating...' : 'Generate Video Now'}
                 </button>
@@ -914,11 +914,11 @@ ${script.caption}`;
           <div className="space-y-6">
             <div className="bg-slate-800 rounded-xl border border-slate-700 p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-white">OwnerFi Status</h3>
+                <h3 className="text-lg font-semibold text-white">Ownerfi Status</h3>
                 <button
                   onClick={triggerCron}
                   disabled={triggeringViral}
-                  className="px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 disabled:bg-gray-400 transition-colors"
+                  className="px-4 py-2 bg-[#00BC7D] text-white text-sm font-medium rounded-lg hover:bg-[#009B66] disabled:bg-gray-400 transition-colors"
                 >
                   {triggeringViral ? 'Generating...' : 'Generate Video Now'}
                 </button>
@@ -1073,7 +1073,7 @@ ${script.caption}`;
                 <button
                   onClick={triggerBenefitCron}
                   disabled={triggeringBenefit}
-                  className="px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 disabled:bg-gray-400 transition-colors"
+                  className="px-4 py-2 bg-[#00BC7D] text-white text-sm font-medium rounded-lg hover:bg-[#009B66] disabled:bg-gray-400 transition-colors"
                 >
                   {triggeringBenefit ? 'Generating...' : 'Generate Video Now'}
                 </button>
@@ -1133,7 +1133,7 @@ ${script.caption}`;
                     <li>• Smart anti-repetition (avoids last 5 used benefits)</li>
                     <li>• Clear CTA: "Visit ownerfi.ai" in speech + captions</li>
                     <li>• HeyGen avatar + Submagic captions</li>
-                    <li>• Posted to OwnerFi social media accounts</li>
+                    <li>• Posted to Ownerfi social media accounts</li>
                   </ul>
                 </div>
               </div>
@@ -1579,16 +1579,16 @@ ${script.caption}`;
                       alert('Failed to trigger Gaza video generation');
                     }
                   }}
-                  className="px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors"
+                  className="px-4 py-2 bg-[#00BC7D] text-white text-sm font-medium rounded-lg hover:bg-[#009B66] transition-colors"
                 >
                   Generate Video Now
                 </button>
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div className="bg-emerald-50 rounded-lg p-4 border border-emerald-200">
-                  <div className="text-sm text-emerald-600 font-medium">Profile ID</div>
-                  <div className="text-xs font-mono text-emerald-900 mt-1 truncate">6930ec1545584e27f626ccb6</div>
+                <div className="bg-[#00BC7D]/5 rounded-lg p-4 border border-[#00BC7D]/30">
+                  <div className="text-sm text-[#00BC7D] font-medium">Profile ID</div>
+                  <div className="text-xs font-mono text-[#004D33] mt-1 truncate">6930ec1545584e27f626ccb6</div>
                 </div>
                 <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
                   <div className="text-sm text-blue-600 font-medium">Videos/Day</div>
@@ -1744,12 +1744,12 @@ ${script.caption}`;
                       </div>
                     </div>
 
-                    {/* OwnerFi Analytics */}
+                    {/* Ownerfi Analytics */}
                     <div className="border border-slate-200 rounded-lg p-4">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
                           <span className="text-2xl">🏠</span>
-                          <h4 className="font-semibold text-white">OwnerFi</h4>
+                          <h4 className="font-semibold text-white">Ownerfi</h4>
                         </div>
                         <span className={`text-xs px-3 py-1 rounded-full font-semibold ${
                           analytics.brands.ownerfi.health === 'excellent' ? 'bg-green-100 text-green-700' :
@@ -1798,7 +1798,7 @@ ${script.caption}`;
                       <button
                         onClick={() => loadAnalytics(true)}
                         disabled={refreshingAnalytics}
-                        className="px-3 py-2 bg-emerald-600 text-white text-xs font-medium rounded-lg hover:bg-emerald-700 disabled:bg-gray-400 transition-colors flex items-center gap-2"
+                        className="px-3 py-2 bg-[#00BC7D] text-white text-xs font-medium rounded-lg hover:bg-[#009B66] disabled:bg-gray-400 transition-colors flex items-center gap-2"
                       >
                         {refreshingAnalytics ? (
                           <>
@@ -1869,7 +1869,7 @@ ${script.caption}`;
                                     className={`text-xs px-3 py-1 rounded-lg font-medium transition-all ${
                                       copiedRecId === rec.id
                                         ? 'bg-green-600 text-white'
-                                        : 'bg-emerald-600 text-white hover:bg-emerald-700'
+                                        : 'bg-[#00BC7D] text-white hover:bg-[#009B66]'
                                     }`}
                                   >
                                     {copiedRecId === rec.id ? '✓ Copied!' : '📋 Copy'}

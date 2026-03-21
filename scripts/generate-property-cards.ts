@@ -1,5 +1,5 @@
 /**
- * OwnerFi Product Demo Card Generator
+ * Ownerfi Product Demo Card Generator
  *
  * Generates 1080x1920 screenshots that look EXACTLY like the buyer swiper UI.
  * Uses Puppeteer to render the real PropertyCard design with actual property data.
@@ -89,11 +89,11 @@ function buildCardHTML(property: Property): string {
   // Badge config — video always narrates owner financing, so prioritize OF badge
   // Uses same logic as getVideoBadgeCSS() in src/lib/deal-badge.ts
   const dealTypes = property.dealType || [];
-  const isOwnerFinance = dealTypes.includes('owner_finance');
-  const isCashDealOnly = !isOwnerFinance && dealTypes.includes('cash_deal');
+  const isOwnerfinance = dealTypes.includes('owner_finance');
+  const isCashDealOnly = !isOwnerfinance && dealTypes.includes('cash_deal');
 
   const badgeText = isCashDealOnly ? 'Cash Deal' : 'Owner Finance';
-  const badgeBg = isCashDealOnly ? 'background: #eab308;' : 'background: #059669;';
+  const badgeBg = isCashDealOnly ? 'background: #eab308;' : 'background: #00BC7D;';
   const badgeColor = isCashDealOnly ? 'color: #000;' : 'color: #fff;';
   const badgeIcon = isCashDealOnly ? '💵' : '💰';
 
@@ -112,8 +112,8 @@ function buildCardHTML(property: Property): string {
       height: 1920px;
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       overflow: hidden;
-      /* from-indigo-950 via-slate-900 to-emerald-950 */
-      background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 50%, #022c22 100%);
+      /* from-indigo-950 via-slate-900 to-cash-green-950 */
+      background: linear-gradient(135deg, #1e1b4b 0%, #111625 50%, #022c22 100%);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -127,7 +127,7 @@ function buildCardHTML(property: Property): string {
       position: relative;
       border-radius: 48px;
       overflow: hidden;
-      /* from-slate-50 via-blue-50 to-emerald-50 */
+      /* from-slate-50 via-blue-50 to-cash-green-50 */
       background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 50%, #ecfdf5 100%);
       box-shadow: 0 25px 50px -12px rgba(0,0,0,0.4);
     }
@@ -158,7 +158,7 @@ function buildCardHTML(property: Property): string {
       );
     }
 
-    /* Badge — top left, matches bg-emerald-600 backdrop-blur-sm rounded-full */
+    /* Badge — top left, matches bg-cash-green-600 backdrop-blur-sm rounded-full */
     .badge {
       position: absolute;
       top: 28px;
@@ -197,7 +197,7 @@ function buildCardHTML(property: Property): string {
     .swipe-arrow { color: #94a3b8; font-size: 26px; }
     .swipe-text { color: #334155; font-weight: 700; font-size: 24px; }
 
-    /* OwnerFi URL — big branding in the gap between swipe indicator and info panel */
+    /* Ownerfi URL — big branding in the gap between swipe indicator and info panel */
     .ownerfi-url {
       position: absolute;
       top: 52%;
@@ -211,7 +211,7 @@ function buildCardHTML(property: Property): string {
       font-size: 88px;
       font-weight: 900;
       letter-spacing: 4px;
-      background: linear-gradient(135deg, #10b981, #3b82f6);
+      background: linear-gradient(135deg, #00BC7D, #3b82f6);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
@@ -246,12 +246,12 @@ function buildCardHTML(property: Property): string {
       background: linear-gradient(to right, #94a3b8, #64748b);
     }
 
-    /* "Tap for details" — bg-emerald-500 text-white rounded-full */
+    /* "Tap for details" — bg-cash-green-500 text-white rounded-full */
     .details-btn {
       display: inline-flex;
       align-items: center;
       gap: 10px;
-      background: #10b981;
+      background: #00BC7D;
       color: white;
       padding: 14px 28px;
       border-radius: 999px;
@@ -268,7 +268,7 @@ function buildCardHTML(property: Property): string {
     .price {
       font-size: 52px;
       font-weight: 900;
-      color: #0f172a;
+      color: #111625;
       margin-top: 16px;
       margin-bottom: 4px;
     }
@@ -282,7 +282,7 @@ function buildCardHTML(property: Property): string {
     .street {
       font-size: 26px;
       font-weight: 700;
-      color: #0f172a;
+      color: #111625;
       line-height: 1.2;
       margin-bottom: 4px;
     }
@@ -308,7 +308,7 @@ function buildCardHTML(property: Property): string {
       gap: 10px;
     }
     .stat-icon { font-size: 20px; }
-    .stat-value { font-size: 24px; font-weight: 700; color: #0f172a; }
+    .stat-value { font-size: 24px; font-weight: 700; color: #111625; }
     .stat-label { font-size: 18px; color: #64748b; }
 
     /* Action buttons — grid-cols-3 gap-2 */
@@ -332,7 +332,7 @@ function buildCardHTML(property: Property): string {
       box-shadow: 0 6px 16px rgba(0,0,0,0.12);
     }
     .btn-search { background: linear-gradient(to right, #3b82f6, #2563eb); }
-    .btn-contact { background: linear-gradient(to right, #10b981, #059669); }
+    .btn-contact { background: linear-gradient(to right, #00BC7D, #00BC7D); }
     .btn-share { background: linear-gradient(to right, #8b5cf6, #7c3aed); }
     .btn-icon { font-size: 20px; }
 
@@ -347,7 +347,7 @@ function buildCardHTML(property: Property): string {
     .brand-logo {
       width: 44px;
       height: 44px;
-      background: linear-gradient(135deg, #10b981, #3b82f6);
+      background: linear-gradient(135deg, #00BC7D, #3b82f6);
       border-radius: 12px;
       display: flex;
       align-items: center;
@@ -356,7 +356,7 @@ function buildCardHTML(property: Property): string {
       font-size: 24px;
       font-weight: 800;
     }
-    .brand-name { font-size: 28px; font-weight: 700; color: #0f172a; }
+    .brand-name { font-size: 28px; font-weight: 700; color: #111625; }
     .brand-url { margin-left: auto; font-size: 22px; color: #94a3b8; }
 
   </style>
@@ -380,7 +380,7 @@ function buildCardHTML(property: Property): string {
       <span class="swipe-arrow">&rarr;</span>
     </div>
 
-    <!-- OwnerFi URL Branding -->
+    <!-- Ownerfi URL Branding -->
     <div class="ownerfi-url">
       <div class="ownerfi-url-text">www.ownerfi.ai</div>
     </div>
@@ -427,7 +427,7 @@ function buildCardHTML(property: Property): string {
 
       <div class="branding">
         <div class="brand-logo">O</div>
-        <span class="brand-name">OwnerFi</span>
+        <span class="brand-name">Ownerfi</span>
         <span class="brand-url">ownerfi.ai</span>
       </div>
     </div>
@@ -540,7 +540,7 @@ async function main() {
     console.log(`Auto-rotation: ${targetState} (last was ${rotation.lastState || 'none'})\n`);
   }
 
-  console.log(`=== OwnerFi Product Demo Card Generator — ${targetState} ===\n`);
+  console.log(`=== Ownerfi Product Demo Card Generator — ${targetState} ===\n`);
 
   // Pull properties for this state
   const usedIds = rotation.usedIds[targetState] || [];

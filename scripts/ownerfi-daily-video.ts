@@ -1,5 +1,5 @@
 /**
- * OwnerFi Daily Video Pipeline
+ * Ownerfi Daily Video Pipeline
  *
  * Full end-to-end cron: generates property cards, creates video,
  * polls until done, posts directly to Late.dev.
@@ -170,7 +170,7 @@ async function generateScript(cards: CardData[], lang: 'en' | 'es'): Promise<Vid
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
   const systemPrompt = lang === 'en'
-    ? `You write punchy short-form video scripts for OwnerFi — a platform that helps renters find homes where sellers would consider owner financing.
+    ? `You write punchy short-form video scripts for Ownerfi — a platform that helps renters find homes where sellers would consider owner financing.
 
 TARGET AUDIENCE: 20-35 year olds currently renting who can't buy through traditional mortgages.
 
@@ -190,11 +190,11 @@ OUTPUT FORMAT (JSON):
 {
   "hook": "A raw, punchy opening line (max 12 words). Hit a SPECIFIC pain point. Different every time.",
   "intro": "2-3 short sentences. Introduce the homes naturally. Mention the lowest price. Under 35 words total.",
-  "cta": "One sentence. Tell them to follow OwnerFi. Mention link in bio. Under 15 words. Casual.",
+  "cta": "One sentence. Tell them to follow Ownerfi. Mention link in bio. Under 15 words. Casual.",
   "postCaption": "Suspenseful social media caption under 150 characters. Make people NEED to watch. Hint at what they'll see without giving it away. Mention the state. No hashtags here.",
   "postTitle": "Short punchy title under 150 characters for YouTube/TikTok. Create curiosity about these specific homes. Mention the state."
 }`
-    : `Escribes guiones cortos y directos para videos de OwnerFi — una plataforma que ayuda a personas que rentan a encontrar casas donde los vendedores podrían considerar financiamiento directo (owner financing).
+    : `Escribes guiones cortos y directos para videos de Ownerfi — una plataforma que ayuda a personas que rentan a encontrar casas donde los vendedores podrían considerar financiamiento directo (owner financing).
 
 AUDIENCIA: Latinos de 20-35 años rentando en EE.UU. que no califican para hipotecas tradicionales.
 
@@ -214,7 +214,7 @@ FORMATO DE SALIDA (JSON):
 {
   "hook": "Línea inicial directa y fuerte (max 12 palabras). Un dolor específico. Diferente cada vez.",
   "intro": "2-3 oraciones cortas. Presenta las casas naturalmente. Menciona el precio más bajo. Menos de 35 palabras.",
-  "cta": "Una oración. Que sigan a OwnerFi. Mencionar link en bio. Menos de 15 palabras.",
+  "cta": "Una oración. Que sigan a Ownerfi. Mencionar link en bio. Menos de 15 palabras.",
   "postCaption": "Pie de publicación en español, menos de 150 caracteres. Que genere suspenso y curiosidad. Menciona el estado. Sin hashtags.",
   "postTitle": "Título corto en español, menos de 150 caracteres. Genera curiosidad sobre estas casas específicas. Menciona el estado."
 }`;
@@ -250,7 +250,7 @@ FORMATO DE SALIDA (JSON):
 
   const defaultHook = lang === 'en' ? 'Check out these owner finance homes.' : 'Mira estas casas con owner financing.';
   const defaultIntro = lang === 'en' ? `We found ${cards.length} homes in ${stateName}.` : `Encontramos ${cards.length} casas en ${stateName}.`;
-  const defaultCta = lang === 'en' ? 'Follow OwnerFi for new deals every day. Link in bio.' : 'Sigue a OwnerFi para nuevas casas cada día. Link en bio.';
+  const defaultCta = lang === 'en' ? 'Follow Ownerfi for new deals every day. Link in bio.' : 'Sigue a Ownerfi para nuevas casas cada día. Link en bio.';
   const defaultCaption = lang === 'en' ? `These ${stateName} homes don't need a bank to say yes` : `Estas casas en ${stateName} no necesitan banco para comprarlas`;
   const defaultTitle = lang === 'en' ? `Owner finance homes in ${stateName} starting at $${Math.round(lowestPrice / 1000)}K` : `Casas con owner financing en ${stateName} desde $${Math.round(lowestPrice / 1000)}K`;
 
@@ -285,7 +285,7 @@ function buildScenes(cards: CardData[], script: VideoScript): any[] {
   scenes.push({
     character: { type: 'avatar', avatar_id: AVATAR_ID, avatar_style: 'normal', scale: 0.4, offset: { x: 0.25, y: 0.22 } },
     voice: { type: 'text', input_text: introText, voice_id: VOICE_ID, volume: 0.8 },
-    caption_setting: { style: 'shout-block', font_family: 'Montserrat', font_size: 60, text_color: '#FFFFFFFF', highlight_text_color: '#10B981FF', offset: { x: 0.0, y: 0.28 }, hidden: false, override_visual_style: true },
+    caption_setting: { style: 'shout-block', font_family: 'Montserrat', font_size: 60, text_color: '#FFFFFFFF', highlight_text_color: '#00BC7DFF', offset: { x: 0.0, y: 0.28 }, hidden: false, override_visual_style: true },
     background: { type: 'image', url: cards[0].cardImageUrl, fit: 'contain' },
   });
 
@@ -295,7 +295,7 @@ function buildScenes(cards: CardData[], script: VideoScript): any[] {
     scenes.push({
       character: { type: 'avatar', avatar_id: AVATAR_ID, avatar_style: 'normal', scale: 0.4, offset: { x: 0.25, y: 0.22 } },
       voice: { type: 'text', input_text: script.houseNarrations[i], voice_id: VOICE_ID, volume: 0.8 },
-      caption_setting: { style: 'shout-block', font_family: 'Montserrat', font_size: 60, text_color: '#FFFFFFFF', highlight_text_color: '#10B981FF', offset: { x: 0.0, y: 0.28 }, hidden: false, override_visual_style: true },
+      caption_setting: { style: 'shout-block', font_family: 'Montserrat', font_size: 60, text_color: '#FFFFFFFF', highlight_text_color: '#00BC7DFF', offset: { x: 0.0, y: 0.28 }, hidden: false, override_visual_style: true },
       background: { type: 'image', url: card.cardImageUrl, fit: 'contain' },
       transition_effect: { transition_in: transitions[i % transitions.length] },
     });
@@ -305,7 +305,7 @@ function buildScenes(cards: CardData[], script: VideoScript): any[] {
   scenes.push({
     character: { type: 'avatar', avatar_id: AVATAR_ID, avatar_style: 'normal', scale: 0.4, offset: { x: 0.25, y: 0.22 } },
     voice: { type: 'text', input_text: script.cta, voice_id: VOICE_ID, volume: 0.8 },
-    caption_setting: { style: 'shout-block', font_family: 'Montserrat', font_size: 60, text_color: '#FFFFFFFF', highlight_text_color: '#10B981FF', offset: { x: 0.0, y: 0.28 }, hidden: false, override_visual_style: true },
+    caption_setting: { style: 'shout-block', font_family: 'Montserrat', font_size: 60, text_color: '#FFFFFFFF', highlight_text_color: '#00BC7DFF', offset: { x: 0.0, y: 0.28 }, hidden: false, override_visual_style: true },
     background: { type: 'image', url: cards[cards.length - 1].cardImageUrl, fit: 'contain' },
     transition_effect: { transition_in: 'fade' },
   });
@@ -544,7 +544,7 @@ async function runLang(cards: CardData[], lang: 'en' | 'es'): Promise<boolean> {
 async function main() {
   const startTime = Date.now();
   console.log('============================================');
-  console.log('  OwnerFi Daily Video Pipeline');
+  console.log('  Ownerfi Daily Video Pipeline');
   console.log(`  ${new Date().toLocaleString('en-US', { timeZone: 'America/Chicago' })} CDT`);
   console.log(`  Language: ${LANG}${DRY_RUN ? ' (dry-run)' : ''}`);
   console.log('============================================');

@@ -27,7 +27,7 @@ export function LegalFooter({
           <div className="text-center">
             <p className="text-red-800 font-bold text-sm mb-2">⚠️ IMPORTANT LEGAL NOTICE</p>
             <p className="text-red-700 text-xs leading-relaxed mb-2">
-              <strong>OwnerFi is not a licensed real estate broker, agent, or lender.</strong> We are a lead generation platform that connects consumers with licensed real estate professionals.
+              <strong>Ownerfi is not a licensed real estate broker, agent, or lender.</strong> We are a lead generation platform that connects consumers with licensed real estate professionals.
               All property information is estimated and not guaranteed. No advice is provided.
               Consult licensed professionals for all real estate, financial, and legal decisions.
             </p>
@@ -57,7 +57,7 @@ export function LegalFooter({
             <a href="mailto:support@ownerfi.ai" className="hover:text-white transition-colors">Legal Contact</a>
           </div>
           <p className="text-xs text-slate-500">
-            © {new Date().getFullYear()} OwnerFi - Lead Generation Platform Only - Not Licensed Real Estate Services
+            © {new Date().getFullYear()} Ownerfi - Lead Generation Platform Only - Not Licensed Real Estate Services
           </p>
         </div>
       </div>

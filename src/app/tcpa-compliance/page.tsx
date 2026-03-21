@@ -4,15 +4,13 @@ import Link from 'next/link';
 
 export default function TCPACompliance() {
   return (
-    <div className="min-h-screen bg-slate-900 text-white">
+    <div className="min-h-screen bg-[#111625] text-white">
       {/* Header */}
       <header className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 px-6 py-4">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">O</span>
-            </div>
-            <span className="text-lg font-bold text-white">OwnerFi</span>
+            <img src="/logo.jpg" alt="Ownerfi" width={32} height={32} className="rounded-lg" />
+            <span className="text-lg font-bold text-white">Ownerfi</span>
           </Link>
           <Link
             href="/"
@@ -42,7 +40,7 @@ export default function TCPACompliance() {
             <div className="bg-red-500/10 border border-red-400/30 rounded-lg p-4">
               <p className="text-slate-200 leading-relaxed">
                 Agent acknowledges and agrees that all communications (calls, texts, emails, voicemails, or otherwise) 
-                made to leads purchased from OwnerFi are the <strong>sole responsibility of the Agent and Agent's brokerage.</strong>
+                made to leads purchased from Ownerfi are the <strong>sole responsibility of the Agent and Agent's brokerage.</strong>
               </p>
             </div>
           </section>
@@ -82,7 +80,7 @@ export default function TCPACompliance() {
             <h2 className="text-2xl font-bold text-purple-400 mb-4">3. Indemnification</h2>
             <div className="bg-purple-500/10 border border-purple-400/30 rounded-lg p-4">
               <p className="text-slate-200 leading-relaxed">
-                Agent agrees to <strong>indemnify, defend, and hold harmless</strong> OwnerFi and its affiliates,
+                Agent agrees to <strong>indemnify, defend, and hold harmless</strong> Ownerfi and its affiliates,
                 officers, directors, employees, and contractors from and against any and all claims, damages, fines, penalties,
                 settlements, costs, or expenses (including reasonable attorneys' fees) arising from or related to Agent's
                 communications with leads, including but not limited to TCPA or state telemarketing violations.
@@ -95,7 +93,7 @@ export default function TCPACompliance() {
             <h2 className="text-2xl font-bold text-blue-400 mb-4">4. Independent Contractor Status</h2>
             <div className="bg-blue-500/10 border border-blue-400/30 rounded-lg p-4">
               <p className="text-slate-200 leading-relaxed">
-                Agent acknowledges they are an <strong>independent contractor</strong>, not an employee or representative of OwnerFi. 
+                Agent acknowledges they are an <strong>independent contractor</strong>, not an employee or representative of Ownerfi. 
                 All communications made to leads are made on behalf of the Agent and/or Agent's brokerage only.
               </p>
             </div>
@@ -106,7 +104,7 @@ export default function TCPACompliance() {
             <h2 className="text-2xl font-bold text-green-400 mb-4">5. Termination for Non-Compliance</h2>
             <div className="bg-green-500/10 border border-green-400/30 rounded-lg p-4">
               <p className="text-slate-200 leading-relaxed">
-                OwnerFi reserves the right to <strong>immediately suspend or terminate</strong> Agent's access to leads 
+                Ownerfi reserves the right to <strong>immediately suspend or terminate</strong> Agent's access to leads 
                 in the event of suspected or confirmed TCPA/telemarketing non-compliance, without refund, and to provide 
                 proof of such violations to regulators if required.
               </p>
@@ -117,7 +115,7 @@ export default function TCPACompliance() {
           <div className="bg-yellow-100 border border-yellow-300 rounded-lg p-6 mt-8">
             <h3 className="text-yellow-800 font-bold text-lg mb-3">⚖️ Legal Notice</h3>
             <p className="text-yellow-800 text-sm leading-relaxed">
-              This agreement is binding and enforceable. By purchasing leads from OwnerFi, you agree to these terms. 
+              This agreement is binding and enforceable. By purchasing leads from Ownerfi, you agree to these terms. 
               Violation of these terms may result in immediate termination of services, forfeiture of fees paid, 
               and potential legal action for indemnification of any resulting claims or damages.
             </p>
@@ -149,7 +147,7 @@ export default function TCPACompliance() {
       <footer className="bg-slate-800/30 border-t border-slate-700/50 py-6 mt-12">
         <div className="max-w-4xl mx-auto px-6 text-center">
           <p className="text-xs text-slate-500">
-            © 2025 OwnerFi - #1076, 1028 Cresthaven Road, Suite 200, Memphis, TN 38119, United States
+            © 2025 Ownerfi - #1076, 1028 Cresthaven Road, Suite 200, Memphis, TN 38119, United States
           </p>
         </div>
       </footer>

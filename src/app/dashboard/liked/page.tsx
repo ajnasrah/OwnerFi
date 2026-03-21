@@ -106,9 +106,9 @@ export default function LikedProperties() {
 
   if (loading) {
     return (
-      <div className="h-screen overflow-hidden bg-slate-900 flex items-center justify-center">
+      <div className="h-screen overflow-hidden bg-[#111625] flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-emerald-400 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+          <div className="w-16 h-16 border-4 border-[#00BC7D] border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
           <div className="text-2xl font-bold text-white mb-2">LOADING SAVED HOMES</div>
           <p className="text-slate-400 font-medium">Finding your liked properties...</p>
         </div>
@@ -117,7 +117,7 @@ export default function LikedProperties() {
   }
 
   return (
-    <div className="h-screen overflow-y-auto bg-slate-900">
+    <div className="h-screen overflow-y-auto bg-[#111625]">
       {/* Header with Navigation */}
       <header className="relative z-20 bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 px-6 py-4">
         <div className="flex items-center justify-between">
@@ -142,10 +142,10 @@ export default function LikedProperties() {
               </Link>
 
               <Link href="/dashboard/liked" className="flex flex-col items-center group">
-                <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                <div className="w-12 h-12 bg-gradient-to-br from-[#00BC7D]/50 to-[#00BC7D] rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
                   <span className="text-white text-xl">♥</span>
                 </div>
-                <span className="text-xs font-bold text-emerald-400 mt-1">SAVED</span>
+                <span className="text-xs font-bold text-[#00BC7D] mt-1">SAVED</span>
               </Link>
 
               <Link href="/dashboard/settings" className="flex flex-col items-center group">
@@ -214,7 +214,7 @@ export default function LikedProperties() {
                           Cash Deal
                         </div>
                       ) : (
-                        <div className="bg-emerald-600 text-white px-2 py-1 rounded-lg text-xs font-bold">
+                        <div className="bg-[#00BC7D] text-white px-2 py-1 rounded-lg text-xs font-bold">
                           Owner Finance
                         </div>
                       )}
@@ -350,7 +350,7 @@ export default function LikedProperties() {
                     {/* Disclaimer */}
                     <div className="text-center bg-slate-700/30 rounded p-2 mb-4">
                       <p className="text-slate-400 text-[10px]">
-                        Property info from listing agent • OwnerFi does not verify • Conduct your own due diligence
+                        Property info from listing agent • Ownerfi does not verify • Conduct your own due diligence
                       </p>
                     </div>
 
@@ -362,7 +362,7 @@ export default function LikedProperties() {
                           detail: { message: `I'm interested in the property at ${property.address}, ${property.city}, ${property.state} (listed at $${property.listPrice?.toLocaleString()}). Can you tell me more about it?` }
                         }));
                       }}
-                      className="w-full mb-3 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 active:from-emerald-700 active:to-emerald-800 text-white py-3 px-4 rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98] font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20"
+                      className="w-full mb-3 bg-gradient-to-r from-[#00BC7D]/50 to-[#00BC7D] hover:from-[#00BC7D] hover:to-[#00BC7D]/50 active:from-[#009B66] active:to-[#007A52] text-white py-3 px-4 rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98] font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-[#00BC7D]/20"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -382,7 +382,7 @@ export default function LikedProperties() {
                         href={`https://www.zillow.com/homedetails/${property.id}_zpid/`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white py-2 px-3 rounded-lg transition-all hover:scale-105 font-bold text-sm text-center"
+                        className="bg-gradient-to-r from-[#00BC7D]/50 to-[#00BC7D] hover:from-[#00BC7D] hover:to-[#00BC7D]/50 text-white py-2 px-3 rounded-lg transition-all hover:scale-105 font-bold text-sm text-center"
                       >
                         ZILLOW
                       </a>
@@ -412,7 +412,7 @@ export default function LikedProperties() {
               </p>
               <Link
                 href={isInvestor ? '/dashboard/investor' : '/dashboard'}
-                className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 rounded-xl font-bold text-lg transition-all duration-300 hover:scale-105 shadow-2xl shadow-emerald-500/25"
+                className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-[#00BC7D]/50 to-[#00BC7D] hover:from-[#00BC7D] hover:to-[#00BC7D]/50 rounded-xl font-bold text-lg transition-all duration-300 hover:scale-105 shadow-2xl shadow-[#00BC7D]/25"
               >
                 BROWSE PROPERTIES
                 <svg className="ml-2 w-5 h-5" fill="currentColor" viewBox="0 0 20 20">

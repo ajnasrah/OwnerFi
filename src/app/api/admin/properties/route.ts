@@ -82,7 +82,7 @@ function mapPropertyFields(doc: FirebaseFirestore.QueryDocumentSnapshot) {
     agentEmail: data.agentEmail || data.listingAgentEmail || null,
     // Source tracking - CRITICAL for GHL badge
     source: data.source || null,
-    agentConfirmedOwnerFinance: data.agentConfirmedOwnerFinance || false,
+    agentConfirmedOwnerfinance: data.agentConfirmedOwnerfinance || false,
     originalQueueId: data.originalQueueId || null,
     // Coordinates for radius search
     latitude: data.latitude || null,
@@ -194,7 +194,7 @@ async function searchWithTypesense(params: TypesenseSearchParams): Promise<{
         agentPhone: doc.agentPhone || null,
         agentEmail: doc.agentEmail || null,
         source: doc.sourceType || null,
-        agentConfirmedOwnerFinance: doc.manuallyVerified || false,
+        agentConfirmedOwnerfinance: doc.manuallyVerified || false,
         latitude: doc.location?.[0] || null,
         longitude: doc.location?.[1] || null,
         estimatedValue: doc.zestimate || null,

@@ -53,8 +53,8 @@ export default function AdminHub() {
 
   if (status !== 'authenticated' || (session as unknown as ExtendedSession)?.user?.role !== 'admin') {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-400"></div>
+      <div className="min-h-screen bg-[#111625] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00BC7D]"></div>
       </div>
     );
   }
@@ -88,7 +88,7 @@ export default function AdminHub() {
       icon: '👥',
       title: 'Buyer Leads',
       description: 'View and manage buyer profiles',
-      color: 'emerald',
+      color: 'brand',
     },
     {
       href: '/admin/cre-analysis',
@@ -132,7 +132,7 @@ export default function AdminHub() {
 
   const colorClasses: Record<string, { border: string; shadow: string; text: string; bg: string }> = {
     blue: { border: 'hover:border-blue-500/50', shadow: 'hover:shadow-blue-500/10', text: 'text-blue-400', bg: 'from-blue-400 to-blue-600' },
-    emerald: { border: 'hover:border-emerald-500/50', shadow: 'hover:shadow-emerald-500/10', text: 'text-emerald-400', bg: 'from-emerald-400 to-emerald-600' },
+    brand: { border: 'hover:border-[#00BC7D]/50', shadow: 'hover:shadow-[#00BC7D]/10', text: 'text-[#00BC7D]', bg: 'from-[#00BC7D] to-[#00BC7D]' },
     purple: { border: 'hover:border-purple-500/50', shadow: 'hover:shadow-purple-500/10', text: 'text-purple-400', bg: 'from-purple-400 to-purple-600' },
     pink: { border: 'hover:border-pink-500/50', shadow: 'hover:shadow-pink-500/10', text: 'text-pink-400', bg: 'from-pink-400 to-pink-600' },
     yellow: { border: 'hover:border-yellow-500/50', shadow: 'hover:shadow-yellow-500/10', text: 'text-yellow-400', bg: 'from-yellow-400 to-yellow-600' },
@@ -146,10 +146,8 @@ export default function AdminHub() {
       <header className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50">
         <div className="px-4 py-3 flex items-center justify-between max-w-6xl mx-auto">
           <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">O</span>
-            </div>
-            <span className="text-lg font-bold text-white">OwnerFi</span>
+            <img src="/logo.jpg" alt="Ownerfi" width={32} height={32} className="rounded-lg" />
+            <span className="text-lg font-bold text-white">Ownerfi</span>
           </Link>
           <div className="flex items-center gap-2">
             <span className="text-slate-400 text-sm hidden sm:block">Admin</span>
@@ -176,7 +174,7 @@ export default function AdminHub() {
           </Link>
           <Link
             href="/dashboard"
-            className="flex-1 flex items-center justify-center gap-2 py-3 bg-emerald-500/20 border border-emerald-500/40 rounded-xl text-emerald-400 font-bold text-sm active:scale-95 transition-all"
+            className="flex-1 flex items-center justify-center gap-2 py-3 bg-[#00BC7D]/20 border border-[#00BC7D]/40 rounded-xl text-[#00BC7D] font-bold text-sm active:scale-95 transition-all"
           >
             <span>🏠</span> Buyer Dashboard
           </Link>
@@ -214,7 +212,7 @@ export default function AdminHub() {
                 <div className="text-slate-400 text-xs">Realtors</div>
               </div>
               <div className="bg-slate-800/50 rounded-xl p-4 text-center border border-slate-700/50">
-                <div className="text-2xl font-bold text-emerald-400">{stats.pendingDisputes}</div>
+                <div className="text-2xl font-bold text-[#00BC7D]">{stats.pendingDisputes}</div>
                 <div className="text-slate-400 text-xs">Disputes</div>
               </div>
             </>

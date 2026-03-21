@@ -3,7 +3,7 @@ import { ApifyClient } from 'apify-client';
 import { getFirebaseAdmin } from '@/lib/scraper-v2/firebase-admin';
 import { withCronLock } from '@/lib/scraper-v2/cron-lock';
 import { sanitizeDescription } from '@/lib/description-sanitizer';
-import { hasStrictOwnerFinancing } from '@/lib/owner-financing-filter-strict';
+import { hasStrictOwnerfinancing } from '@/lib/owner-financing-filter-strict';
 
 // Type for Apify Zillow scraper response
 interface ZillowApifyItem {
@@ -62,8 +62,8 @@ interface PropertyDoc {
   address: string;
   currentStatus: string;
   lastCheck: Date | null;
-  isOwnerFinance: boolean;
-  agentConfirmedOwnerFinance?: boolean;
+  isOwnerfinance: boolean;
+  agentConfirmedOwnerfinance?: boolean;
   source?: string;
 }
 
@@ -153,8 +153,8 @@ export async function GET(request: NextRequest) {
         address: data.fullAddress || data.streetAddress || data.address || 'Unknown',
         currentStatus: data.homeStatus || 'UNKNOWN',
         lastCheck: data.lastStatusCheck?.toDate?.() || null,
-        isOwnerFinance: data.isOwnerFinance || false,
-        agentConfirmedOwnerFinance: data.agentConfirmedOwnerFinance,
+        isOwnerfinance: data.isOwnerfinance || false,
+        agentConfirmedOwnerfinance: data.agentConfirmedOwnerfinance,
         source: data.source,
       });
     });
@@ -172,8 +172,8 @@ export async function GET(request: NextRequest) {
         address: data.fullAddress || data.streetAddress || data.address || 'Unknown',
         currentStatus: data.homeStatus || 'UNKNOWN',
         lastCheck: data.lastStatusCheck?.toDate?.() || null,
-        isOwnerFinance: false,
-        agentConfirmedOwnerFinance: data.agentConfirmedOwnerFinance,
+        isOwnerfinance: false,
+        agentConfirmedOwnerfinance: data.agentConfirmedOwnerfinance,
         source: data.source,
       });
     });
@@ -380,21 +380,21 @@ export async function GET(request: NextRequest) {
       }
 
       // Property is still active - check owner financing for owner finance properties
-      if (prop.collection === 'properties' && prop.isOwnerFinance) {
+      if (prop.collection === 'properties' && prop.isOwnerfinance) {
         // Trust manually added properties and agent-confirmed properties
         // These sources indicate human verification that the property offers owner financing,
         // even if the Zillow description doesn't contain explicit keywords
         const manualSources = ['manual-add-v2', 'manual-add', 'admin-upload', 'manual', 'bookmarklet'];
         const isManuallyAdded = manualSources.includes(prop.source || '');
-        const isAgentConfirmed = prop.agentConfirmedOwnerFinance || prop.source === 'agent_outreach';
+        const isAgentConfirmed = prop.agentConfirmedOwnerfinance || prop.source === 'agent_outreach';
         const isTrustedSource = isManuallyAdded || isAgentConfirmed;
 
-        const ownerFinanceCheck = hasStrictOwnerFinancing(result.description);
+        const ownerFinanceCheck = hasStrictOwnerfinancing(result.description);
 
         if (!ownerFinanceCheck.passes && !isTrustedSource) {
           // No longer offers owner financing - mark as inactive instead of deleting
           firestoreBatch.update(docRef, {
-            isOwnerFinance: false,
+            isOwnerfinance: false,
             isActive: false,
             offMarketReason: 'Owner financing removed from listing',
             lastStatusCheck: new Date(),

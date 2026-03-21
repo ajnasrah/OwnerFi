@@ -4,14 +4,14 @@ import { db } from '@/lib/firebase'
 import { collection, query, where, getDocs } from 'firebase/firestore'
 
 export const metadata: Metadata = {
-  title: 'Owner Financing Arizona | Rent to Own Alternative | Phoenix, Tucson & More | OwnerFi',
+  title: 'Owner Financing Arizona | Rent to Own Alternative | Phoenix, Tucson & More | Ownerfi',
   description: 'Find owner financed homes in Arizona - better than rent to own! Immediate ownership in Phoenix, Tucson, Mesa, Scottsdale. No banks needed. Flexible credit options available.',
   keywords: 'owner financing arizona, owner financed homes arizona, rent to own homes arizona, rent to own phoenix, owner financing scottsdale, seller financing arizona, no credit check homes arizona, bad credit homes arizona, arizona real estate owner financing',
   openGraph: {
-    title: 'Owner Financed Homes in Arizona - Better Than Rent to Own | OwnerFi',
+    title: 'Owner Financed Homes in Arizona - Better Than Rent to Own | Ownerfi',
     description: 'Skip the banks! Find owner financed properties across Arizona with immediate ownership. Serving Phoenix, Tucson, Mesa, Scottsdale and more.',
     url: 'https://ownerfi.ai/owner-financing-arizona',
-    siteName: 'OwnerFi',
+    siteName: 'Ownerfi',
     type: 'website',
   },
   twitter: {
@@ -53,7 +53,7 @@ async function getArizonaProperties() {
   }
 }
 
-export default async function OwnerFinancingArizona() {
+export default async function OwnerfinancingArizona() {
   const { cityCounts, totalCount } = await getArizonaProperties()
   const cities = Object.entries(cityCounts).sort((a, b) => b[1] - a[1])
 
@@ -99,7 +99,7 @@ export default async function OwnerFinancingArizona() {
   const localBusinessSchema = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
-    "name": "OwnerFi Arizona - Owner Financed Homes",
+    "name": "Ownerfi Arizona - Owner Financed Homes",
     "description": "Find owner financed homes throughout Arizona. Better than rent to own with immediate ownership.",
     "url": "https://ownerfi.ai/owner-financing-arizona",
     "areaServed": {
@@ -149,7 +149,7 @@ export default async function OwnerFinancingArizona() {
             </p>
 
             <div className="grid md:grid-cols-3 gap-6 mb-8">
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-xl border border-green-200">
+              <div className="bg-gradient-to-br from-green-50 to-[#00BC7D]/5 p-6 rounded-xl border border-green-200">
                 <h3 className="font-bold text-green-900 mb-2">Immediate Ownership</h3>
                 <p className="text-green-800">Get the deed right away, unlike rent to own</p>
               </div>
@@ -171,7 +171,7 @@ export default async function OwnerFinancingArizona() {
           </div>
 
           {/* Call to Action Section */}
-          <section className="py-12 px-6 bg-gradient-to-r from-emerald-900/30 to-blue-900/30 rounded-2xl mb-12">
+          <section className="py-12 px-6 bg-gradient-to-r from-[#004D33]/30 to-blue-900/30 rounded-2xl mb-12">
             <div className="max-w-4xl mx-auto text-center">
               <h2 className="text-3xl font-bold text-white mb-4">
                 Ready to Find Your Arizona Home?
@@ -182,7 +182,7 @@ export default async function OwnerFinancingArizona() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link href="/auth">
-                  <button className="bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white py-4 px-8 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-[1.02] shadow-lg hover:shadow-xl">
+                  <button className="bg-gradient-to-r from-[#00BC7D] to-[#00BC7D]/50 hover:from-[#00BC7D]/50 hover:to-[#00d68f] text-white py-4 px-8 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-[1.02] shadow-lg hover:shadow-xl">
                     🏠 Browse Arizona Properties
                   </button>
                 </Link>

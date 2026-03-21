@@ -38,9 +38,6 @@
     "src/app/api/admin/upload-properties-v4/route.ts": {
       "maxDuration": 300
     },
-    "src/app/api/process-video/route.ts": {
-      "maxDuration": 300
-    },
     "src/app/api/cron/refresh-zillow-status/route.ts": {
       "maxDuration": 300
     },
@@ -52,18 +49,6 @@
     },
     "src/app/api/cron/process-scraper-queue/route.ts": {
       "maxDuration": 300
-    },
-    "src/app/api/workers/process-video/route.ts": {
-      "maxDuration": 300
-    },
-    "src/app/api/webhooks/submagic/[brand]/route.ts": {
-      "maxDuration": 300
-    },
-    "src/app/api/webhooks/heygen/[brand]/route.ts": {
-      "maxDuration": 120
-    },
-    "src/app/api/webhooks/synthesia/[brand]/route.ts": {
-      "maxDuration": 120
     },
     "src/app/api/v2/scraper/run/route.ts": {
       "maxDuration": 600

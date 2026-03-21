@@ -274,7 +274,7 @@ export function validateEnvironment(): { valid: boolean; errors: string[] } {
       console.warn('⚠️  LATE_CARZ_PROFILE_ID not set - Carz posting will fail');
     }
     if (!lateProfiles.ownerfi) {
-      console.warn('⚠️  LATE_OWNERFI_PROFILE_ID not set - OwnerFi posting will fail');
+      console.warn('⚠️  LATE_OWNERFI_PROFILE_ID not set - Ownerfi posting will fail');
     }
     if (!monitoring.slackWebhook) {
       console.warn('⚠️  SLACK_WEBHOOK_URL not set - No Slack alerts will be sent');

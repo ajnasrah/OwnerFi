@@ -82,7 +82,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const config = getBrandConfig(brand);
 
   const brandNames: Record<Brand, string> = {
-    ownerfi: 'OwnerFi',
+    ownerfi: 'Ownerfi',
     carz: 'Carz Inc',
     abdullah: 'Abdullah',
     benefit: 'Owner Finance Benefits',
@@ -179,14 +179,12 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         />
       )}
 
-      <div className="min-h-screen bg-slate-900 text-white">
+      <div className="min-h-screen bg-[#111625] text-white">
         {/* Header */}
         <header className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 px-6 py-4">
           <div className="max-w-4xl mx-auto flex items-center justify-between">
             <Link href={`/${brand}/blog`} className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">{brand[0].toUpperCase()}</span>
-              </div>
+              <img src="/logo.jpg" alt="Ownerfi" width={32} height={32} className="rounded-lg" />
               <span className="text-lg font-bold text-white">{brandName} Blog</span>
             </Link>
             <nav>
@@ -206,7 +204,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           <article>
             <header className="mb-8">
               <div className="flex items-center gap-2 mb-4">
-                <span className="text-sm font-medium px-3 py-1 bg-emerald-500/20 text-emerald-400 rounded-full">
+                <span className="text-sm font-medium px-3 py-1 bg-[#00BC7D]/20 text-[#00BC7D] rounded-full">
                   {post.pillar?.replace(/-/g, ' ').toUpperCase()}
                 </span>
                 <span className="text-sm text-slate-400">
@@ -253,7 +251,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                     <ul className="mt-4 space-y-2">
                       {section.bullets.map((bullet: string, bulletIndex: number) => (
                         <li key={bulletIndex} className="text-slate-300 flex items-start gap-2">
-                          <span className="text-emerald-400 mt-1">•</span>
+                          <span className="text-[#00BC7D] mt-1">•</span>
                           <span>{bullet}</span>
                         </li>
                       ))}
@@ -261,11 +259,11 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                   )}
 
                   {section.type === 'cta' && (
-                    <div className="mt-6 p-6 bg-gradient-to-r from-emerald-600/20 to-blue-600/20 rounded-xl border border-emerald-500/30">
+                    <div className="mt-6 p-6 bg-gradient-to-r from-[#00BC7D]/20 to-blue-600/20 rounded-xl border border-[#00BC7D]/30">
                       <div className="flex flex-col gap-4">
                         <Link
                           href={brand === 'ownerfi' ? '/signup' : '/'}
-                          className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white py-3 px-8 rounded-xl font-semibold transition-all duration-300 hover:scale-105 shadow-lg text-center"
+                          className="bg-gradient-to-r from-[#00BC7D]/50 to-[#00BC7D] hover:from-[#00BC7D] hover:to-[#00BC7D]/50 text-white py-3 px-8 rounded-xl font-semibold transition-all duration-300 hover:scale-105 shadow-lg text-center"
                         >
                           {brand === 'ownerfi' && 'Browse Properties'}
                           {brand === 'carz' && 'View Inventory'}

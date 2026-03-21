@@ -101,8 +101,8 @@ export default function RealtorSettings() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-900">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-400"></div>
+      <div className="min-h-screen flex items-center justify-center bg-[#111625]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#00BC7D]"></div>
       </div>
     );
   }
@@ -207,15 +207,13 @@ export default function RealtorSettings() {
   };
 
   return (
-    <div className="h-screen bg-slate-900 flex flex-col overflow-hidden">
+    <div className="h-screen bg-[#111625] flex flex-col overflow-hidden">
       {/* Header */}
       <header className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 p-3 flex-shrink-0">
         <div className="flex items-center justify-between max-w-md mx-auto">
           <Link href="/realtor-dashboard" className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-xs">O</span>
-            </div>
-            <span className="text-base font-bold text-white">OwnerFi</span>
+            <img src="/logo.jpg" alt="Ownerfi" width={28} height={28} className="rounded-lg" />
+            <span className="text-base font-bold text-white">Ownerfi</span>
           </Link>
           <span className="text-slate-400 text-xs">Profile</span>
         </div>
@@ -237,8 +235,8 @@ export default function RealtorSettings() {
         )}
 
         {successMessage && (
-          <div className="bg-emerald-500/20 border border-emerald-400/30 rounded-lg p-2 mb-2 flex-shrink-0">
-            <p className="text-emerald-300 text-xs">{successMessage}</p>
+          <div className="bg-[#00BC7D]/20 border border-[#00BC7D]/30 rounded-lg p-2 mb-2 flex-shrink-0">
+            <p className="text-[#00d68f] text-xs">{successMessage}</p>
           </div>
         )}
 
@@ -248,7 +246,7 @@ export default function RealtorSettings() {
             <div>
               <h3 className="text-white font-medium mb-2 text-sm">Current Cities</h3>
               <div className="bg-slate-800/50 border border-slate-700/50 rounded-lg p-3 text-center">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-400 mx-auto"></div>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#00BC7D] mx-auto"></div>
                 <p className="text-slate-400 text-xs mt-1">Loading...</p>
               </div>
             </div>
@@ -260,7 +258,7 @@ export default function RealtorSettings() {
                 </h3>
                 <button
                   onClick={fetchCurrentCities}
-                  className="text-emerald-400 hover:text-emerald-300 text-xs font-medium"
+                  className="text-[#00BC7D] hover:text-[#00d68f] text-xs font-medium"
                 >
                   Refresh
                 </button>
@@ -309,7 +307,7 @@ export default function RealtorSettings() {
             </div>
             <button
               onClick={handleCitySearch}
-              className="bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-2 rounded-lg font-medium transition-colors text-sm"
+              className="bg-[#00BC7D]/50 hover:bg-[#00BC7D] text-white px-3 py-2 rounded-lg font-medium transition-colors text-sm"
             >
               Find
             </button>
@@ -326,7 +324,7 @@ export default function RealtorSettings() {
               <div className="flex gap-2">
                 <button
                   onClick={selectAllCities}
-                  className="text-emerald-400 hover:text-emerald-300 text-xs font-medium"
+                  className="text-[#00BC7D] hover:text-[#00d68f] text-xs font-medium"
                 >
                   All
                 </button>
@@ -355,7 +353,7 @@ export default function RealtorSettings() {
                           type="checkbox"
                           checked={isSelected}
                           onChange={() => handleCityToggle(cityKey)}
-                          className="w-3 h-3 text-emerald-500 bg-slate-700 border-slate-600 rounded focus:ring-emerald-400 focus:ring-1"
+                          className="w-3 h-3 text-[#00BC7D] bg-slate-700 border-slate-600 rounded focus:ring-[#00BC7D] focus:ring-1"
                         />
                         <span className="text-white text-xs">{city.name}, {city.state}</span>
                       </div>
@@ -374,7 +372,7 @@ export default function RealtorSettings() {
             <button
               onClick={handleSave}
               disabled={loading || selectedCities.size === 0}
-              className="w-full bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-600 disabled:cursor-not-allowed text-white py-2 px-4 rounded-lg font-medium transition-colors disabled:opacity-50 text-sm"
+              className="w-full bg-[#00BC7D]/50 hover:bg-[#00BC7D] disabled:bg-slate-600 disabled:cursor-not-allowed text-white py-2 px-4 rounded-lg font-medium transition-colors disabled:opacity-50 text-sm"
             >
               {loading 
                 ? 'Saving...' 

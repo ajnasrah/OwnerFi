@@ -105,7 +105,7 @@ export default function SharedPropertyPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-16 h-16 border-4 border-[#00BC7D] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-slate-300">Loading property...</p>
         </div>
       </div>
@@ -121,7 +121,7 @@ export default function SharedPropertyPage() {
           <p className="text-slate-300 mb-6">This property may no longer be available or the link is invalid.</p>
           <Link
             href="/"
-            className="inline-block bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-3 rounded-xl font-bold transition-colors"
+            className="inline-block bg-[#00BC7D]/50 hover:bg-[#00BC7D] text-white px-6 py-3 rounded-xl font-bold transition-colors"
           >
             Browse Properties
           </Link>
@@ -133,20 +133,16 @@ export default function SharedPropertyPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-lg border-b border-slate-700/50">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-[#111625]/95 backdrop-blur-lg border-b border-slate-700/50">
         <div className="max-w-lg mx-auto px-4 py-3 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-lg flex items-center justify-center">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-              </svg>
-            </div>
-            <span className="font-bold text-white">OwnerFi</span>
+            <img src="/logo.jpg" alt="Ownerfi" width={32} height={32} className="rounded-lg" />
+            <span className="font-bold text-white">Ownerfi</span>
           </Link>
           <button
             onClick={handleSaveProperty}
             disabled={saving || isCheckingAuth}
-            className="bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-700 text-white px-4 py-2 rounded-lg font-semibold text-sm transition-colors"
+            className="bg-[#00BC7D]/50 hover:bg-[#00BC7D] disabled:bg-[#009B66] text-white px-4 py-2 rounded-lg font-semibold text-sm transition-colors"
           >
             {isCheckingAuth ? '...' : saving ? 'Saving...' : isLoggedIn ? 'Save Property' : 'Sign Up Free'}
           </button>
@@ -169,7 +165,7 @@ export default function SharedPropertyPage() {
 
           {/* Financing Badge */}
           <div className="absolute top-4 left-4">
-            <span className="bg-emerald-600 text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg">
+            <span className="bg-[#00BC7D] text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg">
               Owner Finance Available
             </span>
           </div>
@@ -239,7 +235,7 @@ export default function SharedPropertyPage() {
               </div>
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center">
-                  <svg className="w-8 h-8 text-emerald-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-8 h-8 text-[#00BC7D] mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
                   <p className="text-white font-semibold text-sm">Sign up to see full details</p>
@@ -251,12 +247,12 @@ export default function SharedPropertyPage() {
       </main>
 
       {/* Fixed Bottom CTA */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-lg border-t border-slate-700/50 p-4">
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-[#111625]/95 backdrop-blur-lg border-t border-slate-700/50 p-4">
         <div className="max-w-lg mx-auto">
           <button
             onClick={handleSaveProperty}
             disabled={saving || isCheckingAuth}
-            className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 disabled:from-emerald-700 disabled:to-emerald-800 text-white py-4 px-6 rounded-xl font-bold text-lg shadow-xl hover:shadow-2xl transform hover:scale-[1.02] active:scale-[0.98] transition-all disabled:transform-none"
+            className="w-full bg-gradient-to-r from-[#00BC7D]/50 to-[#00BC7D] hover:from-[#00BC7D] hover:to-[#009B66] disabled:from-[#009B66] disabled:to-[#007A52] text-white py-4 px-6 rounded-xl font-bold text-lg shadow-xl hover:shadow-2xl transform hover:scale-[1.02] active:scale-[0.98] transition-all disabled:transform-none"
           >
             {isCheckingAuth ? 'Checking...' : saving ? 'Saving Property...' : isLoggedIn ? 'Save This Property' : 'Sign Up to Save This Property'}
           </button>

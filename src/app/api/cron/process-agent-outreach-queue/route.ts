@@ -246,7 +246,7 @@ export async function GET(request: NextRequest) {
               agentEmail: property.agentEmail || null,
               source: 'agent_outreach_system',
               isCashDeal: true,
-              isOwnerFinance: false,
+              isOwnerfinance: false,
               dealTypes: ['cash_deal'],
               isActive: true,
               importedAt: new Date(),

@@ -215,12 +215,12 @@ export default function BuyerSettings() {
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-6">
         <div className="text-center">
           <div className="relative w-20 h-20 mx-auto mb-6">
-            <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-3xl animate-pulse"></div>
-            <div className="absolute inset-2 bg-slate-900 rounded-2xl flex items-center justify-center">
+            <div className="absolute inset-0 bg-gradient-to-br from-[#00BC7D] to-blue-500 rounded-3xl animate-pulse"></div>
+            <div className="absolute inset-2 bg-[#111625] rounded-2xl flex items-center justify-center">
               <span className="text-3xl">⚙️</span>
             </div>
           </div>
-          <div className="w-16 h-16 border-4 border-slate-700 border-t-emerald-400 rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-16 h-16 border-4 border-slate-700 border-t-[#00BC7D] rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-slate-300 font-semibold text-lg">Loading your settings...</p>
         </div>
       </div>
@@ -230,7 +230,7 @@ export default function BuyerSettings() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       {/* Modern Floating Header */}
-      <header className="sticky top-0 z-50 backdrop-blur-xl bg-slate-900/80 border-b border-slate-700/50 shadow-lg shadow-black/20">
+      <header className="sticky top-0 z-50 backdrop-blur-xl bg-[#111625]/80 border-b border-slate-700/50 shadow-lg shadow-black/20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex items-center justify-between">
             {/* Back Button */}
@@ -252,11 +252,11 @@ export default function BuyerSettings() {
               {(session as unknown as ExtendedSession)?.user?.role === 'realtor' && (
                 <Link
                   href="/realtor-dashboard"
-                  className="px-3 py-1.5 bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/30 rounded-lg flex items-center gap-1.5 transition-all duration-200 hover:scale-105 group"
+                  className="px-3 py-1.5 bg-[#00BC7D]/20 hover:bg-[#00BC7D]/30 border border-[#00BC7D]/30 rounded-lg flex items-center gap-1.5 transition-all duration-200 hover:scale-105 group"
                   title="Realtor Dashboard"
                 >
-                  <span className="text-emerald-400 text-xs font-semibold">Realtor Hub</span>
-                  <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <span className="text-[#00BC7D] text-xs font-semibold">Realtor Hub</span>
+                  <svg className="w-4 h-4 text-[#00BC7D]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </Link>
@@ -316,16 +316,16 @@ export default function BuyerSettings() {
           )}
 
           {success && (
-            <div className="bg-gradient-to-r from-emerald-500/10 to-emerald-600/10 border border-emerald-500/50 rounded-2xl p-4 backdrop-blur-xl animate-slideIn">
+            <div className="bg-gradient-to-r from-[#00BC7D]/10 to-[#00BC7D]/10 border border-[#00BC7D]/50 rounded-2xl p-4 backdrop-blur-xl animate-slideIn">
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 bg-emerald-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <svg className="w-5 h-5 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
+                <div className="w-8 h-8 bg-[#00BC7D]/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <svg className="w-5 h-5 text-[#00BC7D]" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-emerald-300 font-semibold mb-1">Success!</h3>
-                  <p className="text-emerald-200 text-sm">{success}</p>
+                  <h3 className="text-[#00d68f] font-semibold mb-1">Success!</h3>
+                  <p className="text-[#66E0B8] text-sm">{success}</p>
                 </div>
               </div>
             </div>
@@ -353,16 +353,16 @@ export default function BuyerSettings() {
 
             <div className="space-y-3">
               {/* Are you a realtor? */}
-              <label className="flex items-center gap-3 p-3 bg-slate-900/30 rounded-lg cursor-pointer hover:bg-slate-900/50 transition-all group">
+              <label className="flex items-center gap-3 p-3 bg-[#111625]/30 rounded-lg cursor-pointer hover:bg-[#111625]/50 transition-all group">
                 <input
                   type="checkbox"
                   checked={formData.isRealtor}
                   onChange={(e) => setFormData(prev => ({ ...prev, isRealtor: e.target.checked }))}
                   onFocus={trackFormStart}
-                  className="w-5 h-5 text-emerald-500 bg-slate-700 border-slate-600 rounded focus:ring-emerald-400 cursor-pointer"
+                  className="w-5 h-5 text-[#00BC7D] bg-slate-700 border-slate-600 rounded focus:ring-[#00BC7D] cursor-pointer"
                 />
                 <div className="flex-1">
-                  <span className="text-sm font-semibold text-white group-hover:text-emerald-400 transition-colors">
+                  <span className="text-sm font-semibold text-white group-hover:text-[#00BC7D] transition-colors">
                     I am a licensed realtor
                   </span>
                   <p className="text-xs text-slate-400 mt-0.5">Check this if you have a real estate license</p>
@@ -370,15 +370,15 @@ export default function BuyerSettings() {
               </label>
 
               {/* Are you an investor? */}
-              <label className="flex items-center gap-3 p-3 bg-slate-900/30 rounded-lg cursor-pointer hover:bg-slate-900/50 transition-all group">
+              <label className="flex items-center gap-3 p-3 bg-[#111625]/30 rounded-lg cursor-pointer hover:bg-[#111625]/50 transition-all group">
                 <input
                   type="checkbox"
                   checked={formData.isInvestor}
                   onChange={(e) => setFormData(prev => ({ ...prev, isInvestor: e.target.checked }))}
-                  className="w-5 h-5 text-emerald-500 bg-slate-700 border-slate-600 rounded focus:ring-emerald-400 cursor-pointer"
+                  className="w-5 h-5 text-[#00BC7D] bg-slate-700 border-slate-600 rounded focus:ring-[#00BC7D] cursor-pointer"
                 />
                 <div className="flex-1">
-                  <span className="text-sm font-semibold text-white group-hover:text-emerald-400 transition-colors">
+                  <span className="text-sm font-semibold text-white group-hover:text-[#00BC7D] transition-colors">
                     I am a real estate investor
                   </span>
                   <p className="text-xs text-slate-400 mt-0.5">Looking to buy properties for investment purposes</p>
@@ -387,7 +387,7 @@ export default function BuyerSettings() {
 
               {/* Deal Type Preference - shown only for investors */}
               {formData.isInvestor && (
-                <div className="ml-8 p-3 bg-emerald-900/20 border border-emerald-500/30 rounded-lg">
+                <div className="ml-8 p-3 bg-[#004D33]/20 border border-[#00BC7D]/30 rounded-lg">
                   <label className="block text-xs font-semibold text-slate-300 mb-2">
                     Default Deal View
                   </label>
@@ -406,7 +406,7 @@ export default function BuyerSettings() {
                         onClick={() => setFormData(prev => ({ ...prev, dealTypePreference: option.value }))}
                         className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                           formData.dealTypePreference === option.value
-                            ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/25'
+                            ? 'bg-[#00BC7D] text-white shadow-lg shadow-[#00BC7D]/25'
                             : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
                         }`}
                       >
@@ -419,7 +419,7 @@ export default function BuyerSettings() {
 
               {/* ARV Threshold for Deal Alerts - shown only for investors */}
               {formData.isInvestor && (
-                <div className="ml-8 mt-3 p-3 bg-emerald-900/20 border border-emerald-500/30 rounded-lg">
+                <div className="ml-8 mt-3 p-3 bg-[#004D33]/20 border border-[#00BC7D]/30 rounded-lg">
                   <label className="block text-xs font-semibold text-slate-300 mb-2">
                     Deal Alert ARV Threshold
                   </label>
@@ -434,9 +434,9 @@ export default function BuyerSettings() {
                       step="5"
                       value={formData.arvThreshold}
                       onChange={(e) => setFormData(prev => ({ ...prev, arvThreshold: e.target.value }))}
-                      className="flex-1 accent-emerald-500 h-2 bg-slate-700 rounded-lg cursor-pointer"
+                      className="flex-1 accent-[#00BC7D] h-2 bg-slate-700 rounded-lg cursor-pointer"
                     />
-                    <span className="text-emerald-400 font-bold text-sm w-12 text-right">
+                    <span className="text-[#00BC7D] font-bold text-sm w-12 text-right">
                       {formData.arvThreshold}%
                     </span>
                   </div>
@@ -449,7 +449,7 @@ export default function BuyerSettings() {
 
               {/* Search Radius - shown only for investors */}
               {formData.isInvestor && (
-                <div className="ml-8 mt-3 p-3 bg-emerald-900/20 border border-emerald-500/30 rounded-lg">
+                <div className="ml-8 mt-3 p-3 bg-[#004D33]/20 border border-[#00BC7D]/30 rounded-lg">
                   <label className="block text-xs font-semibold text-slate-300 mb-2">
                     Search Radius
                   </label>
@@ -464,9 +464,9 @@ export default function BuyerSettings() {
                       step="5"
                       value={formData.searchRadius}
                       onChange={(e) => setFormData(prev => ({ ...prev, searchRadius: e.target.value }))}
-                      className="flex-1 accent-emerald-500 h-2 bg-slate-700 rounded-lg cursor-pointer"
+                      className="flex-1 accent-[#00BC7D] h-2 bg-slate-700 rounded-lg cursor-pointer"
                     />
-                    <span className="text-emerald-400 font-bold text-sm w-16 text-right">
+                    <span className="text-[#00BC7D] font-bold text-sm w-16 text-right">
                       {formData.searchRadius} mi
                     </span>
                   </div>
@@ -505,7 +505,7 @@ export default function BuyerSettings() {
                     max="10"
                     value={formData.minBedrooms}
                     onChange={(e) => setFormData(prev => ({ ...prev, minBedrooms: e.target.value }))}
-                    className="w-full bg-slate-900/50 border border-slate-600/50 rounded-lg px-2 py-1 text-sm text-white placeholder-slate-500 focus:border-purple-500/50 focus:outline-none transition-all"
+                    className="w-full bg-[#111625]/50 border border-slate-600/50 rounded-lg px-2 py-1 text-sm text-white placeholder-slate-500 focus:border-purple-500/50 focus:outline-none transition-all"
                     placeholder="Min"
                   />
                   <input
@@ -514,7 +514,7 @@ export default function BuyerSettings() {
                     max="10"
                     value={formData.maxBedrooms}
                     onChange={(e) => setFormData(prev => ({ ...prev, maxBedrooms: e.target.value }))}
-                    className="w-full bg-slate-900/50 border border-slate-600/50 rounded-lg px-2 py-1 text-sm text-white placeholder-slate-500 focus:border-purple-500/50 focus:outline-none transition-all"
+                    className="w-full bg-[#111625]/50 border border-slate-600/50 rounded-lg px-2 py-1 text-sm text-white placeholder-slate-500 focus:border-purple-500/50 focus:outline-none transition-all"
                     placeholder="Max"
                   />
                 </div>
@@ -534,7 +534,7 @@ export default function BuyerSettings() {
                     step="0.5"
                     value={formData.minBathrooms}
                     onChange={(e) => setFormData(prev => ({ ...prev, minBathrooms: e.target.value }))}
-                    className="w-full bg-slate-900/50 border border-slate-600/50 rounded-lg px-2 py-1 text-sm text-white placeholder-slate-500 focus:border-purple-500/50 focus:outline-none transition-all"
+                    className="w-full bg-[#111625]/50 border border-slate-600/50 rounded-lg px-2 py-1 text-sm text-white placeholder-slate-500 focus:border-purple-500/50 focus:outline-none transition-all"
                     placeholder="Min"
                   />
                   <input
@@ -544,7 +544,7 @@ export default function BuyerSettings() {
                     step="0.5"
                     value={formData.maxBathrooms}
                     onChange={(e) => setFormData(prev => ({ ...prev, maxBathrooms: e.target.value }))}
-                    className="w-full bg-slate-900/50 border border-slate-600/50 rounded-lg px-2 py-1 text-sm text-white placeholder-slate-500 focus:border-purple-500/50 focus:outline-none transition-all"
+                    className="w-full bg-[#111625]/50 border border-slate-600/50 rounded-lg px-2 py-1 text-sm text-white placeholder-slate-500 focus:border-purple-500/50 focus:outline-none transition-all"
                     placeholder="Max"
                   />
                 </div>
@@ -565,7 +565,7 @@ export default function BuyerSettings() {
                       const value = e.target.value.replace(/[^\d]/g, '');
                       setFormData(prev => ({ ...prev, minSquareFeet: value }));
                     }}
-                    className="w-full bg-slate-900/50 border border-slate-600/50 rounded-lg px-2 py-1 text-sm text-white placeholder-slate-500 focus:border-purple-500/50 focus:outline-none transition-all"
+                    className="w-full bg-[#111625]/50 border border-slate-600/50 rounded-lg px-2 py-1 text-sm text-white placeholder-slate-500 focus:border-purple-500/50 focus:outline-none transition-all"
                     placeholder="Min"
                   />
                   <input
@@ -576,7 +576,7 @@ export default function BuyerSettings() {
                       const value = e.target.value.replace(/[^\d]/g, '');
                       setFormData(prev => ({ ...prev, maxSquareFeet: value }));
                     }}
-                    className="w-full bg-slate-900/50 border border-slate-600/50 rounded-lg px-2 py-1 text-sm text-white placeholder-slate-500 focus:border-purple-500/50 focus:outline-none transition-all"
+                    className="w-full bg-[#111625]/50 border border-slate-600/50 rounded-lg px-2 py-1 text-sm text-white placeholder-slate-500 focus:border-purple-500/50 focus:outline-none transition-all"
                     placeholder="Max"
                   />
                 </div>
@@ -589,7 +589,7 @@ export default function BuyerSettings() {
                   <span>Asking Price</span>
                 </label>
                 <div className="grid grid-cols-2 gap-2">
-                  <div className="bg-slate-900/50 border border-slate-600/50 rounded-lg px-2 py-1 focus-within:border-purple-500/50 transition-all">
+                  <div className="bg-[#111625]/50 border border-slate-600/50 rounded-lg px-2 py-1 focus-within:border-purple-500/50 transition-all">
                     <div className="flex items-center">
                       <span className="text-xs font-bold text-slate-400 mr-1">$</span>
                       <input
@@ -605,7 +605,7 @@ export default function BuyerSettings() {
                       />
                     </div>
                   </div>
-                  <div className="bg-slate-900/50 border border-slate-600/50 rounded-lg px-2 py-1 focus-within:border-purple-500/50 transition-all">
+                  <div className="bg-[#111625]/50 border border-slate-600/50 rounded-lg px-2 py-1 focus-within:border-purple-500/50 transition-all">
                     <div className="flex items-center">
                       <span className="text-xs font-bold text-slate-400 mr-1">$</span>
                       <input
@@ -630,7 +630,7 @@ export default function BuyerSettings() {
           <button
             type="submit"
             disabled={saving}
-            className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white py-3 px-4 rounded-xl font-bold text-base transition-all duration-300 hover:scale-[1.01] shadow-lg shadow-emerald-500/25 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+            className="w-full bg-gradient-to-r from-[#00BC7D]/50 to-[#00BC7D] hover:from-[#00BC7D] hover:to-[#00BC7D]/50 text-white py-3 px-4 rounded-xl font-bold text-base transition-all duration-300 hover:scale-[1.01] shadow-lg shadow-[#00BC7D]/25 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
           >
             {saving ? (
               <span className="flex items-center justify-center gap-2">

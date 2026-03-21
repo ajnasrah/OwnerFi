@@ -90,7 +90,7 @@ Target audience: Humanitarian-focused, awareness seekers
 
 | Brand | Posts/Day | Daily Times |
 |-------|-----------|-------------|
-| OwnerFi | 10 | 6AM, 8AM, 10AM, 12PM, 2PM, 4PM, 6PM, 7:30PM, 9PM, 10:30PM |
+| Ownerfi | 10 | 6AM, 8AM, 10AM, 12PM, 2PM, 4PM, 6PM, 7:30PM, 9PM, 10:30PM |
 | Abdullah | 10 | 5:30AM, 7AM, 9AM, 11AM, 1PM, 3PM, 5PM, 7PM, 9PM, 11PM |
 | Carz | 5 | 7AM, 12PM, 4PM, 7PM, 9:30PM |
 | Vass Distro | 5 | 8AM, 11AM, 2PM, 5PM, 8PM |
@@ -101,7 +101,7 @@ Target audience: Humanitarian-focused, awareness seekers
 
 ## TIME SLOT MASTER VIEW (All Brands by Hour)
 
-| Time | OwnerFi | Abdullah | Carz | Vass | Gaza |
+| Time | Ownerfi | Abdullah | Carz | Vass | Gaza |
 |------|---------|----------|------|------|------|
 | 5:30 AM | | ✓ | | | |
 | 6:00 AM | ✓ | | | | |
@@ -131,7 +131,7 @@ Target audience: Humanitarian-focused, awareness seekers
 ## SCHEDULING TIPS
 
 1. **Use YouTube Studio scheduler** — Bulk upload and schedule
-2. **Batch film by brand** — All 10 OwnerFi videos in one session
+2. **Batch film by brand** — All 10 Ownerfi videos in one session
 3. **Same times every day** — Builds audience habit
 4. **Check analytics monthly** — Swap underperforming slots
 
@@ -140,6 +140,6 @@ Target audience: Humanitarian-focused, awareness seekers
 ## HOW TO UPDATE
 
 Tell Claude/ChatGPT:
-- "Move OwnerFi slot 3 to 11AM"
+- "Move Ownerfi slot 3 to 11AM"
 - "Add a 6th Gaza slot at 7PM"
 - "Remove Abdullah's 11PM slot"

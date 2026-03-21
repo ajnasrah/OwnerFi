@@ -1,11 +1,11 @@
 # README FOR AI (Claude/ChatGPT)
 
-This folder contains ALL brand prompts for the OwnerFi/Carz/Abdullah media system.
+This folder contains ALL brand prompts for the Ownerfi/Carz/Abdullah media system.
 
 ## Quick Commands
 
 When I say:
-- **"Update the OwnerFi prompt"** → You ONLY update Brand 2 section inside BRAND_SYSTEM_PROMPTS.md
+- **"Update the Ownerfi prompt"** → You ONLY update Brand 2 section inside BRAND_SYSTEM_PROMPTS.md
 - **"Update the Abdullah prompt"** → You ONLY update Brand 1 section
 - **"Update Property Videos prompt"** → You ONLY update Brand 3 section
 - **"Update Benefit Videos prompt"** → You ONLY update Brand 4 section
@@ -19,7 +19,7 @@ When I say:
 
 When I say:
 - **"Generate scripts for [brand]"** → Follow that brand's rules exactly
-- **"Write 5 scripts for OwnerFi"** → Generate 5 complete outputs (script, title, caption, hashtags, first comment)
+- **"Write 5 scripts for Ownerfi"** → Generate 5 complete outputs (script, title, caption, hashtags, first comment)
 - **"Property video for [address]"** → Generate 30s and 15s versions
 
 ## Rules You MUST Follow
@@ -36,7 +36,7 @@ When I say:
 | Brand | Voice | CTA |
 |-------|-------|-----|
 | Abdullah | Goofy, real, funny | "Follow Abdullah for more." |
-| OwnerFi | Calm, helpful, trustworthy | "Visit www.ownerfi.ai..." |
+| Ownerfi | Calm, helpful, trustworthy | "Visit www.ownerfi.ai..." |
 | Property | Excited, clear, walkthrough | "Visit www.ownerfi.ai..." |
 | Benefit | Empowering, motivational | "Visit www.ownerfi.ai..." |
 | Carz | Fast, bold, insider | "Follow Carz for more." |

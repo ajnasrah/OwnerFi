@@ -24,7 +24,7 @@ export default function PrivacyPolicy() {
               onClick={() => setActiveSection('buyer')}
               className={`px-6 py-3 rounded-lg font-medium transition-all ${
                 activeSection === 'buyer'
-                  ? 'bg-emerald-500 text-white'
+                  ? 'bg-[#00BC7D]/50 text-white'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
@@ -51,7 +51,7 @@ export default function PrivacyPolicy() {
                 <ul className="space-y-2 text-blue-700">
                   <li>• <strong>We collect your name, phone, email, budget, and preferences</strong></li>
                   <li>• <strong>We share this information with licensed real estate agents</strong> who will contact you</li>
-                  <li>• <strong>Agents pay OwnerFi a 30% referral fee</strong> when they help you close on a home</li>
+                  <li>• <strong>Agents pay Ownerfi a 30% referral fee</strong> when they help you close on a home</li>
                   <li>• <strong>Agents may call, text, or email you</strong> to offer help with properties</li>
                   <li>• <strong>You can decline representation</strong> by telling the agent directly</li>
                   <li>• <strong>We use cookies and tracking technologies</strong> to improve our platform</li>
@@ -203,7 +203,7 @@ export default function PrivacyPolicy() {
                 <ul className="list-disc ml-6 space-y-1 text-green-700">
                   <li>Inform any contacting agent: <strong>"I do not want representation."</strong></li>
                   <li>Agents are legally obligated to stop contacting you.</li>
-                  <li>OwnerFi is <strong>not responsible</strong> for their failure to do so.</li>
+                  <li>Ownerfi is <strong>not responsible</strong> for their failure to do so.</li>
                 </ul>
               </div>
             </section>
@@ -331,7 +331,7 @@ export default function PrivacyPolicy() {
             <section>
               <h2 className="text-2xl font-semibold text-primary-text mb-4">9. Children&apos;s Privacy</h2>
               <p className="mb-3">
-                OwnerFi is not intended for users under 18. We do not knowingly collect personal information from anyone under the age of 18.
+                Ownerfi is not intended for users under 18. We do not knowingly collect personal information from anyone under the age of 18.
               </p>
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                 <p className="text-red-700">
@@ -350,7 +350,7 @@ export default function PrivacyPolicy() {
             <section>
               <h2 className="text-2xl font-semibold text-primary-text mb-4">11. Contact</h2>
               <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
-                <p className="font-bold">OwnerFi</p>
+                <p className="font-bold">Ownerfi</p>
                 <p className="text-slate-700 mt-1">
                   Email: <a href="mailto:support@ownerfi.ai" className="text-primary hover:underline">support@ownerfi.ai</a>
                 </p>
@@ -360,10 +360,10 @@ export default function PrivacyPolicy() {
             <div className="border-t pt-8 mt-8">
               <div className="bg-blue-100 border-2 border-blue-300 rounded-lg p-6">
                 <p className="text-blue-900 font-bold text-center text-lg mb-3">
-                  ✅ By Using OwnerFi, You Agree
+                  ✅ By Using Ownerfi, You Agree
                 </p>
                 <p className="text-blue-800 text-sm text-center">
-                  By using OwnerFi, you acknowledge that you have read and agree to this Privacy Policy. You consent to the collection and sharing of your information with licensed real estate agents as described above. You understand that agents pay OwnerFi a referral fee, that agents may contact you, and that you can decline representation at any time.
+                  By using Ownerfi, you acknowledge that you have read and agree to this Privacy Policy. You consent to the collection and sharing of your information with licensed real estate agents as described above. You understand that agents pay Ownerfi a referral fee, that agents may contact you, and that you can decline representation at any time.
                 </p>
               </div>
             </div>
@@ -578,7 +578,7 @@ export default function PrivacyPolicy() {
                 <section>
                   <h2 className="text-2xl font-semibold text-primary-text mb-4">11. Contact</h2>
                   <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
-                    <p className="font-bold">OwnerFi Privacy Team</p>
+                    <p className="font-bold">Ownerfi Privacy Team</p>
                     <p className="text-slate-700 mt-1">
                       Email: <a href="mailto:support@ownerfi.ai" className="text-primary hover:underline">support@ownerfi.ai</a>
                     </p>
@@ -594,7 +594,7 @@ export default function PrivacyPolicy() {
                       ✅ By Registering as an Agent, You Agree
                     </p>
                     <p className="text-blue-800 text-sm text-center">
-                      By registering and using the OwnerFi platform as a real estate agent, you acknowledge that you have read and agree to this Privacy Policy. You consent to the collection and use of your information as described. You agree to protect buyer data you receive and use it only for legitimate real estate services. You understand that transaction records and signed agreements may be retained for legal compliance purposes.
+                      By registering and using the Ownerfi platform as a real estate agent, you acknowledge that you have read and agree to this Privacy Policy. You consent to the collection and use of your information as described. You agree to protect buyer data you receive and use it only for legitimate real estate services. You understand that transaction records and signed agreements may be retained for legal compliance purposes.
                     </p>
                   </div>
                 </div>

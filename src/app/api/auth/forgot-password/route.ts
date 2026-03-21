@@ -68,11 +68,11 @@ export async function POST(request: NextRequest) {
       await setDoc(doc(db, 'mail', resetToken), {
         to: [email.toLowerCase()],
         message: {
-          subject: 'Reset your password - OwnerFi',
+          subject: 'Reset your password - Ownerfi',
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
               <h2>Password Reset Request</h2>
-              <p>You requested to reset your password for your OwnerFi account.</p>
+              <p>You requested to reset your password for your Ownerfi account.</p>
               <p>Click the button below to reset your password:</p>
               <div style="text-align: center; margin: 30px 0;">
                 <a href="${resetLink}" style="background-color: #3B82F6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
           text: `
 Password Reset Request
 
-You requested to reset your password for your OwnerFi account.
+You requested to reset your password for your Ownerfi account.
 
 Click this link to reset your password: ${resetLink}
 

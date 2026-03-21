@@ -13,11 +13,11 @@ import { SocialImage, BlogSection } from './blog-models';
  */
 export const BRAND_COLORS = {
   ownerfi: {
-    primary: '#10b981', // emerald-500
+    primary: '#00BC7D', // brand green
     secondary: '#3b82f6', // blue-500
-    background: '#0f172a', // slate-900
+    background: '#111625', // brand dark
     text: '#ffffff',
-    accent: '#34d399', // emerald-400
+    accent: '#00d68f', // brand green light
   },
   carz: {
     primary: '#ef4444', // red-500
@@ -50,15 +50,15 @@ export const BRAND_COLORS = {
   gaza: {
     primary: '#dc2626', // red-600
     secondary: '#16a34a', // green-600
-    background: '#0f172a', // slate-900
+    background: '#111625', // slate-900
     text: '#ffffff',
     accent: '#ef4444', // red-500
   },
   // Default for other brands
   default: {
     primary: '#3b82f6', // blue-500
-    secondary: '#10b981', // emerald-500
-    background: '#0f172a', // slate-900
+    secondary: '#00BC7D', // brand green
+    background: '#111625', // brand dark
     text: '#ffffff',
     accent: '#60a5fa', // blue-400
   },
@@ -120,7 +120,7 @@ export function generateOGImageHTML(config: OGImageConfig): string {
         </div>
         <div style="display: flex; align-items: center; gap: 16px; margin-top: auto;">
           <div style="width: 48px; height: 48px; background: ${colors.accent}; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 24px;">${config.brand[0].toUpperCase()}</div>
-          <span style="font-size: 32px; font-weight: 600;">${config.brand === 'ownerfi' ? 'OwnerFi' : config.brand === 'carz' ? 'Carz Inc' : config.brand === 'abdullah' ? 'Abdullah' : config.brand.charAt(0).toUpperCase() + config.brand.slice(1)}</span>
+          <span style="font-size: 32px; font-weight: 600;">${config.brand === 'ownerfi' ? 'Ownerfi' : config.brand === 'carz' ? 'Carz Inc' : config.brand === 'abdullah' ? 'Abdullah' : config.brand.charAt(0).toUpperCase() + config.brand.slice(1)}</span>
         </div>
       </div>
     `;
@@ -149,7 +149,7 @@ export function generateOGImageHTML(config: OGImageConfig): string {
 
         <div style="display: flex; align-items: center; gap: 16px; margin-top: auto;">
           <div style="width: 40px; height: 40px; background: ${colors.accent}; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 20px;">${config.brand[0].toUpperCase()}</div>
-          <span style="font-size: 28px; font-weight: 600;">${config.brand === 'ownerfi' ? 'OwnerFi' : config.brand === 'carz' ? 'Carz Inc' : config.brand === 'abdullah' ? 'Abdullah' : config.brand.charAt(0).toUpperCase() + config.brand.slice(1)}</span>
+          <span style="font-size: 28px; font-weight: 600;">${config.brand === 'ownerfi' ? 'Ownerfi' : config.brand === 'carz' ? 'Carz Inc' : config.brand === 'abdullah' ? 'Abdullah' : config.brand.charAt(0).toUpperCase() + config.brand.slice(1)}</span>
         </div>
       </div>
     `;
@@ -163,7 +163,7 @@ export function generateOGImageHTML(config: OGImageConfig): string {
         <div style="width: 100px; height: 4px; background: ${colors.accent}; border-radius: 2px; margin-bottom: 32px;"></div>
         <div style="display: flex; align-items: center; gap: 16px;">
           <div style="width: 48px; height: 48px; background: ${colors.accent}; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 24px;">${config.brand[0].toUpperCase()}</div>
-          <span style="font-size: 32px; font-weight: 600;">${config.brand === 'ownerfi' ? 'OwnerFi' : config.brand === 'carz' ? 'Carz Inc' : config.brand === 'abdullah' ? 'Abdullah' : config.brand.charAt(0).toUpperCase() + config.brand.slice(1)}</span>
+          <span style="font-size: 32px; font-weight: 600;">${config.brand === 'ownerfi' ? 'Ownerfi' : config.brand === 'carz' ? 'Carz Inc' : config.brand === 'abdullah' ? 'Abdullah' : config.brand.charAt(0).toUpperCase() + config.brand.slice(1)}</span>
         </div>
       </div>
     `;
@@ -183,7 +183,7 @@ export function generateOGImageHTML(config: OGImageConfig): string {
 
         <div style="display: flex; align-items: center; gap: 16px; margin-top: auto;">
           <div style="width: 40px; height: 40px; background: ${colors.accent}; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 20px;">${config.brand[0].toUpperCase()}</div>
-          <span style="font-size: 28px; font-weight: 600;">${config.brand === 'ownerfi' ? 'OwnerFi' : config.brand === 'carz' ? 'Carz Inc' : config.brand === 'abdullah' ? 'Abdullah' : config.brand.charAt(0).toUpperCase() + config.brand.slice(1)}</span>
+          <span style="font-size: 28px; font-weight: 600;">${config.brand === 'ownerfi' ? 'Ownerfi' : config.brand === 'carz' ? 'Carz Inc' : config.brand === 'abdullah' ? 'Abdullah' : config.brand.charAt(0).toUpperCase() + config.brand.slice(1)}</span>
         </div>
       </div>
     `;
@@ -238,7 +238,7 @@ export function generateSocialImagesFromBlog(
       id: `slide-${stepsSection.bullets.length + 2}`,
       type: 'carousel-slide',
       title: 'Next Step',
-      content: ctaSection?.content || `Visit ${brand === 'ownerfi' ? 'OwnerFi.ai' : brand === 'carz' ? 'CarzInc.com' : 'the link in bio'} to learn more`,
+      content: ctaSection?.content || `Visit ${brand === 'ownerfi' ? 'Ownerfi.ai' : brand === 'carz' ? 'CarzInc.com' : 'the link in bio'} to learn more`,
       slideNumber: stepsSection.bullets.length + 2,
       totalSlides: stepsSection.bullets.length + 2,
     });
@@ -286,10 +286,10 @@ export function generateSocialCaption(
 
   // Brand-specific hashtags
   const hashtags = {
-    ownerfi: '#OwnerFinancing #RealEstate #Homeownership #OwnerFi #AlternativeFinancing',
+    ownerfi: '#Ownerfinancing #RealEstate #Homeownership #Ownerfi #AlternativeFinancing',
     carz: '#Cars #Automotive #CarBuying #CarzInc #UsedCars',
     abdullah: '#Entrepreneurship #RealEstate #Business #PersonalGrowth #Abdullah',
-    benefit: '#Homeownership #OwnerFinancing #RentNoMore #RealEstate #BuyNotRent',
+    benefit: '#Homeownership #Ownerfinancing #RentNoMore #RealEstate #BuyNotRent',
     personal: '#PersonalGrowth #Lifestyle #Motivation #Success #Mindset',
     gaza: '#Gaza #Palestine #Humanitarian #HumanRights #Peace',
   };

@@ -1,7 +1,7 @@
 /**
  * Centralized Brand Configuration
  *
- * This file contains all brand-specific settings for Carz Inc, OwnerFi, and Podcast.
+ * This file contains all brand-specific settings for Carz Inc, Ownerfi, and Podcast.
  * Each brand has its own isolated configuration to ensure failures in one brand
  * don't affect the others.
  */
@@ -144,11 +144,11 @@ export const CARZ_CONFIG: BrandConfig = {
 };
 
 /**
- * OwnerFi Brand Configuration
+ * Ownerfi Brand Configuration
  */
 export const OWNERFI_CONFIG: BrandConfig = {
   id: 'ownerfi',
-  displayName: 'OwnerFi',
+  displayName: 'Ownerfi',
 
   lateProfileId: process.env.LATE_OWNERFI_PROFILE_ID || '',
 
@@ -204,7 +204,7 @@ export const BENEFIT_CONFIG: BrandConfig = {
   id: 'benefit',
   displayName: 'Owner Finance Benefits',
 
-  lateProfileId: process.env.LATE_OWNERFI_PROFILE_ID || '', // Uses OwnerFi's Late profile
+  lateProfileId: process.env.LATE_OWNERFI_PROFILE_ID || '', // Uses Ownerfi's Late profile
 
   platforms: {
     default: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads'],
@@ -220,7 +220,7 @@ export const BENEFIT_CONFIG: BrandConfig = {
 
   content: {
     youtubeCategory: 'HOWTO_STYLE', // Educational owner financing content
-    defaultHashtags: ['#OwnerFinancing', '#RealEstate', '#Homeownership', '#Investment', '#OwnerFi'],
+    defaultHashtags: ['#Ownerfinancing', '#RealEstate', '#Homeownership', '#Investment', '#Ownerfi'],
     captionStyle: 'educational',
   },
 
@@ -349,15 +349,15 @@ export const PERSONAL_CONFIG: BrandConfig = {
 };
 
 /**
- * OwnerFi for Realtors Sub-Brand Configuration
+ * Ownerfi for Realtors Sub-Brand Configuration
  * Question-based content targeting real estate agents
- * Each video starts with a pain point question and positions OwnerFi as the solution
+ * Each video starts with a pain point question and positions Ownerfi as the solution
  */
 export const REALTORS_CONFIG: BrandConfig = {
   id: 'realtors',
-  displayName: 'OwnerFi for Realtors',
+  displayName: 'Ownerfi for Realtors',
 
-  lateProfileId: process.env.LATE_OWNERFI_PROFILE_ID || '', // Uses OwnerFi's Late profile (sub-brand)
+  lateProfileId: process.env.LATE_OWNERFI_PROFILE_ID || '', // Uses Ownerfi's Late profile (sub-brand)
 
   platforms: {
     default: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads'],
@@ -376,9 +376,9 @@ export const REALTORS_CONFIG: BrandConfig = {
     defaultHashtags: [
       '#RealEstateAgent',
       '#RealtorLife',
-      '#OwnerFinancing',
+      '#Ownerfinancing',
       '#RealEstateLeads',
-      '#OwnerFi',
+      '#Ownerfi',
       '#RealEstateInvesting',
       '#AgentTips',
     ],

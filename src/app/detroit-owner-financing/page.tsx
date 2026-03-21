@@ -4,14 +4,14 @@ import { db } from '@/lib/firebase'
 import { collection, query, where, getDocs } from 'firebase/firestore'
 
 export const metadata: Metadata = {
-  title: 'Owner Financing Detroit | Rent to Own Alternative MI | Downtown, Midtown | OwnerFi',
+  title: 'Owner Financing Detroit | Rent to Own Alternative MI | Downtown, Midtown | Ownerfi',
   description: 'Find owner financed homes in Detroit - better than rent to own! Immediate ownership in Downtown, Midtown, Corktown. No banks needed. Flexible credit options.',
   keywords: 'owner financing detroit, owner financed homes detroit, rent to own detroit, rent to own michigan, seller financing detroit, no credit check homes detroit, bad credit homes detroit, detroit real estate owner financing',
   openGraph: {
-    title: 'Owner Financed Homes in Detroit - Better Than Rent to Own | OwnerFi',
+    title: 'Owner Financed Homes in Detroit - Better Than Rent to Own | Ownerfi',
     description: 'Skip the banks! Find owner financed properties across Detroit with immediate ownership. Serving Downtown, Midtown, Corktown and more.',
     url: 'https://ownerfi.ai/detroit-owner-financing',
-    siteName: 'OwnerFi',
+    siteName: 'Ownerfi',
     type: 'website',
   },
   twitter: {
@@ -53,7 +53,7 @@ async function getDetroitProperties() {
   }
 }
 
-export default async function OwnerFinancingDetroit() {
+export default async function OwnerfinancingDetroit() {
   const { areaCounts, totalCount } = await getDetroitProperties()
 
   const faqSchema = {
@@ -98,7 +98,7 @@ export default async function OwnerFinancingDetroit() {
   const localBusinessSchema = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
-    "name": "OwnerFi Detroit - Owner Financed Homes",
+    "name": "Ownerfi Detroit - Owner Financed Homes",
     "description": "Find owner financed homes throughout Detroit. Better than rent to own with immediate ownership.",
     "url": "https://ownerfi.ai/detroit-owner-financing",
     "areaServed": {
@@ -149,7 +149,7 @@ export default async function OwnerFinancingDetroit() {
             </p>
 
             <div className="grid md:grid-cols-3 gap-6 mb-8">
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-xl border border-green-200">
+              <div className="bg-gradient-to-br from-green-50 to-[#00BC7D]/5 p-6 rounded-xl border border-green-200">
                 <h3 className="font-bold text-green-900 mb-2">Immediate Detroit Ownership</h3>
                 <p className="text-green-800">Get the deed right away, unlike rent to own</p>
               </div>
@@ -238,14 +238,14 @@ export default async function OwnerFinancingDetroit() {
                   Great neighborhood with owner financing options
                 </p>
               </div>
-              <div className="p-6 bg-gradient-to-br from-emerald-50 to-emerald-50 rounded-xl border-2 border-emerald-200">
-                <h3 className="text-xl font-bold text-emerald-900 mb-2">
+              <div className="p-6 bg-gradient-to-br from-[#00BC7D]/5 to-[#00BC7D]/5 rounded-xl border-2 border-[#00BC7D]/30">
+                <h3 className="text-xl font-bold text-[#004D33] mb-2">
                   Greektown
                 </h3>
-                <p className="text-emerald-700 mb-2">
+                <p className="text-[#009B66] mb-2">
                   {areaCounts['Greektown'] || 'Premium'} owner financed properties
                 </p>
-                <p className="text-sm text-emerald-600 mb-3">
+                <p className="text-sm text-[#00BC7D] mb-3">
                   Great neighborhood with owner financing options
                 </p>
               </div>

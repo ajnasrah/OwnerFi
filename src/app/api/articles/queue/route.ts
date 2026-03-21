@@ -69,7 +69,7 @@ export async function GET(_request: NextRequest) {
       });
     });
 
-    // Get OwnerFi articles (all, not just unprocessed)
+    // Get Ownerfi articles (all, not just unprocessed)
     const ownerfiQuery = query(
       collection(db, 'ownerfi_articles'),
       orderBy('pubDate', 'desc'),

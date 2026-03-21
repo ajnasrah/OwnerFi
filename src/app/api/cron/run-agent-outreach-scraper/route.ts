@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ApifyClient } from 'apify-client';
 import { getFirebaseAdmin } from '@/lib/scraper-v2/firebase-admin';
 import { withCronLock } from '@/lib/scraper-v2/cron-lock';
-import { hasStrictOwnerFinancing } from '@/lib/owner-financing-filter-strict';
+import { hasStrictOwnerfinancing } from '@/lib/owner-financing-filter-strict';
 import { hasNegativeKeywords } from '@/lib/negative-keywords';
 
 export const maxDuration = 300;
@@ -152,9 +152,9 @@ export async function GET(request: NextRequest) {
       total: detailItems.length,
       added: 0,
       cashDeals: 0,
-      potentialOwnerFinance: 0,
+      potentialOwnerfinance: 0,
       noAgent: 0,
-      hasOwnerFinance: 0,
+      hasOwnerfinance: 0,
       negativeKeywords: 0,
     };
 
@@ -196,11 +196,11 @@ export async function GET(request: NextRequest) {
       const city = property.city || property.address?.city || '';
       const state = property.state || property.address?.state || '';
 
-      const ownerFinanceResult = hasStrictOwnerFinancing(description);
+      const ownerFinanceResult = hasStrictOwnerfinancing(description);
       const negativeResult = hasNegativeKeywords(description);
 
       if (ownerFinanceResult.passes) {
-        stats.hasOwnerFinance++;
+        stats.hasOwnerfinance++;
         continue;
       }
 
@@ -220,7 +220,7 @@ export async function GET(request: NextRequest) {
         dealType = 'cash_deal';
         stats.cashDeals++;
       } else {
-        stats.potentialOwnerFinance++;
+        stats.potentialOwnerfinance++;
       }
 
       const agentName = property.attributionInfo?.agentName
@@ -293,10 +293,10 @@ export async function GET(request: NextRequest) {
     console.log(`   Properties detailed: ${stats.total}`);
     console.log(`   Added to queue: ${stats.added}`);
     console.log(`   - Cash deals: ${stats.cashDeals}`);
-    console.log(`   - Potential OF: ${stats.potentialOwnerFinance}`);
+    console.log(`   - Potential OF: ${stats.potentialOwnerfinance}`);
     console.log(`   Skipped:`);
     console.log(`   - No agent: ${stats.noAgent}`);
-    console.log(`   - Has OF keywords: ${stats.hasOwnerFinance}`);
+    console.log(`   - Has OF keywords: ${stats.hasOwnerfinance}`);
     console.log(`   - Negative keywords: ${stats.negativeKeywords}`);
 
     await db.collection('cron_logs').add({
@@ -306,8 +306,8 @@ export async function GET(request: NextRequest) {
       propertiesFromSearch: searchItems.length,
       propertiesDetailed: stats.total,
       addedToQueue: stats.added,
-      stats: { cashDeals: stats.cashDeals, potentialOwnerFinance: stats.potentialOwnerFinance },
-      skipped: { noAgent: stats.noAgent, hasOwnerFinance: stats.hasOwnerFinance, negativeKeywords: stats.negativeKeywords },
+      stats: { cashDeals: stats.cashDeals, potentialOwnerfinance: stats.potentialOwnerfinance },
+      skipped: { noAgent: stats.noAgent, hasOwnerfinance: stats.hasOwnerfinance, negativeKeywords: stats.negativeKeywords },
       timestamp: new Date(),
     });
 
@@ -316,8 +316,8 @@ export async function GET(request: NextRequest) {
       duration: `${duration}s`,
       propertiesFound: stats.total,
       addedToQueue: stats.added,
-      stats: { cashDeals: stats.cashDeals, potentialOwnerFinance: stats.potentialOwnerFinance },
-      skipped: { noAgent: stats.noAgent, hasOwnerFinance: stats.hasOwnerFinance, negativeKeywords: stats.negativeKeywords },
+      stats: { cashDeals: stats.cashDeals, potentialOwnerfinance: stats.potentialOwnerfinance },
+      skipped: { noAgent: stats.noAgent, hasOwnerfinance: stats.hasOwnerfinance, negativeKeywords: stats.negativeKeywords },
       message: `Added ${stats.added} properties to agent outreach queue`,
     };
   });

@@ -339,7 +339,7 @@ export interface ReferralAgreement {
   signatureIpAddress?: string;
   signatureUserAgent?: string;
 
-  // OwnerFi Addendum Acknowledgments (Sections 8-12)
+  // Ownerfi Addendum Acknowledgments (Sections 8-12)
   acknowledgeTCPA?: boolean;                // Section 9: TCPA & Contact Compliance
   acknowledgeTCPAAt?: Timestamp;
   acknowledgeCreativeFinance?: boolean;     // Section 11: Creative Finance Disclaimer
@@ -375,7 +375,7 @@ export interface ReferralAgreement {
 
   // Re-referral fields (Agent A referring to Agent B)
   isReReferral?: boolean;                    // true if this is a re-referral from another agent
-  originalAgreementId?: string;              // ID of the original OwnerFi agreement
+  originalAgreementId?: string;              // ID of the original Ownerfi agreement
   referringAgentId?: string;                 // Agent A's user ID (who referred)
   referringAgentName?: string;
   referringAgentEmail?: string;

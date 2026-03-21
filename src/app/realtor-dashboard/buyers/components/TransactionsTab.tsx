@@ -24,7 +24,7 @@ export function TransactionsTab({ transactions }: TransactionsTabProps) {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                transaction.type === 'agreement_signed' ? 'bg-emerald-500/20 text-emerald-400' :
+                transaction.type === 'agreement_signed' ? 'bg-[#00BC7D]/20 text-[#00BC7D]' :
                 transaction.type === 'lead_purchase' ? 'bg-blue-500/20 text-blue-400' :
                 transaction.type === 'refund' ? 'bg-green-500/20 text-green-400' :
                 'bg-slate-500/20 text-slate-400'
@@ -42,7 +42,7 @@ export function TransactionsTab({ transactions }: TransactionsTabProps) {
             </div>
             <div className="text-right">
               {transaction.creditsChange !== 0 && (
-                <div className={`font-medium ${transaction.creditsChange > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                <div className={`font-medium ${transaction.creditsChange > 0 ? 'text-[#00BC7D]' : 'text-red-400'}`}>
                   {transaction.creditsChange > 0 ? '+' : ''}{transaction.creditsChange} credit{Math.abs(transaction.creditsChange) !== 1 ? 's' : ''}
                 </div>
               )}

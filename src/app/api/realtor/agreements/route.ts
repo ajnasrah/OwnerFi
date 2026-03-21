@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
 
         // Section 1: Referring Company
         // For re-referrals: Agent A (who is passing the lead)
-        // For original agreements: OwnerFi (who found and refers the buyer)
+        // For original agreements: Ownerfi (who found and refers the buyer)
         referringCompanyName: agreement.isReReferral
           ? (agreement.referringAgentCompany || 'Independent Agent')
           : REFERRING_COMPANY_DEFAULTS.COMPANY_NAME,
@@ -124,7 +124,7 @@ export async function GET(request: NextRequest) {
         prospectEmail: agreement.leadInfoReleased ? (agreement.buyerEmail || '') : '',
         prospectBestTimeToCall: '',
         prospectRemarks: '',
-        otherTerms: 'Owner Finance Property Buyer Lead via OwnerFi.com'
+        otherTerms: 'Owner Finance Property Buyer Lead via Ownerfi.com'
       };
 
       return NextResponse.json({

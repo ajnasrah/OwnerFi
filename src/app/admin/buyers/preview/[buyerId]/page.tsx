@@ -143,20 +143,20 @@ export default function BuyerPreview() {
 
   if (loading) {
     return (
-      <div className="h-screen bg-slate-900 flex items-center justify-center p-4 overflow-hidden fixed inset-0">
+      <div className="h-screen bg-[#111625] flex items-center justify-center p-4 overflow-hidden fixed inset-0">
         <div className="text-center max-w-sm w-full">
           {/* Animated Logo/Icon */}
           <div className="mb-8">
             <div className="w-20 h-20 mx-auto mb-4 relative">
-              <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-3xl animate-pulse"></div>
-              <div className="absolute inset-2 bg-slate-900 rounded-2xl flex items-center justify-center">
+              <div className="absolute inset-0 bg-gradient-to-br from-[#00BC7D] to-blue-500 rounded-3xl animate-pulse"></div>
+              <div className="absolute inset-2 bg-[#111625] rounded-2xl flex items-center justify-center">
                 <span className="text-3xl font-black">🏠</span>
               </div>
             </div>
 
             {/* Animated Spinner */}
             <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 border-4 border-slate-700 border-t-emerald-400 rounded-full animate-spin"></div>
+              <div className="w-16 h-16 border-4 border-slate-700 border-t-[#00BC7D] rounded-full animate-spin"></div>
             </div>
           </div>
 
@@ -170,16 +170,16 @@ export default function BuyerPreview() {
 
           {/* Loading Progress Bar */}
           <div className="bg-slate-700/50 rounded-full h-3 mb-6 overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-emerald-400 to-blue-500 rounded-full animate-pulse w-3/4"></div>
+            <div className="h-full bg-gradient-to-r from-[#00BC7D] to-blue-500 rounded-full animate-pulse w-3/4"></div>
           </div>
 
           {/* Fun Fact Section */}
           {currentFact && (
-            <div className="bg-gradient-to-br from-emerald-500/10 to-blue-500/10 border-2 border-emerald-500/30 rounded-2xl p-6">
+            <div className="bg-gradient-to-br from-[#00BC7D]/10 to-blue-500/10 border-2 border-[#00BC7D]/30 rounded-2xl p-6">
               <div className="flex items-start gap-4">
                 <div className="text-3xl flex-shrink-0">💡</div>
                 <div className="text-left">
-                  <h3 className="text-emerald-400 font-black text-base mb-3">Did You Know?</h3>
+                  <h3 className="text-[#00BC7D] font-black text-base mb-3">Did You Know?</h3>
                   <p className="text-slate-200 text-base leading-relaxed">
                     {currentFact.replace(/^[^\s]+\s/, '')}
                   </p>
@@ -194,16 +194,16 @@ export default function BuyerPreview() {
 
   if (!properties.length) {
     return (
-      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4">
+      <div className="min-h-screen bg-[#111625] flex flex-col items-center justify-center p-4">
         <div className="text-center">
           <div className="text-4xl mb-4">🏠</div>
           <h2 className="text-xl font-bold text-white mb-4">NO HOMES FOUND</h2>
           <p className="text-slate-300 mb-6 text-base">
-            No properties in <span className="text-emerald-400">{profile?.city}</span> match buyer criteria.
+            No properties in <span className="text-[#00BC7D]">{profile?.city}</span> match buyer criteria.
           </p>
           <Link
             href="/admin/buyers"
-            className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg font-semibold"
+            className="bg-[#00BC7D] hover:bg-[#00BC7D]/50 text-white px-4 py-2 rounded-lg font-semibold"
           >
             BACK TO BUYERS
           </Link>

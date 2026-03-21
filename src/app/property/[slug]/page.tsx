@@ -33,13 +33,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (!property) {
     return {
-      title: 'Property Not Found | OwnerFi',
+      title: 'Property Not Found | Ownerfi',
       description: 'This property listing is no longer available.',
     };
   }
 
   // Title: Keep under 60 chars for Google
-  // Format: "123 Main St, Memphis TN | Owner Finance | OwnerFi"
+  // Format: "123 Main St, Memphis TN | Owner Finance | Ownerfi"
   const shortAddress = property.address?.length > 25
     ? property.address.substring(0, 22) + '...'
     : property.address;
@@ -75,12 +75,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       property.city,
       property.state,
     ].join(', '),
-    authors: [{ name: 'OwnerFi' }],
+    authors: [{ name: 'Ownerfi' }],
     openGraph: {
       title,
       description,
       url: canonicalUrl,
-      siteName: 'OwnerFi',
+      siteName: 'Ownerfi',
       images: [
         {
           url: imageUrl,
@@ -168,19 +168,15 @@ export default async function PropertyPage({ params }: PageProps) {
         </Suspense>
 
         {/* Header */}
-        <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-lg border-b border-slate-700/50">
+        <header className="sticky top-0 z-50 bg-[#111625]/95 backdrop-blur-lg border-b border-slate-700/50">
           <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                </svg>
-              </div>
-              <span className="font-bold text-white text-xl">OwnerFi</span>
+              <img src="/logo.jpg" alt="Ownerfi" width={32} height={32} className="rounded-lg" />
+              <span className="font-bold text-white text-xl">Ownerfi</span>
             </Link>
             <Link
               href="/auth"
-              className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg font-semibold text-sm transition-colors"
+              className="bg-[#00BC7D]/50 hover:bg-[#00BC7D] text-white px-4 py-2 rounded-lg font-semibold text-sm transition-colors"
             >
               Sign Up Free
             </Link>
@@ -193,13 +189,13 @@ export default async function PropertyPage({ params }: PageProps) {
           <nav className="mb-6" aria-label="Breadcrumb">
             <ol className="flex items-center space-x-2 text-sm text-slate-400">
               <li>
-                <Link href="/" className="hover:text-emerald-400 transition-colors">Home</Link>
+                <Link href="/" className="hover:text-[#00BC7D] transition-colors">Home</Link>
               </li>
               <li>/</li>
               <li>
                 <Link
                   href={`/owner-financing-${property.state?.toLowerCase().replace(/\s+/g, '-')}`}
-                  className="hover:text-emerald-400 transition-colors"
+                  className="hover:text-[#00BC7D] transition-colors"
                 >
                   {property.state}
                 </Link>
@@ -225,7 +221,7 @@ export default async function PropertyPage({ params }: PageProps) {
                   state={property.state}
                 />
                 <div className="absolute top-4 left-4">
-                  <span className="bg-emerald-600 text-white px-3 py-1.5 rounded-full text-sm font-bold shadow-lg">
+                  <span className="bg-[#00BC7D] text-white px-3 py-1.5 rounded-full text-sm font-bold shadow-lg">
                     Owner Finance Available
                   </span>
                 </div>
@@ -276,7 +272,7 @@ export default async function PropertyPage({ params }: PageProps) {
 
                 {/* Owner Financing Terms */}
                 <div className="space-y-4 mb-6">
-                  <h3 className="font-bold text-emerald-400 text-lg">Owner Financing Terms</h3>
+                  <h3 className="font-bold text-[#00BC7D] text-lg">Owner Financing Terms</h3>
 
                   {property.downPaymentAmount && (
                     <div className="flex justify-between items-center py-2 border-b border-slate-700">
@@ -322,20 +318,20 @@ export default async function PropertyPage({ params }: PageProps) {
                 </div>
 
                 {/* Benefits */}
-                <div className="bg-emerald-900/30 rounded-lg p-4 mb-6">
-                  <h4 className="font-bold text-emerald-400 mb-3">Why Owner Financing?</h4>
+                <div className="bg-[#004D33]/30 rounded-lg p-4 mb-6">
+                  <h4 className="font-bold text-[#00BC7D] mb-3">Why Owner Financing?</h4>
                   <ul className="space-y-2 text-sm text-slate-300">
                     <li className="flex items-center gap-2">
-                      <span className="text-emerald-400">✓</span> No bank qualifying
+                      <span className="text-[#00BC7D]">✓</span> No bank qualifying
                     </li>
                     <li className="flex items-center gap-2">
-                      <span className="text-emerald-400">✓</span> Bad credit OK
+                      <span className="text-[#00BC7D]">✓</span> Bad credit OK
                     </li>
                     <li className="flex items-center gap-2">
-                      <span className="text-emerald-400">✓</span> Fast closing
+                      <span className="text-[#00BC7D]">✓</span> Fast closing
                     </li>
                     <li className="flex items-center gap-2">
-                      <span className="text-emerald-400">✓</span> Flexible terms
+                      <span className="text-[#00BC7D]">✓</span> Flexible terms
                     </li>
                   </ul>
                 </div>
@@ -343,7 +339,7 @@ export default async function PropertyPage({ params }: PageProps) {
                 {/* CTA Button */}
                 <Link
                   href={`/auth?property=${slug}`}
-                  className="block w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white py-4 px-6 rounded-xl font-bold text-lg text-center shadow-xl hover:shadow-2xl transform hover:scale-[1.02] active:scale-[0.98] transition-all"
+                  className="block w-full bg-gradient-to-r from-[#00BC7D] to-[#009B66] hover:from-[#00BC7D] hover:to-[#009B66] text-white py-4 px-6 rounded-xl font-bold text-lg text-center shadow-xl hover:shadow-2xl transform hover:scale-[1.02] active:scale-[0.98] transition-all"
                 >
                   Get More Details
                 </Link>
@@ -382,7 +378,7 @@ export default async function PropertyPage({ params }: PageProps) {
         {/* Footer */}
         <footer className="mt-16 border-t border-slate-700/50 py-8">
           <div className="max-w-7xl mx-auto px-4 text-center text-slate-400 text-sm">
-            <p>&copy; {new Date().getFullYear()} OwnerFi. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} Ownerfi. All rights reserved.</p>
             <p className="mt-2">
               Owner financing homes in {property.city}, {property.state} and nationwide.
             </p>

@@ -38,21 +38,21 @@ export function generateStateMetadata(state: string): Metadata {
   ).join(' ');
 
   return {
-    title: `Owner Financing ${stateTitle} - Seller Financed Homes | OwnerFi`,
+    title: `Owner Financing ${stateTitle} - Seller Financed Homes | Ownerfi`,
     description: `Find owner financed homes in ${stateTitle}. Browse seller financing properties with flexible terms, no bank approval needed. Bad credit OK, low down payments.`,
     keywords: `owner financing ${stateTitle}, seller financing ${stateTitle}, ${stateTitle} real estate, no bank ${stateTitle}, owner financed homes ${stateTitle}, rent to own ${stateTitle}`,
     alternates: {
       canonical: `https://ownerfi.ai/owner-financing-${state}`
     },
     openGraph: {
-      title: `Owner Financing ${stateTitle} - No Bank Required | OwnerFi`,
+      title: `Owner Financing ${stateTitle} - No Bank Required | Ownerfi`,
       description: `Discover owner financed properties in ${stateTitle}. Skip the bank with flexible seller financing options.`,
       url: `https://ownerfi.ai/owner-financing-${state}`,
       images: [{
         url: 'https://ownerfi.ai/og-image.png',
         width: 1200,
         height: 630,
-        alt: `Owner Financing ${stateTitle} - OwnerFi`
+        alt: `Owner Financing ${stateTitle} - Ownerfi`
       }]
     },
     twitter: {
@@ -71,21 +71,21 @@ export function generateCityMetadata(city: string): Metadata {
   ).join(' ');
 
   return {
-    title: `${cityTitle} Owner Financing - Direct Seller Financing | OwnerFi`,
+    title: `${cityTitle} Owner Financing - Direct Seller Financing | Ownerfi`,
     description: `Owner financed properties in ${cityTitle}. Skip the bank with direct seller financing. View available homes with flexible terms and low down payments.`,
     keywords: `${cityTitle} owner financing, ${cityTitle} seller financing, ${cityTitle} real estate, ${cityTitle} homes for sale, ${cityTitle} no bank financing`,
     alternates: {
       canonical: `https://ownerfi.ai/${city}-owner-financing`
     },
     openGraph: {
-      title: `${cityTitle} Owner Financing - No Bank Required | OwnerFi`,
+      title: `${cityTitle} Owner Financing - No Bank Required | Ownerfi`,
       description: `Find owner financed homes in ${cityTitle}. Direct seller financing available.`,
       url: `https://ownerfi.ai/${city}-owner-financing`,
       images: [{
         url: 'https://ownerfi.ai/og-image.png',
         width: 1200,
         height: 630,
-        alt: `${cityTitle} Owner Financing - OwnerFi`
+        alt: `${cityTitle} Owner Financing - Ownerfi`
       }]
     },
     twitter: {
@@ -101,17 +101,17 @@ export function generateCityMetadata(city: string): Metadata {
 export function generateKeywordMetadata(keyword: string): Metadata {
   const configs = {
     'rent-to-own-homes': {
-      title: "Rent to Own Homes - No Credit Check Required | OwnerFi",
+      title: "Rent to Own Homes - No Credit Check Required | Ownerfi",
       description: "Find rent to own homes with flexible terms. No credit check required, low down payments, and pathway to homeownership. Better than traditional rent-to-own.",
       keywords: "rent to own homes, lease to own, rent with option to buy, no credit check homes, flexible homeownership, rent to own bad credit"
     },
     'bad-credit-home-buying': {
-      title: "Bad Credit Home Buying - Owner Financing Solutions | OwnerFi",
+      title: "Bad Credit Home Buying - Owner Financing Solutions | Ownerfi",
       description: "Buy a home with bad credit through owner financing. Flexible terms, no bank approval needed, fresh start to homeownership. Poor credit OK.",
       keywords: "bad credit home buying, poor credit mortgage, owner financing bad credit, no credit check real estate, bad credit real estate"
     },
     'no-credit-check-homes': {
-      title: "No Credit Check Homes - Owner Financed Properties | OwnerFi",
+      title: "No Credit Check Homes - Owner Financed Properties | Ownerfi",
       description: "Find homes with no credit check required. Owner financing makes homeownership possible regardless of credit history. Skip bank approval.",
       keywords: "no credit check homes, no credit real estate, owner financing no credit, buy house no credit check, no credit approval homes"
     }

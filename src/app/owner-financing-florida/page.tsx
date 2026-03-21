@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_US',
     url: 'https://ownerfi.ai/owner-financing-florida',
-    siteName: 'OwnerFi',
+    siteName: 'Ownerfi',
     title: 'Owner Financing Florida - Seller Financed Homes',
     description: 'Browse owner financed properties across Florida. No bank needed, flexible terms available.',
     images: [{
@@ -32,7 +32,7 @@ function generateLocalBusinessSchema() {
   return {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
-    "name": "OwnerFi Florida",
+    "name": "Ownerfi Florida",
     "description": "Discover owner financed properties in Florida",
     "url": "https://ownerfi.ai/owner-financing-florida",
     "areaServed": {
@@ -90,7 +90,7 @@ function generateFAQSchema() {
   }
 }
 
-export default function OwnerFinancingFlorida() {
+export default function OwnerfinancingFlorida() {
   return (
     <>
       <Script
@@ -104,20 +104,18 @@ export default function OwnerFinancingFlorida() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(generateFAQSchema()) }}
       />
 
-      <div className="min-h-screen bg-slate-900 text-white">
+      <div className="min-h-screen bg-[#111625] text-white">
         {/* Header */}
         <header className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 px-6 py-4">
           <div className="max-w-6xl mx-auto flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">O</span>
-              </div>
-              <span className="text-lg font-bold text-white">OwnerFi</span>
+              <img src="/logo.jpg" alt="Ownerfi" width={32} height={32} className="rounded-lg" />
+              <span className="text-lg font-bold text-white">Ownerfi</span>
             </Link>
             <nav className="flex items-center gap-4">
               <Link href="/" className="text-slate-300 hover:text-white text-sm">Home</Link>
               <Link href="/how-owner-finance-works" className="text-slate-300 hover:text-white text-sm">How It Works</Link>
-              <Link href="/auth" className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
+              <Link href="/auth" className="bg-[#00BC7D]/50 hover:bg-[#00BC7D] text-white px-4 py-2 rounded-lg text-sm font-medium">
                 Browse Properties
               </Link>
             </nav>
@@ -157,7 +155,7 @@ export default function OwnerFinancingFlorida() {
                   <div className="text-slate-300 mt-2">Florida Properties</div>
                 </div>
                 <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 text-center border border-slate-700/50">
-                  <div className="text-3xl font-bold text-emerald-400">0%</div>
+                  <div className="text-3xl font-bold text-[#00BC7D]">0%</div>
                   <div className="text-slate-300 mt-2">State Income Tax</div>
                 </div>
                 <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 text-center border border-slate-700/50">
@@ -173,7 +171,7 @@ export default function OwnerFinancingFlorida() {
           </section>
 
           {/* Call to Action Section */}
-          <section className="py-12 px-6 bg-gradient-to-r from-emerald-900/30 to-blue-900/30">
+          <section className="py-12 px-6 bg-gradient-to-r from-[#004D33]/30 to-blue-900/30">
             <div className="max-w-4xl mx-auto text-center">
               <h2 className="text-3xl font-bold text-white mb-4">
                 Ready to Find Your Florida Home?
@@ -184,7 +182,7 @@ export default function OwnerFinancingFlorida() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link href="/auth">
-                  <button className="bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white py-4 px-8 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-[1.02] shadow-lg hover:shadow-xl">
+                  <button className="bg-gradient-to-r from-[#00BC7D] to-[#00BC7D]/50 hover:from-[#00BC7D]/50 hover:to-[#00d68f] text-white py-4 px-8 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-[1.02] shadow-lg hover:shadow-xl">
                     🏠 Browse Florida Properties
                   </button>
                 </Link>
@@ -208,7 +206,7 @@ export default function OwnerFinancingFlorida() {
               </h2>
               <div className="grid md:grid-cols-3 gap-6">
                 <Link href="/owner-financing-miami" className="group">
-                  <div className="bg-slate-900/50 border border-slate-700/50 rounded-xl p-6 hover:border-blue-400/50 transition-all">
+                  <div className="bg-[#111625]/50 border border-slate-700/50 rounded-xl p-6 hover:border-blue-400/50 transition-all">
                     <h3 className="text-xl font-bold text-blue-400 mb-2 group-hover:text-blue-300">Miami</h3>
                     <p className="text-slate-300 text-sm mb-3">Miami-Dade County</p>
                     <ul className="text-slate-400 text-sm space-y-1">
@@ -222,8 +220,8 @@ export default function OwnerFinancingFlorida() {
                 </Link>
 
                 <Link href="/owner-financing-orlando" className="group">
-                  <div className="bg-slate-900/50 border border-slate-700/50 rounded-xl p-6 hover:border-emerald-400/50 transition-all">
-                    <h3 className="text-xl font-bold text-emerald-400 mb-2 group-hover:text-emerald-300">Orlando</h3>
+                  <div className="bg-[#111625]/50 border border-slate-700/50 rounded-xl p-6 hover:border-[#00BC7D]/50 transition-all">
+                    <h3 className="text-xl font-bold text-[#00BC7D] mb-2 group-hover:text-[#00d68f]">Orlando</h3>
                     <p className="text-slate-300 text-sm mb-3">Central Florida</p>
                     <ul className="text-slate-400 text-sm space-y-1">
                       <li>• Winter Park</li>
@@ -231,12 +229,12 @@ export default function OwnerFinancingFlorida() {
                       <li>• Lake Mary</li>
                       <li>• Sanford</li>
                     </ul>
-                    <p className="text-emerald-400 text-sm mt-3">70+ Properties →</p>
+                    <p className="text-[#00BC7D] text-sm mt-3">70+ Properties →</p>
                   </div>
                 </Link>
 
                 <Link href="/owner-financing-tampa" className="group">
-                  <div className="bg-slate-900/50 border border-slate-700/50 rounded-xl p-6 hover:border-purple-400/50 transition-all">
+                  <div className="bg-[#111625]/50 border border-slate-700/50 rounded-xl p-6 hover:border-purple-400/50 transition-all">
                     <h3 className="text-xl font-bold text-purple-400 mb-2 group-hover:text-purple-300">Tampa Bay</h3>
                     <p className="text-slate-300 text-sm mb-3">West Coast</p>
                     <ul className="text-slate-400 text-sm space-y-1">
@@ -250,7 +248,7 @@ export default function OwnerFinancingFlorida() {
                 </Link>
 
                 <Link href="/owner-financing-jacksonville" className="group">
-                  <div className="bg-slate-900/50 border border-slate-700/50 rounded-xl p-6 hover:border-yellow-400/50 transition-all">
+                  <div className="bg-[#111625]/50 border border-slate-700/50 rounded-xl p-6 hover:border-yellow-400/50 transition-all">
                     <h3 className="text-xl font-bold text-yellow-400 mb-2 group-hover:text-yellow-300">Jacksonville</h3>
                     <p className="text-slate-300 text-sm mb-3">North Florida</p>
                     <ul className="text-slate-400 text-sm space-y-1">
@@ -264,7 +262,7 @@ export default function OwnerFinancingFlorida() {
                 </Link>
 
                 <Link href="/owner-financing-fort-lauderdale" className="group">
-                  <div className="bg-slate-900/50 border border-slate-700/50 rounded-xl p-6 hover:border-orange-400/50 transition-all">
+                  <div className="bg-[#111625]/50 border border-slate-700/50 rounded-xl p-6 hover:border-orange-400/50 transition-all">
                     <h3 className="text-xl font-bold text-orange-400 mb-2 group-hover:text-orange-300">Fort Lauderdale</h3>
                     <p className="text-slate-300 text-sm mb-3">Broward County</p>
                     <ul className="text-slate-400 text-sm space-y-1">
@@ -278,7 +276,7 @@ export default function OwnerFinancingFlorida() {
                 </Link>
 
                 <Link href="/owner-financing-west-palm-beach" className="group">
-                  <div className="bg-slate-900/50 border border-slate-700/50 rounded-xl p-6 hover:border-cyan-400/50 transition-all">
+                  <div className="bg-[#111625]/50 border border-slate-700/50 rounded-xl p-6 hover:border-cyan-400/50 transition-all">
                     <h3 className="text-xl font-bold text-cyan-400 mb-2 group-hover:text-cyan-300">West Palm Beach</h3>
                     <p className="text-slate-300 text-sm mb-3">Palm Beach County</p>
                     <ul className="text-slate-400 text-sm space-y-1">
@@ -307,7 +305,7 @@ export default function OwnerFinancingFlorida() {
                   <p className="text-slate-300">Florida has no state income tax, leaving more money for your home payments and lifestyle.</p>
                 </div>
                 <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border border-slate-700/50">
-                  <div className="text-emerald-400 text-3xl mb-4">📈</div>
+                  <div className="text-[#00BC7D] text-3xl mb-4">📈</div>
                   <h3 className="text-xl font-semibold text-white mb-3">Appreciating Market</h3>
                   <p className="text-slate-300">Florida real estate consistently appreciates, making owner financed properties excellent investments.</p>
                 </div>
@@ -342,7 +340,7 @@ export default function OwnerFinancingFlorida() {
                 Types of Owner Financed Properties in Florida
               </h2>
               <div className="grid md:grid-cols-3 gap-8">
-                <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
+                <div className="bg-[#111625]/50 rounded-xl p-6 border border-slate-700/50">
                   <h3 className="text-xl font-semibold text-blue-400 mb-3">🏖️ Beachfront & Coastal</h3>
                   <ul className="text-slate-300 space-y-2">
                     <li>• Condos with ocean views</li>
@@ -351,8 +349,8 @@ export default function OwnerFinancingFlorida() {
                     <li>• Marina communities</li>
                   </ul>
                 </div>
-                <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
-                  <h3 className="text-xl font-semibold text-emerald-400 mb-3">🏡 Single Family Homes</h3>
+                <div className="bg-[#111625]/50 rounded-xl p-6 border border-slate-700/50">
+                  <h3 className="text-xl font-semibold text-[#00BC7D] mb-3">🏡 Single Family Homes</h3>
                   <ul className="text-slate-300 space-y-2">
                     <li>• Suburban neighborhoods</li>
                     <li>• Gated communities</li>
@@ -360,7 +358,7 @@ export default function OwnerFinancingFlorida() {
                     <li>• Golf course properties</li>
                   </ul>
                 </div>
-                <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
+                <div className="bg-[#111625]/50 rounded-xl p-6 border border-slate-700/50">
                   <h3 className="text-xl font-semibold text-purple-400 mb-3">💼 Investment Properties</h3>
                   <ul className="text-slate-300 space-y-2">
                     <li>• Vacation rentals</li>
@@ -402,7 +400,7 @@ export default function OwnerFinancingFlorida() {
                     a: "You'll need to obtain homeowners insurance including windstorm coverage. This is separate from your owner financing payments and is your responsibility as the property owner."
                   }
                 ].map((faq, i) => (
-                  <div key={i} className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
+                  <div key={i} className="bg-[#111625]/50 rounded-xl p-6 border border-slate-700/50">
                     <h3 className="text-xl font-semibold text-white mb-3">{faq.q}</h3>
                     <p className="text-slate-300">{faq.a}</p>
                   </div>

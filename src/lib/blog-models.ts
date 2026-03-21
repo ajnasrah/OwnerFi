@@ -77,7 +77,7 @@ export interface BlogPost {
   // Content
   title: string;
   subtitle?: string;
-  author: string; // "OwnerFi Team", "Abdullah", "Carz Inc"
+  author: string; // "Ownerfi Team", "Abdullah", "Carz Inc"
 
   // Sections (structured for social image generation)
   sections: BlogSection[];

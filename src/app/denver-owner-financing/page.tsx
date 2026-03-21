@@ -4,14 +4,14 @@ import { db } from '@/lib/firebase'
 import { collection, query, where, getDocs } from 'firebase/firestore'
 
 export const metadata: Metadata = {
-  title: 'Owner Financing Denver | Rent to Own Alternative CO | Downtown, LoDo | OwnerFi',
+  title: 'Owner Financing Denver | Rent to Own Alternative CO | Downtown, LoDo | Ownerfi',
   description: 'Find owner financed homes in Denver - better than rent to own! Immediate ownership in Downtown, LoDo, Capitol Hill. No banks needed. Flexible credit options.',
   keywords: 'owner financing denver, owner financed homes denver, rent to own denver, rent to own colorado, seller financing denver, no credit check homes denver, bad credit homes denver, denver real estate owner financing',
   openGraph: {
-    title: 'Owner Financed Homes in Denver - Better Than Rent to Own | OwnerFi',
+    title: 'Owner Financed Homes in Denver - Better Than Rent to Own | Ownerfi',
     description: 'Skip the banks! Find owner financed properties across Denver with immediate ownership. Serving Downtown, LoDo, Capitol Hill and more.',
     url: 'https://ownerfi.ai/denver-owner-financing',
-    siteName: 'OwnerFi',
+    siteName: 'Ownerfi',
     type: 'website',
   },
   twitter: {
@@ -53,7 +53,7 @@ async function getDenverProperties() {
   }
 }
 
-export default async function OwnerFinancingDenver() {
+export default async function OwnerfinancingDenver() {
   const { areaCounts, totalCount } = await getDenverProperties()
 
   const faqSchema = {
@@ -98,7 +98,7 @@ export default async function OwnerFinancingDenver() {
   const localBusinessSchema = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
-    "name": "OwnerFi Denver - Owner Financed Homes",
+    "name": "Ownerfi Denver - Owner Financed Homes",
     "description": "Find owner financed homes throughout Denver. Better than rent to own with immediate ownership.",
     "url": "https://ownerfi.ai/denver-owner-financing",
     "areaServed": {
@@ -149,7 +149,7 @@ export default async function OwnerFinancingDenver() {
             </p>
 
             <div className="grid md:grid-cols-3 gap-6 mb-8">
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-xl border border-green-200">
+              <div className="bg-gradient-to-br from-green-50 to-[#00BC7D]/5 p-6 rounded-xl border border-green-200">
                 <h3 className="font-bold text-green-900 mb-2">Immediate Denver Ownership</h3>
                 <p className="text-green-800">Get the deed right away, unlike rent to own</p>
               </div>
@@ -238,14 +238,14 @@ export default async function OwnerFinancingDenver() {
                   Great neighborhood with owner financing options
                 </p>
               </div>
-              <div className="p-6 bg-gradient-to-br from-emerald-50 to-emerald-50 rounded-xl border-2 border-emerald-200">
-                <h3 className="text-xl font-bold text-emerald-900 mb-2">
+              <div className="p-6 bg-gradient-to-br from-[#00BC7D]/5 to-[#00BC7D]/5 rounded-xl border-2 border-[#00BC7D]/30">
+                <h3 className="text-xl font-bold text-[#004D33] mb-2">
                   Cherry Creek
                 </h3>
-                <p className="text-emerald-700 mb-2">
+                <p className="text-[#009B66] mb-2">
                   {areaCounts['Cherry Creek'] || 'Premium'} owner financed properties
                 </p>
-                <p className="text-sm text-emerald-600 mb-3">
+                <p className="text-sm text-[#00BC7D] mb-3">
                   Great neighborhood with owner financing options
                 </p>
               </div>

@@ -30,7 +30,7 @@ export interface PropertySource {
 // ============================================
 // OWNER FINANCE DETAILS
 // ============================================
-export interface OwnerFinanceDetails {
+export interface OwnerfinanceDetails {
   verified: boolean;
   financingType: 'owner_finance' | 'seller_finance' | 'rent_to_own' | 'contract_for_deed' | 'assumable' | 'creative';
   primaryKeyword: string;
@@ -164,7 +164,7 @@ export interface UnifiedProperty {
   dealType: DealType;
 
   // Owner Finance Details (populated when dealType includes 'owner_finance')
-  ownerFinance?: OwnerFinanceDetails;
+  ownerFinance?: OwnerfinanceDetails;
 
   // Cash Deal Details (populated when dealType includes 'cash_deal')
   cashDeal?: CashDealDetails;
@@ -232,7 +232,7 @@ export const UNIFIED_PROPERTIES_COLLECTION = 'properties_unified';
 // ============================================
 // TYPE GUARDS
 // ============================================
-export function isOwnerFinanceProperty(property: UnifiedProperty): boolean {
+export function isOwnerfinanceProperty(property: UnifiedProperty): boolean {
   return property.dealType === 'owner_finance' || property.dealType === 'both';
 }
 
@@ -240,8 +240,8 @@ export function isCashDealProperty(property: UnifiedProperty): boolean {
   return property.dealType === 'cash_deal' || property.dealType === 'both';
 }
 
-export function hasVerifiedOwnerFinancing(property: UnifiedProperty): boolean {
-  return isOwnerFinanceProperty(property) &&
+export function hasVerifiedOwnerfinancing(property: UnifiedProperty): boolean {
+  return isOwnerfinanceProperty(property) &&
          property.ownerFinance?.verified === true;
 }
 
@@ -249,11 +249,11 @@ export function hasVerifiedOwnerFinancing(property: UnifiedProperty): boolean {
 // DEAL TYPE HELPERS
 // ============================================
 export function determineDealType(
-  passesOwnerFinance: boolean,
+  passesOwnerfinance: boolean,
   passesCashDeal: boolean
 ): DealType {
-  if (passesOwnerFinance && passesCashDeal) return 'both';
-  if (passesOwnerFinance) return 'owner_finance';
+  if (passesOwnerfinance && passesCashDeal) return 'both';
+  if (passesOwnerfinance) return 'owner_finance';
   if (passesCashDeal) return 'cash_deal';
   return 'standard';
 }

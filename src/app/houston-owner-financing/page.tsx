@@ -4,14 +4,14 @@ import { db } from '@/lib/firebase'
 import { collection, query, where, getDocs } from 'firebase/firestore'
 
 export const metadata: Metadata = {
-  title: 'Owner Financing Houston | Rent to Own Alternative TX | Montrose, River Oaks | OwnerFi',
+  title: 'Owner Financing Houston | Rent to Own Alternative TX | Montrose, River Oaks | Ownerfi',
   description: 'Find owner financed homes in Houston - better than rent to own! Immediate ownership in Montrose, River Oaks, Heights, Downtown. No banks needed. Flexible credit options.',
   keywords: 'owner financing houston, owner financed homes houston, rent to own houston, rent to own texas, owner financing montrose, seller financing houston, no credit check homes houston, bad credit homes houston, houston real estate owner financing',
   openGraph: {
-    title: 'Owner Financed Homes in Houston - Better Than Rent to Own | OwnerFi',
+    title: 'Owner Financed Homes in Houston - Better Than Rent to Own | Ownerfi',
     description: 'Skip the banks! Find owner financed properties across Houston with immediate ownership. Serving Montrose, River Oaks, Heights and more.',
     url: 'https://ownerfi.ai/houston-owner-financing',
-    siteName: 'OwnerFi',
+    siteName: 'Ownerfi',
     type: 'website',
   },
   twitter: {
@@ -53,7 +53,7 @@ async function getHoustonProperties() {
   }
 }
 
-export default async function OwnerFinancingHouston() {
+export default async function OwnerfinancingHouston() {
   const { areaCounts, totalCount } = await getHoustonProperties()
 
   const faqSchema = {
@@ -98,7 +98,7 @@ export default async function OwnerFinancingHouston() {
   const localBusinessSchema = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
-    "name": "OwnerFi Houston - Owner Financed Homes",
+    "name": "Ownerfi Houston - Owner Financed Homes",
     "description": "Find owner financed homes throughout Houston. Better than rent to own with immediate ownership.",
     "url": "https://ownerfi.ai/houston-owner-financing",
     "areaServed": {
@@ -150,7 +150,7 @@ export default async function OwnerFinancingHouston() {
             </p>
 
             <div className="grid md:grid-cols-3 gap-6 mb-8">
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-xl border border-green-200">
+              <div className="bg-gradient-to-br from-green-50 to-[#00BC7D]/5 p-6 rounded-xl border border-green-200">
                 <h3 className="font-bold text-green-900 mb-2">Immediate Houston Ownership</h3>
                 <p className="text-green-800">Get the deed right away, unlike rent to own</p>
               </div>
@@ -172,7 +172,7 @@ export default async function OwnerFinancingHouston() {
           </div>
 
           {/* Call to Action Section */}
-          <section className="py-12 px-6 bg-gradient-to-r from-emerald-900/30 to-blue-900/30 rounded-2xl mb-12">
+          <section className="py-12 px-6 bg-gradient-to-r from-[#004D33]/30 to-blue-900/30 rounded-2xl mb-12">
             <div className="max-w-4xl mx-auto text-center">
               <h2 className="text-3xl font-bold text-white mb-4">
                 Ready to Find Your Houston Home?
@@ -183,7 +183,7 @@ export default async function OwnerFinancingHouston() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link href="/auth">
-                  <button className="bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white py-4 px-8 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-[1.02] shadow-lg hover:shadow-xl">
+                  <button className="bg-gradient-to-r from-[#00BC7D] to-[#00BC7D]/50 hover:from-[#00BC7D]/50 hover:to-[#00d68f] text-white py-4 px-8 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-[1.02] shadow-lg hover:shadow-xl">
                     🏠 Browse Houston Properties
                   </button>
                 </Link>
@@ -236,7 +236,7 @@ export default async function OwnerFinancingHouston() {
                 </p>
               </div>
 
-              <div className="p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border-2 border-green-200">
+              <div className="p-6 bg-gradient-to-br from-green-50 to-[#00BC7D]/5 rounded-xl border-2 border-green-200">
                 <h3 className="text-xl font-bold text-green-900 mb-2">
                   Heights
                 </h3>

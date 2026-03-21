@@ -691,7 +691,7 @@ export async function cleanupLowQualityArticles(keepTopN: number = 10): Promise<
   }
 
   if (deleted.carz > 0 || deleted.ownerfi > 0) {
-    console.log(`🧹 Cleanup complete: ${deleted.carz} Carz + ${deleted.ownerfi} OwnerFi articles deleted`);
+    console.log(`🧹 Cleanup complete: ${deleted.carz} Carz + ${deleted.ownerfi} Ownerfi articles deleted`);
   }
 
   return deleted;
@@ -731,7 +731,7 @@ export async function cleanupProcessedArticles(olderThanDays: number = 7): Promi
   }
 
   if (deleted.carz > 0 || deleted.ownerfi > 0) {
-    console.log(`🧹 Processed article cleanup: ${deleted.carz} Carz + ${deleted.ownerfi} OwnerFi deleted`);
+    console.log(`🧹 Processed article cleanup: ${deleted.carz} Carz + ${deleted.ownerfi} Ownerfi deleted`);
   }
 
   return deleted;
@@ -970,7 +970,7 @@ export async function findWorkflowBySubmagicId(submagicProjectId: string): Promi
 } | null> {
   if (!db) return null;
 
-  // Search in both Carz and OwnerFi workflow queues
+  // Search in both Carz and Ownerfi workflow queues
   for (const brand of ['carz', 'ownerfi'] as const) {
     const collectionName = getCollectionName('WORKFLOW_QUEUE', brand);
     const q = query(

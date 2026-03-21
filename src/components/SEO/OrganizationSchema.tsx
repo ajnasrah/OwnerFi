@@ -5,7 +5,7 @@ export function OrganizationSchema() {
     '@context': 'https://schema.org',
     '@type': 'Organization',
     '@id': 'https://ownerfi.ai/#organization',
-    name: 'OwnerFi',
+    name: 'Ownerfi',
     url: 'https://ownerfi.ai',
     logo: 'https://ownerfi.ai/logo.png',
     description: 'Find owner financed properties in Texas, Florida, and Georgia. Skip the bank with flexible seller financing options.',

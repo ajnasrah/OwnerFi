@@ -225,8 +225,8 @@ export default function AuthSetup() {
 
   if (!verifiedPhone) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-400"></div>
+      <div className="min-h-screen bg-[#111625] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00BC7D]"></div>
       </div>
     );
   }
@@ -256,7 +256,7 @@ export default function AuthSetup() {
                   value={formData.firstName}
                   onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
                   onFocus={trackFormStart}
-                  className="w-full px-3 py-2.5 bg-slate-900/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-white placeholder-slate-500"
+                  className="w-full px-3 py-2.5 bg-[#111625]/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00BC7D] text-white placeholder-slate-500"
                   placeholder="John"
                 />
               </div>
@@ -267,7 +267,7 @@ export default function AuthSetup() {
                   required
                   value={formData.lastName}
                   onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
-                  className="w-full px-3 py-2.5 bg-slate-900/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-white placeholder-slate-500"
+                  className="w-full px-3 py-2.5 bg-[#111625]/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00BC7D] text-white placeholder-slate-500"
                   placeholder="Doe"
                 />
               </div>
@@ -280,7 +280,7 @@ export default function AuthSetup() {
                 required
                 value={formData.email}
                 onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                className="w-full px-3 py-2.5 bg-slate-900/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-white placeholder-slate-500"
+                className="w-full px-3 py-2.5 bg-[#111625]/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00BC7D] text-white placeholder-slate-500"
                 placeholder="john@example.com"
               />
               <p className="text-xs text-slate-400 mt-1">We'll use this to send you updates</p>
@@ -311,7 +311,7 @@ export default function AuthSetup() {
                     name="isRealtor"
                     checked={formData.isRealtor === true}
                     onChange={() => setFormData(prev => ({ ...prev, isRealtor: true }))}
-                    className="w-4 h-4 text-emerald-500 bg-slate-700 border-slate-600 focus:ring-emerald-400"
+                    className="w-4 h-4 text-[#00BC7D] bg-slate-700 border-slate-600 focus:ring-[#00BC7D]"
                   />
                   <span className="ml-2 text-slate-200">Yes</span>
                 </label>
@@ -321,7 +321,7 @@ export default function AuthSetup() {
                     name="isRealtor"
                     checked={formData.isRealtor === false}
                     onChange={() => setFormData(prev => ({ ...prev, isRealtor: false }))}
-                    className="w-4 h-4 text-emerald-500 bg-slate-700 border-slate-600 focus:ring-emerald-400"
+                    className="w-4 h-4 text-[#00BC7D] bg-slate-700 border-slate-600 focus:ring-[#00BC7D]"
                   />
                   <span className="ml-2 text-slate-200">No</span>
                 </label>
@@ -338,7 +338,7 @@ export default function AuthSetup() {
                     name="isInvestor"
                     checked={formData.isInvestor === true}
                     onChange={() => setFormData(prev => ({ ...prev, isInvestor: true }))}
-                    className="w-4 h-4 text-emerald-500 bg-slate-700 border-slate-600 focus:ring-emerald-400"
+                    className="w-4 h-4 text-[#00BC7D] bg-slate-700 border-slate-600 focus:ring-[#00BC7D]"
                   />
                   <span className="ml-2 text-slate-200">Yes</span>
                 </label>
@@ -348,7 +348,7 @@ export default function AuthSetup() {
                     name="isInvestor"
                     checked={formData.isInvestor === false}
                     onChange={() => setFormData(prev => ({ ...prev, isInvestor: false }))}
-                    className="w-4 h-4 text-emerald-500 bg-slate-700 border-slate-600 focus:ring-emerald-400"
+                    className="w-4 h-4 text-[#00BC7D] bg-slate-700 border-slate-600 focus:ring-[#00BC7D]"
                   />
                   <span className="ml-2 text-slate-200">No</span>
                 </label>
@@ -366,7 +366,7 @@ export default function AuthSetup() {
                     required
                     value={formData.licenseNumber}
                     onChange={(e) => setFormData(prev => ({ ...prev, licenseNumber: e.target.value }))}
-                    className="w-full px-3 py-2.5 bg-slate-900/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-white placeholder-slate-500"
+                    className="w-full px-3 py-2.5 bg-[#111625]/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00BC7D] text-white placeholder-slate-500"
                     placeholder="TX12345678"
                   />
                   <p className="text-xs text-slate-400 mt-1">Enter your real estate license number</p>
@@ -378,7 +378,7 @@ export default function AuthSetup() {
                     type="text"
                     value={formData.company}
                     onChange={(e) => setFormData(prev => ({ ...prev, company: e.target.value }))}
-                    className="w-full px-3 py-2.5 bg-slate-900/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-white placeholder-slate-500"
+                    className="w-full px-3 py-2.5 bg-[#111625]/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00BC7D] text-white placeholder-slate-500"
                     placeholder="ABC Realty"
                   />
                 </div>
@@ -392,19 +392,19 @@ export default function AuthSetup() {
                   id="terms"
                   checked={agreedToTerms}
                   onChange={(e) => setAgreedToTerms(e.target.checked)}
-                  className="mt-0.5 w-4 h-4 text-emerald-500 bg-slate-700 border-slate-600 rounded focus:ring-emerald-400 cursor-pointer"
+                  className="mt-0.5 w-4 h-4 text-[#00BC7D] bg-slate-700 border-slate-600 rounded focus:ring-[#00BC7D] cursor-pointer"
                   required
                 />
                 <label htmlFor="terms" className="text-xs text-slate-300 leading-relaxed cursor-pointer">
                   I agree to the{' '}
-                  <Link href="/terms" className="text-emerald-400 hover:text-emerald-300 font-semibold underline" target="_blank">
+                  <Link href="/terms" className="text-[#00BC7D] hover:text-[#00d68f] font-semibold underline" target="_blank">
                     Terms and Conditions
                   </Link>
                   {' '}and{' '}
-                  <Link href="/privacy" className="text-emerald-400 hover:text-emerald-300 font-semibold underline" target="_blank">
+                  <Link href="/privacy" className="text-[#00BC7D] hover:text-[#00d68f] font-semibold underline" target="_blank">
                     Privacy Policy
                   </Link>
-                  {'. I understand that my contact information may be shared with independent licensed real estate agents who are not employees of OwnerFi. I consent to receive text messages and calls from OwnerFi and these third-party agents regarding properties I express interest in. OwnerFi receives a referral fee from agents. Message and data rates may apply.'}
+                  {'. I understand that my contact information may be shared with independent licensed real estate agents who are not employees of Ownerfi. I consent to receive text messages and calls from Ownerfi and these third-party agents regarding properties I express interest in. Ownerfi receives a referral fee from agents. Message and data rates may apply.'}
                 </label>
               </div>
             </div>
@@ -412,7 +412,7 @@ export default function AuthSetup() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white py-3 px-4 rounded-lg font-bold transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-gradient-to-r from-[#00BC7D] to-[#009B66] hover:from-[#00BC7D] hover:to-[#009B66] text-white py-3 px-4 rounded-lg font-bold transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Creating Account...' : 'Create Account & Start Browsing →'}
             </button>

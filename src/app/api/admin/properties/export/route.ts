@@ -34,7 +34,7 @@ export async function GET(_request: NextRequest) {
     const propertiesQuery = query(
       collection(db, 'properties'),
       where('isActive', '==', true),
-      where('isOwnerFinance', '==', true),
+      where('isOwnerfinance', '==', true),
       orderBy('createdAt', 'desc')
     );
 

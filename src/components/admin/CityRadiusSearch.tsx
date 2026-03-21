@@ -249,7 +249,7 @@ export function CityRadiusSearch({ onSearch, className = '' }: CityRadiusSearchP
             }}
             className={`flex-1 px-4 py-2 rounded-lg font-semibold transition-colors ${
               searchType === 'city'
-                ? 'bg-emerald-500 text-white'
+                ? 'bg-[#00BC7D]/50 text-white'
                 : 'bg-slate-700 text-slate-400 hover:bg-slate-600'
             }`}
           >
@@ -263,7 +263,7 @@ export function CityRadiusSearch({ onSearch, className = '' }: CityRadiusSearchP
             }}
             className={`flex-1 px-4 py-2 rounded-lg font-semibold transition-colors ${
               searchType === 'state'
-                ? 'bg-emerald-500 text-white'
+                ? 'bg-[#00BC7D]/50 text-white'
                 : 'bg-slate-700 text-slate-400 hover:bg-slate-600'
             }`}
           >
@@ -280,7 +280,7 @@ export function CityRadiusSearch({ onSearch, className = '' }: CityRadiusSearchP
             <select
               value={selectedState}
               onChange={(e) => handleStateChange(e.target.value)}
-              className="w-full px-4 py-3 rounded-lg bg-slate-700 border border-slate-600 text-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 outline-none"
+              className="w-full px-4 py-3 rounded-lg bg-slate-700 border border-slate-600 text-white focus:border-[#00BC7D] focus:ring-2 focus:ring-[#00BC7D] outline-none"
             >
               <option value="">All States</option>
               {US_STATES.map((state) => (
@@ -306,14 +306,14 @@ export function CityRadiusSearch({ onSearch, className = '' }: CityRadiusSearchP
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onFocus={() => query.length >= 2 && predictions.length > 0 && setShowDropdown(true)}
-              className="w-full px-4 py-3 rounded-lg bg-slate-700 border border-slate-600 text-white placeholder-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 outline-none"
+              className="w-full px-4 py-3 rounded-lg bg-slate-700 border border-slate-600 text-white placeholder-slate-400 focus:border-[#00BC7D] focus:ring-2 focus:ring-[#00BC7D] outline-none"
               placeholder="Enter city name (e.g., Memphis, Dallas, Houston...)"
               autoComplete="off"
             />
 
             {loading && (
               <div className="absolute right-3 top-3.5">
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-emerald-400"></div>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-[#00BC7D]"></div>
               </div>
             )}
           </div>
@@ -341,7 +341,7 @@ export function CityRadiusSearch({ onSearch, className = '' }: CityRadiusSearchP
         {searchType === 'city' && (
         <div>
           <label className="block text-white mb-2 font-semibold">
-            Search Radius: <span className="text-emerald-400">{radius} miles</span>
+            Search Radius: <span className="text-[#00BC7D]">{radius} miles</span>
           </label>
 
           <div className="flex items-center gap-4">
@@ -352,7 +352,7 @@ export function CityRadiusSearch({ onSearch, className = '' }: CityRadiusSearchP
               step="5"
               value={radius}
               onChange={(e) => handleRadiusChange(parseInt(e.target.value))}
-              className="flex-1 h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+              className="flex-1 h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-[#00BC7D]"
             />
 
             <div className="flex gap-2">
@@ -362,7 +362,7 @@ export function CityRadiusSearch({ onSearch, className = '' }: CityRadiusSearchP
                   onClick={() => handleRadiusChange(value)}
                   className={`px-3 py-1 rounded text-sm font-semibold transition-colors ${
                     radius === value
-                      ? 'bg-emerald-500 text-white'
+                      ? 'bg-[#00BC7D]/50 text-white'
                       : 'bg-slate-700 text-slate-400 hover:bg-slate-600'
                   }`}
                 >
@@ -407,7 +407,7 @@ export function CityRadiusSearch({ onSearch, className = '' }: CityRadiusSearchP
 
             <button
               onClick={handleClearSearch}
-              className="text-emerald-400 hover:text-emerald-300 font-semibold text-sm px-3 py-1 rounded hover:bg-slate-600 transition-colors"
+              className="text-[#00BC7D] hover:text-[#00d68f] font-semibold text-sm px-3 py-1 rounded hover:bg-slate-600 transition-colors"
             >
               Clear
             </button>

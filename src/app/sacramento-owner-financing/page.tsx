@@ -4,14 +4,14 @@ import { db } from '@/lib/firebase'
 import { collection, query, where, getDocs } from 'firebase/firestore'
 
 export const metadata: Metadata = {
-  title: 'Owner Financing Sacramento | Rent to Own Alternative CA | Downtown, Midtown | OwnerFi',
+  title: 'Owner Financing Sacramento | Rent to Own Alternative CA | Downtown, Midtown | Ownerfi',
   description: 'Find owner financed homes in Sacramento - better than rent to own! Immediate ownership in Downtown, Midtown, East Sacramento. No banks needed. Flexible credit options.',
   keywords: 'owner financing sacramento, owner financed homes sacramento, rent to own sacramento, rent to own california, seller financing sacramento, no credit check homes sacramento, bad credit homes sacramento, sacramento real estate owner financing',
   openGraph: {
-    title: 'Owner Financed Homes in Sacramento - Better Than Rent to Own | OwnerFi',
+    title: 'Owner Financed Homes in Sacramento - Better Than Rent to Own | Ownerfi',
     description: 'Skip the banks! Find owner financed properties across Sacramento with immediate ownership. Serving Downtown, Midtown, East Sacramento and more.',
     url: 'https://ownerfi.ai/sacramento-owner-financing',
-    siteName: 'OwnerFi',
+    siteName: 'Ownerfi',
     type: 'website',
   },
   twitter: {
@@ -53,7 +53,7 @@ async function getSacramentoProperties() {
   }
 }
 
-export default async function OwnerFinancingSacramento() {
+export default async function OwnerfinancingSacramento() {
   const { areaCounts, totalCount } = await getSacramentoProperties()
 
   const faqSchema = {
@@ -98,7 +98,7 @@ export default async function OwnerFinancingSacramento() {
   const localBusinessSchema = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
-    "name": "OwnerFi Sacramento - Owner Financed Homes",
+    "name": "Ownerfi Sacramento - Owner Financed Homes",
     "description": "Find owner financed homes throughout Sacramento. Better than rent to own with immediate ownership.",
     "url": "https://ownerfi.ai/sacramento-owner-financing",
     "areaServed": {
@@ -149,11 +149,11 @@ export default async function OwnerFinancingSacramento() {
             </p>
 
             <div className="grid md:grid-cols-3 gap-6 mb-8">
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-xl border border-green-200">
+              <div className="bg-gradient-to-br from-green-50 to-[#00BC7D]/5 p-6 rounded-xl border border-green-200">
                 <h3 className="font-bold text-green-900 mb-2">Immediate Sacramento Ownership</h3>
                 <p className="text-green-800">Get the deed right away, unlike rent to own</p>
               </div>
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-xl border border-green-200">
+              <div className="bg-gradient-to-br from-green-50 to-[#00BC7D]/5 p-6 rounded-xl border border-green-200">
                 <h3 className="font-bold text-green-900 mb-2">California Capital</h3>
                 <p className="text-green-800">Premium location, great lifestyle</p>
               </div>
@@ -164,14 +164,14 @@ export default async function OwnerFinancingSacramento() {
             </div>
 
             <Link href="/auth">
-              <button className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:from-green-700 hover:to-emerald-700 transition-all transform hover:scale-105 shadow-lg">
+              <button className="bg-gradient-to-r from-green-600 to-[#00BC7D] text-white px-8 py-4 rounded-xl font-semibold text-lg hover:from-green-700 hover:to-[#009B66] transition-all transform hover:scale-105 shadow-lg">
                 Browse Sacramento Properties →
               </button>
             </Link>
           </div>
 
           {/* Call to Action Section */}
-          <section className="py-12 px-6 bg-gradient-to-r from-green-900/30 to-emerald-900/30 rounded-2xl mb-12">
+          <section className="py-12 px-6 bg-gradient-to-r from-green-900/30 to-[#004D33]/30 rounded-2xl mb-12">
             <div className="max-w-4xl mx-auto text-center">
               <h2 className="text-3xl font-bold text-white mb-4">
                 Ready to Find Your Sacramento Home?
@@ -238,14 +238,14 @@ export default async function OwnerFinancingSacramento() {
                   Great neighborhood with owner financing options
                 </p>
               </div>
-              <div className="p-6 bg-gradient-to-br from-emerald-50 to-emerald-50 rounded-xl border-2 border-emerald-200">
-                <h3 className="text-xl font-bold text-emerald-900 mb-2">
+              <div className="p-6 bg-gradient-to-br from-[#00BC7D]/5 to-[#00BC7D]/5 rounded-xl border-2 border-[#00BC7D]/30">
+                <h3 className="text-xl font-bold text-[#004D33] mb-2">
                   Land Park
                 </h3>
-                <p className="text-emerald-700 mb-2">
+                <p className="text-[#009B66] mb-2">
                   {areaCounts['Land Park'] || 'Premium'} owner financed properties
                 </p>
-                <p className="text-sm text-emerald-600 mb-3">
+                <p className="text-sm text-[#00BC7D] mb-3">
                   Great neighborhood with owner financing options
                 </p>
               </div>
@@ -373,7 +373,7 @@ export default async function OwnerFinancingSacramento() {
           </div>
 
           {/* CTA Section */}
-          <div className="bg-gradient-to-r from-green-600 to-emerald-600 rounded-2xl shadow-xl p-8 text-center text-white">
+          <div className="bg-gradient-to-r from-green-600 to-[#00BC7D] rounded-2xl shadow-xl p-8 text-center text-white">
             <h2 className="text-3xl font-bold mb-4">
               Start Your Sacramento Homeownership Journey Today
             </h2>

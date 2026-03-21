@@ -4,14 +4,14 @@ import { db } from '@/lib/firebase'
 import { collection, query, where, getDocs } from 'firebase/firestore'
 
 export const metadata: Metadata = {
-  title: 'Bad Credit Home Buying | Owner Financing for All Credit | Rent to Own Alternative | OwnerFi',
+  title: 'Bad Credit Home Buying | Owner Financing for All Credit | Rent to Own Alternative | Ownerfi',
   description: 'Buy a home with bad credit through owner financing - better than rent to own! Many sellers offer flexible credit terms. No bank approval needed. Find homes that work with your credit situation.',
   keywords: 'bad credit home buying, bad credit homes, poor credit home loans, no credit check homes, owner financing bad credit, rent to own bad credit, buy house bad credit, homes for bad credit, seller financing bad credit, bad credit mortgage alternative',
   openGraph: {
-    title: 'Bad Credit Home Buying - Owner Financing Solutions | OwnerFi',
+    title: 'Bad Credit Home Buying - Owner Financing Solutions | Ownerfi',
     description: 'Don\'t let bad credit stop you from homeownership. Find owner financed homes with flexible credit requirements. Better than rent to own!',
     url: 'https://ownerfi.ai/bad-credit-home-buying',
-    siteName: 'OwnerFi',
+    siteName: 'Ownerfi',
     type: 'website',
   },
   twitter: {
@@ -106,11 +106,11 @@ export default async function BadCreditHomeBuying() {
     "description": "Complete guide to buying a home with bad credit through owner financing. Learn how to bypass banks and work directly with sellers.",
     "author": {
       "@type": "Organization",
-      "name": "OwnerFi"
+      "name": "Ownerfi"
     },
     "publisher": {
       "@type": "Organization",
-      "name": "OwnerFi",
+      "name": "Ownerfi",
       "url": "https://ownerfi.ai"
     },
     "datePublished": "2025-01-01",
@@ -150,7 +150,7 @@ export default async function BadCreditHomeBuying() {
               Unlike rent to own, owner financing can offer immediate ownership without traditional bank approval.
             </p>
 
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-xl border-2 border-green-300 mb-8">
+            <div className="bg-gradient-to-r from-green-50 to-[#00BC7D]/5 p-6 rounded-xl border-2 border-green-300 mb-8">
               <h2 className="text-2xl font-bold text-green-900 mb-4">
                 Important: Credit Requirements Vary by Seller
               </h2>
@@ -412,7 +412,7 @@ export default async function BadCreditHomeBuying() {
           </div>
 
           {/* Success Tips */}
-          <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl shadow-xl p-8 mb-12 border border-green-200">
+          <div className="bg-gradient-to-br from-green-50 to-[#00BC7D]/5 rounded-2xl shadow-xl p-8 mb-12 border border-green-200">
             <h2 className="text-3xl font-bold text-green-900 mb-6">
               Tips for Success: Buying with Bad Credit
             </h2>

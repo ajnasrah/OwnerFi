@@ -34,7 +34,7 @@ export function LeadCard({
   );
 
   let statusLabel = 'Available';
-  let statusColor = 'bg-emerald-500/20 text-emerald-400';
+  let statusColor = 'bg-[#00BC7D]/20 text-[#00BC7D]';
   if (hasSignedAgreement) {
     statusLabel = 'Accepted';
     statusColor = 'bg-blue-500/20 text-blue-400';
@@ -56,7 +56,7 @@ export function LeadCard({
           </h4>
           <p className="text-slate-400 text-sm">{lead.city}, {lead.state}</p>
           {lead.matchScore != null && lead.matchScore > 0 && (
-            <p className="text-emerald-400 text-xs mt-1">
+            <p className="text-[#00BC7D] text-xs mt-1">
               {lead.matchScore}% match
               {lead.likedPropertiesCount ? ` • ${lead.likedPropertiesCount} liked` : ''}
             </p>
@@ -91,7 +91,7 @@ export function LeadCard({
       ) : (
         <button
           onClick={() => onAcceptLead(lead.id, `${lead.firstName} ${lead.lastName}`)}
-          className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-2 px-4 rounded-lg font-medium transition-colors"
+          className="w-full bg-[#00BC7D]/50 hover:bg-[#00BC7D] text-white py-2 px-4 rounded-lg font-medium transition-colors"
         >
           Accept Lead
         </button>

@@ -1,9 +1,9 @@
 // RF-701 Referral Agreement Template - Tennessee Association of REALTORS®
-// Auto-filled with OwnerFi company data, realtor data, and buyer data
+// Auto-filled with Ownerfi company data, realtor data, and buyer data
 //
 // ROLE ASSIGNMENT (Updated February 2026):
-// - Section 1 (Referring Company): OwnerFi — finds buyer leads and refers them to realtors
-// - Section 2 (Receiving Company / Paying Fee): Realtor's brokerage — receives the referral and pays OwnerFi the fee
+// - Section 1 (Referring Company): Ownerfi — finds buyer leads and refers them to realtors
+// - Section 2 (Receiving Company / Paying Fee): Realtor's brokerage — receives the referral and pays Ownerfi the fee
 
 export interface AgreementTemplateData {
   agreementNumber: string;
@@ -11,7 +11,7 @@ export interface AgreementTemplateData {
   expirationDate: string;
   timeZone: string;
 
-  // Section 1: COMPANY REFERRING THE BUYER OR SELLER (OwnerFi)
+  // Section 1: COMPANY REFERRING THE BUYER OR SELLER (Ownerfi)
   referringCompanyName: string;
   referringCompanyAddress: string;
   referringCompanyPhone: string;
@@ -103,19 +103,19 @@ Agreement Number: ${data.agreementNumber}
 ================================================================================
 
 8. INDEMNIFICATION:
-   Receiving Company agrees to INDEMNIFY, DEFEND, AND HOLD HARMLESS OwnerFi, its affiliates, officers, directors, employees, and contractors from and against any and all claims, damages, fines, penalties, settlements, costs, or expenses (including reasonable attorneys' fees) arising from or related to Receiving Company's interactions with the referred Prospect, including but not limited to: (a) TCPA or state telemarketing violations; (b) misrepresentation of property data; (c) transaction failures; (d) failure to verify creative finance risks; (e) any communications made to the Prospect; or (f) any claims by the Prospect arising from services rendered by the Receiving Company.
+   Receiving Company agrees to INDEMNIFY, DEFEND, AND HOLD HARMLESS Ownerfi, its affiliates, officers, directors, employees, and contractors from and against any and all claims, damages, fines, penalties, settlements, costs, or expenses (including reasonable attorneys' fees) arising from or related to Receiving Company's interactions with the referred Prospect, including but not limited to: (a) TCPA or state telemarketing violations; (b) misrepresentation of property data; (c) transaction failures; (d) failure to verify creative finance risks; (e) any communications made to the Prospect; or (f) any claims by the Prospect arising from services rendered by the Receiving Company.
 
 9. TCPA & CONTACT COMPLIANCE:
-   Receiving Company acknowledges review of and agreement to OwnerFi's TCPA Compliance Agreement (available at ownerfi.ai/tcpa-compliance). Receiving Company expressly agrees to: (a) comply with the federal Telephone Consumer Protection Act (TCPA), Telemarketing Sales Rule (TSR), and all applicable state telemarketing laws; (b) honor all opt-out requests within 24 hours; (c) maintain an internal Do Not Call list; (d) properly identify themselves in all communications; (e) use automated dialing/texting only in compliance with applicable laws. All communications to the Prospect are the SOLE RESPONSIBILITY of the Receiving Company.
+   Receiving Company acknowledges review of and agreement to Ownerfi's TCPA Compliance Agreement (available at ownerfi.ai/tcpa-compliance). Receiving Company expressly agrees to: (a) comply with the federal Telephone Consumer Protection Act (TCPA), Telemarketing Sales Rule (TSR), and all applicable state telemarketing laws; (b) honor all opt-out requests within 24 hours; (c) maintain an internal Do Not Call list; (d) properly identify themselves in all communications; (e) use automated dialing/texting only in compliance with applicable laws. All communications to the Prospect are the SOLE RESPONSIBILITY of the Receiving Company.
 
 10. RESPA COMPLIANCE:
     Both parties confirm this Referral Fee complies with RESPA Section 8 and represents compensation for actual referral services rendered. Receiving Company confirms: (a) no portion of the Referral Fee is passed to or influences the Prospect's selection of settlement services; (b) Receiving Company will make required disclosures to the Prospect regarding the referral relationship; (c) this agreement does not constitute a kickback or unearned fee prohibited under federal law.
 
 11. CREATIVE FINANCE ACKNOWLEDGMENT:
-    Receiving Company acknowledges that referred Prospects may seek owner-financed or creative finance properties. Receiving Company has reviewed OwnerFi's Creative Finance Disclaimer (available at ownerfi.ai/creative-finance-disclaimer) and agrees to: (a) direct Prospects to independently verify all property and financing data with licensed professionals; (b) make no representations about creative finance structures on OwnerFi's behalf; (c) assume all liability for any Prospect losses related to creative finance transactions (including due-on-sale triggers, title issues, Dodd-Frank violations). OWNERFI BEARS ZERO LIABILITY FOR CREATIVE FINANCE OUTCOMES.
+    Receiving Company acknowledges that referred Prospects may seek owner-financed or creative finance properties. Receiving Company has reviewed Ownerfi's Creative Finance Disclaimer (available at ownerfi.ai/creative-finance-disclaimer) and agrees to: (a) direct Prospects to independently verify all property and financing data with licensed professionals; (b) make no representations about creative finance structures on Ownerfi's behalf; (c) assume all liability for any Prospect losses related to creative finance transactions (including due-on-sale triggers, title issues, Dodd-Frank violations). OWNERFI BEARS ZERO LIABILITY FOR CREATIVE FINANCE OUTCOMES.
 
 12. DATA DISCLAIMER & AS-IS ACCEPTANCE:
-    Receiving Company acknowledges and accepts that: (a) Prospect contact information is provided "AS-IS" from public sources, MLS data, or user submissions without independent verification by OwnerFi; (b) OwnerFi makes no warranties regarding the accuracy, completeness, or reliability of Prospect data; (c) Receiving Company will independently confirm all Prospect details before proceeding; (d) OwnerFi is not liable for any inaccuracies in Prospect information or any resulting damages.
+    Receiving Company acknowledges and accepts that: (a) Prospect contact information is provided "AS-IS" from public sources, MLS data, or user submissions without independent verification by Ownerfi; (b) Ownerfi makes no warranties regarding the accuracy, completeness, or reliability of Prospect data; (c) Receiving Company will independently confirm all Prospect details before proceeding; (d) Ownerfi is not liable for any inaccuracies in Prospect information or any resulting damages.
 
 By signing this Agreement, Receiving Company certifies they have read, understood, and agree to Sections 8-12 above, and have reviewed the referenced compliance documents at ownerfi.ai.
 
@@ -144,7 +144,7 @@ export function generateAgreementHTML(data: AgreementTemplateData): string {
       <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #34d399, #3b82f6); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
         <span style="color: white; font-weight: bold; font-size: 14px;">O</span>
       </div>
-      <span style="font-size: 24px; font-weight: bold; color: #1a365d;">OwnerFi</span>
+      <span style="font-size: 24px; font-weight: bold; color: #1a365d;">Ownerfi</span>
     </div>
   </div>
 
@@ -283,16 +283,16 @@ export function generateAgreementHTML(data: AgreementTemplateData): string {
     </div>
   </div>
 
-  <!-- OwnerFi Addendum - Liability & Compliance Provisions -->
+  <!-- Ownerfi Addendum - Liability & Compliance Provisions -->
   <div style="margin: 25px 0; border: 2px solid #dc2626; border-radius: 8px; padding: 15px; background: #fef2f2;">
     <div style="text-align: center; font-weight: bold; font-size: 14px; color: #dc2626; margin-bottom: 15px; text-transform: uppercase;">
-      OwnerFi Addendum - Required Acknowledgments
+      Ownerfi Addendum - Required Acknowledgments
     </div>
 
     <div style="margin: 12px 0;">
       <div style="font-weight: bold; font-size: 12px; color: #991b1b; margin-bottom: 6px;">8. INDEMNIFICATION:</div>
       <div style="font-size: 10px; line-height: 1.5; text-align: justify; color: #7f1d1d;">
-        Receiving Company agrees to <strong>indemnify, defend, and hold harmless</strong> OwnerFi, its affiliates, officers, directors,
+        Receiving Company agrees to <strong>indemnify, defend, and hold harmless</strong> Ownerfi, its affiliates, officers, directors,
         employees, and contractors from and against any and all claims, damages, fines, penalties, settlements, costs, or expenses
         (including reasonable attorneys' fees) arising from or related to Receiving Company's interactions with the referred Prospect,
         including but not limited to: (a) TCPA or state telemarketing violations; (b) misrepresentation of property data; (c) transaction
@@ -304,7 +304,7 @@ export function generateAgreementHTML(data: AgreementTemplateData): string {
     <div style="margin: 12px 0;">
       <div style="font-weight: bold; font-size: 12px; color: #991b1b; margin-bottom: 6px;">9. TCPA & CONTACT COMPLIANCE:</div>
       <div style="font-size: 10px; line-height: 1.5; text-align: justify; color: #7f1d1d;">
-        Receiving Company acknowledges review of and agreement to OwnerFi's TCPA Compliance Agreement (available at ownerfi.ai/tcpa-compliance).
+        Receiving Company acknowledges review of and agreement to Ownerfi's TCPA Compliance Agreement (available at ownerfi.ai/tcpa-compliance).
         Receiving Company expressly agrees to: (a) comply with the federal Telephone Consumer Protection Act (TCPA), Telemarketing Sales Rule (TSR),
         and all applicable state telemarketing laws; (b) honor all opt-out requests within 24 hours; (c) maintain an internal Do Not Call list;
         (d) properly identify themselves in all communications; (e) use automated dialing/texting only in compliance with applicable laws.
@@ -326,10 +326,10 @@ export function generateAgreementHTML(data: AgreementTemplateData): string {
       <div style="font-weight: bold; font-size: 12px; color: #991b1b; margin-bottom: 6px;">11. CREATIVE FINANCE ACKNOWLEDGMENT:</div>
       <div style="font-size: 10px; line-height: 1.5; text-align: justify; color: #7f1d1d;">
         Receiving Company acknowledges that referred Prospects may seek owner-financed or creative finance properties. Receiving Company
-        has reviewed OwnerFi's Creative Finance Disclaimer (available at ownerfi.ai/creative-finance-disclaimer) and agrees to: (a) direct
+        has reviewed Ownerfi's Creative Finance Disclaimer (available at ownerfi.ai/creative-finance-disclaimer) and agrees to: (a) direct
         Prospects to independently verify all property and financing data with licensed professionals; (b) make no representations about
-        creative finance structures on OwnerFi's behalf; (c) assume all liability for any Prospect losses related to creative finance
-        transactions (including due-on-sale triggers, title issues, Dodd-Frank violations). <strong>OwnerFi bears ZERO liability for creative
+        creative finance structures on Ownerfi's behalf; (c) assume all liability for any Prospect losses related to creative finance
+        transactions (including due-on-sale triggers, title issues, Dodd-Frank violations). <strong>Ownerfi bears ZERO liability for creative
         finance outcomes.</strong>
       </div>
     </div>
@@ -338,8 +338,8 @@ export function generateAgreementHTML(data: AgreementTemplateData): string {
       <div style="font-weight: bold; font-size: 12px; color: #991b1b; margin-bottom: 6px;">12. DATA DISCLAIMER & AS-IS ACCEPTANCE:</div>
       <div style="font-size: 10px; line-height: 1.5; text-align: justify; color: #7f1d1d;">
         Receiving Company acknowledges and accepts that: (a) Prospect contact information is provided "AS-IS" from public sources, MLS data,
-        or user submissions without independent verification by OwnerFi; (b) OwnerFi makes no warranties regarding the accuracy, completeness,
-        or reliability of Prospect data; (c) Receiving Company will independently confirm all Prospect details before proceeding; (d) OwnerFi
+        or user submissions without independent verification by Ownerfi; (b) Ownerfi makes no warranties regarding the accuracy, completeness,
+        or reliability of Prospect data; (c) Receiving Company will independently confirm all Prospect details before proceeding; (d) Ownerfi
         is not liable for any inaccuracies in Prospect information or any resulting damages.
       </div>
     </div>
@@ -455,7 +455,7 @@ export function generateAgreementHTML(data: AgreementTemplateData): string {
 }
 
 // eXp Realty brokerage information - Used in Section 1 (Referring Company)
-// OwnerFi operates under eXp Realty's brokerage license; legally the referring company is eXp Realty
+// Ownerfi operates under eXp Realty's brokerage license; legally the referring company is eXp Realty
 export const OWNERFI_COMPANY_INFO = {
   // Company Info (legal brokerage name, NOT platform name)
   COMPANY_NAME: 'eXp Realty',
@@ -485,7 +485,7 @@ export const OWNERFI_COMPANY_INFO = {
   TIME_ZONE: 'Central'
 } as const;
 
-// Alias: OwnerFi IS the referring company
+// Alias: Ownerfi IS the referring company
 export const REFERRING_COMPANY_DEFAULTS = OWNERFI_COMPANY_INFO;
 
 // Helper to calculate expiration date

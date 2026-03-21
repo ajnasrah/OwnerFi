@@ -1,7 +1,7 @@
 /**
  * Typesense Module Exports
  *
- * Fast search engine integration for OwnerFi.
+ * Fast search engine integration for Ownerfi.
  */
 
 // Client

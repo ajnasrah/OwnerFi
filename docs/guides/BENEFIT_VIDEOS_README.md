@@ -213,7 +213,7 @@ HEYGEN_API_KEY=your_heygen_api_key
 # Submagic API
 SUBMAGIC_API_KEY=your_submagic_api_key
 
-# Late API (uses OwnerFi profile)
+# Late API (uses Ownerfi profile)
 LATE_API_KEY=your_late_api_key
 LATE_OWNERFI_PROFILE_ID=your_ownerfi_profile_id
 
@@ -288,7 +288,7 @@ export const SELLER_BENEFITS: BenefitPoint[] = [
     audience: 'seller',
     title: 'Your New Benefit Title',
     shortDescription: 'Your 1-2 sentence description that will be spoken in the video.',
-    hashtags: ['#YourHashtag', '#OwnerFinancing', '#OwnerFi'],
+    hashtags: ['#YourHashtag', '#Ownerfinancing', '#Ownerfi'],
     category: 'financial' // or 'flexibility', 'speed', 'market', 'tax', 'investment'
   }
 ];
@@ -454,7 +454,7 @@ Every benefit video includes:
 **In Caption**:
 > 🏡 See owner-financed properties in your area at ownerfi.ai
 >
-> #OwnerFinancing #RealEstate #[relevant hashtags]
+> #Ownerfinancing #RealEstate #[relevant hashtags]
 
 ---
 
@@ -482,7 +482,7 @@ For questions or issues:
 
 ## License
 
-Part of the OwnerFi platform. Internal use only.
+Part of the Ownerfi platform. Internal use only.
 
 ---
 

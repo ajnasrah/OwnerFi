@@ -70,7 +70,7 @@ export function AvailableLeadsTab({
             placeholder="Search by name..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-slate-700/50 border border-slate-600 rounded-lg pl-10 pr-4 py-3 text-white placeholder-slate-400 focus:border-emerald-500 focus:outline-none"
+            className="w-full bg-slate-700/50 border border-slate-600 rounded-lg pl-10 pr-4 py-3 text-white placeholder-slate-400 focus:border-[#00BC7D] focus:outline-none"
           />
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">&#128269;</span>
         </div>
@@ -80,7 +80,7 @@ export function AvailableLeadsTab({
             placeholder="Filter by city..."
             value={cityFilter}
             onChange={(e) => setCityFilter(e.target.value)}
-            className="w-full bg-slate-700/50 border border-slate-600 rounded-lg pl-10 pr-4 py-3 text-white placeholder-slate-400 focus:border-emerald-500 focus:outline-none"
+            className="w-full bg-slate-700/50 border border-slate-600 rounded-lg pl-10 pr-4 py-3 text-white placeholder-slate-400 focus:border-[#00BC7D] focus:outline-none"
           />
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">&#128205;</span>
         </div>
@@ -104,7 +104,7 @@ export function AvailableLeadsTab({
           <div>
             <div className="flex items-center gap-2 mb-1">
               <span className="text-white font-medium">Free Leads:</span>
-              <span className={`font-bold ${atLimit ? 'text-yellow-400' : 'text-emerald-400'}`}>
+              <span className={`font-bold ${atLimit ? 'text-yellow-400' : 'text-[#00BC7D]'}`}>
                 {pendingCount}/{FREE_LIMIT} pending
               </span>
               {hasCredits && (

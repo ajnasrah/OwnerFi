@@ -24,10 +24,8 @@ export function HomePageContent({ hasSession }: HomePageContentProps) {
         <nav className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 px-4 lg:px-6 py-4" aria-label="Main navigation">
           <div className="flex justify-between items-center max-w-6xl mx-auto">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">O</span>
-              </div>
-              <span className="text-lg font-bold text-white">OwnerFi</span>
+              <img src="/logo.jpg" alt="Ownerfi" width={32} height={32} className="rounded-lg" />
+              <span className="text-lg font-bold text-white">Ownerfi</span>
             </div>
 
             <div className="flex items-center gap-4">
@@ -40,7 +38,7 @@ export function HomePageContent({ hasSession }: HomePageContentProps) {
               {hasSession ? (
                 <Link
                   href="/dashboard"
-                  className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white px-4 py-2 rounded-xl font-semibold text-sm transition-all duration-300 hover:scale-105 shadow-lg shadow-emerald-500/25"
+                  className="bg-gradient-to-r from-[#00BC7D]/50 to-[#00BC7D] hover:from-[#00BC7D] hover:to-[#00BC7D]/50 text-white px-4 py-2 rounded-xl font-semibold text-sm transition-all duration-300 hover:scale-105 shadow-lg shadow-[#00BC7D]/25"
                 >
                   {t.nav.goToDashboard}
                 </Link>
@@ -65,14 +63,14 @@ export function HomePageContent({ hasSession }: HomePageContentProps) {
               {/* Left: Main Message */}
               <div className="text-center lg:text-left">
                 {/* Trust Badge */}
-                <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30 rounded-full px-3 py-1.5 mb-4">
-                  <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                  <span className="text-emerald-400 text-xs font-semibold">{t.hero.trustBadge}</span>
+                <div className="inline-flex items-center gap-2 bg-[#00BC7D]/10 border border-[#00BC7D]/30 rounded-full px-3 py-1.5 mb-4">
+                  <div className="w-2 h-2 bg-[#00BC7D] rounded-full animate-pulse" />
+                  <span className="text-[#00BC7D] text-xs font-semibold">{t.hero.trustBadge}</span>
                 </div>
 
                 <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-black text-white leading-tight mb-4">
                   {t.hero.title1}
-                  <span className="block text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-blue-400 to-purple-400">
+                  <span className="block text-transparent bg-clip-text bg-gradient-to-r from-[#00BC7D] via-blue-400 to-purple-400">
                     {t.hero.title2}
                   </span>
                 </h1>
@@ -85,7 +83,7 @@ export function HomePageContent({ hasSession }: HomePageContentProps) {
                 <div className="flex flex-col gap-3 mb-6 max-w-md mx-auto lg:mx-0">
                   <Link
                     href="/auth"
-                    className="group bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white px-6 py-3.5 rounded-xl font-bold text-base transition-all duration-300 hover:scale-[1.02] shadow-xl hover:shadow-2xl text-center flex items-center justify-center gap-2"
+                    className="group bg-gradient-to-r from-[#00BC7D] to-[#00BC7D]/50 hover:from-[#00BC7D]/50 hover:to-[#00d68f] text-white px-6 py-3.5 rounded-xl font-bold text-base transition-all duration-300 hover:scale-[1.02] shadow-xl hover:shadow-2xl text-center flex items-center justify-center gap-2"
                     data-event="cta_click"
                     data-location="hero"
                   >
@@ -116,7 +114,7 @@ export function HomePageContent({ hasSession }: HomePageContentProps) {
               <div className="relative">
                 {/* Floating Stats */}
                 <div className="absolute -top-8 -left-8 bg-slate-800/90 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-4 shadow-2xl z-10 animate-float">
-                  <div className="text-3xl font-black text-emerald-400">500+</div>
+                  <div className="text-3xl font-black text-[#00BC7D]">500+</div>
                   <div className="text-slate-300 text-sm">{t.hero.stat1}</div>
                 </div>
 
@@ -130,10 +128,10 @@ export function HomePageContent({ hasSession }: HomePageContentProps) {
                   {/* Phone Frame */}
                   <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-900 rounded-[3rem] p-3 shadow-2xl border-4 border-slate-700">
                     {/* Notch */}
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-slate-900 rounded-b-2xl" />
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-[#111625] rounded-b-2xl" />
 
                     {/* Screen Content - App Demo Video */}
-                    <div className="relative w-full h-full bg-slate-900 rounded-[2.5rem] overflow-hidden">
+                    <div className="relative w-full h-full bg-[#111625] rounded-[2.5rem] overflow-hidden">
                       <HeroVideo />
                     </div>
                   </div>
@@ -160,8 +158,8 @@ export function HomePageContent({ hasSession }: HomePageContentProps) {
 
             <div className="grid sm:grid-cols-3 gap-6 mb-12">
               <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-6 text-center">
-                <div className="w-12 h-12 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-12 h-12 bg-[#00BC7D]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-6 h-6 text-[#00BC7D]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
@@ -198,9 +196,9 @@ export function HomePageContent({ hasSession }: HomePageContentProps) {
                   href="https://www.tiktok.com/@ownerfi.ai"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-emerald-400 hover:text-emerald-300 font-semibold transition-colors"
+                  className="text-[#00BC7D] hover:text-[#00d68f] font-semibold transition-colors"
                 >
-                  @OwnerFi.ai
+                  @Ownerfi.ai
                 </a>
                 {' '}{t.whyChoose.socialText}
               </p>
@@ -227,7 +225,7 @@ export function HomePageContent({ hasSession }: HomePageContentProps) {
               {/* Step 1 */}
               <div className="relative">
                 <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-xl p-6 text-center h-full">
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center text-white font-black text-lg shadow-xl">
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-10 h-10 bg-[#00BC7D]/50 rounded-full flex items-center justify-center text-white font-black text-lg shadow-xl">
                     1
                   </div>
                   <div className="text-4xl mb-4 mt-2">📝</div>

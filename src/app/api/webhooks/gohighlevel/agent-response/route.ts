@@ -168,7 +168,7 @@ export async function POST(request: NextRequest) {
       const descriptionText = sanitizeDescription(property.rawData?.description || '');
       const financingTypeResult = detectFinancingType(descriptionText);
 
-      const isOwnerFinance = property.dealType === 'potential_owner_finance';
+      const isOwnerfinance = property.dealType === 'potential_owner_finance';
       const isCashDeal = property.dealType === 'cash_deal';
 
       const discountPercent = property.priceToZestimateRatio
@@ -176,7 +176,7 @@ export async function POST(request: NextRequest) {
         : 0;
 
       // Add to unified properties collection
-      console.log(`   → Routing to properties (${isOwnerFinance ? 'owner_finance' : 'cash_deal'})`);
+      console.log(`   → Routing to properties (${isOwnerfinance ? 'owner_finance' : 'cash_deal'})`);
 
       await db.collection('properties').doc(`zpid_${property.zpid}`).set({
         // Core identifiers
@@ -214,12 +214,12 @@ export async function POST(request: NextRequest) {
         description: descriptionText,
 
         // Financing Type Status (for owner finance)
-        ...(isOwnerFinance && {
+        ...(isOwnerfinance && {
           financingType: financingTypeResult.financingType || 'Owner Finance',
           allFinancingTypes: financingTypeResult.allTypes.length > 0 ? financingTypeResult.allTypes : ['Owner Finance'],
           financingTypeLabel: financingTypeResult.displayLabel || 'Owner Finance',
           ownerFinanceVerified: true,
-          agentConfirmedOwnerFinance: true,
+          agentConfirmedOwnerfinance: true,
         }),
 
         // Cash deal fields
@@ -228,9 +228,9 @@ export async function POST(request: NextRequest) {
         }),
 
         // Unified collection flags
-        isOwnerFinance,
+        isOwnerfinance,
         isCashDeal,
-        dealTypes: isOwnerFinance ? ['owner_finance'] : ['cash_deal'],
+        dealTypes: isOwnerfinance ? ['owner_finance'] : ['cash_deal'],
         isActive: true,
 
         // Source tracking

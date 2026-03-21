@@ -424,7 +424,7 @@ export default function PropertySearchTab({ setEditingProperty, setEditForm }: P
                   <div className="text-sm font-medium text-gray-900">${property.listPrice?.toLocaleString()}</div>
                   {property.estimatedValue && property.estimatedValue > 0 && property.listPrice && (
                     <div className="text-xs mt-0.5" style={{
-                      color: (property.listPrice / property.estimatedValue) <= 0.8 ? '#10b981'
+                      color: (property.listPrice / property.estimatedValue) <= 0.8 ? '#00BC7D'
                         : (property.listPrice / property.estimatedValue) >= 1.0 ? '#ef4444'
                         : '#6b7280'
                     }}>

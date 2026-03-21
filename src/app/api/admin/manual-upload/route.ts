@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
 
       // UNIFIED COLLECTION FIELDS - Required for unified properties collection
       dealTypes: ['owner_finance'], // Manual uploads are owner finance by default
-      isOwnerFinance: true,
+      isOwnerfinance: true,
       isCashDeal: false, // Can be upgraded later if qualifies
       isActive: true,
 
@@ -231,7 +231,7 @@ export async function GET(request: NextRequest) {
       exists: true,
       property,
       isManuallyVerified: property.manuallyVerified || false,
-      isOwnerFinance: property.isOwnerFinance || false,
+      isOwnerfinance: property.isOwnerfinance || false,
       isCashDeal: property.isCashDeal || false,
     });
 

@@ -4,14 +4,14 @@ import { db } from '@/lib/firebase'
 import { collection, query, where, getDocs } from 'firebase/firestore'
 
 export const metadata: Metadata = {
-  title: 'Owner Financing San Francisco | Rent to Own Alternative CA | Financial District, Mission District | OwnerFi',
+  title: 'Owner Financing San Francisco | Rent to Own Alternative CA | Financial District, Mission District | Ownerfi',
   description: 'Find owner financed homes in San Francisco - better than rent to own! Immediate ownership in Financial District, Mission District, Nob Hill. No banks needed. Flexible credit options.',
   keywords: 'owner financing san francisco, owner financed homes san francisco, rent to own san francisco, rent to own california, seller financing san francisco, no credit check homes san francisco, bad credit homes san francisco, san francisco real estate owner financing',
   openGraph: {
-    title: 'Owner Financed Homes in San Francisco - Better Than Rent to Own | OwnerFi',
+    title: 'Owner Financed Homes in San Francisco - Better Than Rent to Own | Ownerfi',
     description: 'Skip the banks! Find owner financed properties across San Francisco with immediate ownership. Serving Financial District, Mission District, Nob Hill and more.',
     url: 'https://ownerfi.ai/san-francisco-owner-financing',
-    siteName: 'OwnerFi',
+    siteName: 'Ownerfi',
     type: 'website',
   },
   twitter: {
@@ -53,7 +53,7 @@ async function getSanFranciscoProperties() {
   }
 }
 
-export default async function OwnerFinancingSanFrancisco() {
+export default async function OwnerfinancingSanFrancisco() {
   const { areaCounts, totalCount } = await getSanFranciscoProperties()
 
   const faqSchema = {
@@ -98,7 +98,7 @@ export default async function OwnerFinancingSanFrancisco() {
   const localBusinessSchema = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
-    "name": "OwnerFi San Francisco - Owner Financed Homes",
+    "name": "Ownerfi San Francisco - Owner Financed Homes",
     "description": "Find owner financed homes throughout San Francisco. Better than rent to own with immediate ownership.",
     "url": "https://ownerfi.ai/san-francisco-owner-financing",
     "areaServed": {
@@ -149,7 +149,7 @@ export default async function OwnerFinancingSanFrancisco() {
             </p>
 
             <div className="grid md:grid-cols-3 gap-6 mb-8">
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-xl border border-green-200">
+              <div className="bg-gradient-to-br from-green-50 to-[#00BC7D]/5 p-6 rounded-xl border border-green-200">
                 <h3 className="font-bold text-green-900 mb-2">Immediate San Francisco Ownership</h3>
                 <p className="text-green-800">Get the deed right away, unlike rent to own</p>
               </div>
@@ -238,14 +238,14 @@ export default async function OwnerFinancingSanFrancisco() {
                   Great neighborhood with owner financing options
                 </p>
               </div>
-              <div className="p-6 bg-gradient-to-br from-emerald-50 to-emerald-50 rounded-xl border-2 border-emerald-200">
-                <h3 className="text-xl font-bold text-emerald-900 mb-2">
+              <div className="p-6 bg-gradient-to-br from-[#00BC7D]/5 to-[#00BC7D]/5 rounded-xl border-2 border-[#00BC7D]/30">
+                <h3 className="text-xl font-bold text-[#004D33] mb-2">
                   Haight-Ashbury
                 </h3>
-                <p className="text-emerald-700 mb-2">
+                <p className="text-[#009B66] mb-2">
                   {areaCounts['Haight-Ashbury'] || 'Premium'} owner financed properties
                 </p>
-                <p className="text-sm text-emerald-600 mb-3">
+                <p className="text-sm text-[#00BC7D] mb-3">
                   Great neighborhood with owner financing options
                 </p>
               </div>

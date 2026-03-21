@@ -135,7 +135,7 @@ export function ShareModal({ property, isOpen, onClose }: ShareModalProps) {
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-slate-900 truncate">{property.address}</p>
               <p className="text-slate-600 text-sm">{property.city}, {property.state}</p>
-              <p className="text-emerald-600 font-bold">${property.listPrice?.toLocaleString()}</p>
+              <p className="text-[#00BC7D] font-bold">${property.listPrice?.toLocaleString()}</p>
             </div>
           </div>
         </div>
@@ -145,7 +145,7 @@ export function ShareModal({ property, isOpen, onClose }: ShareModalProps) {
           {/* SMS - Primary */}
           <button
             onClick={handleSmsShare}
-            className="w-full flex items-center gap-4 p-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-semibold transition-colors"
+            className="w-full flex items-center gap-4 p-4 bg-[#00BC7D]/50 hover:bg-[#00BC7D] text-white rounded-xl font-semibold transition-colors"
           >
             <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -154,7 +154,7 @@ export function ShareModal({ property, isOpen, onClose }: ShareModalProps) {
             </div>
             <div className="flex-1 text-left">
               <div className="font-bold">Share via Text Message</div>
-              <div className="text-emerald-100 text-sm">Send to a friend</div>
+              <div className="text-[#B3F0DB] text-sm">Send to a friend</div>
             </div>
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -169,7 +169,7 @@ export function ShareModal({ property, isOpen, onClose }: ShareModalProps) {
               className="flex flex-col items-center gap-2 p-3 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
             >
               {copied ? (
-                <svg className="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 text-[#00BC7D]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                 </svg>
               ) : (

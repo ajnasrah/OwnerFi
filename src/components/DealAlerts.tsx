@@ -138,9 +138,9 @@ export default function DealAlerts() {
 
   return (
     <div className="fixed top-4 right-4 z-50 max-w-md animate-slide-in">
-      <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-lg shadow-2xl border border-emerald-500 overflow-hidden">
+      <div className="bg-gradient-to-r from-[#00BC7D] to-[#009B66] rounded-lg shadow-2xl border border-[#00BC7D] overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 bg-emerald-800/50">
+        <div className="flex items-center justify-between px-4 py-3 bg-[#007A52]/50">
           <div className="flex items-center gap-2">
             <span className="text-2xl animate-pulse">🔔</span>
             <span className="font-bold text-white">
@@ -149,7 +149,7 @@ export default function DealAlerts() {
           </div>
           <button
             onClick={() => setShowToast(false)}
-            className="text-emerald-200 hover:text-white p-1"
+            className="text-[#66E0B8] hover:text-white p-1"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -165,16 +165,16 @@ export default function DealAlerts() {
               href={deal.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="block px-4 py-3 hover:bg-emerald-600/50 border-t border-emerald-500/30 transition-colors"
+              className="block px-4 py-3 hover:bg-[#00BC7D]/50 border-t border-[#00BC7D]/30 transition-colors"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="font-medium text-white truncate">{deal.address}</div>
-                  <div className="text-sm text-emerald-200">{deal.city}, {deal.state}</div>
+                  <div className="text-sm text-[#66E0B8]">{deal.city}, {deal.state}</div>
                 </div>
                 <div className="text-right flex-shrink-0">
                   <div className="text-lg font-bold text-yellow-300">{deal.percentOfArv}%</div>
-                  <div className="text-xs text-emerald-200">${deal.price.toLocaleString()}</div>
+                  <div className="text-xs text-[#66E0B8]">${deal.price.toLocaleString()}</div>
                 </div>
               </div>
             </a>
@@ -182,8 +182,8 @@ export default function DealAlerts() {
         </div>
 
         {/* Footer */}
-        <div className="px-4 py-2 bg-emerald-800/50 text-center">
-          <span className="text-xs text-emerald-200">
+        <div className="px-4 py-2 bg-[#007A52]/50 text-center">
+          <span className="text-xs text-[#66E0B8]">
             Memphis area • Under 80% ARV • Click to view on Zillow
           </span>
         </div>

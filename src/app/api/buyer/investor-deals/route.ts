@@ -159,13 +159,15 @@ export async function GET(request: NextRequest) {
       }));
 
     // Apply client-requested filters
-    // Price and land filters are pushed to Typesense query, but needed for Firestore fallback
+    // Price filters pushed to Typesense query, but needed for Firestore fallback
     if (typesenseError) {
       if (minPrice !== undefined) allDeals = allDeals.filter(d => d.price >= minPrice);
       if (maxPrice !== undefined) allDeals = allDeals.filter(d => d.price <= maxPrice);
-      if (excludeLand) {
-        allDeals = allDeals.filter(d => !d.isLand);
-      }
+    }
+    // Land filter applied ALWAYS (not just Firestore fallback) because some land properties
+    // lack isLand:true in Typesense but get detected via LAND_TYPES propertyType fallback
+    if (excludeLand) {
+      allDeals = allDeals.filter(d => !d.isLand);
     }
     // ARV filter always applied client-side (percentOfArv is optional in Typesense,
     // filtering at query level would exclude properties missing the field entirely)

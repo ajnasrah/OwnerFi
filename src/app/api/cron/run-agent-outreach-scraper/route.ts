@@ -4,6 +4,7 @@ import { getFirebaseAdmin } from '@/lib/scraper-v2/firebase-admin';
 import { withCronLock } from '@/lib/scraper-v2/cron-lock';
 import { hasStrictOwnerfinancing } from '@/lib/owner-financing-filter-strict';
 import { hasNegativeKeywords } from '@/lib/negative-keywords';
+import { normalizePhone, isValidPhone } from '@/lib/phone-utils';
 
 export const maxDuration = 300;
 
@@ -190,6 +191,12 @@ export async function GET(request: NextRequest) {
         continue;
       }
 
+      // FILTER 1b: Validate phone number format
+      if (!isValidPhone(agentPhone)) {
+        stats.noAgent++;
+        continue;
+      }
+
       // FILTER 2: Check keywords
       const description = property.description || '';
       const streetAddr = property.streetAddress || property.address?.streetAddress || '';
@@ -228,7 +235,7 @@ export async function GET(request: NextRequest) {
         || property.contactRecipients?.[0]?.displayName
         || 'Agent';
 
-      const phoneNormalized = agentPhone.replace(/\D/g, '');
+      const phoneNormalized = normalizePhone(agentPhone);
       const addressNormalized = streetAddr.toLowerCase().trim()
         .replace(/[#,\.]/g, '').replace(/\s+/g, ' ');
 

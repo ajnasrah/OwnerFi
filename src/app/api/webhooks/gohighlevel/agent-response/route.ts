@@ -98,19 +98,27 @@ export async function POST(request: NextRequest) {
     // Parse body
     const body = JSON.parse(rawBody);
 
-    // Check for signature in headers only (body signatures are a security risk)
-    const signature = request.headers.get('x-webhook-signature') ||
-                     request.headers.get('x-ghl-signature');
+    // GHL custom webhooks don't support HMAC signatures natively.
+    // When GHL_BYPASS_SIGNATURE is "true" (set in Vercel production), skip auth entirely.
+    const bypassAuth = process.env.GHL_BYPASS_SIGNATURE === 'true';
 
-    // Verify webhook signature
-    const verification = verifyWebhookSignature(rawBody, signature);
-    if (!verification.valid) {
-      console.error('❌ [AGENT RESPONSE WEBHOOK] Invalid signature:', verification.reason);
-      console.error('   Body keys:', Object.keys(body));
-      return NextResponse.json(
-        { error: 'Unauthorized', reason: verification.reason },
-        { status: 401 }
-      );
+    if (!bypassAuth) {
+      // Check for signature in headers only (body signatures are a security risk)
+      const signature = request.headers.get('x-webhook-signature') ||
+                       request.headers.get('x-ghl-signature');
+
+      // Verify webhook signature
+      const verification = verifyWebhookSignature(rawBody, signature);
+      if (!verification.valid) {
+        console.error('❌ [AGENT RESPONSE WEBHOOK] Invalid signature:', verification.reason);
+        console.error('   Body keys:', Object.keys(body));
+        return NextResponse.json(
+          { error: 'Unauthorized', reason: verification.reason },
+          { status: 401 }
+        );
+      }
+    } else {
+      console.log('✅ [AGENT RESPONSE WEBHOOK] Auth bypassed (GHL_BYPASS_SIGNATURE=true)');
     }
     // Accept both firebaseId and firebase_id (GHL uses snake_case)
     const firebaseId = body.firebaseId || body.firebase_id;

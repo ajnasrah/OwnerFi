@@ -78,10 +78,7 @@ export async function GET(request: NextRequest) {
   const cronSecret = process.env.CRON_SECRET;
 
   if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-    const isVercelCron = request.headers.get('x-vercel-cron') === '1';
-    if (!isVercelCron) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   // Use lock to prevent concurrent execution
@@ -694,7 +691,7 @@ async function runUnifiedScraper(): Promise<{
     if (investorAlertDeals.length > 0) {
       try {
         const investorResult = await sendInvestorDealAlerts(investorAlertDeals);
-        console.log(`[INVESTOR-ALERT] Sent ${investorResult.totalSent} alerts to ${investorResult.subscribersNotified} subscribers, ${investorResult.totalFailed} failed`);
+        console.log(`[INVESTOR-ALERT] Sent ${investorResult.totalSent} alerts to ${investorResult.subscribersNotified} subscribers, ${investorResult.totalFailed} failed, ${investorResult.deferred} deferred`);
       } catch (error: any) {
         console.error('[INVESTOR-ALERT] Alert system failed:', error.message);
       }

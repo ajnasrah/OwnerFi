@@ -149,39 +149,131 @@ async function sendAlertToSubscriber(
 }
 
 /**
+ * Process any deferred alerts from previous runs that hit the daily SMS cap.
+ * Called at the start of each sendInvestorDealAlerts run.
+ */
+async function processDeferredAlerts(
+  subscribers: SubscribedBuyer[],
+  maxToSend: number
+): Promise<{ sent: number; failed: number; notifiedBuyers: Set<string> }> {
+  const { db } = getFirebaseAdmin();
+  let sent = 0;
+  let failed = 0;
+  const notifiedBuyers = new Set<string>();
+
+  const deferredSnap = await db.collection('deferred_deal_alerts')
+    .orderBy('deferredAt', 'asc')
+    .limit(maxToSend * 2) // fetch extra since some may be already claimed
+    .get();
+
+  if (deferredSnap.empty) return { sent, failed, notifiedBuyers };
+
+  console.log(`[INVESTOR-ALERT] Processing ${deferredSnap.size} deferred alerts from previous runs`);
+
+  const subscriberMap = new Map(subscribers.map(s => [s.id, s]));
+  const toDelete: FirebaseFirestore.DocumentReference[] = [];
+
+  for (const doc of deferredSnap.docs) {
+    if (sent >= maxToSend) break;
+
+    const data = doc.data();
+    const buyer = subscriberMap.get(data.buyerId);
+
+    // Remove if subscriber no longer active
+    if (!buyer) {
+      toDelete.push(doc.ref);
+      continue;
+    }
+
+    // Already claimed by a previous send? Remove from queue
+    const claimed = await claimNotification(buyer.id, data.dealId);
+    if (!claimed) {
+      toDelete.push(doc.ref);
+      continue;
+    }
+
+    const deal: InvestorDealInfo = data.deal;
+    const success = await sendAlertToSubscriber(buyer, deal);
+    if (success) {
+      sent++;
+      notifiedBuyers.add(buyer.id);
+      try {
+        await db.collection('buyerProfiles').doc(buyer.id).update({
+          dealAlertNotifiedPropertyIds: admin.firestore.FieldValue.arrayUnion(data.dealId),
+        });
+      } catch (err) {
+        console.error(`[INVESTOR-ALERT] Failed to track deferred notification for buyer ${buyer.id}:`, err);
+      }
+    } else {
+      failed++;
+    }
+
+    toDelete.push(doc.ref);
+    await new Promise(r => setTimeout(r, 200));
+  }
+
+  // Clean up processed deferred alerts
+  const BATCH_LIMIT = 400;
+  for (let i = 0; i < toDelete.length; i += BATCH_LIMIT) {
+    const batch = db.batch();
+    toDelete.slice(i, i + BATCH_LIMIT).forEach(ref => batch.delete(ref));
+    await batch.commit();
+  }
+
+  if (sent > 0) {
+    console.log(`[INVESTOR-ALERT] Deferred: sent ${sent}, failed ${failed}`);
+  }
+
+  return { sent, failed, notifiedBuyers };
+}
+
+/**
  * Main entry point: Send investor deal alerts for a batch of cash deals
  *
  * Called from the scraper run after Abdullah's alerts (Step 7.5).
  * For each deal, finds all subscribers whose ARV threshold would include it,
  * deduplicates, and sends via GHL.
+ *
+ * When the daily SMS cap is reached, remaining unsent alerts are saved
+ * to 'deferred_deal_alerts' and processed on the next run.
  */
 export async function sendInvestorDealAlerts(
   deals: InvestorDealInfo[]
-): Promise<{ totalSent: number; totalFailed: number; subscribersNotified: number }> {
+): Promise<{ totalSent: number; totalFailed: number; subscribersNotified: number; deferred: number }> {
+  const MAX_SMS_PER_DAY = 200;
+
   if (!INVESTOR_ALERT_WEBHOOK_URL) {
     console.log('[INVESTOR-ALERT] Webhook URL not configured, skipping');
-    return { totalSent: 0, totalFailed: 0, subscribersNotified: 0 };
+    return { totalSent: 0, totalFailed: 0, subscribersNotified: 0, deferred: 0 };
   }
 
   const subscribers = await getActiveSubscribers();
   console.log(`[INVESTOR-ALERT] Found ${subscribers.length} active subscribers for ${deals.length} deals`);
 
   if (subscribers.length === 0) {
-    return { totalSent: 0, totalFailed: 0, subscribersNotified: 0 };
+    return { totalSent: 0, totalFailed: 0, subscribersNotified: 0, deferred: 0 };
   }
 
   let totalSent = 0;
   let totalFailed = 0;
+  let totalDeferred = 0;
   const notifiedBuyers = new Set<string>();
   const { db } = getFirebaseAdmin();
+
+  // First, process any deferred alerts from previous runs
+  const deferredResult = await processDeferredAlerts(subscribers, MAX_SMS_PER_DAY);
+  totalSent += deferredResult.sent;
+  totalFailed += deferredResult.failed;
+  deferredResult.notifiedBuyers.forEach(id => notifiedBuyers.add(id));
+
+  let capReached = totalSent >= MAX_SMS_PER_DAY;
 
   for (const deal of deals) {
     if (!deal.zestimate || deal.zestimate <= 0) continue;
     const percentOfArv = Math.round((deal.askingPrice / deal.zestimate) * 100);
-    // Generate a stable deal ID from zpid or address+city+state
     const addrFallback = deal.streetAddress ? `${deal.streetAddress}_${deal.city || ''}_${deal.state || ''}`.replace(/\s+/g, '_') : null;
     const dealId = deal.zpid ? String(deal.zpid) : addrFallback;
-    if (!dealId) continue; // Skip deals with no identifiable ID
+    if (!dealId) continue;
 
     for (const buyer of subscribers) {
       // Check if this deal is below the buyer's threshold
@@ -189,6 +281,24 @@ export async function sendInvestorDealAlerts(
 
       // In-memory dedup check
       if (buyer.dealAlertNotifiedPropertyIds.includes(dealId)) continue;
+
+      // If cap reached, defer remaining alerts instead of skipping
+      if (capReached) {
+        try {
+          const deferredId = `${buyer.id}_${dealId}`;
+          await db.collection('deferred_deal_alerts').doc(deferredId).set({
+            buyerId: buyer.id,
+            dealId,
+            deal,
+            percentOfArv,
+            deferredAt: new Date(),
+          });
+          totalDeferred++;
+        } catch (err) {
+          console.error(`[INVESTOR-ALERT] Failed to defer alert for ${buyer.id}/${dealId}:`, err);
+        }
+        continue;
+      }
 
       // Firestore transaction dedup
       const claimed = await claimNotification(buyer.id, dealId);
@@ -200,13 +310,18 @@ export async function sendInvestorDealAlerts(
         totalSent++;
         notifiedBuyers.add(buyer.id);
 
-        // Track in buyer profile - await to ensure dedup data persists
         try {
           await db.collection('buyerProfiles').doc(buyer.id).update({
             dealAlertNotifiedPropertyIds: admin.firestore.FieldValue.arrayUnion(dealId),
           });
         } catch (err) {
           console.error(`[INVESTOR-ALERT] Failed to track notification for buyer ${buyer.id}:`, err);
+        }
+
+        // Check cap after each successful send
+        if (totalSent >= MAX_SMS_PER_DAY) {
+          console.warn(`[INVESTOR-ALERT] Daily SMS cap reached (${MAX_SMS_PER_DAY}). Deferring remaining alerts to next run.`);
+          capReached = true;
         }
       } else {
         totalFailed++;
@@ -217,6 +332,10 @@ export async function sendInvestorDealAlerts(
     }
   }
 
-  console.log(`[INVESTOR-ALERT] Complete: ${totalSent} sent, ${totalFailed} failed, ${notifiedBuyers.size} buyers notified`);
-  return { totalSent, totalFailed, subscribersNotified: notifiedBuyers.size };
+  if (totalDeferred > 0) {
+    console.log(`[INVESTOR-ALERT] Deferred ${totalDeferred} alerts to next run`);
+  }
+
+  console.log(`[INVESTOR-ALERT] Complete: ${totalSent} sent, ${totalFailed} failed, ${notifiedBuyers.size} buyers notified, ${totalDeferred} deferred`);
+  return { totalSent, totalFailed, subscribersNotified: notifiedBuyers.size, deferred: totalDeferred };
 }

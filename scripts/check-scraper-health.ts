@@ -16,7 +16,7 @@ async function main() {
 
   const snap = await db.collection('properties')
     .where('foundAt', '>=', admin.firestore.Timestamp.fromDate(sevenDaysAgo))
-    .select('foundAt', 'dealTypes', 'isOwnerFinance', 'isCashDeal')
+    .select('foundAt', 'dealTypes', 'isOwnerfinance', 'isCashDeal')
     .get();
 
   const byDay: Record<string, { total: number; of: number; cd: number; both: number }> = {};
@@ -28,7 +28,7 @@ async function main() {
     const day = foundAt.toISOString().split('T')[0];
     if (!byDay[day]) byDay[day] = { total: 0, of: 0, cd: 0, both: 0 };
     byDay[day].total++;
-    const isOF = d.isOwnerFinance;
+    const isOF = d.isOwnerfinance;
     const isCD = d.isCashDeal;
     if (isOF && isCD) byDay[day].both++;
     else if (isOF) byDay[day].of++;

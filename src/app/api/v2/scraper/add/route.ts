@@ -22,6 +22,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/auth';
+import { ExtendedSession } from '@/types/session';
 import { getFirebaseAdmin } from '@/lib/scraper-v2/firebase-admin';
 import { runDetailScraper } from '@/lib/scraper-v2/apify-client';
 import { runUnifiedFilter, logFilterResult, FilterResult } from '@/lib/scraper-v2/unified-filter';
@@ -30,6 +33,26 @@ import {
   validateProperty,
   createUnifiedPropertyDoc,
 } from '@/lib/scraper-v2/property-transformer';
+
+/**
+ * Verify the request is from an admin session or has a valid CRON_SECRET bearer token.
+ */
+async function isAuthorized(request: NextRequest): Promise<boolean> {
+  // Check Bearer CRON_SECRET
+  const authHeader = request.headers.get('authorization');
+  const cronSecret = process.env.CRON_SECRET;
+  if (cronSecret && authHeader === `Bearer ${cronSecret}`) {
+    return true;
+  }
+
+  // Check admin session
+  const session = await getServerSession(authOptions as any) as ExtendedSession | null;
+  if (session?.user && (session as ExtendedSession).user.role === 'admin') {
+    return true;
+  }
+
+  return false;
+}
 
 // CORS headers for bookmarklet access
 const corsHeaders = {
@@ -44,6 +67,14 @@ export async function OPTIONS() {
 
 export async function POST(request: NextRequest) {
   try {
+    // Auth: require admin session or CRON_SECRET
+    if (!(await isAuthorized(request))) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized. Admin access or valid CRON_SECRET required.' },
+        { status: 401, headers: corsHeaders }
+      );
+    }
+
     const body = await request.json();
     const { url, urls, forceOwnerfinance = true } = body; // Default to true for manual adds
 
@@ -270,6 +301,14 @@ export async function POST(request: NextRequest) {
 
 // GET endpoint for simple bookmarklet usage
 export async function GET(request: NextRequest) {
+  // Auth: require admin session or CRON_SECRET
+  if (!(await isAuthorized(request))) {
+    return NextResponse.json(
+      { success: false, error: 'Unauthorized. Admin access or valid CRON_SECRET required.' },
+      { status: 401, headers: corsHeaders }
+    );
+  }
+
   const url = request.nextUrl.searchParams.get('url');
 
   if (!url) {
@@ -279,9 +318,10 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  // Create a fake request with the URL
+  // Create a fake request with the URL and forward auth headers
   const fakeRequest = {
     json: async () => ({ url }),
+    headers: request.headers,
   } as NextRequest;
 
   return POST(fakeRequest);

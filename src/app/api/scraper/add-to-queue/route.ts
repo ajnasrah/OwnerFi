@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/auth';
+import { ExtendedSession } from '@/types/session';
 
 // Initialize Firebase Admin (if not already initialized)
 if (!getApps().length) {
@@ -17,6 +20,26 @@ const db = getFirestore();
 
 export async function POST(request: NextRequest) {
   try {
+    // Auth: require admin session or CRON_SECRET
+    const authHeader = request.headers.get('authorization');
+    const cronSecret = process.env.CRON_SECRET;
+    const hasCronAuth = cronSecret && authHeader === `Bearer ${cronSecret}`;
+
+    if (!hasCronAuth) {
+      const session = await getServerSession(authOptions as any) as ExtendedSession | null;
+      if (!session?.user || (session as ExtendedSession).user.role !== 'admin') {
+        return NextResponse.json(
+          { error: 'Unauthorized. Admin access or valid CRON_SECRET required.' },
+          {
+            status: 401,
+            headers: {
+              'Access-Control-Allow-Origin': '*',
+            }
+          }
+        );
+      }
+    }
+
     const body = await request.json();
     const { url, address, price } = body;
 
@@ -136,7 +159,7 @@ export async function OPTIONS() {
     headers: {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     },
   });
 }

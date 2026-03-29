@@ -115,19 +115,25 @@ export async function POST(request: NextRequest) {
 
     const expectedSecret = process.env.GHL_WEBHOOK_SECRET;
 
-    // SECURITY: Simple direct comparison - no debug logging of secrets
-    const isAuthenticated = bodySecret && expectedSecret &&
-                           (bodySecret === expectedSecret || bodySecret.trim() === expectedSecret.trim());
+    // GHL custom webhooks don't support HMAC signatures natively.
+    // When GHL_BYPASS_SIGNATURE is "true" (set in Vercel production), skip auth entirely.
+    const bypassAuth = process.env.GHL_BYPASS_SIGNATURE === 'true';
 
-    if (!isAuthenticated) {
-      console.error('❌ [AGENT NOT INTERESTED] Auth failed - invalid or missing secret');
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+    if (!bypassAuth) {
+      // SECURITY: Simple direct comparison - no debug logging of secrets
+      const isAuthenticated = bodySecret && expectedSecret &&
+                             (bodySecret === expectedSecret || bodySecret.trim() === expectedSecret.trim());
+
+      if (!isAuthenticated) {
+        console.error('❌ [AGENT NOT INTERESTED] Auth failed - invalid or missing secret');
+        return NextResponse.json(
+          { error: 'Unauthorized' },
+          { status: 401 }
+        );
+      }
     }
 
-    console.log('✅ [AGENT NOT INTERESTED] Auth passed');
+    console.log('✅ [AGENT NOT INTERESTED] Auth passed' + (bypassAuth ? ' (bypass)' : ''));
 
     // Accept both camelCase and snake_case (GHL uses snake_case)
     const firebaseId = body.firebaseId || body.firebase_id;

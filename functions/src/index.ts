@@ -43,11 +43,11 @@ function getTypesenseClient() {
 function transformToTypesense(docId: string, data: FirebaseFirestore.DocumentData) {
   // Determine dealType from flags
   let dealType = 'owner_finance';
-  if (data.isOwnerFinance && data.isCashDeal) {
+  if (data.isOwnerfinance && data.isCashDeal) {
     dealType = 'both';
   } else if (data.isCashDeal) {
     dealType = 'cash_deal';
-  } else if (data.isOwnerFinance) {
+  } else if (data.isOwnerfinance) {
     dealType = 'owner_finance';
   }
 
@@ -96,7 +96,7 @@ function transformToTypesense(docId: string, data: FirebaseFirestore.DocumentDat
     termYears: data.termYears || data.loanTermYears || undefined,
     balloonYears: data.balloonYears || undefined,
     financingType: data.financingType || undefined,
-    ownerFinanceVerified: data.ownerFinanceVerified || data.isOwnerFinance || false,
+    ownerFinanceVerified: data.ownerFinanceVerified || data.isOwnerfinance || false,
     // Cash deal fields
     zestimate: zestimate || undefined,
     rentEstimate,
@@ -147,7 +147,7 @@ export const onPropertyCreate = onDocumentCreated('properties/{propertyId}', asy
   }
 
   // Skip if neither owner finance nor cash deal
-  if (!data.isOwnerFinance && !data.isCashDeal) {
+  if (!data.isOwnerfinance && !data.isCashDeal) {
     console.log(`Skipping property without deal type: ${docId}`);
     return;
   }
@@ -185,7 +185,7 @@ export const onPropertyUpdate = onDocumentUpdated('properties/{propertyId}', asy
   }
 
   // Skip if neither owner finance nor cash deal
-  if (!data.isOwnerFinance && !data.isCashDeal) {
+  if (!data.isOwnerfinance && !data.isCashDeal) {
     // Remove from Typesense if it was there
     try {
       await client.collections('properties').documents(docId).delete();

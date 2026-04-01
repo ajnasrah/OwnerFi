@@ -36,12 +36,17 @@ export async function handleAgentYes(
   const descriptionText = sanitizeDescription(property.rawData?.description || '');
   const financingTypeResult = detectFinancingType(descriptionText);
 
-  const isOwnerfinance = property.dealType === 'potential_owner_finance';
+  // Agent said YES = owner financing confirmed. Always mark as OF.
+  // Property can also be a cash deal if price < 80% Zestimate.
   const isCashDeal = property.dealType === 'cash_deal';
 
   const discountPercent = property.priceToZestimateRatio
     ? Math.round((1 - property.priceToZestimateRatio) * 100)
     : 0;
+
+  // Build dealTypes array — always includes owner_finance since agent confirmed
+  const dealTypes = ['owner_finance'];
+  if (isCashDeal) dealTypes.push('cash_deal');
 
   // Add to unified properties collection
   const propertyData: Record<string, unknown> = {
@@ -79,24 +84,22 @@ export async function handleAgentYes(
     // Description
     description: descriptionText,
 
-    // Financing type (for owner finance)
-    ...(isOwnerfinance && {
-      financingType: financingTypeResult.financingType || 'Owner Finance',
-      allFinancingTypes: financingTypeResult.allTypes.length > 0 ? financingTypeResult.allTypes : ['Owner Finance'],
-      financingTypeLabel: financingTypeResult.displayLabel || 'Owner Finance',
-      ownerFinanceVerified: true,
-      agentConfirmedOwnerfinance: true,
-    }),
+    // Agent confirmed OF — always set financing fields
+    financingType: financingTypeResult.financingType || 'Owner Finance',
+    allFinancingTypes: financingTypeResult.allTypes.length > 0 ? financingTypeResult.allTypes : ['Owner Finance'],
+    financingTypeLabel: financingTypeResult.displayLabel || 'Owner Finance',
+    ownerFinanceVerified: true,
+    agentConfirmedOwnerfinance: true,
 
     // Cash deal fields
     ...(isCashDeal && {
       agentConfirmedMotivated: true,
     }),
 
-    // Unified collection flags
-    isOwnerfinance,
+    // Unified collection flags — agent YES always means owner finance
+    isOwnerfinance: true,
     isCashDeal,
-    dealTypes: isOwnerfinance ? ['owner_finance'] : ['cash_deal'],
+    dealTypes,
     isActive: true,
 
     // Source tracking

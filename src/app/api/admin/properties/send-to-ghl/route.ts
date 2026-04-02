@@ -117,6 +117,9 @@ export async function POST(request: NextRequest) {
           agentPhone: property.agentPhoneNumber || property.agentPhone || null,
           agentEmail: property.agentEmail || null,
 
+          // Image
+          imgSrc: property.firstPropertyImage || property.imgSrc || (property.images?.primary) || (property.propertyImages?.[0]) || (property.imageUrls?.[0]) || null,
+
           // Metadata
           source: 'admin_bulk_send',
           sentAt: new Date().toISOString(),

@@ -118,6 +118,9 @@ export async function POST(request: NextRequest) {
           dealType: deal.ownerFinanceVerified ? 'owner_finance' : 'cash_deal',
           ownerFinanceVerified: deal.ownerFinanceVerified || false,
 
+          // Image
+          imgSrc: deal.firstPropertyImage || deal.imgSrc || (deal.images?.primary) || (deal.propertyImages?.[0]) || (deal.imageUrls?.[0]) || null,
+
           // Metadata
           source: 'admin_cash_deals',
           sentAt: new Date().toISOString(),

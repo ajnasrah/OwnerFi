@@ -123,7 +123,8 @@ export async function GET(request: NextRequest) {
     const page = Math.max(1, Number(searchParams.get('page') || '1') || 1);
     const pageSize = Math.min(48, Math.max(1, Number(searchParams.get('pageSize') || '24') || 24));
 
-    // Fetch deals from Typesense (or Firestore fallback)
+    // Fetch ALL deals from Typesense (or Firestore fallback) regardless of dealType filter
+    // so breakdown counts are always accurate and consistent across filter tabs
     let allDeals: InvestorDeal[] = [];
     let typesenseError = null;
 
@@ -135,7 +136,7 @@ export async function GET(request: NextRequest) {
     try {
       const client = getTypesenseSearchClient();
       if (client) {
-        allDeals = await searchTypesense(client, nearbyCities, searchState, dealTypeFilter, {
+        allDeals = await searchTypesense(client, nearbyCities, searchState, 'all', {
           minPrice, maxPrice, maxArvPercent, excludeLand,
         });
       } else {
@@ -147,7 +148,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (typesenseError) {
-      allDeals = await searchFirestore(nearbyCities, searchState, dealTypeFilter);
+      allDeals = await searchFirestore(nearbyCities, searchState, 'all');
     }
 
     // Filter by passed status and mark liked properties (O(1) Set lookups)
@@ -177,13 +178,29 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Count by deal type in single pass (before sorting/pagination)
+    // Count breakdown by actual qualification (before dealType filtering)
+    // Properties qualifying for both are counted in BOTH categories
     let ofCount = 0, cdCount = 0;
     for (const d of allDeals) {
-      if (d.dealType === 'owner_finance') ofCount++;
-      else cdCount++;
+      if (d.qualifiesForBoth) {
+        ofCount++;
+        cdCount++;
+      } else if (d.dealType === 'owner_finance') {
+        ofCount++;
+      } else {
+        cdCount++;
+      }
     }
     const breakdown = { ownerFinance: ofCount, cashDeal: cdCount, total: allDeals.length };
+
+    // Now filter by deal type for display
+    if (dealTypeFilter === 'owner_finance') {
+      allDeals = allDeals.filter(d => d.dealType === 'owner_finance' || d.qualifiesForBoth);
+    } else if (dealTypeFilter === 'cash_deal') {
+      allDeals = allDeals.filter(d => d.dealType === 'cash_deal' || d.qualifiesForBoth);
+      // Reassign display dealType for "both" properties when viewing cash deals
+      allDeals = allDeals.map(d => d.qualifiesForBoth ? { ...d, dealType: 'cash_deal' as const } : d);
+    }
 
     // Sort
     allDeals.sort((a, b) => {
@@ -412,28 +429,26 @@ async function searchTypesense(
 async function searchFirestore(
   nearbyCities: string[],
   state: string,
-  dealTypeFilter: 'all' | 'owner_finance' | 'cash_deal',
+  _dealTypeFilter: 'all' | 'owner_finance' | 'cash_deal',
 ): Promise<InvestorDeal[]> {
   if (!db) return [];
 
   try {
     const queries = [];
 
-    // Owner finance query
-    if (dealTypeFilter !== 'cash_deal') {
-      queries.push(
-        getDocs(query(
-          collection(db, 'properties'),
-          where('isActive', '==', true),
-          where('isOwnerfinance', '==', true),
-          where('state', '==', state),
-          firestoreLimit(200)
-        ))
-      );
-    }
+    // Always fetch all deal types for accurate breakdown counts
+    queries.push(
+      getDocs(query(
+        collection(db, 'properties'),
+        where('isActive', '==', true),
+        where('isOwnerfinance', '==', true),
+        where('state', '==', state),
+        firestoreLimit(200)
+      ))
+    );
 
     // Cash deals query
-    if (dealTypeFilter !== 'owner_finance') {
+    {
       queries.push(
         getDocs(query(
           collection(db, 'properties'),
@@ -487,10 +502,11 @@ async function searchFirestore(
         }
 
         const isCashDeal = data.isCashDeal === true;
+        const qualifiesForBoth = isOwnerfinance && isCashDeal;
         let dealType: 'owner_finance' | 'cash_deal';
-        if (isOwnerfinance && isCashDeal) {
-          // 'both' — show based on filter preference
-          dealType = dealTypeFilter === 'cash_deal' ? 'cash_deal' : 'owner_finance';
+        if (qualifiesForBoth) {
+          // 'both' — default display as owner_finance (filter reassignment happens in caller)
+          dealType = 'owner_finance';
         } else if (isOwnerfinance) {
           dealType = 'owner_finance';
         } else if (isCashDeal || needsWork) {
@@ -518,9 +534,10 @@ async function searchFirestore(
           beds: (data.bedrooms as number) || 0,
           baths: (data.bathrooms as number) || 0,
           sqft: (data.squareFoot as number) || (data.squareFeet as number) || 0,
-          imgSrc: (data.primaryImage as string) || (data.firstPropertyImage as string) || (data.hiResImageLink as string) || (data.mediumImageLink as string) || (data.imgSrc as string) || (data.imageUrl as string) || '',
+          imgSrc: (data.primaryImage as string) || (data.firstPropertyImage as string) || (data.hiResImageLink as string) || (data.mediumImageLink as string) || (data.imgSrc as string) || (data.imageUrl as string) || ((data.propertyImages as string[]) || [])[0] || '',
           galleryImages: (data.propertyImages as string[]) || (data.imageUrls as string[]) || undefined,
           dealType,
+          qualifiesForBoth: qualifiesForBoth || undefined,
           isLiked: false,
           monthlyPayment: (data.monthlyPayment as number) ?? undefined,
           downPaymentAmount: (data.downPaymentAmount as number) ?? undefined,

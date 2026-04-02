@@ -162,7 +162,7 @@ export function transformPropertyForTypesense(
     propertyType: property.propertyType || 'other',
     financingType: property.ownerFinance?.financingType || undefined,
 
-    primaryImage: (property as any).primaryImage || property.images?.primary || property.imageUrl || undefined,
+    primaryImage: (property as any).primaryImage || (property as any).firstPropertyImage || (property as any).hiResImageLink || (property as any).mediumImageLink || (property as any).imgSrc || property.images?.primary || property.imageUrl || ((property as any).propertyImages || [])[0] || ((property as any).imageUrls || [])[0] || undefined,
     galleryImages: (property as any).propertyImages || property.images?.gallery || (property as any).imageUrls || undefined,
 
     // Agent/Contact info
@@ -462,8 +462,8 @@ export async function indexRawFirestoreProperty(
       zpid: data.zpid ? String(data.zpid) : undefined,
       url: data.url || (data.hdpUrl ? (data.hdpUrl.startsWith('http') ? data.hdpUrl : `https://www.zillow.com${data.hdpUrl}`) : undefined),
       // Images
-      primaryImage: data.firstPropertyImage || data.imgSrc || data.imageUrl || undefined,
-      galleryImages: data.propertyImages || data.imageUrls || undefined,
+      primaryImage: data.primaryImage || data.firstPropertyImage || data.hiResImageLink || data.mediumImageLink || data.imgSrc || data.images?.primary || data.imageUrl || (data.propertyImages || [])[0] || (data.imageUrls || [])[0] || undefined,
+      galleryImages: data.propertyImages || data.images?.gallery || data.imageUrls || undefined,
       // Agent/Contact info
       agentName: data.agentName || data.listingAgentName || undefined,
       agentPhone: data.agentPhoneNumber || data.agentPhone || data.brokerPhoneNumber || undefined,

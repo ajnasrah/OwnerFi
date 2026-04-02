@@ -795,6 +795,20 @@
           "order": "ASCENDING"
         },
         {
+          "fieldPath": "dealTypes",
+          "arrayConfig": "CONTAINS"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "properties",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "isActive",
+          "order": "ASCENDING"
+        },
+        {
           "fieldPath": "nearbyCities",
           "arrayConfig": "CONTAINS"
         }

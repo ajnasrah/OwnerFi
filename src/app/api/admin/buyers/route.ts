@@ -120,10 +120,15 @@ export async function GET(request: NextRequest) {
       where('role', '==', 'buyer')
     );
 
-    const usersSnapshot = await getDocs(usersQuery);
+    // Fetch users, buyer profiles, and active property IDs in parallel
+    const [usersSnapshot, buyerProfilesSnapshot, activePropsSnapshot] = await Promise.all([
+      getDocs(usersQuery),
+      getDocs(collection(db, 'buyerProfiles')),
+      getDocs(query(collection(db, 'properties'), where('isActive', '==', true))),
+    ]);
 
-    // Get all buyer profiles
-    const buyerProfilesSnapshot = await getDocs(collection(db, 'buyerProfiles'));
+    // Build set of active property IDs to validate matched/liked counts
+    const activePropertyIds = new Set(activePropsSnapshot.docs.map(d => d.id));
 
     // Create a map of buyer profiles by user ID
     const buyerProfilesMap = new Map();
@@ -133,10 +138,6 @@ export async function GET(request: NextRequest) {
         buyerProfilesMap.set(data.userId, firestoreToBuyerProfile(doc.id, data));
       }
     });
-
-    // FAST MODE: Skip expensive calculations for admin table
-    // Matched/liked counts come from pre-computed arrays in buyerProfile
-    // This eliminates N+1 queries and property matching calculations
 
     const buyers: BuyerAdminView[] = [];
     const buyersWithDistance: Array<BuyerAdminView & { distance?: number }> = [];
@@ -154,9 +155,9 @@ export async function GET(request: NextRequest) {
 
       if (!buyerProfile) continue; // Skip users without buyer profiles
 
-      // FAST: Use pre-computed arrays from buyerProfile (no N+1 queries!)
-      const matchedPropertiesCount = buyerProfile.matchedPropertyIds?.length || 0;
-      const likedPropertiesCount = buyerProfile.likedPropertyIds?.length || 0;
+      // Validate counts against active properties (exclude stale/deleted property IDs)
+      const matchedPropertiesCount = buyerProfile.matchedPropertyIds?.filter((id: string) => activePropertyIds.has(id)).length || 0;
+      const likedPropertiesCount = buyerProfile.likedPropertyIds?.filter((id: string) => activePropertyIds.has(id)).length || 0;
 
       const buyer = toBuyerAdminView(buyerProfile, {
         matchedPropertiesCount,

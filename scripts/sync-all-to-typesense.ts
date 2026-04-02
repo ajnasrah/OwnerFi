@@ -66,7 +66,7 @@ interface FirestoreProperty {
   hoa?: number;
   daysOnZillow?: number;
   isActive?: boolean;
-  isOwnerFinance?: boolean;
+  isOwnerfinance?: boolean;
   ownerFinanceVerified?: boolean;
   isCashDeal?: boolean;
   needsWork?: boolean;
@@ -79,8 +79,12 @@ interface FirestoreProperty {
   zpid?: number | string;
   url?: string;
   firstPropertyImage?: string;
+  hiResImageLink?: string;
+  mediumImageLink?: string;
   imgSrc?: string;
+  imageUrl?: string;
   propertyImages?: string[];
+  imageUrls?: string[];
   agentName?: string;
   agentPhoneNumber?: string;
   agentEmail?: string;
@@ -109,9 +113,9 @@ function timestampToUnix(ts: any): number {
 }
 
 function transformForTypesense(id: string, data: FirestoreProperty) {
-  const dealType = data.isOwnerFinance && data.isCashDeal
+  const dealType = data.isOwnerfinance && data.isCashDeal
     ? 'both'
-    : data.isOwnerFinance
+    : data.isOwnerfinance
       ? 'owner_finance'
       : data.isCashDeal
         ? 'cash_deal'
@@ -141,7 +145,7 @@ function transformForTypesense(id: string, data: FirestoreProperty) {
     monthlyHoa: data.hoa || undefined,
     daysOnZillow: data.daysOnZillow || undefined,
     isActive: data.isActive !== false,
-    ownerFinanceVerified: data.isOwnerFinance || data.ownerFinanceVerified || false,
+    ownerFinanceVerified: data.isOwnerfinance || data.ownerFinanceVerified || false,
     needsWork: data.needsWork || false,
     isLand: data.isLand || LAND_TYPES.has((data.homeType || data.propertyType || '').toLowerCase()) || false,
     homeStatus: data.homeStatus || undefined,
@@ -150,8 +154,8 @@ function transformForTypesense(id: string, data: FirestoreProperty) {
     financingType: data.financingType || undefined,
     zpid: data.zpid ? String(data.zpid) : undefined,
     url: data.url || undefined,
-    primaryImage: data.firstPropertyImage || data.imgSrc || (data.propertyImages?.[0]) || undefined,
-    galleryImages: data.propertyImages || undefined,
+    primaryImage: data.firstPropertyImage || data.hiResImageLink || data.mediumImageLink || data.imgSrc || data.imageUrl || (data.propertyImages?.[0]) || (data.imageUrls?.[0]) || undefined,
+    galleryImages: data.propertyImages || data.imageUrls || undefined,
     agentName: data.agentName || undefined,
     agentPhone: data.agentPhoneNumber || undefined,
     agentEmail: data.agentEmail || undefined,

@@ -228,6 +228,7 @@ export function transformProperty(
   // First image with fallback
   const firstPropertyImage = raw.desktopWebHdpImageLink
     || raw.hiResImageLink
+    || raw.mediumImageLink
     || raw.imgSrc
     || (propertyImages.length > 0 ? propertyImages[0] : '')
     || getStreetViewImage(fullAddress);

@@ -82,7 +82,7 @@ function transformToTypesense(docId: string, data: FirebaseFirestore.DocumentDat
     yearBuilt: data.yearBuilt || undefined,
     isActive: data.isActive !== false,
     propertyType: data.homeType || data.propertyType || 'single-family',
-    primaryImage: data.primaryImage || data.firstPropertyImage || data.hiResImageLink || data.mediumImageLink || data.imgSrc || '',
+    primaryImage: data.primaryImage || data.firstPropertyImage || data.hiResImageLink || data.mediumImageLink || data.imgSrc || data.imageUrl || (data.propertyImages || [])[0] || (data.imageUrls || [])[0] || undefined,
     galleryImages: data.propertyImages || data.imageUrls || undefined,
     createdAt: data.createdAt?.toMillis?.() || Date.now(),
     updatedAt: data.updatedAt?.toMillis?.() || undefined,

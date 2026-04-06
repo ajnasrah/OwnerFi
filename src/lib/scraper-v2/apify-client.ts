@@ -11,8 +11,9 @@ import { ApifyClient } from 'apify-client';
 // All-in-one actor that does search + details in one run
 const ALL_IN_ONE_ACTOR = 'memo23/zillow-cheerio-scraper';
 
-// Fallback actors (if all-in-one fails or for specific use cases)
-const SEARCH_ACTOR = 'maxcopell/zillow-scraper';
+// Search actor: api-ninja works as of April 2026
+// (maxcopell/zillow-scraper broke ~March 31, 2026 — Zillow changed their API)
+const SEARCH_ACTOR = 'api-ninja/zillow-search-scraper';
 const DETAIL_ACTOR = 'maxcopell/zillow-detail-scraper';
 
 let client: ApifyClient | null = null;
@@ -105,10 +106,10 @@ export async function runAllInOneScraper(
   console.log(`\n[APIFY STEP 1] Running search scraper...`);
   console.log(`[APIFY] Actor: ${SEARCH_ACTOR}`);
 
+  // api-ninja expects plain string URLs and homesPerUrl for limit
   const searchInput = {
-    searchUrls: searchUrls.map(url => ({ url })),
-    maxResults: options.maxItems ?? 2000,
-    mode: 'pagination' as const,
+    searchUrls,
+    homesPerUrl: options.maxItems ?? 2000,
   };
 
   const searchRun = await client.actor(SEARCH_ACTOR).start(searchInput);
@@ -230,8 +231,9 @@ export async function runAllInOneScraper(
 }
 
 /**
- * Fallback: Run search-only scraper (maxcopell)
- * Returns basic info without full details
+ * Run search scraper (api-ninja/zillow-search-scraper)
+ * Returns basic info without full details.
+ * Normalizes api-ninja output fields to match ScrapedProperty.
  */
 export async function runSearchScraper(
   searchUrls: string[],
@@ -242,13 +244,14 @@ export async function runSearchScraper(
 ): Promise<ScrapedProperty[]> {
   const client = getApifyClient();
 
+  // api-ninja expects searchUrls as plain strings (not {url} objects)
+  // homesPerUrl controls per-URL limit (default 120 is too low)
   const input = {
-    searchUrls: searchUrls.map(url => ({ url })),
-    maxResults: options.maxResults ?? 1000,
-    mode: options.mode ?? 'pagination',
+    searchUrls,
+    homesPerUrl: options.maxResults ?? 1000,
   };
 
-  console.log(`[APIFY] Starting search scraper (fallback)`);
+  console.log(`[APIFY] Starting search scraper`);
   console.log(`[APIFY] Actor: ${SEARCH_ACTOR}`);
 
   const run = await client.actor(SEARCH_ACTOR).call(input);
@@ -256,7 +259,26 @@ export async function runSearchScraper(
 
   console.log(`[APIFY] Search completed. Found ${items.length} properties`);
 
-  return items as ScrapedProperty[];
+  // Normalize api-ninja field names to match ScrapedProperty
+  const normalized = items.map((item: any) => ({
+    ...item,
+    // Address fields
+    streetAddress: item.streetAddress || item.addressStreet,
+    city: item.city || item.addressCity,
+    state: item.state || item.addressState,
+    zipcode: item.zipcode || item.addressZipcode,
+    // Price: api-ninja returns formatted string in price, number in unformattedPrice
+    price: item.unformattedPrice ?? item.price,
+    // Beds/baths/area
+    bedrooms: item.bedrooms ?? item.beds,
+    bathrooms: item.bathrooms ?? item.baths,
+    livingArea: item.livingArea ?? item.area,
+    // Lat/long: api-ninja returns { latitude, longitude } in latLong
+    latitude: item.latitude ?? item.latLong?.latitude,
+    longitude: item.longitude ?? item.latLong?.longitude,
+  }));
+
+  return normalized as ScrapedProperty[];
 }
 
 /**

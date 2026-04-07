@@ -163,19 +163,6 @@ export async function POST(request: NextRequest) {
 
     dispute = disputeDoc.data();
 
-    // Debug: Log dispute structure for troubleshooting
-    console.log('Dispute resolution debug:', {
-      disputeId,
-      action,
-      refundCredits,
-      disputeStatus: dispute.status,
-      hasRealtorUserId: !!dispute.realtorUserId,
-      hasRealtorId: !!dispute.realtorId,
-      realtorUserIdValue: dispute.realtorUserId,
-      realtorIdValue: dispute.realtorId,
-      allDisputeFields: Object.keys(dispute || {})
-    });
-
     // Allow re-processing approved disputes if they don't have refund amounts
     if (dispute.status === 'approved' && !dispute.refundAmount && refundCredits > 0) {
     }
@@ -192,8 +179,7 @@ export async function POST(request: NextRequest) {
     if ((action === 'approve' || action === 'refund') && refundCredits > 0) {
       updateData.refundAmount = refundCredits;
 
-      // Get realtor ID - check the actual field name used in dispute creation
-      const realtorUserId = (dispute.realtorUserId as string) || (dispute.realtorId as string);
+      const realtorUserId = dispute.realtorUserId as string;
 
       if (!realtorUserId) {
         await logError('Cannot refund credits - no realtor ID in dispute', {
@@ -201,10 +187,7 @@ export async function POST(request: NextRequest) {
           metadata: {
             disputeId,
             action,
-            refundCredits,
-            disputeFields: Object.keys(dispute),
-            hasRealtorId: !!dispute?.realtorId,
-            hasRealtorUserId: !!dispute?.realtorUserId
+            refundCredits
           }
         });
 
@@ -293,17 +276,12 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('DISPUTE RESOLUTION ERROR:', error);
-    console.error('REQUEST BODY:', { disputeId, action, adminNotes, refundCredits });
-    console.error('DISPUTE DATA:', dispute);
-
     await logError('Failed to resolve dispute', {
       action: 'admin_dispute_resolve_error',
       metadata: {
         disputeId,
         action,
         refundCredits,
-        hasRealtorId: !!dispute?.realtorId,
         disputeData: dispute
       }
     }, error as Error);

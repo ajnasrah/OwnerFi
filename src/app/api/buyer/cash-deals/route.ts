@@ -4,6 +4,7 @@ import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { requireAuth } from '@/lib/auth-helpers';
 import { ErrorResponses, logError } from '@/lib/api-error-handler';
+import { getCitiesWithinRadiusWithExpansion } from '@/lib/comprehensive-cities';
 
 /**
  * BUYER CASH DEALS API
@@ -81,6 +82,20 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    // Use buyer's pre-computed nearby cities for radius-based search
+    let nearbyCities: string[];
+    if (profile.filter?.nearbyCities?.length > 0) {
+      nearbyCities = profile.filter.nearbyCities;
+      console.log(`✅ [cash-deals] Using stored filter: ${nearbyCities.length} nearby cities`);
+    } else {
+      // Fallback: Calculate on-the-fly if no filter exists
+      // Uses automatic radius expansion: 30mi → 60mi → 120mi if needed
+      console.log(`⚠️  [cash-deals] No stored filter found, calculating on-the-fly`);
+      const { cities: nearbyCitiesList, radiusUsed } = getCitiesWithinRadiusWithExpansion(searchCity, searchState, 30, 5);
+      nearbyCities = nearbyCitiesList.map(city => city.name);
+      console.log(`✅ [cash-deals] Calculated ${nearbyCities.length} nearby cities as fallback (radius: ${radiusUsed}mi)`);
+    }
+
     // Try Typesense first
     let deals: CashDeal[] = [];
     let typesenseError = null;
@@ -100,7 +115,7 @@ export async function GET(request: NextRequest) {
     // Fallback to Firestore ONLY if Typesense actually failed (not for empty results)
     // Empty results from Typesense are valid - no need to double-query Firestore
     if (typesenseError) {
-      deals = await searchCashDealsFirestore(searchCity, searchState, maxPrice);
+      deals = await searchCashDealsFirestore(nearbyCities, searchState, maxPrice);
     }
 
     // Filter out land if requested
@@ -116,7 +131,7 @@ export async function GET(request: NextRequest) {
         state: searchState,
         maxPrice,
         maxArvPercent: 80,
-        nearbyCitiesCount: 0, // Could expand with radius search
+        nearbyCitiesCount: nearbyCities.length,
       },
     });
 
@@ -129,15 +144,18 @@ export async function GET(request: NextRequest) {
 async function searchCashDealsTypesense(
   client: any,
   city: string,
-  state: string,
+  _state: string, // Unused — kept for signature compatibility; city/nearbyCities query handles geography
   maxPrice: number | undefined,
   _radius: number // TODO: Implement geo radius search
 ): Promise<CashDeal[]> {
   // Build filter: cash deals OR properties that need work (investor specials)
   // Include properties with: dealType cash_deal/both OR needsWork=true
+  // NOTE: No state filter — the city query (searching city,nearbyCities fields) already
+  // constrains geography. nearbyCities can span multiple states (e.g. Memphis metro
+  // includes cities in TN, AR, and MS), so a single-state filter would incorrectly exclude
+  // cross-border properties.
   const filters = [
     'isActive:=true',
-    `state:=${state}`,
     // Cash deals OR investor/fixer properties
     '(dealType:=[cash_deal, both] || needsWork:=true)',
   ];
@@ -200,27 +218,27 @@ async function searchCashDealsTypesense(
 }
 
 async function searchCashDealsFirestore(
-  city: string,
-  state: string,
+  nearbyCities: string[],
+  _state: string, // Unused — kept for signature compatibility; city filter handles geography
   maxPrice: number | undefined
 ): Promise<CashDeal[]> {
   if (!db) return [];
 
   try {
     // Query 1: Cash deals
+    // NOTE: No state filter — nearbyCities can span multiple states (e.g. Memphis metro
+    // includes cities in TN, AR, MS). City matching below constrains geography.
     const cashQuery = query(
       collection(db, 'properties'),
       where('isActive', '==', true),
-      where('isCashDeal', '==', true),
-      where('state', '==', state)
+      where('isCashDeal', '==', true)
     );
 
     // Query 2: Properties that need work (investor specials, fixers, etc.)
     const needsWorkQuery = query(
       collection(db, 'properties'),
       where('isActive', '==', true),
-      where('needsWork', '==', true),
-      where('state', '==', state)
+      where('needsWork', '==', true)
     );
 
     const [cashSnapshot, needsWorkSnapshot] = await Promise.all([
@@ -231,6 +249,7 @@ async function searchCashDealsFirestore(
     // Merge results, deduping by ID
     const seenIds = new Set<string>();
     const deals: CashDeal[] = [];
+    const nearbyCitiesSet = new Set(nearbyCities.map(c => c.toLowerCase().trim()));
 
     const processDoc = (doc: { id: string; data: () => Record<string, unknown> }) => {
       if (seenIds.has(doc.id)) return;
@@ -257,12 +276,9 @@ async function searchCashDealsFirestore(
 
       const discount = arv > 0 ? arv - price : 0;
 
-      // Filter by city (case-insensitive)
-      const propCity = ((data.city as string) || '').toLowerCase();
-      const searchCityLower = city.toLowerCase();
-      const nearbyCities = (data.nearbyCities as string[]) || [];
-      if (!propCity.includes(searchCityLower) &&
-          !nearbyCities.some((c: string) => c.toLowerCase().includes(searchCityLower))) {
+      // Filter by nearby cities (case-insensitive exact match against buyer's pre-computed list)
+      const propCity = ((data.city as string) || '').toLowerCase().trim();
+      if (!nearbyCitiesSet.has(propCity)) {
         return;
       }
 

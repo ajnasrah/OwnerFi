@@ -194,7 +194,7 @@ async function main() {
     }
 
     // Check 3: Does it have a deal type?
-    if (!fsDoc.isOwnerFinance && !fsDoc.isCashDeal) {
+    if (!fsDoc.isOwnerfinance && !fsDoc.isCashDeal) {
       statNoDealType++;
       findings.push({
         typesenseId: id,
@@ -203,7 +203,7 @@ async function main() {
         dealType: tsDealType,
         reason: 'NO_DEAL_TYPE',
         severity: 'REMOVE',
-        detail: `Neither isOwnerFinance nor isCashDeal is true — not a valid deal`,
+        detail: `Neither isOwnerfinance nor isCashDeal is true — not a valid deal`,
       });
       hasIssue = true;
     }

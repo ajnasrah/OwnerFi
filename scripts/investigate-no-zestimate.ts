@@ -96,7 +96,7 @@ async function main() {
           source: d.source || 'unknown',
           importMethod: d.importMethod || 'unknown',
           isCashDeal: d.isCashDeal,
-          isOwnerFinance: d.isOwnerFinance,
+          isOwnerfinance: d.isOwnerfinance,
           dealTypes: d.dealTypes || [],
           cashDealReason: d.cashDealReason,
           discountPercentage: d.discountPercentage,
@@ -137,7 +137,7 @@ async function main() {
     console.log(`    Price: $${doc.price?.toLocaleString()}`);
     console.log(`    Source: ${doc.source} / ${doc.importMethod}`);
     console.log(`    Deal types: ${JSON.stringify(doc.dealTypes)}`);
-    console.log(`    isCashDeal: ${doc.isCashDeal}, isOwnerFinance: ${doc.isOwnerFinance}`);
+    console.log(`    isCashDeal: ${doc.isCashDeal}, isOwnerfinance: ${doc.isOwnerfinance}`);
     console.log(`    cashDealReason: ${doc.cashDealReason}`);
     console.log(`    discountPercentage: ${doc.discountPercentage}`);
     console.log(`    eightyPercentOfZestimate: ${doc.eightyPercentOfZestimate}`);

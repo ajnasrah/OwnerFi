@@ -111,7 +111,7 @@ async function processInterestedProperty(firebaseId: string, csvAddress: string)
     // Detect financing type
     const descriptionText = sanitizeDescription(queueData.rawData?.description || queueData.description || '');
 
-    const isOwnerFinance = queueData.dealType === 'potential_owner_finance' || true; // Default to owner finance for interested
+    const isOwnerfinance = queueData.dealType === 'potential_owner_finance' || true; // Default to owner finance for interested
     const isCashDeal = queueData.dealType === 'cash_deal';
 
     const discountPercent = queueData.priceToZestimateRatio
@@ -165,9 +165,9 @@ async function processInterestedProperty(firebaseId: string, csvAddress: string)
 
       // Active flags
       isActive: true,
-      isOwnerFinance: true,
+      isOwnerfinance: true,
       isCashDeal: isCashDeal,
-      dealTypes: isOwnerFinance ? ['owner_finance'] : ['cash_deal'],
+      dealTypes: isOwnerfinance ? ['owner_finance'] : ['cash_deal'],
 
       // Source tracking
       source: 'agent_outreach',

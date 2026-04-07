@@ -48,7 +48,7 @@ export default function RealtorDashboard() {
 
   // Dispute modal state
   const [disputeModal, setDisputeModal] = useState<DisputeModalState>({
-    buyer: null, reason: '', description: '', submitting: false, success: false,
+    buyer: null, reason: '', description: '', submitting: false, success: false, error: null,
   });
 
   // Referral modal state
@@ -74,11 +74,11 @@ export default function RealtorDashboard() {
 
   // Dispute handlers
   const openDisputeModal = useCallback((buyer: OwnedBuyer) => {
-    setDisputeModal({ buyer, reason: '', description: '', submitting: false });
+    setDisputeModal({ buyer, reason: '', description: '', submitting: false, success: false, error: null });
   }, []);
 
   const closeDisputeModal = useCallback(() => {
-    setDisputeModal({ buyer: null, reason: '', description: '', submitting: false });
+    setDisputeModal({ buyer: null, reason: '', description: '', submitting: false, success: false, error: null });
   }, []);
 
   const disputeRef = useRef(disputeModal);
@@ -104,15 +104,13 @@ export default function RealtorDashboard() {
 
       if (result.success) {
         trackEvent('lead_dispute_submitted', { reason: current.reason });
-        setDisputeModal(prev => ({ ...prev, submitting: false, success: true }));
+        setDisputeModal(prev => ({ ...prev, submitting: false, success: true, error: null }));
         queryClient.invalidateQueries({ queryKey: ['realtor-dashboard'] });
       } else {
-        alert(result.error || 'Failed to submit dispute');
-        setDisputeModal(prev => ({ ...prev, submitting: false }));
+        setDisputeModal(prev => ({ ...prev, submitting: false, error: result.error || 'Failed to submit dispute' }));
       }
     } catch {
-      alert('Failed to submit dispute');
-      setDisputeModal(prev => ({ ...prev, submitting: false }));
+      setDisputeModal(prev => ({ ...prev, submitting: false, error: 'Failed to submit dispute. Please try again.' }));
     }
   }, [closeDisputeModal, queryClient]);
 
@@ -196,8 +194,8 @@ export default function RealtorDashboard() {
           setReferralModal(prev => ({ ...prev, copied: false }));
         }, 2000);
       } catch {
-        // Fallback: select text for manual copy
-        alert('Could not copy automatically. Please copy the link manually.');
+        // Fallback: inform user via modal error state
+        setReferralModal(prev => ({ ...prev, error: 'Could not copy automatically. Please copy the link manually.' }));
       }
     }
   }, [referralModal.inviteUrl]);

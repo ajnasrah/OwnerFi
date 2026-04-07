@@ -33,7 +33,7 @@ async function main() {
   console.log('\n=== 1. COUNT COMPARISON ===\n');
 
   const [fsActiveOF, fsActiveCash, fsTotalActive, fsTotalAll, fsInactive] = await Promise.all([
-    db.collection('properties').where('isActive', '==', true).where('isOwnerFinance', '==', true).count().get(),
+    db.collection('properties').where('isActive', '==', true).where('isOwnerfinance', '==', true).count().get(),
     db.collection('properties').where('isActive', '==', true).where('isCashDeal', '==', true).count().get(),
     db.collection('properties').where('isActive', '==', true).count().get(),
     db.collection('properties').count().get(),

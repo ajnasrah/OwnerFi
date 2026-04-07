@@ -82,6 +82,12 @@ export function DisputeModal({ modal, onUpdateField, onSubmit, onClose }: Disput
                 />
               </div>
 
+              {modal.error && (
+                <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-lg px-3 py-2">
+                  {modal.error}
+                </div>
+              )}
+
               <div className="flex gap-3">
                 <button
                   onClick={onClose}

@@ -127,7 +127,7 @@ async function processRow(
           await propRef.update({
             ownerFinanceVerified: true,
             agentConfirmedOwnerFinance: true,
-            isOwnerFinance: true,
+            isOwnerfinance: true,
             dealTypes: ['owner_finance'],
             agentConfirmedAt: new Date(),
             updatedAt: new Date(),
@@ -157,7 +157,7 @@ async function processRow(
             imgSrc: queueData.rawData?.hiResImageLink || queueData.rawData?.imgSrc || null,
             ownerFinanceVerified: true,
             agentConfirmedOwnerFinance: true,
-            isOwnerFinance: true,
+            isOwnerfinance: true,
             isCashDeal: false,
             dealTypes: ['owner_finance'],
             isActive: true,

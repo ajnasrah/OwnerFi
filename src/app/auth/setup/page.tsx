@@ -34,6 +34,14 @@ export default function AuthSetup() {
   // Form tracking
   const { trackFormStart, trackFormSubmit, trackFormSuccess, trackFormError } = useFormTracking('signup');
 
+  // Check sessionStorage for pre-selected role (e.g. from /auth?role=realtor)
+  useEffect(() => {
+    const signupRole = sessionStorage.getItem('signup_role');
+    if (signupRole === 'realtor') {
+      setFormData(prev => ({ ...prev, isRealtor: true }));
+    }
+  }, []);
+
   useEffect(() => {
     // First check session storage for verified phone (new signup flow)
     const phone = sessionStorage.getItem('verified_phone');
@@ -47,7 +55,6 @@ export default function AuthSetup() {
     if (status === 'authenticated' && isExtendedSession(session)) {
       const sessionPhone = session.user.phone;
       if (sessionPhone) {
-        console.log('🔄 [SETUP] User authenticated but needs profile setup, using session phone');
         setVerifiedPhone(sessionPhone);
         setIsExistingUser(true);
         // Pre-fill email if available
@@ -162,10 +169,9 @@ export default function AuthSetup() {
 
       // If user is already authenticated (existing user completing profile), skip signIn
       if (isExistingUser) {
-        console.log('🔐 [SETUP] User already authenticated, skipping signIn');
-
         // Clear session storage
         sessionStorage.removeItem('verified_phone');
+        sessionStorage.removeItem('signup_role');
         const sharedPropertyId = sessionStorage.getItem('shared_property_id');
         sessionStorage.removeItem('shared_property_id');
 
@@ -188,14 +194,13 @@ export default function AuthSetup() {
         redirect: false,
       });
 
-      console.log('🔐 [SETUP] Sign in result:', signInResult);
-
       if (signInResult?.ok) {
         // Check for shared property to auto-like
         const sharedPropertyId = sessionStorage.getItem('shared_property_id');
 
         // Clear session storage
         sessionStorage.removeItem('verified_phone');
+        sessionStorage.removeItem('signup_role');
         sessionStorage.removeItem('shared_property_id');
 
         // 🔧 Small delay to ensure session is established
@@ -212,12 +217,10 @@ export default function AuthSetup() {
           router.push('/dashboard');
         }
       } else {
-        console.error('❌ [SETUP] Sign in failed:', signInResult);
         setError(signInResult?.error || 'Account created but failed to sign in. Please try signing in manually.');
         setLoading(false);
       }
     } catch (err) {
-      console.error('Signup error:', err);
       setError('Something went wrong. Please try again.');
       setLoading(false);
     }

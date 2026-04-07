@@ -54,6 +54,17 @@ export interface SEOProperty {
   createdAt?: string;
   lastUpdated?: string;
   updatedAt?: string;
+  // Deal type fields
+  dealType?: string;
+  dealTypes?: string[];
+  isOwnerfinance?: boolean;
+  isCashDeal?: boolean;
+  // Cash deal fields
+  cashDealReason?: string;
+  discountPercent?: number;
+  rentEstimate?: number;
+  annualTax?: number;
+  monthlyHOA?: number;
   source: 'properties';
   slug: string;
 }
@@ -285,6 +296,17 @@ function normalizeProperty(data: any, id: string, source: 'properties' = 'proper
     createdAt: data.createdAt,
     lastUpdated: data.lastUpdated,
     updatedAt: data.updatedAt,
+    // Deal type fields
+    dealType: data.dealType || (data.isOwnerfinance && data.isCashDeal ? 'both' : data.isCashDeal ? 'cash_deal' : data.isOwnerfinance ? 'owner_finance' : undefined),
+    dealTypes: data.dealTypes,
+    isOwnerfinance: data.isOwnerfinance ?? data.ownerFinanceVerified ?? false,
+    isCashDeal: data.isCashDeal ?? false,
+    // Cash deal fields
+    cashDealReason: data.cashDeal?.reason || data.cashDealReason,
+    discountPercent: data.cashDeal?.discountPercent || data.discountPercent,
+    rentEstimate: data.rentEstimate || data.rentZestimate,
+    annualTax: data.annualTax || data.propertyTaxRate,
+    monthlyHOA: data.hoa?.monthlyFee || data.monthlyHOA,
     source,
     slug: generateSlug({ ...data, id: data.zpid || id }),
   };

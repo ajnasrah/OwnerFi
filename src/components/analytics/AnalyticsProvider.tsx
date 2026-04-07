@@ -56,7 +56,9 @@ export type AnalyticsEvent =
   | 'chatbot_speak'
   | 'chatbot_feedback'
   | 'chatbot_restart'
-  | 'chatbot_email_transcript';
+  | 'chatbot_email_transcript'
+  // Realtor tracking
+  | 'lead_dispute_submitted';
 
 interface EventData {
   [key: string]: string | number | boolean;

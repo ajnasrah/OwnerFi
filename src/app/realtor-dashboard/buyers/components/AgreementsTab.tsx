@@ -15,12 +15,12 @@ async function openAgreementInNewTab(agreementId: string) {
   const res = await fetch(`/api/realtor/agreements?id=${agreementId}`);
   const data = await res.json();
   if (!data.success || !data.agreementHTML) {
-    alert('Failed to load agreement. Please try again.');
+    console.warn('Failed to load agreement:', data.error || 'No agreement HTML returned');
     return;
   }
   const win = window.open('', '_blank');
   if (!win) {
-    alert('Please allow pop-ups to view the agreement.');
+    console.warn('Pop-up blocked: unable to open agreement in a new tab.');
     return;
   }
   win.document.write(`<!DOCTYPE html><html><head><title>Referral Agreement</title><style>body{font-family:Arial,sans-serif;max-width:800px;margin:0 auto;padding:20px}@media print{button{display:none!important}}</style></head><body>${data.agreementHTML}<div style="text-align:center;margin-top:24px"><button onclick="window.print()" style="padding:10px 24px;font-size:16px;cursor:pointer;background:#00BC7D;color:white;border:none;border-radius:8px">Print / Save as PDF</button></div></body></html>`);

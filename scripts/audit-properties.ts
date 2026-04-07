@@ -59,8 +59,8 @@ async function main() {
     // === STATS ===
     if (d.isActive !== false) totalActive++;
     else totalInactive++;
-    if (d.isOwnerFinance && d.isCashDeal) totalBoth++;
-    else if (d.isOwnerFinance) totalOwnerFinance++;
+    if (d.isOwnerfinance && d.isCashDeal) totalBoth++;
+    else if (d.isOwnerfinance) totalOwnerFinance++;
     else if (d.isCashDeal) totalCashDeal++;
     else totalNoDealType++;
 
@@ -94,7 +94,7 @@ async function main() {
     }
 
     // === NO DEAL TYPE ===
-    if (!d.isOwnerFinance && !d.isCashDeal) {
+    if (!d.isOwnerfinance && !d.isCashDeal) {
       issues.push({ id, address: addr, category: 'NO_DEAL_TYPE', detail: 'Neither owner finance nor cash deal', price, severity: 'warning' });
     }
 
@@ -137,7 +137,7 @@ async function main() {
     }
 
     // === OWNER FINANCE WITH NO TERMS ===
-    if (d.isOwnerFinance && d.isActive !== false) {
+    if (d.isOwnerfinance && d.isActive !== false) {
       const hasAnyTerms = d.monthlyPayment || d.downPaymentAmount || d.interestRate;
       if (!hasAnyTerms) {
         issues.push({ id, address: addr, category: 'OF_NO_TERMS', detail: 'Owner finance with no financing terms (no payment/down/rate)', price, severity: 'info' });

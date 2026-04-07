@@ -71,8 +71,7 @@ export async function POST(request: NextRequest) {
       state,
       // Realtor specific
       company,
-      licenseNumber,
-      primaryCity
+      licenseNumber
     } = body;
 
     console.log('📝 [SIGNUP-PHONE] Received isInvestor:', isInvestor);
@@ -396,7 +395,7 @@ export async function POST(request: NextRequest) {
       }
 
       const { FirebaseDB } = await import('@/lib/firebase-db');
-      const { RealtorDataHelper, formatPhone } = await import('@/lib/realtor-models');
+      const { RealtorDataHelper } = await import('@/lib/realtor-models');
 
       // Create service area using the city from the form
       const serviceArea = {

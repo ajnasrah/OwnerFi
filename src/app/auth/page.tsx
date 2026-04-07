@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import Link from 'next/link';
@@ -19,6 +19,14 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Store role from URL param (e.g. /auth?role=realtor) so setup page can pre-select it
+  useEffect(() => {
+    const role = searchParams?.get('role');
+    if (role) {
+      sessionStorage.setItem('signup_role', role);
+    }
+  }, [searchParams]);
+
   // Form tracking
   const { trackFormStart, trackFormSubmit, trackFormSuccess, trackFormError } = useFormTracking('auth');
 
@@ -35,8 +43,6 @@ export default function AuthPage() {
     }
 
     try {
-      console.log('📱 Sending verification code to:', phone);
-
       // Use server-side OTP (no reCAPTCHA needed!)
       const response = await fetch('/api/auth/send-otp', {
         method: 'POST',
@@ -53,7 +59,6 @@ export default function AuthPage() {
         setError(result.error || 'Failed to send code. Please try again.');
       }
     } catch (err: any) {
-      console.error('Phone verification error:', err);
       setError(err.message || 'Failed to send verification code. Please try again.');
     } finally {
       setLoading(false);
@@ -92,7 +97,6 @@ export default function AuthPage() {
       const verifiedPhone = verifyResult.phone;
 
       // Check if user exists in database
-      console.log('🔍 [AUTH-PAGE] Checking if user exists for phone:', verifiedPhone);
       const checkResponse = await fetch('/api/auth/check-phone', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -100,20 +104,20 @@ export default function AuthPage() {
       });
 
       const checkData = await checkResponse.json();
-      console.log('📋 [AUTH-PAGE] check-phone response:', { status: checkResponse.status, data: checkData });
 
       if (checkData.exists) {
         // Existing user - sign them in
-        console.log('✅ [AUTH-PAGE] User exists, attempting sign in...');
         const signInResult = await signIn('credentials', {
           phone: verifiedPhone,
           redirect: false,
         });
-        console.log('🔐 [AUTH-PAGE] signIn result:', signInResult);
 
         if (signInResult?.ok) {
           trackEvent('auth_login', { method: 'phone', role: checkData.role || 'buyer' });
           trackFormSuccess({ method: 'phone' });
+
+          // Clean up signup_role so it doesn't persist for existing users
+          sessionStorage.removeItem('signup_role');
 
           // Check for shared property to auto-like
           const sharedPropertyId = sessionStorage.getItem('shared_property_id');
@@ -150,14 +154,12 @@ export default function AuthPage() {
         }
       } else {
         // New user - redirect to setup
-        console.log('❌ [AUTH-PAGE] User NOT found, redirecting to setup. checkData:', checkData);
         // Store verified phone in session storage for setup page
         sessionStorage.setItem('verified_phone', verifiedPhone);
         setLoading(false);
         router.push('/auth/setup');
       }
     } catch (err: any) {
-      console.error('Code verification error:', err);
       setError(err.message || 'Failed to verify code');
       setLoading(false);
     }
@@ -191,6 +193,9 @@ export default function AuthPage() {
       if (signInResult?.ok) {
         trackEvent('auth_login', { method: 'email' });
         trackFormSuccess({ method: 'email' });
+
+        // Clean up signup_role so it doesn't persist for existing users
+        sessionStorage.removeItem('signup_role');
 
         // Small delay to ensure session is established (matches phone login flow)
         await new Promise(resolve => setTimeout(resolve, 500));
@@ -234,7 +239,6 @@ export default function AuthPage() {
         setLoading(false);
       }
     } catch (err: any) {
-      console.error('Email sign-in error:', err);
       setError(err.message || 'Failed to sign in');
       setLoading(false);
     }

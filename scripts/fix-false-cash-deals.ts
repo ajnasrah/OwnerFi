@@ -57,7 +57,7 @@ async function main() {
   console.log(`Total cash deals: ${snapshot.size}`);
 
   const zestFields = ['zestimate', 'estimate', 'estimatedValue', 'homeValue'];
-  const toFix: Array<{ id: string; address: string; price: number; isOwnerFinance: boolean; isActive: boolean }> = [];
+  const toFix: Array<{ id: string; address: string; price: number; isOwnerfinance: boolean; isActive: boolean }> = [];
   const toDeactivate: Array<{ id: string; address: string; price: number }> = [];
 
   for (const doc of snapshot.docs) {
@@ -81,12 +81,12 @@ async function main() {
       id: doc.id,
       address: addr,
       price,
-      isOwnerFinance: !!d.isOwnerFinance,
+      isOwnerfinance: !!d.isOwnerfinance,
       isActive: d.isActive !== false,
     });
 
     // If it's not owner finance either, it has no reason to exist
-    if (!d.isOwnerFinance) {
+    if (!d.isOwnerfinance) {
       toDeactivate.push({ id: doc.id, address: addr, price });
     }
   }
@@ -103,7 +103,7 @@ async function main() {
   if (DRY_RUN) {
     console.log('\nSample of properties to fix:');
     for (const item of toFix.slice(0, 15)) {
-      const action = item.isOwnerFinance ? 'untag cash deal' : 'untag + deactivate';
+      const action = item.isOwnerfinance ? 'untag cash deal' : 'untag + deactivate';
       console.log(`  ${item.id} — $${item.price.toLocaleString()} — ${item.address} [${action}]`);
     }
     console.log('\nDRY RUN — no changes. Run without --dry-run to apply.');
@@ -121,7 +121,7 @@ async function main() {
     for (const item of chunk) {
       const ref = db.collection('properties').doc(item.id);
 
-      if (item.isOwnerFinance) {
+      if (item.isOwnerfinance) {
         // Keep as owner finance, just remove cash deal tag
         batch.update(ref, {
           isCashDeal: false,
@@ -166,7 +166,7 @@ async function main() {
   // Update Typesense for re-tagged properties (update dealType)
   console.log('Updating re-tagged properties in Typesense...');
   let tsUpdated = 0;
-  const ownerFinanceOnly = toFix.filter(f => f.isOwnerFinance);
+  const ownerFinanceOnly = toFix.filter(f => f.isOwnerfinance);
   for (const item of ownerFinanceOnly) {
     try {
       await typesenseClient.collections('properties').documents(item.id).update({

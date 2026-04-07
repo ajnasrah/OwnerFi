@@ -178,7 +178,7 @@ export interface LeadPurchase {
 export interface LeadDispute {
   id: string;
   transactionId: string; // Links to LeadPurchase.id
-  realtorId: string;
+  realtorUserId: string;
   realtorName: string;
   realtorEmail: string;
   buyerName: string;

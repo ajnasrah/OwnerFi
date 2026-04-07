@@ -117,4 +117,5 @@ export interface DisputeModalState {
   description: string;
   submitting: boolean;
   success: boolean;
+  error: string | null;
 }

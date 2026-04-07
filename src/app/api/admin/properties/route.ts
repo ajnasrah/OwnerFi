@@ -87,6 +87,11 @@ function mapPropertyFields(doc: FirebaseFirestore.QueryDocumentSnapshot) {
     // Coordinates for radius search
     latitude: data.latitude || null,
     longitude: data.longitude || null,
+    // Deal type fields
+    dealType: data.dealType || null,
+    dealTypes: data.dealTypes || [],
+    isOwnerfinance: data.isOwnerfinance || data.ownerFinanceVerified || false,
+    isCashDeal: data.isCashDeal || false,
   };
 }
 
@@ -198,6 +203,11 @@ async function searchWithTypesense(params: TypesenseSearchParams): Promise<{
         latitude: doc.location?.[0] || null,
         longitude: doc.location?.[1] || null,
         estimatedValue: doc.zestimate || null,
+        // Deal type fields
+        dealType: doc.dealType || null,
+        dealTypes: doc.dealTypes || [],
+        isOwnerfinance: doc.isOwnerfinance || doc.ownerFinanceVerified || false,
+        isCashDeal: doc.isCashDeal || false,
       };
     });
 

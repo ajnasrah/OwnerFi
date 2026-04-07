@@ -69,7 +69,7 @@ async function main() {
     const zestimate = d.zestimate || d.estimate || d.estimatedValue || 0;
 
     // === 1. No deal type — deactivate ===
-    if (!d.isOwnerFinance && !d.isCashDeal) {
+    if (!d.isOwnerfinance && !d.isCashDeal) {
       actions.push({
         id, address: addr, price,
         category: 'NO_DEAL_TYPE',

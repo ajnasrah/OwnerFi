@@ -109,7 +109,7 @@ async function main() {
         continue;
       }
 
-      if (!data.isOwnerFinance && !data.isCashDeal) {
+      if (!data.isOwnerfinance && !data.isCashDeal) {
         toRemove.push({ id: tsDoc.id, address: tsDoc.address, price: tsDoc.listPrice, reason: 'No deal type' });
         continue;
       }

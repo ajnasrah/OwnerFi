@@ -39,11 +39,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   // Title: Keep under 60 chars for Google
-  // Format: "123 Main St, Memphis TN | Owner Finance | Ownerfi"
+  // Adapt to deal type
+  const isCashOnly = property.isCashDeal && !property.isOwnerfinance && property.dealType !== 'owner_finance' && property.dealType !== 'both';
   const shortAddress = property.address?.length > 25
     ? property.address.substring(0, 22) + '...'
     : property.address;
-  const title = `${shortAddress}, ${property.city} ${property.state} | Owner Finance`;
+  const title = isCashOnly
+    ? `${shortAddress}, ${property.city} ${property.state} | Cash Deal`
+    : `${shortAddress}, ${property.city} ${property.state} | Owner Finance`;
 
   const description = generateMetaDescription(property);
 
@@ -121,6 +124,7 @@ function generateMetaDescription(property: any): string {
   const city = property.city || '';
   const state = property.state || '';
   const price = property.listPrice || property.price;
+  const isCashOnly = property.isCashDeal && !property.isOwnerfinance && property.dealType !== 'owner_finance' && property.dealType !== 'both';
 
   // Keep under 160 characters for Google
   let desc = `${beds} bed, ${baths} bath home in ${city}, ${state}`;
@@ -129,13 +133,14 @@ function generateMetaDescription(property: any): string {
     desc += ` for $${price.toLocaleString()}`;
   }
 
-  if (property.monthlyPayment) {
+  if (isCashOnly) {
+    desc += `. Cash deal — strong investment opportunity. Quick close available.`;
+  } else if (property.monthlyPayment) {
     desc += `. $${property.monthlyPayment.toLocaleString()}/mo owner financing`;
+    desc += `. No bank qualifying. Bad credit OK.`;
   } else {
-    desc += `. Owner financing available`;
+    desc += `. Owner financing available. No bank qualifying.`;
   }
-
-  desc += `. No bank qualifying. Bad credit OK.`;
 
   // Truncate if over 160 chars
   if (desc.length > 160) {
@@ -155,6 +160,15 @@ export default async function PropertyPage({ params }: PageProps) {
 
   const imageUrl = property.imageUrls?.[0] || property.firstPropertyImage || '/placeholder-house.jpg';
   const price = property.listPrice || property.price || 0;
+
+  // Determine deal type
+  const isOF = property.isOwnerfinance || property.dealType === 'owner_finance' || property.dealType === 'both';
+  const isCash = property.isCashDeal || property.dealType === 'cash_deal' || property.dealType === 'both';
+  const isCashOnly = isCash && !isOF;
+
+  // Calculate investment metrics for cash deals
+  const zestimate = (property as any).zestimate || (property as any).estimatedValue;
+  const arvPercent = price && zestimate && zestimate > 0 ? Math.round((price / zestimate) * 100) : null;
 
   return (
     <>
@@ -214,16 +228,28 @@ export default async function PropertyPage({ params }: PageProps) {
               <div className="relative aspect-video rounded-2xl overflow-hidden bg-slate-800">
                 <PropertyImage
                   src={imageUrl}
-                  alt={`${property.address}, ${property.city} ${property.state} - Owner Finance Home`}
+                  alt={`${property.address}, ${property.city} ${property.state} - ${isCashOnly ? 'Cash Deal' : 'Owner Finance Home'}`}
                   priority
                   address={property.address}
                   city={property.city}
                   state={property.state}
                 />
-                <div className="absolute top-4 left-4">
-                  <span className="bg-[#00BC7D] text-white px-3 py-1.5 rounded-full text-sm font-bold shadow-lg">
-                    Owner Finance Available
-                  </span>
+                <div className="absolute top-4 left-4 flex gap-2">
+                  {isOF && (
+                    <span className="bg-amber-500 text-white px-3 py-1.5 rounded-full text-sm font-bold shadow-lg">
+                      Owner Finance
+                    </span>
+                  )}
+                  {isCash && (
+                    <span className="bg-emerald-500 text-white px-3 py-1.5 rounded-full text-sm font-bold shadow-lg">
+                      Cash Deal
+                    </span>
+                  )}
+                  {!isOF && !isCash && (
+                    <span className="bg-[#00BC7D] text-white px-3 py-1.5 rounded-full text-sm font-bold shadow-lg">
+                      Available
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -270,71 +296,164 @@ export default async function PropertyPage({ params }: PageProps) {
                   </p>
                 </div>
 
-                {/* Owner Financing Terms */}
-                <div className="space-y-4 mb-6">
-                  <h3 className="font-bold text-[#00BC7D] text-lg">Owner Financing Terms</h3>
+                {/* OWNER FINANCE SECTION — only shown for OF properties */}
+                {isOF && (
+                  <>
+                    <div className="space-y-4 mb-6">
+                      <h3 className="font-bold text-amber-400 text-lg">Owner Financing Terms</h3>
 
-                  {property.downPaymentAmount && (
-                    <div className="flex justify-between items-center py-2 border-b border-slate-700">
-                      <span className="text-slate-400">Down Payment</span>
-                      <span className="text-white font-bold">
-                        ${property.downPaymentAmount.toLocaleString()}
-                        {property.downPaymentPercent && (
-                          <span className="text-slate-400 font-normal ml-1">
-                            ({property.downPaymentPercent}%)
+                      {property.downPaymentAmount && (
+                        <div className="flex justify-between items-center py-2 border-b border-slate-700">
+                          <span className="text-slate-400">Down Payment</span>
+                          <span className="text-white font-bold">
+                            ${property.downPaymentAmount.toLocaleString()}
+                            {property.downPaymentPercent && (
+                              <span className="text-slate-400 font-normal ml-1">
+                                ({property.downPaymentPercent}%)
+                              </span>
+                            )}
                           </span>
+                        </div>
+                      )}
+
+                      {property.monthlyPayment && (
+                        <div className="flex justify-between items-center py-2 border-b border-slate-700">
+                          <span className="text-slate-400">Monthly Payment</span>
+                          <span className="text-white font-bold">${property.monthlyPayment.toLocaleString()}/mo</span>
+                        </div>
+                      )}
+
+                      {property.interestRate && (
+                        <div className="flex justify-between items-center py-2 border-b border-slate-700">
+                          <span className="text-slate-400">Interest Rate</span>
+                          <span className="text-white font-bold">{property.interestRate}%</span>
+                        </div>
+                      )}
+
+                      {property.termYears && (
+                        <div className="flex justify-between items-center py-2 border-b border-slate-700">
+                          <span className="text-slate-400">Loan Term</span>
+                          <span className="text-white font-bold">{property.termYears} years</span>
+                        </div>
+                      )}
+
+                      {property.balloonYears && (
+                        <div className="flex justify-between items-center py-2 border-b border-slate-700">
+                          <span className="text-slate-400">Balloon</span>
+                          <span className="text-white font-bold">{property.balloonYears} years</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* OF Benefits */}
+                    <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-4 mb-6">
+                      <h4 className="font-bold text-amber-400 mb-3">Why Owner Financing?</h4>
+                      <ul className="space-y-2 text-sm text-slate-300">
+                        <li className="flex items-center gap-2">
+                          <span className="text-amber-400">✓</span> No bank qualifying
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="text-amber-400">✓</span> Bad credit OK
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="text-amber-400">✓</span> Fast closing
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="text-amber-400">✓</span> Flexible terms
+                        </li>
+                      </ul>
+                    </div>
+                  </>
+                )}
+
+                {/* CASH DEAL SECTION — only shown for cash properties */}
+                {isCash && (
+                  <>
+                    <div className="space-y-4 mb-6">
+                      <h3 className="font-bold text-emerald-400 text-lg">Investment Metrics</h3>
+
+                      {zestimate && zestimate > 0 && (
+                        <div className="flex justify-between items-center py-2 border-b border-slate-700">
+                          <span className="text-slate-400">Estimated Value (ARV)</span>
+                          <span className="text-white font-bold">${zestimate.toLocaleString()}</span>
+                        </div>
+                      )}
+
+                      {arvPercent && (
+                        <div className="flex justify-between items-center py-2 border-b border-slate-700">
+                          <span className="text-slate-400">% of ARV</span>
+                          <span className={`font-bold ${
+                            arvPercent <= 70 ? 'text-emerald-400' :
+                            arvPercent <= 85 ? 'text-yellow-400' :
+                            'text-red-400'
+                          }`}>
+                            {arvPercent}%
+                          </span>
+                        </div>
+                      )}
+
+                      {property.discountPercent && (
+                        <div className="flex justify-between items-center py-2 border-b border-slate-700">
+                          <span className="text-slate-400">Discount</span>
+                          <span className="text-emerald-400 font-bold">{property.discountPercent}% below market</span>
+                        </div>
+                      )}
+
+                      {property.rentEstimate && (
+                        <div className="flex justify-between items-center py-2 border-b border-slate-700">
+                          <span className="text-slate-400">Rent Estimate</span>
+                          <span className="text-white font-bold">${property.rentEstimate.toLocaleString()}/mo</span>
+                        </div>
+                      )}
+
+                      {property.annualTax && (
+                        <div className="flex justify-between items-center py-2 border-b border-slate-700">
+                          <span className="text-slate-400">Annual Tax</span>
+                          <span className="text-white font-bold">${property.annualTax.toLocaleString()}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Cash Deal Benefits */}
+                    <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-4 mb-6">
+                      <h4 className="font-bold text-emerald-400 mb-3">Why This Cash Deal?</h4>
+                      <ul className="space-y-2 text-sm text-slate-300">
+                        {arvPercent && arvPercent <= 80 && (
+                          <li className="flex items-center gap-2">
+                            <span className="text-emerald-400">✓</span> Below market value ({arvPercent}% of ARV)
+                          </li>
                         )}
-                      </span>
+                        <li className="flex items-center gap-2">
+                          <span className="text-emerald-400">✓</span> Strong investment opportunity
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="text-emerald-400">✓</span> Quick close possible
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="text-emerald-400">✓</span> Ideal for flips or rentals
+                        </li>
+                      </ul>
                     </div>
-                  )}
+                  </>
+                )}
 
-                  {property.monthlyPayment && (
-                    <div className="flex justify-between items-center py-2 border-b border-slate-700">
-                      <span className="text-slate-400">Monthly Payment</span>
-                      <span className="text-white font-bold">${property.monthlyPayment.toLocaleString()}/mo</span>
-                    </div>
-                  )}
-
-                  {property.interestRate && (
-                    <div className="flex justify-between items-center py-2 border-b border-slate-700">
-                      <span className="text-slate-400">Interest Rate</span>
-                      <span className="text-white font-bold">{property.interestRate}%</span>
-                    </div>
-                  )}
-
-                  {property.termYears && (
-                    <div className="flex justify-between items-center py-2 border-b border-slate-700">
-                      <span className="text-slate-400">Loan Term</span>
-                      <span className="text-white font-bold">{property.termYears} years</span>
-                    </div>
-                  )}
-
-                  {property.balloonYears && (
-                    <div className="flex justify-between items-center py-2 border-b border-slate-700">
-                      <span className="text-slate-400">Balloon</span>
-                      <span className="text-white font-bold">{property.balloonYears} years</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Benefits */}
-                <div className="bg-[#004D33]/30 rounded-lg p-4 mb-6">
-                  <h4 className="font-bold text-[#00BC7D] mb-3">Why Owner Financing?</h4>
-                  <ul className="space-y-2 text-sm text-slate-300">
-                    <li className="flex items-center gap-2">
-                      <span className="text-[#00BC7D]">✓</span> No bank qualifying
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <span className="text-[#00BC7D]">✓</span> Bad credit OK
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <span className="text-[#00BC7D]">✓</span> Fast closing
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <span className="text-[#00BC7D]">✓</span> Flexible terms
-                    </li>
-                  </ul>
-                </div>
+                {/* Fallback if no deal type determined — show generic */}
+                {!isOF && !isCash && (
+                  <div className="bg-[#004D33]/30 rounded-lg p-4 mb-6">
+                    <h4 className="font-bold text-[#00BC7D] mb-3">Property Highlights</h4>
+                    <ul className="space-y-2 text-sm text-slate-300">
+                      <li className="flex items-center gap-2">
+                        <span className="text-[#00BC7D]">✓</span> Available for purchase
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <span className="text-[#00BC7D]">✓</span> Flexible terms possible
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <span className="text-[#00BC7D]">✓</span> Fast closing
+                      </li>
+                    </ul>
+                  </div>
+                )}
 
                 {/* CTA Button */}
                 <Link
@@ -350,27 +469,53 @@ export default async function PropertyPage({ params }: PageProps) {
             </div>
           </div>
 
-          {/* FAQ Section for SEO */}
+          {/* FAQ Section for SEO — adapts to deal type */}
           <section className="mt-16 bg-slate-800/50 rounded-xl p-8">
             <h2 className="text-2xl font-bold text-white mb-6">
-              Frequently Asked Questions About Owner Financing in {property.city}
+              {isCashOnly
+                ? `Frequently Asked Questions About Cash Deals in ${property.city}`
+                : `Frequently Asked Questions About Owner Financing in ${property.city}`
+              }
             </h2>
             <div className="space-y-6">
-              <FAQItem
-                question={`What is owner financing for ${property.address}?`}
-                answer={`Owner financing means the seller of ${property.address} acts as the lender. Instead of getting a mortgage from a bank, you make monthly payments directly to the property owner. This property in ${property.city}, ${property.state} is available with owner financing terms.`}
-              />
-              <FAQItem
-                question="Do I need good credit for owner financing?"
-                answer="No! One of the biggest advantages of owner financing is that you typically don't need to qualify through a bank. This makes it possible to buy a home even with bad credit, no credit history, or self-employment income that's hard to document."
-              />
-              <FAQItem
-                question={`How much is the down payment for this ${property.city} home?`}
-                answer={property.downPaymentAmount
-                  ? `The down payment for this property is $${property.downPaymentAmount.toLocaleString()}${property.downPaymentPercent ? ` (${property.downPaymentPercent}% of the purchase price)` : ''}. Contact us to discuss flexible down payment options.`
-                  : `Down payment terms are negotiable. Sign up for free to get the specific financing details for this ${property.city} property.`
-                }
-              />
+              {isOF && (
+                <>
+                  <FAQItem
+                    question={`What is owner financing for ${property.address}?`}
+                    answer={`Owner financing means the seller of ${property.address} acts as the lender. Instead of getting a mortgage from a bank, you make monthly payments directly to the property owner. This property in ${property.city}, ${property.state} is available with owner financing terms.`}
+                  />
+                  <FAQItem
+                    question="Do I need good credit for owner financing?"
+                    answer="No! One of the biggest advantages of owner financing is that you typically don't need to qualify through a bank. This makes it possible to buy a home even with bad credit, no credit history, or self-employment income that's hard to document."
+                  />
+                  <FAQItem
+                    question={`How much is the down payment for this ${property.city} home?`}
+                    answer={property.downPaymentAmount
+                      ? `The down payment for this property is $${property.downPaymentAmount.toLocaleString()}${property.downPaymentPercent ? ` (${property.downPaymentPercent}% of the purchase price)` : ''}. Contact us to discuss flexible down payment options.`
+                      : `Down payment terms are negotiable. Sign up for free to get the specific financing details for this ${property.city} property.`
+                    }
+                  />
+                </>
+              )}
+              {isCashOnly && (
+                <>
+                  <FAQItem
+                    question={`Why is ${property.address} a good cash deal?`}
+                    answer={arvPercent
+                      ? `This property is listed at ${arvPercent}% of its estimated market value, making it a strong investment opportunity in ${property.city}, ${property.state}. Cash deals like this are ideal for investors looking to flip or hold as a rental.`
+                      : `This property in ${property.city}, ${property.state} is available as a cash deal, offering investors a quick-close opportunity with potential for strong returns through flipping or renting.`
+                    }
+                  />
+                  <FAQItem
+                    question="What makes a good cash deal investment?"
+                    answer="A strong cash deal typically offers a price significantly below the after-repair value (ARV). Properties at 70-80% of ARV or below give investors room for rehab costs and profit. Location, condition, and rental potential are key factors."
+                  />
+                  <FAQItem
+                    question={`Can I finance this ${property.city} property?`}
+                    answer="This property is listed as a cash deal, meaning the seller prefers a cash purchase for a faster closing. However, you may be able to use hard money or private lending to fund the purchase. Sign up to discuss options."
+                  />
+                </>
+              )}
             </div>
           </section>
         </main>
@@ -380,7 +525,10 @@ export default async function PropertyPage({ params }: PageProps) {
           <div className="max-w-7xl mx-auto px-4 text-center text-slate-400 text-sm">
             <p>&copy; {new Date().getFullYear()} Ownerfi. All rights reserved.</p>
             <p className="mt-2">
-              Owner financing homes in {property.city}, {property.state} and nationwide.
+              {isCashOnly
+                ? `Cash deal investment properties in ${property.city}, ${property.state} and nationwide.`
+                : `Owner financing homes in ${property.city}, ${property.state} and nationwide.`
+              }
             </p>
           </div>
         </footer>

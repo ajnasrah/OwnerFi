@@ -224,7 +224,7 @@ async function addToPropertiesCollection(queueData: any, firebaseId: string) {
     agentConfirmedOwnerFinance: true,
     dealType: 'owner_finance',
     isActive: true,
-    isOwnerFinance: true,
+    isOwnerfinance: true,
     dealTypes: ['owner_finance'],
     source: 'agent_outreach',
     agentConfirmedAt: admin.firestore.FieldValue.serverTimestamp(),

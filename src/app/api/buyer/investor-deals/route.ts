@@ -4,6 +4,7 @@ import { collection, doc, getDoc, getDocs, query, where, limit as firestoreLimit
 import { db } from '@/lib/firebase';
 import { requireAuth } from '@/lib/auth-helpers';
 import { ErrorResponses, logError } from '@/lib/api-error-handler';
+import { getCitiesWithinRadiusWithExpansion } from '@/lib/comprehensive-cities';
 
 /**
  * INVESTOR DEALS API
@@ -129,9 +130,18 @@ export async function GET(request: NextRequest) {
     let typesenseError = null;
 
     // Use buyer's pre-computed nearby cities for radius-based search
-    const nearbyCities = (profile.filter?.nearbyCities?.length > 0)
-      ? profile.filter.nearbyCities
-      : [searchCity];
+    let nearbyCities: string[];
+    if (profile.filter?.nearbyCities?.length > 0) {
+      nearbyCities = profile.filter.nearbyCities;
+      console.log(`✅ [investor-deals] Using stored filter: ${nearbyCities.length} nearby cities`);
+    } else {
+      // Fallback: Calculate on-the-fly if no filter exists
+      // Uses automatic radius expansion: 30mi → 60mi → 120mi if needed
+      console.log(`⚠️  [investor-deals] No stored filter found, calculating on-the-fly`);
+      const { cities: nearbyCitiesList, radiusUsed } = getCitiesWithinRadiusWithExpansion(searchCity, searchState, 30, 5);
+      nearbyCities = nearbyCitiesList.map(city => city.name);
+      console.log(`✅ [investor-deals] Calculated ${nearbyCities.length} nearby cities as fallback (radius: ${radiusUsed}mi)`);
+    }
 
     try {
       const client = getTypesenseSearchClient();
@@ -262,7 +272,7 @@ export async function GET(request: NextRequest) {
 async function searchTypesense(
   client: ReturnType<typeof getTypesenseSearchClient>,
   nearbyCities: string[],
-  state: string,
+  _state: string, // Unused — kept for signature compatibility; city filter handles geography
   dealTypeFilter: 'all' | 'owner_finance' | 'cash_deal',
   extraFilters?: {
     minPrice?: number;
@@ -289,9 +299,12 @@ async function searchTypesense(
   const escapedCities = nearbyCities.map(c => '`' + c.replace(/`/g, '') + '`');
   const cityFilter = `city:=[${escapedCities.join(',')}]`;
 
+  // NOTE: No state filter here — the city filter (from buyer's pre-computed nearbyCities)
+  // already constrains geography. nearbyCities can span multiple states (e.g. Memphis metro
+  // includes cities in TN, AR, and MS), so a single-state filter would incorrectly exclude
+  // cross-border properties.
   const filters = [
     'isActive:=true',
-    `state:=${state}`,
     cityFilter,
     dealTypeClause,
   ];
@@ -428,7 +441,7 @@ async function searchTypesense(
 
 async function searchFirestore(
   nearbyCities: string[],
-  state: string,
+  _state: string, // Unused — kept for signature compatibility; city filter handles geography
   _dealTypeFilter: 'all' | 'owner_finance' | 'cash_deal',
 ): Promise<InvestorDeal[]> {
   if (!db) return [];
@@ -437,12 +450,13 @@ async function searchFirestore(
     const queries = [];
 
     // Always fetch all deal types for accurate breakdown counts
+    // NOTE: No state filter — nearbyCities can span multiple states (e.g. Memphis metro
+    // includes cities in TN, AR, MS). City matching below constrains geography.
     queries.push(
       getDocs(query(
         collection(db, 'properties'),
         where('isActive', '==', true),
         where('isOwnerfinance', '==', true),
-        where('state', '==', state),
         firestoreLimit(200)
       ))
     );
@@ -454,7 +468,6 @@ async function searchFirestore(
           collection(db, 'properties'),
           where('isActive', '==', true),
           where('isCashDeal', '==', true),
-          where('state', '==', state),
           firestoreLimit(200)
         ))
       );
@@ -464,7 +477,6 @@ async function searchFirestore(
           collection(db, 'properties'),
           where('isActive', '==', true),
           where('needsWork', '==', true),
-          where('state', '==', state),
           firestoreLimit(200)
         ))
       );

@@ -26,7 +26,7 @@ async function main() {
 
   // Count owner finance properties
   const ofCount = await db.collection('properties')
-    .where('isOwnerFinance', '==', true)
+    .where('isOwnerfinance', '==', true)
     .count().get();
   console.log('Total owner finance:', ofCount.data().count);
 
@@ -46,7 +46,7 @@ async function main() {
 
   // Last 7 days - owner finance
   const recentOF = await db.collection('properties')
-    .where('isOwnerFinance', '==', true)
+    .where('isOwnerfinance', '==', true)
     .where('foundAt', '>=', admin.firestore.Timestamp.fromDate(sevenDaysAgo))
     .count().get();
   console.log('Owner finance (last 7 days):', recentOF.data().count);
@@ -81,7 +81,7 @@ async function main() {
     .where('sentToGHL', '==', true)
     .orderBy('foundAt', 'desc')
     .limit(5)
-    .select('fullAddress', 'foundAt', 'isOwnerFinance', 'isCashDeal', 'dealTypes')
+    .select('fullAddress', 'foundAt', 'isOwnerfinance', 'isCashDeal', 'dealTypes')
     .get();
 
   console.log('\nLast 5 sent to GHL:');

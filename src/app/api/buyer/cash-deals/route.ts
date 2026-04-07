@@ -4,7 +4,7 @@ import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { requireAuth } from '@/lib/auth-helpers';
 import { ErrorResponses, logError } from '@/lib/api-error-handler';
-import { getCitiesWithinRadiusWithExpansion } from '@/lib/comprehensive-cities';
+import { getCitiesWithinRadiusWithExpansion, getCitiesWithinRadiusComprehensive } from '@/lib/comprehensive-cities';
 
 /**
  * BUYER CASH DEALS API
@@ -84,16 +84,26 @@ export async function GET(request: NextRequest) {
 
     // Use buyer's pre-computed nearby cities for radius-based search
     let nearbyCities: string[];
+    let allowedStates: string[];
     if (profile.filter?.nearbyCities?.length > 0) {
       nearbyCities = profile.filter.nearbyCities;
-      console.log(`✅ [cash-deals] Using stored filter: ${nearbyCities.length} nearby cities`);
+      if (profile.filter.nearbyStates?.length > 0) {
+        allowedStates = profile.filter.nearbyStates;
+      } else {
+        const citiesWithState = getCitiesWithinRadiusComprehensive(searchCity, searchState, profile.filter.radiusMiles || 30);
+        allowedStates = [...new Set(citiesWithState.map(c => c.state))];
+        if (allowedStates.length === 0) allowedStates = [searchState];
+      }
+      console.log(`✅ [cash-deals] Using stored filter: ${nearbyCities.length} nearby cities, states: [${allowedStates.join(', ')}]`);
     } else {
       // Fallback: Calculate on-the-fly if no filter exists
       // Uses automatic radius expansion: 30mi → 60mi → 120mi if needed
       console.log(`⚠️  [cash-deals] No stored filter found, calculating on-the-fly`);
       const { cities: nearbyCitiesList, radiusUsed } = getCitiesWithinRadiusWithExpansion(searchCity, searchState, 30, 5);
       nearbyCities = nearbyCitiesList.map(city => city.name);
-      console.log(`✅ [cash-deals] Calculated ${nearbyCities.length} nearby cities as fallback (radius: ${radiusUsed}mi)`);
+      allowedStates = [...new Set(nearbyCitiesList.map(city => city.state))];
+      if (allowedStates.length === 0) allowedStates = [searchState];
+      console.log(`✅ [cash-deals] Calculated ${nearbyCities.length} nearby cities as fallback (radius: ${radiusUsed}mi), states: [${allowedStates.join(', ')}]`);
     }
 
     // Try Typesense first
@@ -103,7 +113,7 @@ export async function GET(request: NextRequest) {
     try {
       const client = getTypesenseSearchClient();
       if (client) {
-        deals = await searchCashDealsTypesense(client, searchCity, searchState, maxPrice, searchRadius);
+        deals = await searchCashDealsTypesense(client, searchCity, allowedStates, maxPrice, searchRadius);
       } else {
         throw new Error('Typesense not available');
       }
@@ -115,7 +125,7 @@ export async function GET(request: NextRequest) {
     // Fallback to Firestore ONLY if Typesense actually failed (not for empty results)
     // Empty results from Typesense are valid - no need to double-query Firestore
     if (typesenseError) {
-      deals = await searchCashDealsFirestore(nearbyCities, searchState, maxPrice);
+      deals = await searchCashDealsFirestore(nearbyCities, allowedStates, maxPrice);
     }
 
     // Filter out land if requested
@@ -144,18 +154,16 @@ export async function GET(request: NextRequest) {
 async function searchCashDealsTypesense(
   client: any,
   city: string,
-  _state: string, // Unused — kept for signature compatibility; city/nearbyCities query handles geography
+  allowedStates: string[],
   maxPrice: number | undefined,
   _radius: number // TODO: Implement geo radius search
 ): Promise<CashDeal[]> {
   // Build filter: cash deals OR properties that need work (investor specials)
-  // Include properties with: dealType cash_deal/both OR needsWork=true
-  // NOTE: No state filter — the city query (searching city,nearbyCities fields) already
-  // constrains geography. nearbyCities can span multiple states (e.g. Memphis metro
-  // includes cities in TN, AR, and MS), so a single-state filter would incorrectly exclude
-  // cross-border properties.
+  // State filter prevents city-name collisions across states (e.g. "Trenton" in TN vs GA).
+  // allowedStates supports multi-state metros (e.g. Memphis → [TN, AR, MS]).
   const filters = [
     'isActive:=true',
+    `state:=[${allowedStates.join(',')}]`,
     // Cash deals OR investor/fixer properties
     '(dealType:=[cash_deal, both] || needsWork:=true)',
   ];
@@ -219,15 +227,15 @@ async function searchCashDealsTypesense(
 
 async function searchCashDealsFirestore(
   nearbyCities: string[],
-  _state: string, // Unused — kept for signature compatibility; city filter handles geography
+  allowedStates: string[],
   maxPrice: number | undefined
 ): Promise<CashDeal[]> {
   if (!db) return [];
 
   try {
     // Query 1: Cash deals
-    // NOTE: No state filter — nearbyCities can span multiple states (e.g. Memphis metro
-    // includes cities in TN, AR, MS). City matching below constrains geography.
+    // NOTE: Firestore queries don't filter by state (no composite index).
+    // State filtering is applied in the city+state check in processDoc.
     const cashQuery = query(
       collection(db, 'properties'),
       where('isActive', '==', true),
@@ -250,6 +258,7 @@ async function searchCashDealsFirestore(
     const seenIds = new Set<string>();
     const deals: CashDeal[] = [];
     const nearbyCitiesSet = new Set(nearbyCities.map(c => c.toLowerCase().trim()));
+    const allowedStatesSet = new Set(allowedStates.map(s => s.toUpperCase()));
 
     const processDoc = (doc: { id: string; data: () => Record<string, unknown> }) => {
       if (seenIds.has(doc.id)) return;
@@ -276,9 +285,10 @@ async function searchCashDealsFirestore(
 
       const discount = arv > 0 ? arv - price : 0;
 
-      // Filter by nearby cities (case-insensitive exact match against buyer's pre-computed list)
+      // Filter by nearby cities AND allowed states to prevent city-name collisions
       const propCity = ((data.city as string) || '').toLowerCase().trim();
-      if (!nearbyCitiesSet.has(propCity)) {
+      const propState = ((data.state as string) || '').toUpperCase().trim();
+      if (!nearbyCitiesSet.has(propCity) || !allowedStatesSet.has(propState)) {
         return;
       }
 

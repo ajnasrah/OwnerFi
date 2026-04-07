@@ -405,6 +405,9 @@ export function InvestorPropertyCard({ deal, isLiked, onToggleLike, onHide, isPr
               {deal.balloonYears != null && (
                 <span className="text-amber-400 text-[10px] font-semibold">Balloon {deal.balloonYears}yr</span>
               )}
+              {deal.zestimate && deal.zestimate > 0 && (
+                <span className="text-slate-400">Zest ${(deal.zestimate / 1000).toFixed(0)}K</span>
+              )}
             </div>
           ) : (
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">

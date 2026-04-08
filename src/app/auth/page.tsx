@@ -133,17 +133,19 @@ export default function AuthPage() {
             return;
           }
 
-          // Otherwise redirect based on role
-          let redirectTo = searchParams?.get('callbackUrl') || '/dashboard';
+          // Redirect: explicit callbackUrl takes priority, otherwise role-based default
+          const callbackUrl = searchParams?.get('callbackUrl');
+          let redirectTo = callbackUrl || '/dashboard';
 
-          // Check role from the check-phone response
-          // Investor check comes before realtor — realtors who are also investors see investor dashboard
-          if (checkData.role === 'admin') {
-            redirectTo = '/admin';
-          } else if (checkData.isInvestor === true) {
-            redirectTo = '/dashboard/investor';
-          } else if (checkData.role === 'realtor') {
-            redirectTo = '/realtor-dashboard';
+          if (!callbackUrl) {
+            // No explicit redirect — use role-based defaults
+            if (checkData.role === 'admin') {
+              redirectTo = '/admin';
+            } else if (checkData.isInvestor === true) {
+              redirectTo = '/dashboard/investor';
+            } else if (checkData.role === 'realtor') {
+              redirectTo = '/realtor-dashboard/buyers';
+            }
           }
 
           router.push(redirectTo);

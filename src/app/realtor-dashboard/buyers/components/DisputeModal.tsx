@@ -13,7 +13,7 @@ export function DisputeModal({ modal, onUpdateField, onSubmit, onClose }: Disput
   if (!modal.buyer) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-modal p-4">
       <div className="bg-slate-800 border border-slate-700 rounded-xl p-6 max-w-md w-full">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-xl font-bold text-white">Dispute Lead</h3>

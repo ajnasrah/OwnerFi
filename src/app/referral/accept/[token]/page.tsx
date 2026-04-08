@@ -298,13 +298,13 @@ export default function AcceptReferralPage() {
             </p>
             <div className="flex gap-4">
               <Link
-                href={`/auth?redirect=${encodeURIComponent(`/referral/accept/${token}`)}`}
+                href={`/auth?callbackUrl=${encodeURIComponent(`/referral/accept/${token}`)}`}
                 className="flex-1 bg-[#00BC7D] hover:bg-[#009B66] text-white text-center py-3 rounded-lg font-semibold transition-colors"
               >
                 Sign In
               </Link>
               <Link
-                href={`/auth?type=realtor&redirect=${encodeURIComponent(`/referral/accept/${token}`)}`}
+                href={`/auth?role=realtor&callbackUrl=${encodeURIComponent(`/referral/accept/${token}`)}`}
                 className="flex-1 bg-slate-700 hover:bg-slate-600 text-white text-center py-3 rounded-lg font-semibold transition-colors"
               >
                 Sign Up

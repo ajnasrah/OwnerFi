@@ -27,7 +27,6 @@ export function getRealtorTabs(): TabItem[] {
   return [
     { key: 'leads', label: 'Leads', href: '/realtor-dashboard/buyers', icon: UsersIcon, matchPaths: ['/realtor-dashboard'] },
     { key: 'deals', label: 'Deals', href: '/dashboard/investor', icon: ChartIcon },
-    { key: 'settings', label: 'Area', href: '/realtor-dashboard/settings', icon: GearIcon },
   ];
 }
 

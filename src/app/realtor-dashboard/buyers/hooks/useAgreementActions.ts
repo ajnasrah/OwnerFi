@@ -150,7 +150,10 @@ export function useAgreementActions() {
         }),
       });
       const result = await response.json();
-      if (!response.ok) throw new Error(result.details || result.error || `Server error (${response.status})`);
+      if (!response.ok) {
+        const detail = result.stack || result.details || result.error || `Server error (${response.status})`;
+        throw new Error(detail);
+      }
 
       if (result.success) {
         setModal(prev => ({

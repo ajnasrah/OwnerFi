@@ -337,15 +337,20 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error('Sign agreement failed:', errorMessage, error);
+    const errorStack = error instanceof Error ? error.stack : '';
+    console.error('Sign agreement failed:', errorMessage, '\nStack:', errorStack);
 
-    await logError('Sign agreement failed', {
-      action: 'sign_agreement_error',
-      metadata: { errorMessage }
-    }, error as Error);
+    try {
+      await logError('Sign agreement failed', {
+        action: 'sign_agreement_error',
+        metadata: { errorMessage, errorStack: errorStack?.slice(0, 500) }
+      }, error as Error);
+    } catch {
+      // Don't let logging failure mask the real error
+    }
 
     return NextResponse.json(
-      { error: 'Failed to sign agreement. Please try again.', details: errorMessage },
+      { error: 'Failed to sign agreement. Please try again.', details: errorMessage, stack: errorStack?.slice(0, 500) },
       { status: 500 }
     );
   }

@@ -261,18 +261,13 @@ export default function RealtorDashboard() {
   if (!dashboardData) return null;
 
   return (
-    <div className="min-h-screen bg-[#111625] overflow-y-auto pb-20">
-      {/* Welcome message */}
-      <div className="px-4 py-3">
-        <div className="text-slate-300 text-sm">Welcome back, <span className="text-white font-medium">{dashboardData.realtorData.firstName}</span></div>
-      </div>
-
+    <div className="min-h-screen bg-[#111625] overflow-y-auto pb-16">
       {/* Main Content */}
-      <main className="max-w-6xl mx-auto p-4">
+      <main className="max-w-6xl mx-auto px-3 pt-2 md:p-4">
 
-        {/* Navigation Tabs */}
-        <div className="bg-slate-800/30 rounded-xl p-1 mb-6">
-          <div className="flex gap-1">
+        {/* Navigation Tabs — compact on mobile */}
+        <div className="bg-slate-800/30 rounded-lg p-0.5 mb-2 md:mb-6">
+          <div className="flex gap-0.5">
             <button
               onClick={() => setActiveTab('available')}
               className={`flex-1 text-center py-2 px-2 rounded-lg text-xs font-medium transition-all ${
@@ -322,7 +317,7 @@ export default function RealtorDashboard() {
         </div>
 
         {/* Content Area */}
-        <div className="bg-slate-800/30 rounded-xl p-6">
+        <div className="bg-slate-800/30 rounded-xl p-3 md:p-6">
           {activeTab === 'available' && (
             <AvailableLeadsTab
               dashboardData={dashboardData}

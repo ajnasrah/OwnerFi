@@ -278,6 +278,11 @@ body > * {
   display: none;  /* Chrome, Safari and Opera */
 }
 
+/* Hide bottom tab bar when any modal is open (Safari backdrop-blur z-index fix) */
+body.modal-open nav[class*="fixed bottom-0"] {
+  display: none !important;
+}
+
 /* Print styles */
 @media print {
   * {

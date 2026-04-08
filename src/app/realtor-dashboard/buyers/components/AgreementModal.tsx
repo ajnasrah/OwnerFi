@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { AgreementModalState } from '../types';
 
 // Safely format a date value that could be a string, Date, Firestore Timestamp, or ISO string
@@ -34,6 +35,16 @@ interface AgreementModalProps {
 }
 
 export function AgreementModal({ modal, onUpdateField, onSign, onRetry, onClose }: AgreementModalProps) {
+  // Hide the bottom tab bar when modal is open (Safari backdrop-blur breaks z-index)
+  useEffect(() => {
+    if (modal.isOpen) {
+      document.body.classList.add('modal-open');
+    } else {
+      document.body.classList.remove('modal-open');
+    }
+    return () => document.body.classList.remove('modal-open');
+  }, [modal.isOpen]);
+
   if (!modal.isOpen) return null;
 
   return (

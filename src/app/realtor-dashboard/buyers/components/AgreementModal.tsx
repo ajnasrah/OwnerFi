@@ -103,84 +103,50 @@ export function AgreementModal({ modal, onUpdateField, onSign, onRetry, onClose 
                 </div>
               )}
 
-              {/* Terms Summary */}
+              {/* Terms Summary — compact */}
               {modal.terms && (
-                <div className="bg-slate-700/50 rounded-lg p-4 mb-6">
-                  <h4 className="text-white font-semibold mb-2">Key Terms</h4>
-                  <ul className="text-slate-300 text-sm space-y-1">
-                    <li>Referral Fee: <span className="text-[#00BC7D] font-medium">{modal.terms.referralFeePercent}%</span> of your commission</li>
-                    <li>Agreement Valid For: <span className="text-white font-medium">{modal.terms.agreementTermDays} days</span></li>
-                    <li>Expires: <span className="text-white font-medium">{safeFormatDate(modal.terms.expirationDate)}</span></li>
-                  </ul>
+                <div className="bg-slate-700/50 rounded-lg p-3 mb-3 md:p-4 md:mb-6">
+                  <div className="text-slate-300 text-xs md:text-sm space-y-0.5">
+                    <div>Referral Fee: <span className="text-[#00BC7D] font-medium">{modal.terms.referralFeePercent}%</span> · Valid: <span className="text-white font-medium">{modal.terms.agreementTermDays} days</span> · Expires: <span className="text-white font-medium">{safeFormatDate(modal.terms.expirationDate)}</span></div>
+                  </div>
                 </div>
               )}
+            </div>
+          )}
 
-              {/* Signature Section */}
-              <div className="border-t border-slate-700 pt-6">
-                <h4 className="text-white font-semibold mb-4">Sign Agreement</h4>
+          {/* Signature Section — OUTSIDE the scroll area so it stays stable on mobile */}
+          {modal.step === 'review' && modal.agreementHTML && (
+            <div className="flex-shrink-0 border-t border-slate-700 p-3 md:p-6 space-y-3">
+              <h4 className="text-white font-semibold text-sm">Sign Agreement</h4>
 
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-slate-300 text-sm mb-2">
-                      Type your full legal name to sign
-                    </label>
-                    <input
-                      type="text"
-                      value={modal.typedName}
-                      onChange={(e) => onUpdateField({ typedName: e.target.value })}
-                      placeholder="Your Full Legal Name"
-                      className="w-full bg-slate-700/50 border border-slate-600 rounded-lg p-3 text-white placeholder-slate-500 focus:border-[#00BC7D] focus:outline-none"
-                    />
-                  </div>
+              <input
+                type="text"
+                value={modal.typedName}
+                onChange={(e) => onUpdateField({ typedName: e.target.value })}
+                placeholder="Type your full legal name to sign"
+                className="w-full bg-slate-700/50 border border-slate-600 rounded-lg p-2.5 text-sm text-white placeholder-slate-500 focus:border-[#00BC7D] focus:outline-none"
+              />
 
-                  <label className="flex items-start gap-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={modal.agreeToTerms}
-                      onChange={(e) => onUpdateField({ agreeToTerms: e.target.checked })}
-                      className="mt-1 w-5 h-5 rounded border-slate-600 bg-slate-700 text-[#00BC7D] focus:ring-[#00BC7D]"
-                    />
-                    <span className="text-slate-300 text-sm">
-                      I have read and agree to the terms of this Referral Agreement. I understand that by typing my name above and checking this box, I am electronically signing this agreement.
-                    </span>
-                  </label>
+              <div className="space-y-2">
+                <label className="flex items-start gap-2 cursor-pointer">
+                  <input type="checkbox" checked={modal.agreeToTerms} onChange={(e) => onUpdateField({ agreeToTerms: e.target.checked })} className="mt-0.5 w-4 h-4 rounded border-slate-600 bg-slate-700 text-[#00BC7D] focus:ring-[#00BC7D] flex-shrink-0" />
+                  <span className="text-slate-300 text-xs">I agree to the Referral Agreement terms and am electronically signing.</span>
+                </label>
 
-                  <label className="flex items-start gap-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={modal.agreeTCPA}
-                      onChange={(e) => onUpdateField({ agreeTCPA: e.target.checked })}
-                      className="mt-1 w-5 h-5 rounded border-slate-600 bg-slate-700 text-[#00BC7D] focus:ring-[#00BC7D]"
-                    />
-                    <span className="text-slate-300 text-sm">
-                      I acknowledge and agree to Ownerfi&apos;s <a href="/tcpa-compliance" target="_blank" className="text-[#00BC7D] hover:underline">TCPA Compliance Agreement</a>. I will comply with all telemarketing laws and honor opt-out requests within 24 hours.
-                    </span>
-                  </label>
+                <label className="flex items-start gap-2 cursor-pointer">
+                  <input type="checkbox" checked={modal.agreeTCPA} onChange={(e) => onUpdateField({ agreeTCPA: e.target.checked })} className="mt-0.5 w-4 h-4 rounded border-slate-600 bg-slate-700 text-[#00BC7D] focus:ring-[#00BC7D] flex-shrink-0" />
+                  <span className="text-slate-300 text-xs">I agree to the <a href="/tcpa-compliance" target="_blank" className="text-[#00BC7D] underline">TCPA Compliance Agreement</a>.</span>
+                </label>
 
-                  <label className="flex items-start gap-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={modal.agreeCreativeFinance}
-                      onChange={(e) => onUpdateField({ agreeCreativeFinance: e.target.checked })}
-                      className="mt-1 w-5 h-5 rounded border-slate-600 bg-slate-700 text-[#00BC7D] focus:ring-[#00BC7D]"
-                    />
-                    <span className="text-slate-300 text-sm">
-                      I acknowledge Ownerfi&apos;s <a href="/creative-finance-disclaimer" target="_blank" className="text-[#00BC7D] hover:underline">Creative Finance Disclaimer</a>. I understand referred buyers may seek owner-financed properties and will direct them to verify all data with licensed professionals.
-                    </span>
-                  </label>
+                <label className="flex items-start gap-2 cursor-pointer">
+                  <input type="checkbox" checked={modal.agreeCreativeFinance} onChange={(e) => onUpdateField({ agreeCreativeFinance: e.target.checked })} className="mt-0.5 w-4 h-4 rounded border-slate-600 bg-slate-700 text-[#00BC7D] focus:ring-[#00BC7D] flex-shrink-0" />
+                  <span className="text-slate-300 text-xs">I acknowledge the <a href="/creative-finance-disclaimer" target="_blank" className="text-[#00BC7D] underline">Creative Finance Disclaimer</a>.</span>
+                </label>
 
-                  <label className="flex items-start gap-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={modal.agreeDataAsIs}
-                      onChange={(e) => onUpdateField({ agreeDataAsIs: e.target.checked })}
-                      className="mt-1 w-5 h-5 rounded border-slate-600 bg-slate-700 text-[#00BC7D] focus:ring-[#00BC7D]"
-                    />
-                    <span className="text-slate-300 text-sm">
-                      I accept that lead contact information is provided &quot;as-is&quot; without verification by Ownerfi. I will independently confirm all lead details before proceeding.
-                    </span>
-                  </label>
-                </div>
+                <label className="flex items-start gap-2 cursor-pointer">
+                  <input type="checkbox" checked={modal.agreeDataAsIs} onChange={(e) => onUpdateField({ agreeDataAsIs: e.target.checked })} className="mt-0.5 w-4 h-4 rounded border-slate-600 bg-slate-700 text-[#00BC7D] focus:ring-[#00BC7D] flex-shrink-0" />
+                  <span className="text-slate-300 text-xs">I accept that lead data is provided &quot;as-is&quot; without verification.</span>
+                </label>
               </div>
             </div>
           )}

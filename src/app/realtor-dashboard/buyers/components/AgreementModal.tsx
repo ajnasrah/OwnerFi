@@ -37,8 +37,8 @@ export function AgreementModal({ modal, onUpdateField, onSign, onRetry, onClose 
   if (!modal.isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-modal p-0 md:p-4 overflow-y-auto">
-      <div className="bg-slate-800 border border-slate-700 rounded-none md:rounded-xl max-w-3xl w-full h-full md:h-auto md:max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-0 md:p-4 overflow-y-auto" style={{ zIndex: 9999 }}>
+      <div className="bg-slate-800 border-0 md:border md:border-slate-700 rounded-none md:rounded-xl max-w-3xl w-full h-full md:h-auto md:max-h-[90vh] overflow-hidden flex flex-col">
 
         {/* Modal Header */}
         <div className="flex items-center justify-between p-4 border-b border-slate-700">

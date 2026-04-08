@@ -354,12 +354,15 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
+    const err = error as Error;
     await logError('Generate agreement failed', {
       action: 'generate_agreement_error'
-    }, error as Error);
+    }, err);
+
+    console.error('Generate agreement error details:', err.message, err.stack);
 
     return NextResponse.json(
-      { error: 'Failed to generate agreement. Please try again.' },
+      { error: 'Failed to generate agreement. Please try again.', details: err.message },
       { status: 500 }
     );
   }

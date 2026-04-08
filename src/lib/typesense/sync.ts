@@ -395,10 +395,12 @@ export async function indexRawFirestoreProperty(
 
   try {
     // Determine deal type from unified collection flags (isOwnerfinance, isCashDeal)
-    // For backward compatibility, also check source collection name
-    let dealType = 'owner_finance'; // default
-    const isOwnerfinance = data.isOwnerfinance === true || source === 'zillow_imports';
-    const isCashDeal = data.isCashDeal === true || source === 'cash_houses' || data.discountPercentage > 15;
+    // Also check the existing dealType string field (GHL-imported properties use this)
+    const isOwnerfinance = data.isOwnerfinance === true;
+    const isCashDeal = data.isCashDeal === true || data.discountPercentage > 15;
+    // Fall back to existing dealType string if boolean flags aren't set
+    const existingDealType = data.dealType as string | undefined;
+    let dealType = existingDealType || 'unknown';
 
     if (isOwnerfinance && isCashDeal) {
       dealType = 'both';

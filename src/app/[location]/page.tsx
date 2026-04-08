@@ -95,6 +95,15 @@ async function getLocationData(locationSlug: string): Promise<LocationData | nul
 
     const stateCode = stateMapping[locationSlug]
 
+    // Helper: check if a property qualifies as owner finance
+    // Handles both scraper pipeline (isOwnerfinance flag) and GHL pipeline (dealType string)
+    const isOwnerFinanceProperty = (data: FirebaseFirestore.DocumentData) => {
+      if (data.isOwnerfinance === true) return true
+      if (data.dealType === 'owner_finance' || data.dealType === 'both') return true
+      if (Array.isArray(data.dealTypes) && data.dealTypes.includes('owner_finance')) return true
+      return false
+    }
+
     if (stateCode) {
       // It's a state - get all properties in this state
       const snapshot = await adminDb
@@ -103,11 +112,15 @@ async function getLocationData(locationSlug: string): Promise<LocationData | nul
         .where('isActive', '==', true)
         .get()
 
-      // Get unique cities in this state
+      // Filter for owner finance properties and get unique cities
       const cities = new Set<string>()
+      let ownerFinanceCount = 0
       snapshot.docs.forEach((doc: FirebaseFirestore.QueryDocumentSnapshot) => {
         const data = doc.data()
-        if (data.city) cities.add(data.city)
+        if (isOwnerFinanceProperty(data)) {
+          ownerFinanceCount++
+          if (data.city) cities.add(data.city)
+        }
       })
 
       return {
@@ -116,7 +129,7 @@ async function getLocationData(locationSlug: string): Promise<LocationData | nul
           word.charAt(0).toUpperCase() + word.slice(1)
         ).join(' '),
         type: 'state',
-        propertyCount: snapshot.size,
+        propertyCount: ownerFinanceCount,
         nearbyLocations: Array.from(cities).slice(0, 10),
         description: `Browse owner financed properties across ${locationSlug}. Find seller financed homes with flexible terms.`
       }
@@ -132,7 +145,10 @@ async function getLocationData(locationSlug: string): Promise<LocationData | nul
         .where('isActive', '==', true)
         .get()
 
-      if (snapshot.empty) {
+      // Filter for owner finance
+      let ofDocs = snapshot.docs.filter(doc => isOwnerFinanceProperty(doc.data()))
+
+      if (ofDocs.length === 0) {
         // Try with lowercase
         snapshot = await adminDb
           .collection('properties')
@@ -140,11 +156,12 @@ async function getLocationData(locationSlug: string): Promise<LocationData | nul
           .where('isActive', '==', true)
           .get()
 
-        if (snapshot.empty) return null
+        ofDocs = snapshot.docs.filter(doc => isOwnerFinanceProperty(doc.data()))
+        if (ofDocs.length === 0) return null
       }
 
       // Get state from first property
-      const firstProperty = snapshot.docs[0]?.data()
+      const firstProperty = ofDocs[0]?.data()
       const state = firstProperty?.state
 
       // Get nearby cities
@@ -158,7 +175,7 @@ async function getLocationData(locationSlug: string): Promise<LocationData | nul
 
         stateSnapshot.docs.forEach((doc: FirebaseFirestore.QueryDocumentSnapshot) => {
           const data = doc.data()
-          if (data.city && data.city !== cityName) {
+          if (isOwnerFinanceProperty(data) && data.city && data.city !== cityName) {
             nearbyCities.add(data.city)
           }
         })
@@ -169,7 +186,7 @@ async function getLocationData(locationSlug: string): Promise<LocationData | nul
         displayName: cityName,
         type: 'city',
         state: state,
-        propertyCount: snapshot.size,
+        propertyCount: ofDocs.length,
         nearbyLocations: Array.from(nearbyCities).slice(0, 10),
         description: `Find owner financed homes in ${cityName}. Browse seller financed properties with no bank financing.`
       }

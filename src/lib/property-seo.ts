@@ -181,14 +181,20 @@ export async function getAllPropertySlugs(): Promise<string[]> {
 
     const slugs: string[] = [];
 
-    // Fetch from unified properties collection
+    // Fetch from unified properties collection — only owner finance properties
     const propertiesSnap = await db.collection('properties')
       .where('isActive', '==', true)
-      .select('address', 'streetAddress', 'fullAddress', 'city', 'state', 'zpid')
+      .select('address', 'streetAddress', 'fullAddress', 'city', 'state', 'zpid', 'isOwnerfinance', 'dealType', 'dealTypes')
       .get();
 
     propertiesSnap.docs.forEach(doc => {
       const data = doc.data();
+      // Only include owner finance properties in sitemap
+      const isOF = data.isOwnerfinance === true ||
+        data.dealType === 'owner_finance' || data.dealType === 'both' ||
+        (Array.isArray(data.dealTypes) && data.dealTypes.includes('owner_finance'));
+      if (!isOF) return;
+
       const slug = generateSlug({
         address: data.address || data.streetAddress || data.fullAddress,
         city: data.city,
@@ -224,14 +230,20 @@ export async function getAllPropertiesForSitemap(): Promise<Array<{
 
     const properties: Array<{ slug: string; lastModified: Date; city: string; state: string }> = [];
 
-    // Fetch from unified properties collection
+    // Fetch from unified properties collection — only owner finance properties
     const propertiesSnap = await db.collection('properties')
       .where('isActive', '==', true)
-      .select('address', 'streetAddress', 'fullAddress', 'city', 'state', 'zpid', 'lastUpdated', 'updatedAt', 'scrapedAt')
+      .select('address', 'streetAddress', 'fullAddress', 'city', 'state', 'zpid', 'lastUpdated', 'updatedAt', 'scrapedAt', 'isOwnerfinance', 'dealType', 'dealTypes')
       .get();
 
     propertiesSnap.docs.forEach(doc => {
       const data = doc.data();
+      // Only include owner finance properties in sitemap
+      const isOF = data.isOwnerfinance === true ||
+        data.dealType === 'owner_finance' || data.dealType === 'both' ||
+        (Array.isArray(data.dealTypes) && data.dealTypes.includes('owner_finance'));
+      if (!isOF) return;
+
       properties.push({
         slug: generateSlug({
           address: data.address || data.streetAddress || data.fullAddress,

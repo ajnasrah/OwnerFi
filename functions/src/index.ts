@@ -41,8 +41,8 @@ function getTypesenseClient() {
 
 // Transform Firestore doc to Typesense doc
 function transformToTypesense(docId: string, data: FirebaseFirestore.DocumentData) {
-  // Determine dealType from flags
-  let dealType = 'owner_finance';
+  // Determine dealType from boolean flags or existing dealType string
+  let dealType = data.dealType || 'unknown';
   if (data.isOwnerfinance && data.isCashDeal) {
     dealType = 'both';
   } else if (data.isCashDeal) {
@@ -147,7 +147,10 @@ export const onPropertyCreate = onDocumentCreated('properties/{propertyId}', asy
   }
 
   // Skip if neither owner finance nor cash deal
-  if (!data.isOwnerfinance && !data.isCashDeal) {
+  // Also check dealType string field (GHL-imported properties use this instead of boolean flags)
+  const hasOwnerFinance = data.isOwnerfinance || data.dealType === 'owner_finance' || data.dealType === 'both';
+  const hasCashDeal = data.isCashDeal || data.dealType === 'cash_deal';
+  if (!hasOwnerFinance && !hasCashDeal) {
     console.log(`Skipping property without deal type: ${docId}`);
     return;
   }
@@ -185,7 +188,10 @@ export const onPropertyUpdate = onDocumentUpdated('properties/{propertyId}', asy
   }
 
   // Skip if neither owner finance nor cash deal
-  if (!data.isOwnerfinance && !data.isCashDeal) {
+  // Also check dealType string field (GHL-imported properties use this instead of boolean flags)
+  const hasOwnerFinanceUpdate = data.isOwnerfinance || data.dealType === 'owner_finance' || data.dealType === 'both';
+  const hasCashDealUpdate = data.isCashDeal || data.dealType === 'cash_deal';
+  if (!hasOwnerFinanceUpdate && !hasCashDealUpdate) {
     // Remove from Typesense if it was there
     try {
       await client.collections('properties').documents(docId).delete();

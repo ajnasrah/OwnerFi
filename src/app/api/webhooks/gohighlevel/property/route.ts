@@ -714,6 +714,8 @@ export async function POST(request: NextRequest) {
       isActive: true,
       ownerFinanceVerified: isAgentYes ? true : (existing.ownerFinanceVerified || false),
       agentConfirmedAt: isAgentYes ? new Date().toISOString() : existing.agentConfirmedAt,
+      isOwnerfinance: existing.isOwnerfinance ?? true,
+      dealTypes: existing.dealTypes || ['owner_finance'],
       dealType: existing.dealType || 'owner_finance',
       featured: existing.featured || false,
       priority: existing.priority || 1,

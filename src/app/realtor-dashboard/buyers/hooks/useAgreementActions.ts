@@ -43,8 +43,8 @@ export function useAgreementActions() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ leadId }),
       });
-      if (!response.ok) throw new Error(`Server error (${response.status})`);
       const result = await response.json();
+      if (!response.ok) throw new Error(result.details || result.error || `Server error (${response.status})`);
 
       if (result.success) {
         setModal(prev => ({
@@ -63,11 +63,11 @@ export function useAgreementActions() {
           error: result.error || 'Failed to generate agreement',
         }));
       }
-    } catch {
+    } catch (err) {
       setModal(prev => ({
         ...prev,
         step: 'review',
-        error: 'Failed to generate agreement. Please try again.',
+        error: err instanceof Error ? err.message : 'Failed to generate agreement. Please try again.',
       }));
     }
   }, [queryClient]);

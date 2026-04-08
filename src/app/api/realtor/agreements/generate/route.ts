@@ -322,10 +322,12 @@ export async function POST(request: NextRequest) {
       updatedAt: now
     };
 
-    const agreementId = await FirebaseDB.createDocument(
+    const agreementDoc = await FirebaseDB.createDocument(
       COLLECTIONS.REFERRAL_AGREEMENTS,
       agreementData
     );
+    // createDocument returns the full doc object — extract just the string ID
+    const agreementId = typeof agreementDoc === 'string' ? agreementDoc : (agreementDoc as { id: string }).id;
 
     // Reserve the lead to prevent race conditions with other realtors
     // Reservation expires after 1 hour if agreement is not signed

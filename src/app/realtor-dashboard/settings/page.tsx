@@ -190,10 +190,6 @@ export default function RealtorSettings() {
         setSelectedCities(new Set());
         setTargetCity('');
         setSuccessMessage('Cities saved successfully!');
-        // Redirect to dashboard after successful save
-        setTimeout(() => {
-          router.push('/realtor-dashboard');
-        }, 1500);
       } else {
         setError('Failed to save settings');
         trackFormError('save_failed');
@@ -207,7 +203,7 @@ export default function RealtorSettings() {
   };
 
   return (
-    <div className="h-screen bg-[#111625] flex flex-col overflow-hidden">
+    <div className="h-screen bg-[#111625] flex flex-col overflow-hidden pb-16">
       {/* Main Content - Single Screen */}
       <div className="flex-1 px-4 py-2 max-w-md mx-auto w-full overflow-hidden flex flex-col">
         
@@ -373,10 +369,10 @@ export default function RealtorSettings() {
           )}
           
           <Link
-            href="/realtor-dashboard"
+            href="/realtor-dashboard/buyers"
             className="block w-full text-center text-slate-400 hover:text-white py-1 transition-colors text-xs"
           >
-            ← Back to Dashboard
+            ← Back to Leads
           </Link>
         </div>
       </div>

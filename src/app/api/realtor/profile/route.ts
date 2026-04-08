@@ -22,13 +22,21 @@ export async function GET(request: NextRequest) {
 
     const realtorData = (userData as UserWithRealtorData).realtorData || {};
 
+    // Build serviceCities — fall back to primary city from serviceArea if empty
+    let serviceCities = (realtorData as Record<string, unknown>).serviceCities as string[] || [];
+    const serviceArea = (realtorData as Record<string, unknown>).serviceArea as { primaryCity?: { name?: string; stateCode?: string } } | null;
+
+    if (serviceCities.length === 0 && serviceArea?.primaryCity?.name && serviceArea.primaryCity.name !== 'Not set') {
+      serviceCities = [`${serviceArea.primaryCity.name}, ${serviceArea.primaryCity.stateCode || ''}`];
+    }
+
     return NextResponse.json({
       success: true,
       data: {
-        targetCity: (realtorData as Record<string, unknown>).targetCity as string || '',
-        serviceCities: (realtorData as Record<string, unknown>).serviceCities as string[] || [],
-        totalCitiesServed: (realtorData as Record<string, unknown>).totalCitiesServed as number || 0,
-        serviceArea: (realtorData as Record<string, unknown>).serviceArea || null
+        targetCity: (realtorData as Record<string, unknown>).targetCity as string || (serviceArea?.primaryCity ? `${serviceArea.primaryCity.name}, ${serviceArea.primaryCity.stateCode}` : ''),
+        serviceCities,
+        totalCitiesServed: serviceCities.length || (realtorData as Record<string, unknown>).totalCitiesServed as number || 0,
+        serviceArea: serviceArea || null
       }
     });
 

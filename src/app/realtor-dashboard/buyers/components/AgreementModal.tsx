@@ -138,25 +138,25 @@ export function AgreementModal({ modal, onUpdateField, onSign, onRetry, onClose 
                 className="w-full bg-slate-700/50 border border-slate-600 rounded-lg p-2.5 text-sm text-white placeholder-slate-500 focus:border-[#00BC7D] focus:outline-none"
               />
 
-              <div className="space-y-2">
-                <label className="flex items-start gap-2 cursor-pointer">
-                  <input type="checkbox" checked={modal.agreeToTerms} onChange={(e) => onUpdateField({ agreeToTerms: e.target.checked })} className="mt-0.5 w-4 h-4 rounded border-slate-600 bg-slate-700 text-[#00BC7D] focus:ring-[#00BC7D] flex-shrink-0" />
-                  <span className="text-slate-300 text-xs">I agree to the Referral Agreement terms and am electronically signing.</span>
+              <div className="space-y-1">
+                <label className="flex items-center gap-3 cursor-pointer py-2 -mx-1 px-1 rounded-lg active:bg-slate-700/50">
+                  <input type="checkbox" checked={modal.agreeToTerms} onChange={(e) => onUpdateField({ agreeToTerms: e.target.checked })} className="w-5 h-5 rounded border-slate-600 bg-slate-700 text-[#00BC7D] focus:ring-[#00BC7D] flex-shrink-0" />
+                  <span className="text-slate-300 text-xs leading-tight">I agree to the Referral Agreement terms</span>
                 </label>
 
-                <label className="flex items-start gap-2 cursor-pointer">
-                  <input type="checkbox" checked={modal.agreeTCPA} onChange={(e) => onUpdateField({ agreeTCPA: e.target.checked })} className="mt-0.5 w-4 h-4 rounded border-slate-600 bg-slate-700 text-[#00BC7D] focus:ring-[#00BC7D] flex-shrink-0" />
-                  <span className="text-slate-300 text-xs">I agree to the <a href="/tcpa-compliance" target="_blank" className="text-[#00BC7D] underline">TCPA Compliance Agreement</a>.</span>
+                <label className="flex items-center gap-3 cursor-pointer py-2 -mx-1 px-1 rounded-lg active:bg-slate-700/50">
+                  <input type="checkbox" checked={modal.agreeTCPA} onChange={(e) => onUpdateField({ agreeTCPA: e.target.checked })} className="w-5 h-5 rounded border-slate-600 bg-slate-700 text-[#00BC7D] focus:ring-[#00BC7D] flex-shrink-0" />
+                  <span className="text-slate-300 text-xs leading-tight">I agree to <a href="/tcpa-compliance" target="_blank" className="text-[#00BC7D] underline">TCPA Compliance</a></span>
                 </label>
 
-                <label className="flex items-start gap-2 cursor-pointer">
-                  <input type="checkbox" checked={modal.agreeCreativeFinance} onChange={(e) => onUpdateField({ agreeCreativeFinance: e.target.checked })} className="mt-0.5 w-4 h-4 rounded border-slate-600 bg-slate-700 text-[#00BC7D] focus:ring-[#00BC7D] flex-shrink-0" />
-                  <span className="text-slate-300 text-xs">I acknowledge the <a href="/creative-finance-disclaimer" target="_blank" className="text-[#00BC7D] underline">Creative Finance Disclaimer</a>.</span>
+                <label className="flex items-center gap-3 cursor-pointer py-2 -mx-1 px-1 rounded-lg active:bg-slate-700/50">
+                  <input type="checkbox" checked={modal.agreeCreativeFinance} onChange={(e) => onUpdateField({ agreeCreativeFinance: e.target.checked })} className="w-5 h-5 rounded border-slate-600 bg-slate-700 text-[#00BC7D] focus:ring-[#00BC7D] flex-shrink-0" />
+                  <span className="text-slate-300 text-xs leading-tight">I acknowledge <a href="/creative-finance-disclaimer" target="_blank" className="text-[#00BC7D] underline">Creative Finance Disclaimer</a></span>
                 </label>
 
-                <label className="flex items-start gap-2 cursor-pointer">
-                  <input type="checkbox" checked={modal.agreeDataAsIs} onChange={(e) => onUpdateField({ agreeDataAsIs: e.target.checked })} className="mt-0.5 w-4 h-4 rounded border-slate-600 bg-slate-700 text-[#00BC7D] focus:ring-[#00BC7D] flex-shrink-0" />
-                  <span className="text-slate-300 text-xs">I accept that lead data is provided &quot;as-is&quot; without verification.</span>
+                <label className="flex items-center gap-3 cursor-pointer py-2 -mx-1 px-1 rounded-lg active:bg-slate-700/50">
+                  <input type="checkbox" checked={modal.agreeDataAsIs} onChange={(e) => onUpdateField({ agreeDataAsIs: e.target.checked })} className="w-5 h-5 rounded border-slate-600 bg-slate-700 text-[#00BC7D] focus:ring-[#00BC7D] flex-shrink-0" />
+                  <span className="text-slate-300 text-xs leading-tight">I accept lead data is provided as-is</span>
                 </label>
               </div>
             </div>

@@ -62,75 +62,56 @@ export function AvailableLeadsTab({
 
   return (
     <div>
-      {/* Search and Filter Bar */}
-      <div className="mb-6 flex flex-col sm:flex-row gap-3">
+      {/* Search + Filter — single row on mobile */}
+      <div className="mb-2 md:mb-4 flex gap-2">
         <div className="flex-1 relative">
           <input
             type="text"
-            placeholder="Search by name..."
+            placeholder="Search name..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-slate-700/50 border border-slate-600 rounded-lg pl-10 pr-4 py-3 text-white placeholder-slate-400 focus:border-[#00BC7D] focus:outline-none"
+            className="w-full bg-slate-700/50 border border-slate-600 rounded-lg pl-8 pr-3 py-2 text-sm text-white placeholder-slate-400 focus:border-[#00BC7D] focus:outline-none"
           />
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">&#128269;</span>
+          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">&#128269;</span>
         </div>
-        <div className="sm:w-48 relative">
+        <div className="w-32 md:w-48 relative">
           <input
             type="text"
-            placeholder="Filter by city..."
+            placeholder="City..."
             value={cityFilter}
             onChange={(e) => setCityFilter(e.target.value)}
-            className="w-full bg-slate-700/50 border border-slate-600 rounded-lg pl-10 pr-4 py-3 text-white placeholder-slate-400 focus:border-[#00BC7D] focus:outline-none"
+            className="w-full bg-slate-700/50 border border-slate-600 rounded-lg pl-8 pr-3 py-2 text-sm text-white placeholder-slate-400 focus:border-[#00BC7D] focus:outline-none"
           />
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">&#128205;</span>
+          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">&#128205;</span>
         </div>
         {(searchQuery || cityFilter) && (
           <button
             onClick={() => { setSearchQuery(''); setCityFilter(''); }}
-            className="px-4 py-3 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition-colors text-sm"
+            className="px-2 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition-colors text-xs"
           >
             Clear
           </button>
         )}
       </div>
 
-      {/* Pending Limit Status Banner */}
-      <div className={`mb-6 p-4 rounded-lg border ${
-        atLimit
-          ? 'bg-yellow-500/10 border-yellow-500/30'
-          : 'bg-slate-700/30 border-slate-600/30'
+      {/* Pending status — compact inline on mobile, full on desktop */}
+      <div className={`mb-2 md:mb-4 px-3 py-2 md:p-4 rounded-lg border flex items-center justify-between ${
+        atLimit ? 'bg-yellow-500/10 border-yellow-500/30' : 'bg-slate-700/30 border-slate-600/30'
       }`}>
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-white font-medium">Free Leads:</span>
-              <span className={`font-bold ${atLimit ? 'text-yellow-400' : 'text-[#00BC7D]'}`}>
-                {pendingCount}/{FREE_LIMIT} pending
-              </span>
-              {hasCredits && (
-                <span className="text-blue-400 text-sm">
-                  + {dashboardData.realtorData.credits} credits
-                </span>
-              )}
-            </div>
-            <p className="text-slate-400 text-sm">
-              {atLimit
-                ? 'Sign your pending agreements or buy credits to accept more leads'
-                : `You can have up to ${FREE_LIMIT} pending leads at a time`
-              }
-            </p>
-          </div>
-          <Link
-            href="/buy-credits"
-            className={`px-4 py-2 rounded-lg font-medium transition-colors text-sm ${
-              atLimit
-                ? 'bg-yellow-500 hover:bg-yellow-600 text-black'
-                : 'bg-slate-600 hover:bg-slate-500 text-white'
-            }`}
-          >
-            {atLimit ? 'Buy More Leads' : 'Get More Leads'}
-          </Link>
+        <div className="flex items-center gap-2 text-sm">
+          <span className={`font-bold ${atLimit ? 'text-yellow-400' : 'text-[#00BC7D]'}`}>
+            {pendingCount}/{FREE_LIMIT}
+          </span>
+          <span className="text-slate-400 hidden md:inline">pending leads</span>
+          {hasCredits && (
+            <span className="text-blue-400 text-xs">+{dashboardData.realtorData.credits} credits</span>
+          )}
         </div>
+        {atLimit && (
+          <Link href="/buy-credits" className="bg-yellow-500 hover:bg-yellow-600 text-black px-3 py-1 rounded-lg font-medium text-xs transition-colors">
+            Buy More
+          </Link>
+        )}
       </div>
 
       {/* Content */}

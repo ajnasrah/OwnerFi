@@ -213,8 +213,8 @@ export default function RealtorSettings() {
         
         {/* Title */}
         <div className="text-center mb-3 flex-shrink-0">
-          <h1 className="text-lg font-bold text-white mb-1">Service Area</h1>
-          <p className="text-slate-300 text-xs">Set up your coverage area</p>
+          <h1 className="text-lg font-bold text-white mb-1">Your Service Area</h1>
+          <p className="text-slate-300 text-xs">Add cities you serve to see matching buyer leads</p>
         </div>
 
         {error && (

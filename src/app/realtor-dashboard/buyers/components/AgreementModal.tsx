@@ -34,7 +34,7 @@ export function AgreementModal({ modal, onUpdateField, onSign, onRetry, onClose 
         </div>
 
         {/* Modal Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-3 md:p-6">
 
           {/* Loading State */}
           {modal.step === 'loading' && (
@@ -64,10 +64,11 @@ export function AgreementModal({ modal, onUpdateField, onSign, onRetry, onClose 
             <div>
               {/* Agreement Preview */}
               {modal.agreementHTML && (
-                <div className="bg-white rounded-lg p-4 mb-6 max-h-96 overflow-y-auto">
+                <div className="bg-white rounded-lg p-2 md:p-4 mb-4 md:mb-6 max-h-64 md:max-h-96 overflow-y-auto overflow-x-auto">
                   <div
                     dangerouslySetInnerHTML={{ __html: modal.agreementHTML }}
-                    className="text-sm"
+                    className="text-[10px] md:text-sm [&_*]:max-w-full [&_table]:text-[10px] [&_td]:break-words [&_span]:break-words"
+                    style={{ maxWidth: '100%', overflowWrap: 'break-word', wordBreak: 'break-word' }}
                   />
                 </div>
               )}

@@ -138,7 +138,7 @@ RF701 – Referral Agreement
 
 export function generateAgreementHTML(data: AgreementTemplateData): string {
   return `
-<div style="font-family: Arial, sans-serif; line-height: 1.4; max-width: 850px; margin: 0 auto; padding: 20px; color: #333; font-size: 12px;">
+<div style="font-family: Arial, sans-serif; line-height: 1.4; max-width: 850px; margin: 0 auto; padding: 10px; color: #333; font-size: 11px; box-sizing: border-box;">
   <div style="text-align: center; margin-bottom: 20px;">
     <div style="display: inline-flex; align-items: center; gap: 8px;">
       <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #34d399, #3b82f6); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
@@ -154,35 +154,35 @@ export function generateAgreementHTML(data: AgreementTemplateData): string {
   <div style="margin: 15px 0;">
     <div style="font-weight: bold; font-size: 13px; margin-bottom: 8px; text-transform: uppercase;">1. Company Referring the Buyer or Seller:</div>
     <div style="display: flex; margin: 4px 0;">
-      <span style="min-width: 280px;">A. Name of Company referring the Buyer or Seller ("Referring Company"):</span>
+      <span style="min-width: 140px; font-size: 10px;">A. Name of Company referring the Buyer or Seller ("Referring Company"):</span>
       <span style="flex: 1; border-bottom: 1px solid #333; padding-left: 5px; min-height: 18px; background: #fffef0;">${data.referringCompanyName}</span>
     </div>
     <div style="display: flex; margin: 4px 0;">
-      <span style="min-width: 280px;">B. Company Address:</span>
+      <span style="min-width: 140px; font-size: 10px;">B. Company Address:</span>
       <span style="flex: 1; border-bottom: 1px solid #333; padding-left: 5px; min-height: 18px; background: #fffef0;">${data.referringCompanyAddress}</span>
     </div>
     <div style="display: flex; margin: 4px 0;">
-      <span style="min-width: 280px;">C. Company Phone Number:</span>
+      <span style="min-width: 140px; font-size: 10px;">C. Company Phone Number:</span>
       <span style="flex: 1; border-bottom: 1px solid #333; padding-left: 5px; min-height: 18px; background: #fffef0;">${data.referringCompanyPhone}</span>
     </div>
     <div style="display: flex; margin: 4px 0;">
-      <span style="min-width: 280px;">D. Company Real Estate License or Firm #:</span>
+      <span style="min-width: 140px; font-size: 10px;">D. Company Real Estate License or Firm #:</span>
       <span style="flex: 1; border-bottom: 1px solid #333; padding-left: 5px; min-height: 18px; background: #fffef0;">${data.referringCompanyLicense}</span>
     </div>
     <div style="display: flex; margin: 4px 0;">
-      <span style="min-width: 280px;">E. Company Federal ID # (for tax purposes):</span>
+      <span style="min-width: 140px; font-size: 10px;">E. Company Federal ID # (for tax purposes):</span>
       <span style="flex: 1; border-bottom: 1px solid #333; padding-left: 5px; min-height: 18px; background: #fffef0;">${data.referringCompanyFederalId}</span>
     </div>
     <div style="display: flex; margin: 4px 0;">
-      <span style="min-width: 280px;">F. Name of Licensee referring the Buyer or Seller:</span>
+      <span style="min-width: 140px; font-size: 10px;">F. Name of Licensee referring the Buyer or Seller:</span>
       <span style="flex: 1; border-bottom: 1px solid #333; padding-left: 5px; min-height: 18px; background: #fffef0;">${data.referringLicenseeName}</span>
     </div>
     <div style="display: flex; margin: 4px 0;">
-      <span style="min-width: 280px;">G. Licensee Phone Number(s) and Email Address:</span>
+      <span style="min-width: 140px; font-size: 10px;">G. Licensee Phone Number(s) and Email Address:</span>
       <span style="flex: 1; border-bottom: 1px solid #333; padding-left: 5px; min-height: 18px; background: #fffef0;">${data.referringLicenseePhone} | ${data.referringLicenseeEmail}</span>
     </div>
     <div style="display: flex; margin: 4px 0;">
-      <span style="min-width: 280px;">H. Relocation Director Name, Contact Info and Email Address:</span>
+      <span style="min-width: 140px; font-size: 10px;">H. Relocation Director Name, Contact Info and Email Address:</span>
       <span style="flex: 1; border-bottom: 1px solid #333; padding-left: 5px; min-height: 18px; background: #fffef0;">${data.referringRelocationDirector} | ${data.referringRelocationEmail}</span>
     </div>
   </div>
@@ -190,31 +190,31 @@ export function generateAgreementHTML(data: AgreementTemplateData): string {
   <div style="margin: 15px 0;">
     <div style="font-weight: bold; font-size: 13px; margin-bottom: 8px; text-transform: uppercase;">2. Company Agreeing to Pay Referral Fee:</div>
     <div style="display: flex; margin: 4px 0;">
-      <span style="min-width: 280px;">A. Name of Company agreeing to pay referral fee ("Receiving Company"):</span>
+      <span style="min-width: 140px; font-size: 10px;">A. Name of Company agreeing to pay referral fee ("Receiving Company"):</span>
       <span style="flex: 1; border-bottom: 1px solid #333; padding-left: 5px; min-height: 18px; background: #fffef0;">${data.receivingCompanyName}</span>
     </div>
     <div style="display: flex; margin: 4px 0;">
-      <span style="min-width: 280px;">B. Company Address:</span>
+      <span style="min-width: 140px; font-size: 10px;">B. Company Address:</span>
       <span style="flex: 1; border-bottom: 1px solid #333; padding-left: 5px; min-height: 18px; background: #fffef0;">${data.receivingCompanyAddress}</span>
     </div>
     <div style="display: flex; margin: 4px 0;">
-      <span style="min-width: 280px;">C. Company Phone Number:</span>
+      <span style="min-width: 140px; font-size: 10px;">C. Company Phone Number:</span>
       <span style="flex: 1; border-bottom: 1px solid #333; padding-left: 5px; min-height: 18px; background: #fffef0;">${data.receivingCompanyPhone}</span>
     </div>
     <div style="display: flex; margin: 4px 0;">
-      <span style="min-width: 280px;">D. Company Real Estate License or Firm #:</span>
+      <span style="min-width: 140px; font-size: 10px;">D. Company Real Estate License or Firm #:</span>
       <span style="flex: 1; border-bottom: 1px solid #333; padding-left: 5px; min-height: 18px; background: #fffef0;">${data.receivingCompanyLicense}</span>
     </div>
     <div style="display: flex; margin: 4px 0;">
-      <span style="min-width: 280px;">E. Name of Licensee assigned this referral:</span>
+      <span style="min-width: 140px; font-size: 10px;">E. Name of Licensee assigned this referral:</span>
       <span style="flex: 1; border-bottom: 1px solid #333; padding-left: 5px; min-height: 18px; background: #fffef0;">${data.receivingLicenseeName}</span>
     </div>
     <div style="display: flex; margin: 4px 0;">
-      <span style="min-width: 280px;">F. Licensee Phone Number(s) and Email Address:</span>
+      <span style="min-width: 140px; font-size: 10px;">F. Licensee Phone Number(s) and Email Address:</span>
       <span style="flex: 1; border-bottom: 1px solid #333; padding-left: 5px; min-height: 18px; background: #fffef0;">${data.receivingLicenseePhone} | ${data.receivingLicenseeEmail}</span>
     </div>
     <div style="display: flex; margin: 4px 0;">
-      <span style="min-width: 280px;">G. Relocation Director Name, Contact Info and Email Address:</span>
+      <span style="min-width: 140px; font-size: 10px;">G. Relocation Director Name, Contact Info and Email Address:</span>
       <span style="flex: 1; border-bottom: 1px solid #333; padding-left: 5px; min-height: 18px; background: #fffef0;">${data.receivingRelocationDirector} | ${data.receivingRelocationEmail}</span>
     </div>
   </div>
@@ -222,7 +222,7 @@ export function generateAgreementHTML(data: AgreementTemplateData): string {
   <div style="margin: 15px 0;">
     <div style="font-weight: bold; font-size: 13px; margin-bottom: 8px; text-transform: uppercase;">3. Name of Party Being Referred:</div>
     <div style="display: flex; margin: 4px 0;">
-      <span style="min-width: 280px;">A. Name:</span>
+      <span style="min-width: 140px; font-size: 10px;">A. Name:</span>
       <span style="flex: 1; border-bottom: 1px solid #333; padding-left: 5px; min-height: 18px; background: #fffef0;">${data.prospectName}</span>
       <span style="margin-left: 10px;">("Prospect")</span>
     </div>
@@ -234,7 +234,7 @@ export function generateAgreementHTML(data: AgreementTemplateData): string {
       <span style="display: inline-block; width: 14px; height: 14px; border: 1px solid #333; margin-right: 5px; text-align: center; line-height: 12px; font-size: 10px; ${data.referralType === 'both' ? 'background: #e8f5e9;' : ''}">${data.referralType === 'both' ? 'X' : ''}</span> Both - Buyer and Seller Referral
     </div>
     <div style="display: flex; margin: 4px 0; margin-top: 10px;">
-      <span style="min-width: 280px;">B. Did the Buyer or Seller agree or request to be referred by your Company?</span>
+      <span style="min-width: 140px; font-size: 10px;">B. Did the Buyer or Seller agree or request to be referred by your Company?</span>
       <span style="display: inline-block; width: 14px; height: 14px; border: 1px solid #333; margin-right: 5px; text-align: center; line-height: 12px; font-size: 10px; ${data.prospectAgreedToReferral ? 'background: #e8f5e9;' : ''}">${data.prospectAgreedToReferral ? 'X' : ''}</span> Yes
       &nbsp;&nbsp;
       <span style="display: inline-block; width: 14px; height: 14px; border: 1px solid #333; margin-right: 5px; text-align: center; line-height: 12px; font-size: 10px; ${!data.prospectAgreedToReferral ? 'background: #e8f5e9;' : ''}">${!data.prospectAgreedToReferral ? 'X' : ''}</span> No
@@ -411,11 +411,11 @@ export function generateAgreementHTML(data: AgreementTemplateData): string {
   <div style="margin-top: 25px; border: 2px solid #333; padding: 15px;">
     <div style="text-align: center; font-weight: bold; font-size: 13px; margin-bottom: 15px; text-transform: uppercase;">Contact Information of Party Being Referred<br>To Be Provided Upon Acceptance by Receiving Firm</div>
     <div style="display: flex; margin: 4px 0;">
-      <span style="min-width: 280px;">Name:</span>
+      <span style="min-width: 140px; font-size: 10px;">Name:</span>
       <span style="flex: 1; border-bottom: 1px solid #333; padding-left: 5px; min-height: 18px; background: #fffef0;">${data.prospectName}</span>
     </div>
     <div style="display: flex; margin: 4px 0;">
-      <span style="min-width: 280px;">Current Address:</span>
+      <span style="min-width: 140px; font-size: 10px;">Current Address:</span>
       <span style="flex: 1; border-bottom: 1px solid #333; padding-left: 5px; min-height: 18px; background: #fffef0;">${data.prospectCurrentAddress}</span>
     </div>
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
@@ -437,11 +437,11 @@ export function generateAgreementHTML(data: AgreementTemplateData): string {
       </div>
     </div>
     <div style="display: flex; margin: 4px 0;">
-      <span style="min-width: 280px;">Remarks/Best Time to Call:</span>
+      <span style="min-width: 140px; font-size: 10px;">Remarks/Best Time to Call:</span>
       <span style="flex: 1; border-bottom: 1px solid #333; padding-left: 5px; min-height: 18px; background: #fffef0;">${data.prospectBestTimeToCall}</span>
     </div>
     <div style="display: flex; margin: 4px 0;">
-      <span style="min-width: 280px;">Other Terms / Relocation Company Info:</span>
+      <span style="min-width: 140px; font-size: 10px;">Other Terms / Relocation Company Info:</span>
       <span style="flex: 1; border-bottom: 1px solid #333; padding-left: 5px; min-height: 18px; background: #fffef0;">${data.otherTerms}</span>
     </div>
   </div>

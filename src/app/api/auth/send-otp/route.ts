@@ -59,8 +59,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Dev bypass: skip Twilio for test phone numbers
-    if (process.env.NODE_ENV === 'development' && TEST_PHONES.has(normalizedPhone)) {
+    // Bypass: skip Twilio for test phone numbers (works in dev and when TEST_PHONE_NUMBERS is set)
+    if (TEST_PHONES.has(normalizedPhone)) {
       console.log(`🧪 [OTP] Test phone bypass — use code 123456 for ${normalizedPhone}`);
       return NextResponse.json({ success: true, message: 'Verification code sent' });
     }

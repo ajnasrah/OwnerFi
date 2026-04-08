@@ -26,8 +26,8 @@ export async function POST(request: NextRequest) {
 
     const normalizedPhone = normalizePhone(phone);
 
-    // Dev bypass: accept 123456 for test phone numbers
-    if (process.env.NODE_ENV === 'development' && TEST_PHONES.has(normalizedPhone)) {
+    // Bypass: accept 123456 for test phone numbers (works in dev and when TEST_PHONE_NUMBERS is set)
+    if (TEST_PHONES.has(normalizedPhone)) {
       if (code === '123456') {
         console.log(`🧪 [OTP] Test phone verified: ${normalizedPhone}`);
         return NextResponse.json({ success: true, phone: normalizedPhone });

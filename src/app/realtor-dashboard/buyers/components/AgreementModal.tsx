@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { AgreementModalState } from '../types';
 
 // Safely format a date value that could be a string, Date, Firestore Timestamp, or ISO string
@@ -24,6 +24,69 @@ function safeFormatDate(value: unknown): string {
   } catch {
     return String(value);
   }
+}
+
+function CheckRow({ checked, onToggle, label }: { checked: boolean; onToggle: () => void; label: string }) {
+  return (
+    <div onClick={onToggle} className="flex items-center gap-3 py-2.5 px-2 rounded-lg active:bg-slate-700/50 cursor-pointer select-none">
+      <div className={`w-6 h-6 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${checked ? 'bg-[#00BC7D] border-[#00BC7D]' : 'border-slate-500 bg-slate-700'}`}>
+        {checked && <span className="text-white text-sm font-bold">✓</span>}
+      </div>
+      <span className="text-slate-300 text-xs">{label}</span>
+    </div>
+  );
+}
+
+function SignatureSection({ modal, onUpdateField }: { modal: AgreementModalState; onUpdateField: (u: Partial<AgreementModalState>) => void }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [showArrow, setShowArrow] = useState(true);
+
+  const checkScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setShowArrow(el.scrollTop + el.clientHeight < el.scrollHeight - 10);
+  }, []);
+
+  useEffect(() => {
+    checkScroll();
+  }, [checkScroll]);
+
+  const scrollDown = () => {
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+  };
+
+  return (
+    <div className="flex-shrink-0 border-t border-slate-700 relative">
+      <div ref={scrollRef} onScroll={checkScroll} className="overflow-y-auto max-h-[40vh] p-3 md:p-6 space-y-2">
+        <h4 className="text-white font-semibold text-sm">Sign Agreement</h4>
+
+        <input
+          type="text"
+          value={modal.typedName}
+          onChange={(e) => onUpdateField({ typedName: e.target.value })}
+          placeholder="Type your full legal name to sign"
+          className="w-full bg-slate-700/50 border border-slate-600 rounded-lg p-2.5 text-sm text-white placeholder-slate-500 focus:border-[#00BC7D] focus:outline-none"
+        />
+
+        <CheckRow checked={modal.agreeToTerms} onToggle={() => onUpdateField({ agreeToTerms: !modal.agreeToTerms })} label="I agree to the Referral Agreement terms" />
+        <CheckRow checked={modal.agreeTCPA} onToggle={() => onUpdateField({ agreeTCPA: !modal.agreeTCPA })} label="I agree to TCPA Compliance" />
+        <CheckRow checked={modal.agreeCreativeFinance} onToggle={() => onUpdateField({ agreeCreativeFinance: !modal.agreeCreativeFinance })} label="I acknowledge Creative Finance Disclaimer" />
+        <CheckRow checked={modal.agreeDataAsIs} onToggle={() => onUpdateField({ agreeDataAsIs: !modal.agreeDataAsIs })} label="I accept lead data is provided as-is" />
+      </div>
+
+      {/* Scroll arrow indicator */}
+      {showArrow && (
+        <button
+          onClick={scrollDown}
+          className="absolute right-3 bottom-2 w-8 h-8 bg-[#00BC7D] rounded-full flex items-center justify-center shadow-lg animate-bounce"
+        >
+          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+      )}
+    </div>
+  );
 }
 
 interface AgreementModalProps {
@@ -125,49 +188,9 @@ export function AgreementModal({ modal, onUpdateField, onSign, onRetry, onClose 
             </div>
           )}
 
-          {/* Signature Section — OUTSIDE the scroll area so it stays stable on mobile */}
+          {/* Signature Section — scrollable with arrow indicator */}
           {modal.step === 'review' && modal.agreementHTML && (
-            <div className="flex-shrink-0 border-t border-slate-700 p-3 md:p-6 space-y-3">
-              <h4 className="text-white font-semibold text-sm">Sign Agreement</h4>
-
-              <input
-                type="text"
-                value={modal.typedName}
-                onChange={(e) => onUpdateField({ typedName: e.target.value })}
-                placeholder="Type your full legal name to sign"
-                className="w-full bg-slate-700/50 border border-slate-600 rounded-lg p-2.5 text-sm text-white placeholder-slate-500 focus:border-[#00BC7D] focus:outline-none"
-              />
-
-              <div className="space-y-1">
-                <div onClick={() => onUpdateField({ agreeToTerms: !modal.agreeToTerms })} className="flex items-center gap-3 py-2.5 px-2 rounded-lg active:bg-slate-700/50 cursor-pointer select-none">
-                  <div className={`w-6 h-6 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${modal.agreeToTerms ? 'bg-[#00BC7D] border-[#00BC7D]' : 'border-slate-500 bg-slate-700'}`}>
-                    {modal.agreeToTerms && <span className="text-white text-sm font-bold">✓</span>}
-                  </div>
-                  <span className="text-slate-300 text-xs">I agree to the Referral Agreement terms</span>
-                </div>
-
-                <div onClick={() => onUpdateField({ agreeTCPA: !modal.agreeTCPA })} className="flex items-center gap-3 py-2.5 px-2 rounded-lg active:bg-slate-700/50 cursor-pointer select-none">
-                  <div className={`w-6 h-6 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${modal.agreeTCPA ? 'bg-[#00BC7D] border-[#00BC7D]' : 'border-slate-500 bg-slate-700'}`}>
-                    {modal.agreeTCPA && <span className="text-white text-sm font-bold">✓</span>}
-                  </div>
-                  <span className="text-slate-300 text-xs">I agree to TCPA Compliance</span>
-                </div>
-
-                <div onClick={() => onUpdateField({ agreeCreativeFinance: !modal.agreeCreativeFinance })} className="flex items-center gap-3 py-2.5 px-2 rounded-lg active:bg-slate-700/50 cursor-pointer select-none">
-                  <div className={`w-6 h-6 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${modal.agreeCreativeFinance ? 'bg-[#00BC7D] border-[#00BC7D]' : 'border-slate-500 bg-slate-700'}`}>
-                    {modal.agreeCreativeFinance && <span className="text-white text-sm font-bold">✓</span>}
-                  </div>
-                  <span className="text-slate-300 text-xs">I acknowledge Creative Finance Disclaimer</span>
-                </div>
-
-                <div onClick={() => onUpdateField({ agreeDataAsIs: !modal.agreeDataAsIs })} className="flex items-center gap-3 py-2.5 px-2 rounded-lg active:bg-slate-700/50 cursor-pointer select-none">
-                  <div className={`w-6 h-6 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${modal.agreeDataAsIs ? 'bg-[#00BC7D] border-[#00BC7D]' : 'border-slate-500 bg-slate-700'}`}>
-                    {modal.agreeDataAsIs && <span className="text-white text-sm font-bold">✓</span>}
-                  </div>
-                  <span className="text-slate-300 text-xs">I accept lead data is provided as-is</span>
-                </div>
-              </div>
-            </div>
+            <SignatureSection modal={modal} onUpdateField={onUpdateField} />
           )}
 
           {/* Signing State */}

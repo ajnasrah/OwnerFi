@@ -73,9 +73,16 @@ export async function POST(request: NextRequest) {
       };
     };
 
-    if (!user || user.role !== 'realtor' || !user.realtorData) {
+    if (!user || (user.role !== 'realtor' && user.role !== 'admin')) {
       return NextResponse.json(
-        { error: 'Realtor profile not found' },
+        { error: 'Realtor account not found' },
+        { status: 400 }
+      );
+    }
+
+    if (!user.realtorData) {
+      return NextResponse.json(
+        { error: 'Realtor profile incomplete. Please sign out and sign back in to repair your account, or contact support.' },
         { status: 400 }
       );
     }

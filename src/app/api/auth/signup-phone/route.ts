@@ -132,6 +132,53 @@ export async function POST(request: NextRequest) {
         phone: existingPhoneUser.phone
       });
 
+      // REPAIR: If existing realtor account is missing realtorData (from a failed signup),
+      // patch it now so the agreement flow doesn't break
+      if (existingPhoneUser.role === 'realtor' && !(existingPhoneUser as any).realtorData) {
+        try {
+          console.log('🔧 [SIGNUP-PHONE] Repairing missing realtorData for existing realtor:', existingPhoneUser.id);
+          const { FirebaseDB } = await import('@/lib/firebase-db');
+          const { RealtorDataHelper } = await import('@/lib/realtor-models');
+
+          const nameParts = (existingPhoneUser.name || '').split(' ');
+          const repairFirstName = firstName || nameParts[0] || '';
+          const repairLastName = lastName || nameParts.slice(1).join(' ') || '';
+
+          const serviceArea = {
+            primaryCity: {
+              name: city || 'Not set',
+              state: state || 'Not set',
+              stateCode: state || 'XX',
+              placeId: 'setup-required',
+              coordinates: { lat: 0, lng: 0 },
+              formattedAddress: city && state ? `${city}, ${state}` : 'Not set'
+            },
+            nearbyCities: [],
+            radiusMiles: 30,
+            totalCitiesServed: 0,
+            lastUpdated: Timestamp.now()
+          };
+
+          const realtorData = RealtorDataHelper.createRealtorData(
+            repairFirstName,
+            repairLastName,
+            normalizedPhone,
+            existingPhoneUser.email || email || '',
+            serviceArea,
+            company || '',
+            licenseNumber || ''
+          );
+
+          await FirebaseDB.updateDocument('users', existingPhoneUser.id, {
+            realtorData,
+            updatedAt: Timestamp.now()
+          });
+          console.log('✅ [SIGNUP-PHONE] Repaired realtorData for existing realtor');
+        } catch (repairError) {
+          console.error('⚠️ [SIGNUP-PHONE] Failed to repair realtorData:', repairError);
+        }
+      }
+
       // Return the existing user ID so they can log in
       return NextResponse.json({
         success: true,

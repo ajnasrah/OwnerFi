@@ -2,6 +2,29 @@
 
 import { AgreementModalState } from '../types';
 
+// Safely format a date value that could be a string, Date, Firestore Timestamp, or ISO string
+function safeFormatDate(value: unknown): string {
+  if (!value) return 'N/A';
+  try {
+    // Firestore Timestamp object
+    if (typeof value === 'object' && value !== null && 'toDate' in value) {
+      return (value as { toDate: () => Date }).toDate().toLocaleDateString();
+    }
+    // Already a Date
+    if (value instanceof Date) return value.toLocaleDateString();
+    // String — try parsing
+    if (typeof value === 'string') {
+      const d = new Date(value);
+      return isNaN(d.getTime()) ? value : d.toLocaleDateString();
+    }
+    // Number (epoch)
+    if (typeof value === 'number') return new Date(value).toLocaleDateString();
+    return String(value);
+  } catch {
+    return String(value);
+  }
+}
+
 interface AgreementModalProps {
   modal: AgreementModalState;
   onUpdateField: (updates: Partial<AgreementModalState>) => void;
@@ -64,12 +87,19 @@ export function AgreementModal({ modal, onUpdateField, onSign, onRetry, onClose 
             <div>
               {/* Agreement Preview */}
               {modal.agreementHTML && (
-                <div className="bg-white rounded-lg p-2 md:p-4 mb-4 md:mb-6 max-h-64 md:max-h-96 overflow-y-auto overflow-x-auto">
-                  <div
-                    dangerouslySetInnerHTML={{ __html: modal.agreementHTML }}
-                    className="text-[10px] md:text-sm [&_*]:max-w-full [&_table]:text-[10px] [&_td]:break-words [&_span]:break-words"
-                    style={{ maxWidth: '100%', overflowWrap: 'break-word', wordBreak: 'break-word' }}
-                  />
+                <div className="bg-white rounded-lg mb-4 md:mb-6 max-h-64 md:max-h-96 overflow-y-auto overflow-x-hidden">
+                  <div className="md:p-4 origin-top-left md:scale-100" style={{ transform: 'scale(0.55)', transformOrigin: 'top left', width: '182%' }}>
+                    <div
+                      dangerouslySetInnerHTML={{ __html: modal.agreementHTML }}
+                      className="md:hidden"
+                    />
+                  </div>
+                  <div className="hidden md:block p-4">
+                    <div
+                      dangerouslySetInnerHTML={{ __html: modal.agreementHTML }}
+                      className="text-sm"
+                    />
+                  </div>
                 </div>
               )}
 
@@ -80,7 +110,7 @@ export function AgreementModal({ modal, onUpdateField, onSign, onRetry, onClose 
                   <ul className="text-slate-300 text-sm space-y-1">
                     <li>Referral Fee: <span className="text-[#00BC7D] font-medium">{modal.terms.referralFeePercent}%</span> of your commission</li>
                     <li>Agreement Valid For: <span className="text-white font-medium">{modal.terms.agreementTermDays} days</span></li>
-                    <li>Expires: <span className="text-white font-medium">{new Date(modal.terms.expirationDate).toLocaleDateString()}</span></li>
+                    <li>Expires: <span className="text-white font-medium">{safeFormatDate(modal.terms.expirationDate)}</span></li>
                   </ul>
                 </div>
               )}

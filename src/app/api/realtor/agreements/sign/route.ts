@@ -20,7 +20,16 @@ interface SignAgreementRequest {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getSessionWithRole('realtor');
+    let session;
+    try {
+      session = await getSessionWithRole('realtor');
+    } catch (authError) {
+      const message = authError instanceof Error ? authError.message : 'Not authenticated';
+      return NextResponse.json(
+        { error: message },
+        { status: 401 }
+      );
+    }
 
     if (!session?.user?.email || !session.user.id) {
       return NextResponse.json(

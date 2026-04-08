@@ -21,6 +21,8 @@ export default function RealtorDashboardHub() {
   }, [status, session, router]);
 
   // On mobile, skip the hub and go straight to buyer leads
+  // (Header "Dashboard" button links directly to /realtor-dashboard/buyers on mobile,
+  //  so this redirect only fires if someone navigates here directly)
   useEffect(() => {
     if (status === 'authenticated' && window.innerWidth < 768) {
       router.replace('/realtor-dashboard/buyers');

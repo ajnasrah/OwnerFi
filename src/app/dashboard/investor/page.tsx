@@ -183,12 +183,14 @@ export default function InvestorDashboard() {
 
       const isAdmin = (session as unknown as ExtendedSession)?.user?.role === 'admin';
 
+      const isRealtorRole = (session as unknown as ExtendedSession)?.user?.role === 'realtor';
+
       if (!data.profile) {
-        if (isAdmin) {
-          // Admin has no buyer profile - show empty state with defaults
+        if (isAdmin || isRealtorRole) {
+          // Admin/realtor has no buyer profile - show empty state with defaults
           setProfile({
             id: '',
-            firstName: 'Admin',
+            firstName: isAdmin ? 'Admin' : (session as unknown as ExtendedSession)?.user?.name?.split(' ')[0] || 'Realtor',
             lastName: '',
             city: 'Memphis',
             state: 'TN',
@@ -205,8 +207,9 @@ export default function InvestorDashboard() {
         return;
       }
 
-      // If not an investor, redirect to regular dashboard (skip for admins)
-      if (!data.profile.isInvestor && !isAdmin) {
+      // If not an investor, redirect to regular dashboard (skip for admins and realtors)
+      const isRealtor = (session as unknown as ExtendedSession)?.user?.role === 'realtor';
+      if (!data.profile.isInvestor && !isAdmin && !isRealtor) {
         router.replace('/dashboard');
         return;
       }

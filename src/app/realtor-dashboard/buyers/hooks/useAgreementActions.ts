@@ -149,8 +149,8 @@ export function useAgreementActions() {
           agreeDataAsIs: current.agreeDataAsIs,
         }),
       });
-      if (!response.ok) throw new Error(`Server error (${response.status})`);
       const result = await response.json();
+      if (!response.ok) throw new Error(result.details || result.error || `Server error (${response.status})`);
 
       if (result.success) {
         setModal(prev => ({
@@ -167,11 +167,11 @@ export function useAgreementActions() {
           error: result.error || 'Failed to sign agreement',
         }));
       }
-    } catch {
+    } catch (err) {
       setModal(prev => ({
         ...prev,
         step: 'review',
-        error: 'Failed to sign agreement. Please try again.',
+        error: err instanceof Error ? err.message : 'Failed to sign agreement. Please try again.',
       }));
     }
   }, [queryClient]);

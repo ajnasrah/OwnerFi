@@ -231,6 +231,36 @@ export async function POST(request: NextRequest) {
 
     console.log(`✅ [GHL Buyer Opt-Out] Marked buyer ${buyerDoc.id} as unavailable`);
 
+    // Void all active referral agreements for this buyer
+    let voidedAgreements = 0;
+    try {
+      const agreementsSnapshot = await db.collection('referralAgreements')
+        .where('buyerId', '==', buyerDoc.id)
+        .where('status', 'in', ['pending', 'signed'])
+        .get();
+
+      if (!agreementsSnapshot.empty) {
+        const batch = db.batch();
+        for (const agreementDoc of agreementsSnapshot.docs) {
+          batch.update(agreementDoc.ref, {
+            status: 'voided',
+            voidedAt: new Date(),
+            voidReason: `Buyer opted out: ${optOutReason}`,
+            voidSource: 'ghl_buyer_optout',
+            updatedAt: new Date(),
+          });
+        }
+        await batch.commit();
+        voidedAgreements = agreementsSnapshot.size;
+        console.log(`✅ [GHL Buyer Opt-Out] Voided ${voidedAgreements} referral agreement(s) for buyer ${buyerDoc.id}`);
+      } else {
+        console.log(`ℹ️ [GHL Buyer Opt-Out] No active referral agreements found for buyer ${buyerDoc.id}`);
+      }
+    } catch (refErr) {
+      const refMsg = refErr instanceof Error ? refErr.message : 'Unknown error';
+      console.error(`⚠️ [GHL Buyer Opt-Out] Failed to void referral agreements: ${refMsg}`);
+    }
+
     // Log the opt-out event
     const logData: Record<string, unknown> = {
       buyerId: buyerDoc.id,
@@ -247,6 +277,7 @@ export async function POST(request: NextRequest) {
     };
     if (payload.status) logData.status = payload.status;
     if (payload.contactId) logData.ghlContactId = payload.contactId;
+    logData.voidedAgreements = voidedAgreements;
 
     await db.collection('buyerOptOutLogs').add(logData);
 
@@ -259,6 +290,7 @@ export async function POST(request: NextRequest) {
       lookupMethod,
       status: payload.status || null,
       reason: optOutReason,
+      voidedAgreements,
       processingTimeMs: Date.now() - startTime,
     };
 

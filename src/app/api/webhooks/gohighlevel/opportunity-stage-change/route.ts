@@ -20,17 +20,24 @@ const db = getFirestore();
  * Webhook: GHL Opportunity Stage Change
  *
  * Called by GHL workflow when an opportunity's stage changes.
- * Maps stage name to Firestore updates:
- *   - "Interested" -> owner finance positive
- *   - "not interested" -> owner finance negative
+ * Supports TWO pipelines:
+ *
+ * 1. AGENT OUTREACH PIPELINE (firebase_id provided):
+ *    Looks up agent_outreach_queue by firebase_id
+ *    - "Interested" -> owner finance positive
+ *    - "not interested" -> owner finance negative
+ *
+ * 2. BUYER PIPELINE (phone/email provided, no firebase_id):
+ *    Looks up buyerProfiles by phone or email
+ *    - "Lost/not int" or "not interested" -> deactivates buyer + voids referral agreements
  *
  * Expected payload from GHL workflow:
  * {
- *   firebase_id: string,        // Custom field on the opportunity
- *   stage: string,              // New stage name ("Interested", "not interested", etc.)
- *   opportunity_id?: string,
- *   contact_name?: string,
- *   contact_phone?: string,
+ *   firebase_id?: string,       // Agent pipeline: outreach queue doc ID
+ *   phone?: string,             // Buyer pipeline: contact phone number
+ *   email?: string,             // Buyer pipeline: contact email
+ *   stage: string,              // New stage name
+ *   pipeline?: string,          // Pipeline name (optional, for logging)
  *   note?: string,
  *   GHL_WEBHOOK?: string        // Auth secret
  * }
@@ -54,17 +61,122 @@ export async function POST(request: NextRequest) {
     }
 
     const firebaseId = body.firebase_id || body.firebaseId;
+    const phone = body.phone || body.contact_phone || '';
+    const email = body.email || body.contact_email || '';
     const stage = (body.stage || '').trim().toLowerCase();
     const note = body.note || body.agent_note || '';
+    const pipeline = (body.pipeline || '').trim().toLowerCase();
 
-    console.log(`[STAGE CHANGE] firebase_id=${firebaseId}, stage="${stage}"`);
-
-    if (!firebaseId) {
-      return NextResponse.json({ error: 'Missing firebase_id' }, { status: 400 });
-    }
+    console.log(`[STAGE CHANGE] firebase_id=${firebaseId}, phone=${phone}, stage="${stage}", pipeline="${pipeline}"`);
 
     if (!stage) {
       return NextResponse.json({ error: 'Missing stage' }, { status: 400 });
+    }
+
+    // Map stage to action
+    const isNotInterested = stage.includes('not') && (stage.includes('interested') || stage.includes('int'));
+    const isLost = stage.includes('lost');
+    const isInterested = stage.includes('interested') && !stage.includes('not');
+
+    // --- BUYER PIPELINE: lookup by phone/email ---
+    if (!firebaseId && (phone || email)) {
+      console.log(`[STAGE CHANGE] No firebase_id — using phone/email lookup (buyer pipeline)`);
+
+      if (!isNotInterested && !isLost) {
+        console.log(`[STAGE CHANGE] Stage "${stage}" is not a removal stage for buyer pipeline, skipping`);
+        return NextResponse.json({
+          success: true,
+          message: `Stage "${stage}" does not require buyer removal`,
+          skipped: true,
+        });
+      }
+
+      // Find buyer profile by phone then email
+      let buyerDoc: FirebaseFirestore.QueryDocumentSnapshot | null = null;
+      let lookupMethod = '';
+
+      if (phone) {
+        const cleanPhone = phone.replace(/\D/g, '');
+        const phoneFormats = [
+          phone,
+          `+${cleanPhone}`,
+          `+1${cleanPhone.length === 10 ? cleanPhone : cleanPhone.slice(1)}`,
+        ];
+        for (const fmt of phoneFormats) {
+          const snap = await db.collection('buyerProfiles').where('phone', '==', fmt).limit(1).get();
+          if (!snap.empty) {
+            buyerDoc = snap.docs[0];
+            lookupMethod = `phone:${fmt}`;
+            break;
+          }
+        }
+      }
+
+      if (!buyerDoc && email) {
+        const snap = await db.collection('buyerProfiles').where('email', '==', email.toLowerCase().trim()).limit(1).get();
+        if (!snap.empty) {
+          buyerDoc = snap.docs[0];
+          lookupMethod = 'email';
+        }
+      }
+
+      if (!buyerDoc) {
+        console.log(`[STAGE CHANGE] Buyer not found by phone=${phone} email=${email}`);
+        return NextResponse.json({ error: 'Buyer not found', phone, email }, { status: 404 });
+      }
+
+      const buyerData = buyerDoc.data();
+      const buyerName = `${buyerData.firstName || ''} ${buyerData.lastName || ''}`.trim() || 'Unknown';
+      console.log(`[STAGE CHANGE] Found buyer: ${buyerName} (${buyerDoc.id}) via ${lookupMethod}`);
+
+      // Deactivate buyer profile
+      await db.collection('buyerProfiles').doc(buyerDoc.id).update({
+        isAvailableForPurchase: false,
+        isActive: false,
+        optedOutAt: new Date(),
+        optOutReason: 'not_interested',
+        optOutSource: 'ghl_stage_change',
+        updatedAt: new Date(),
+      });
+
+      console.log(`[STAGE CHANGE] Deactivated buyer ${buyerDoc.id}`);
+
+      // Void all active referral agreements for this buyer
+      let voidedAgreements = 0;
+      const agreementsSnap = await db.collection('referralAgreements')
+        .where('buyerId', '==', buyerDoc.id)
+        .where('status', 'in', ['pending', 'signed'])
+        .get();
+
+      if (!agreementsSnap.empty) {
+        const batch = db.batch();
+        for (const agDoc of agreementsSnap.docs) {
+          batch.update(agDoc.ref, {
+            status: 'voided',
+            voidedAt: new Date(),
+            voidReason: 'Buyer marked not interested via GHL stage change',
+            voidSource: 'ghl_stage_change',
+            updatedAt: new Date(),
+          });
+        }
+        await batch.commit();
+        voidedAgreements = agreementsSnap.size;
+        console.log(`[STAGE CHANGE] Voided ${voidedAgreements} referral agreement(s)`);
+      }
+
+      return NextResponse.json({
+        success: true,
+        action: 'buyer_not_interested',
+        buyerId: buyerDoc.id,
+        buyerName,
+        lookupMethod,
+        voidedAgreements,
+      });
+    }
+
+    // --- AGENT OUTREACH PIPELINE: lookup by firebase_id ---
+    if (!firebaseId) {
+      return NextResponse.json({ error: 'Missing firebase_id and phone/email' }, { status: 400 });
     }
 
     // Look up the queue document
@@ -81,10 +193,6 @@ export async function POST(request: NextRequest) {
     const propertyDocId = zpid ? `zpid_${zpid}` : null;
 
     console.log(`[STAGE CHANGE] Property: ${property.address}, zpid=${zpid}`);
-
-    // Map stage to action
-    const isInterested = stage.includes('interested') && !stage.includes('not');
-    const isNotInterested = stage.includes('not interested');
 
     if (!isInterested && !isNotInterested) {
       console.log(`[STAGE CHANGE] Stage "${stage}" is not actionable, skipping`);
@@ -251,16 +359,22 @@ export async function GET() {
   return NextResponse.json({
     webhook: 'opportunity-stage-change',
     method: 'POST',
-    description: 'Handles GHL opportunity stage changes for outreach properties',
+    description: 'Handles GHL opportunity stage changes for both agent outreach and buyer pipelines',
     payload: {
-      firebase_id: 'string (required) - the agent_outreach_queue document ID',
-      stage: 'string (required) - new stage name ("Interested" or "not interested")',
+      firebase_id: 'string (optional) - agent_outreach_queue doc ID (agent pipeline)',
+      phone: 'string (optional) - contact phone for buyer pipeline lookup',
+      email: 'string (optional) - contact email for buyer pipeline lookup',
+      stage: 'string (required) - new stage name',
       GHL_WEBHOOK: 'string (required) - auth secret',
       note: 'string (optional)',
     },
+    lookup: {
+      'agent_pipeline': 'Uses firebase_id to look up agent_outreach_queue',
+      'buyer_pipeline': 'Uses phone/email to look up buyerProfiles (when no firebase_id)',
+    },
     stages: {
-      'Interested': 'Sets ownerFinanceVerified=true, creates property if needed',
-      'not interested': 'Sets ownerFinanceVerified=false, removes from search',
+      'Interested': 'Agent pipeline: sets ownerFinanceVerified=true, creates property',
+      'not interested / Lost/not int': 'Agent pipeline: rejects property. Buyer pipeline: deactivates buyer + voids referral agreements',
     },
   });
 }

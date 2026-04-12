@@ -39,6 +39,36 @@ const VOICE_ID = 'f20167ac-d1be-452c-b5a7-e48ea0ede3a9';  // Amir - Arabic accen
 const LATE_BASE_URL = 'https://getlate.dev/api/v1';
 const DRY_RUN = process.argv.includes('--dry-run');
 
+async function fetchWithRetry(
+  url: string,
+  init: RequestInit,
+  opts: { timeoutMs?: number; retries?: number; label?: string } = {},
+): Promise<Response> {
+  const { timeoutMs = 60_000, retries = 3, label = url } = opts;
+  let lastErr: unknown;
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const res = await fetch(url, { ...init, signal: controller.signal });
+      clearTimeout(timer);
+      if (res.status >= 500 && attempt < retries) {
+        console.warn(`[${label}] HTTP ${res.status} (attempt ${attempt}/${retries}) — retrying...`);
+        await new Promise(r => setTimeout(r, 2000 * attempt));
+        continue;
+      }
+      return res;
+    } catch (err) {
+      clearTimeout(timer);
+      lastErr = err;
+      const msg = err instanceof Error ? err.message : String(err);
+      console.warn(`[${label}] fetch failed (attempt ${attempt}/${retries}): ${msg}`);
+      if (attempt < retries) await new Promise(r => setTimeout(r, 2000 * attempt));
+    }
+  }
+  throw lastErr instanceof Error ? lastErr : new Error(String(lastErr));
+}
+
 // Parse --lang flag: 'en', 'es', or 'both' (default)
 function parseLang(): 'en' | 'es' | 'both' {
   const idx = process.argv.indexOf('--lang');
@@ -372,9 +402,11 @@ async function postToLate(videoUrl: string, caption: string, title?: string): Pr
   }
 
   // Get accounts for profile
-  const accountsRes = await fetch(`${LATE_BASE_URL}/accounts?profileId=${profileId}`, {
-    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-  });
+  const accountsRes = await fetchWithRetry(
+    `${LATE_BASE_URL}/accounts?profileId=${profileId}`,
+    { headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' } },
+    { timeoutMs: 30_000, retries: 3, label: 'Late accounts' },
+  );
   if (!accountsRes.ok) {
     console.error('Failed to fetch Late accounts:', await accountsRes.text());
     return false;
@@ -432,11 +464,15 @@ async function postToLate(videoUrl: string, caption: string, title?: string): Pr
   };
   if (title) body.title = title;
 
-  const res = await fetch(`${LATE_BASE_URL}/posts`, {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
+  const res = await fetchWithRetry(
+    `${LATE_BASE_URL}/posts`,
+    {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    },
+    { timeoutMs: 90_000, retries: 3, label: 'Late posts' },
+  );
 
   const responseText = await res.text();
   if (!res.ok) {

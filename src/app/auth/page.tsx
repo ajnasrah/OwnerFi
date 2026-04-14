@@ -354,8 +354,17 @@ export default function AuthPage() {
                   required
                   className="w-full px-4 py-4 bg-[#111625]/50 border border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#00BC7D] focus:border-transparent text-white text-lg placeholder-slate-500 transition-all"
                 />
-                <p className="mt-2 text-xs text-slate-400">
-                  By entering your phone number, you consent to receive automated SMS messages from Ownerfi for verification and account updates. Message and data rates may apply.
+                <p className="mt-2 text-xs text-slate-400 leading-relaxed">
+                  By entering your phone number and tapping Send Verification Code, you give
+                  <strong> express written consent</strong> to receive calls and SMS messages from
+                  Ownerfi <strong>and from licensed real estate agents we share your information with</strong>,
+                  including calls/SMS that use <strong>auto-dialing systems or pre-recorded messages</strong>,
+                  at the number you provided, <strong>even if it is on a federal or state Do-Not-Call list</strong>.
+                  Consent is <strong>not a condition</strong> of any purchase. Message and data rates may apply.
+                  Reply STOP to opt out of SMS at any time. See our{' '}
+                  <a href="/privacy#notice-at-collection" target="_blank" className="underline text-slate-300 hover:text-white">Privacy Notice at Collection</a>{' '}
+                  and{' '}
+                  <a href="/terms" target="_blank" className="underline text-slate-300 hover:text-white">Terms</a>.
                 </p>
               </div>
 

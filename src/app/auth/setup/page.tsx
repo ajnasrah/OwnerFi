@@ -407,7 +407,7 @@ export default function AuthSetup() {
                   <Link href="/privacy" className="text-[#00BC7D] hover:text-[#00d68f] font-semibold underline" target="_blank">
                     Privacy Policy
                   </Link>
-                  {'. I understand that my contact information may be shared with independent licensed real estate agents who are not employees of Ownerfi. I consent to receive text messages and calls from Ownerfi and these third-party agents regarding properties I express interest in. Ownerfi receives a referral fee from agents. Message and data rates may apply.'}
+                  {'. I understand my contact information will be shared with independent licensed real estate agents who are not employees of Ownerfi, and that Ownerfi receives a referral fee from those agents. I give express written consent to receive calls and text messages from Ownerfi and these agents — including calls and SMS placed using auto-dialing systems or pre-recorded / artificial voice messages — at the number I provided, even if my number is on a federal or state Do-Not-Call list. Consent is not a condition of any purchase. Message and data rates may apply. Reply STOP to any text to opt out.'}
                 </label>
               </div>
             </div>

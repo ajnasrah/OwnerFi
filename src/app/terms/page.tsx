@@ -264,8 +264,8 @@ export default function TermsOfService() {
                     or online at <span className="font-mono text-xs">hud.gov/fairhousing</span></li>
                   <li>Contact your <strong>state fair-housing or real estate commission</strong></li>
                   <li>Report the agent to Ownerfi at <a href="mailto:support@ownerfi.ai" className="underline">support@ownerfi.ai</a> with
-                    "FAIR HOUSING" in the subject line — we will investigate and may suspend or remove the
-                    agent's account</li>
+                    "FAIR HOUSING" in the subject line — we may review reports and, in our discretion,
+                    suspend or remove an agent's account</li>
                 </ul>
               </div>
 
@@ -276,8 +276,9 @@ export default function TermsOfService() {
                   unprofessionally, makes deceptive statements about a property, or pressures you, email
                   <a href="mailto:support@ownerfi.ai" className="underline"> support@ownerfi.ai</a> with
                   "AGENT REPORT" in the subject line. Include the agent's name and the date(s) of contact.
-                  We commit to reviewing reports and may suspend or remove agents found in violation of
-                  these Terms.
+                  Ownerfi may, in our discretion, review reports and suspend or remove agents found in
+                  violation of these Terms; however, Ownerfi makes no guarantee of any particular
+                  response, timeframe, or outcome.
                 </p>
               </div>
             </section>
@@ -369,8 +370,12 @@ export default function TermsOfService() {
                 </p>
                 <p className="text-red-700 mt-2 text-sm">
                   To the maximum extent permitted by law, Ownerfi's total aggregate liability for any
-                  claim arising out of or related to the Service or these Terms is limited to one hundred
-                  dollars (US$100).
+                  claim arising out of or related to the Service or these Terms is limited to the
+                  greater of <strong>(a) the total fees you paid Ownerfi in the twelve months
+                  preceding the claim</strong>, or <strong>(b) US$500</strong>. This cap does not
+                  apply to (i) Ownerfi's gross negligence or willful misconduct, or (ii) claims that
+                  cannot be limited by contract under applicable law (such as certain TCPA, Fair
+                  Housing Act, or state consumer-protection statutory claims).
                 </p>
               </div>
             </section>
@@ -383,12 +388,20 @@ export default function TermsOfService() {
                   escrow, financing, title work, inspection, appraisal, or closing. We do not hold,
                   transfer, or insure any funds.
                 </p>
-                <p className="text-orange-900 text-sm">
+                <p className="text-orange-900 text-sm mb-3">
                   Real estate transactions involve significant financial risk. Owner-finance terms (down
                   payment, interest rate, balloon, default remedies) should be reviewed by a licensed
                   attorney before you sign anything. Auctions and foreclosures carry additional risks
                   including title defects, occupancy disputes, and as-is condition. Cash deals from
                   distressed sellers can involve fraud — verify every counterparty independently.
+                </p>
+                <p className="text-orange-900 text-sm font-semibold">
+                  ⚠️ Wire fraud warning: Ownerfi <strong>never</strong> sends, receives, or instructs the
+                  wiring of funds. If you receive wire instructions claiming to be from Ownerfi, or if
+                  closing wire instructions arrive by email near a closing date, treat them as
+                  potentially fraudulent. Always verify wire instructions by phone using a number you
+                  independently obtained from the title company or escrow agent — never use a number
+                  contained in the email itself.
                 </p>
               </div>
             </section>
@@ -491,7 +504,7 @@ export default function TermsOfService() {
                   ✅ By Using Ownerfi, You Agree
                 </p>
                 <p className="text-blue-800 text-sm text-center">
-                  By using Ownerfi, you acknowledge that you have read and agree to these Terms of Service. You understand that: (1) your contact information will be shared with licensed real estate agents who may contact you; (2) agents pay Ownerfi a referral fee when you close; (3) you can decline representation at any time; (4) Ownerfi does not verify property information; (5) all data may be inaccurate or outdated; and (6) you must independently verify all information with licensed professionals.
+                  By using Ownerfi, you acknowledge that you have read and agree to these Terms of Service. You understand that: (1) your contact information will be shared with licensed real estate agents who may contact you; (2) agents pay Ownerfi a referral fee when you close; (3) you can decline representation at any time; (4) Ownerfi does not verify property information; (5) all data may be inaccurate or outdated; (6) you must independently verify all information with licensed professionals; (7) you give express written consent to receive auto-dialed/pre-recorded calls and SMS from Ownerfi and Partner Agents per Section 3, even if your number is on a Do-Not-Call list, and you may revoke that consent at any time; (8) Owner-finance, cash-deal, and auction tags are descriptive, not commitments — sellers may decline owner financing, cash deals are for investors, and auction prices are estimates; (9) you are solely responsible for all costs you incur in reliance on listings (travel, inspections, attorney fees, deposits); and (10) Ownerfi's total liability to you is limited as described in Section 10.
                 </p>
               </div>
             </div>
@@ -609,11 +622,22 @@ export default function TermsOfService() {
                         than between Ownerfi and an individual licensee), you have arranged for your
                         broker to be the contracting party or you have obtained equivalent broker consent.</li>
                     </ul>
-                    <p className="text-amber-900 text-sm font-semibold">
+                    <p className="text-amber-900 text-sm font-semibold mb-2">
                       If your broker refuses to honor the referral fee for any reason — including lack of
                       prior authorization, state-law restrictions, or internal brokerage policy —
                       <strong> you remain personally liable</strong> to Ownerfi for the full referral fee
                       amount.
+                    </p>
+                    <p className="text-amber-900 text-sm">
+                      <strong>Fallback if the referral arrangement is unenforceable:</strong> If a court
+                      or regulator in your state determines that the referral agreement itself is void
+                      or unenforceable (for example, because your state requires referral arrangements
+                      between brokerages rather than individual licensees), you nonetheless agree to
+                      indemnify Ownerfi for, and pay Ownerfi, an amount equal to what Ownerfi would
+                      have received under the referral agreement, on a quantum meruit / unjust
+                      enrichment basis, in consideration of the lead-generation services Ownerfi
+                      provided. Your obligation under this fallback clause is severable from and
+                      survives invalidation of the underlying referral agreement.
                     </p>
                   </div>
 
@@ -863,7 +887,11 @@ export default function TermsOfService() {
                       <strong>Electronic Signatures.</strong> The parties consent to the use of electronic
                       signatures and electronic records under the federal ESIGN Act and applicable state
                       counterparts. A typed-name signature with checkbox confirmation has the same legal
-                      force as a handwritten signature.
+                      force as a handwritten signature. You may withdraw consent to electronic records
+                      and request paper copies of any signed referral agreement by emailing
+                      <a href="mailto:support@ownerfi.ai" className="underline"> support@ownerfi.ai</a>.
+                      Withdrawing consent does not affect the legal validity of records already signed
+                      electronically.
                     </p>
                   </div>
                 </section>
@@ -874,7 +902,7 @@ export default function TermsOfService() {
                       ✅ By Registering as an Agent, You Agree
                     </p>
                     <p className="text-blue-800 text-sm text-center">
-                      By registering and using the Ownerfi platform as a real estate agent, you acknowledge that you have read and agree to these Terms of Service. You confirm that: (1) you hold an active real estate license in good standing; (2) you have authority to enter into referral agreements; (3) you will pay the 30% referral fee at closing for all referred leads; (4) digital signatures on referral agreements are legally binding; (5) lead quality is not guaranteed; and (6) you will comply with all applicable laws and regulations.
+                      By registering and using the Ownerfi platform as a real estate agent, you acknowledge that you have read and agree to these Terms of Service. You confirm that: (1) you hold an active real estate license in good standing; (2) you have obtained your broker's authorization to enter into referral arrangements through Ownerfi and you have authority to bind your brokerage to the referral fee — and if your broker refuses to honor the fee, you remain personally liable per Section 3; (3) you will pay the 30% gross-commission referral fee on every closed transaction with a referred buyer, and the closed-transaction trigger is defined in Section 3; (4) digital signatures via the federal ESIGN Act are legally binding, and you may request paper copies via support@ownerfi.ai; (5) lead quality is not guaranteed; (6) you are solely responsible for compliance with TCPA, CAN-SPAM, Do-Not-Call rules, the Fair Housing Act, your state's real-estate licensing laws, and any state-specific referral-arrangement rules — and you indemnify Ownerfi for violations per Section 12; (7) if a court holds the referral arrangement void in your state, you still owe Ownerfi the equivalent amount on a quantum-meruit basis per Section 3.
                     </p>
                   </div>
                 </div>

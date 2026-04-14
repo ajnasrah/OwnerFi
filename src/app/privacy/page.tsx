@@ -63,8 +63,8 @@ export default function PrivacyPolicy() {
 
               <div className="space-y-8 text-lg leading-relaxed text-slate-700">
 
-            <section>
-              <h2 className="text-2xl font-semibold text-primary-text mb-4">1. Information We Collect</h2>
+            <section id="notice-at-collection" className="scroll-mt-24">
+              <h2 className="text-2xl font-semibold text-primary-text mb-4">1. Information We Collect <span className="text-base font-normal text-slate-500">(CCPA Notice at Collection)</span></h2>
 
               {/* Data Categories Table */}
               <div className="overflow-x-auto mb-6">
@@ -277,12 +277,11 @@ export default function PrivacyPolicy() {
                 <p className="font-bold text-blue-900 mb-2">🔔 Data Breach Notification</p>
                 <p className="text-blue-900 text-sm">
                   If we become aware of a security incident that materially compromises your personal
-                  information, we will notify affected users in accordance with applicable state
-                  breach-notification laws (typically within 30–60 days of discovery, depending on the
-                  state). Notice will be sent to the email address on file. Where required by state law,
-                  we will also notify the appropriate state Attorney General and credit-reporting
-                  agencies. We will provide information about the incident, the categories of data
-                  involved, and steps you can take to protect yourself.
+                  information, we will notify affected users <strong>as required by applicable
+                  state breach-notification laws</strong>. Notice will be sent to the email address on
+                  file. Where state law requires it, we will also notify the appropriate state Attorney
+                  General and credit-reporting agencies. We will provide information about the incident,
+                  the categories of data involved, and steps you can take to protect yourself.
                 </p>
               </div>
             </section>

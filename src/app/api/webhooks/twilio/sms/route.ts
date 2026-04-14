@@ -12,6 +12,7 @@ import {
   isOptedOut,
   optOut,
 } from '@/lib/agent-outreach/conversation-manager';
+import { revokeBuyerTCPAConsent } from '@/lib/tcpa-revocation';
 import { handleAgentYes, handleAgentNo } from '@/lib/agent-outreach/property-resolver';
 import {
   formatOptOutConfirmation,
@@ -144,7 +145,20 @@ async function processInboundSMS(normalizedPhone: string, body: string, messageS
   // Check for opt-out keywords first (TCPA compliance)
   if (OPT_OUT_PATTERN.test(body)) {
     console.log('   🚫 Opt-out keyword detected');
+    // Agent-outreach side: opt out the phone from agent-outreach SMS flow
     await optOut(normalizedPhone);
+    // Buyer side: scrub buyerProfiles + write audit record (idempotent if no
+    // matching buyer exists — most STOPs are from listing agents, not buyers,
+    // but a buyer who replied STOP to a property-match SMS hits this path too).
+    try {
+      const result = await revokeBuyerTCPAConsent(normalizedPhone, 'sms-stop');
+      if (result.buyerProfilesUpdated > 0) {
+        console.log(`   📵 TCPA revocation: ${result.buyerProfilesUpdated} buyer profile(s) flagged (case ${result.caseId})`);
+      }
+    } catch (err) {
+      // Don't let buyer-side scrub failure block the agent-side opt-out reply.
+      console.error('   ⚠️ TCPA buyer-side scrub failed:', err instanceof Error ? err.message : err);
+    }
     await sendSMS(normalizedPhone, formatOptOutConfirmation(), responseOpts);
     return;
   }

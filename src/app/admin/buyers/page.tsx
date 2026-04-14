@@ -1069,6 +1069,49 @@ export default function AdminBuyers() {
                             Filters
                           </Link>
                         )}
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            const note = window.prompt(
+                              `Revoke TCPA consent for ${buyer.firstName} ${buyer.lastName} (${buyer.phone || 'no phone'})?\n\n` +
+                              `This will:\n` +
+                              `• Set smsNotifications=false on the buyer profile\n` +
+                              `• Mark marketingOptOut=true\n` +
+                              `• Write a tcpa_revocations audit record\n` +
+                              `• Return the list of agents who currently have this buyer's contact info\n\n` +
+                              `You will still need to email each agent manually per the runbook.\n\n` +
+                              `Optional note (e.g. "buyer emailed REVOKE CONSENT 2026-04-14"):`,
+                              ''
+                            );
+                            if (note === null) return;
+                            try {
+                              const res = await fetch(`/api/admin/buyers/${buyer.id}/revoke-tcpa`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ note }),
+                              });
+                              const data = await res.json();
+                              if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+                              const agentList = (data.agentsToNotify || [])
+                                .map((a: { agentName?: string; agentEmail?: string }) =>
+                                  `${a.agentName || '(no name)'} <${a.agentEmail || '(no email)'}>`)
+                                .join('\n') || '(none — no active referral agreements)';
+                              alert(
+                                `✅ Revoked. Case: ${data.result.caseId}\n\n` +
+                                `Agents you must notify:\n${agentList}`
+                              );
+                            } catch (err) {
+                              alert(`Failed: ${err instanceof Error ? err.message : 'unknown error'}`);
+                            }
+                          }}
+                          className="inline-flex items-center gap-1 text-red-400 hover:text-red-300 font-semibold text-sm transition-colors hover:underline"
+                          title="Revoke TCPA consent — see docs/runbooks/tcpa-consent-revocation.md"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728" />
+                          </svg>
+                          Revoke TCPA
+                        </button>
                       </div>
                     </td>
                   </tr>

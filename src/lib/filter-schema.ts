@@ -2,11 +2,13 @@
  * Unified FilterConfig — role-agnostic filter shape for buyer/investor/realtor.
  *
  * Base = city + radius (loose). Zips layer on top:
- *   include → UNION with locations (zips can be anywhere in US)
+ *   include → overrides cities entirely (zip-only search)
  *   exclude → SUBTRACT from locations
  *   off     → ignore zips
  *
- * Strict-zip-only mode: set locations=[] and mode='include'.
+ * Property details (price, beds, baths, sqft, dealType, excludeLand,
+ * maxArvPercent) are optional. When set, they narrow the result set on top of
+ * the location/zip selection.
  */
 
 export interface LocationEntry {
@@ -22,9 +24,23 @@ export interface ZipFilter {
   codes: string[]; // 5-digit strings, deduped
 }
 
+export type DealTypeChoice = 'all' | 'owner_finance' | 'cash_deal';
+
+export interface Range {
+  min?: number;
+  max?: number;
+}
+
 export interface FilterConfig {
   locations: LocationEntry[];
   zips: ZipFilter;
+  dealType?: DealTypeChoice;
+  price?: Range;
+  beds?: number;          // minimum beds
+  baths?: number;         // minimum baths
+  sqft?: Range;
+  excludeLand?: boolean;
+  maxArvPercent?: number; // show only deals at or below this % of Zestimate
 }
 
 export const EMPTY_FILTER: FilterConfig = {
@@ -41,6 +57,12 @@ const MAX_LOCATIONS = 20;
 const MIN_RADIUS = 0;
 const MAX_RADIUS = 500;
 const DEFAULT_RADIUS = 30;
+
+const MAX_PRICE = 100_000_000;
+const MAX_SQFT = 1_000_000;
+const MAX_BEDS = 20;
+const MAX_BATHS = 20;
+const MAX_ARV_PERCENT = 300;
 
 export function normalizeZip(raw: string): string | null {
   if (!raw) return null;
@@ -59,6 +81,34 @@ export function normalizeLocation(raw: unknown): LocationEntry | null {
     ? Math.min(MAX_RADIUS, Math.max(MIN_RADIUS, rawRadius))
     : DEFAULT_RADIUS;
   return { city, state, radiusMiles };
+}
+
+function clampInt(raw: unknown, min: number, max: number): number | undefined {
+  const n = typeof raw === 'number' ? raw : Number(raw);
+  if (!Number.isFinite(n)) return undefined;
+  return Math.max(min, Math.min(max, Math.trunc(n)));
+}
+
+function clampFloat(raw: unknown, min: number, max: number): number | undefined {
+  const n = typeof raw === 'number' ? raw : Number(raw);
+  if (!Number.isFinite(n)) return undefined;
+  return Math.max(min, Math.min(max, n));
+}
+
+function normalizeRange(raw: unknown, max: number): Range | undefined {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const r = raw as Record<string, unknown>;
+  let min = clampInt(r.min, 0, max);
+  let maxV = clampInt(r.max, 0, max);
+  // Swap if min > max (user probably intended the wider window)
+  if (min !== undefined && maxV !== undefined && min > maxV) {
+    [min, maxV] = [maxV, min];
+  }
+  if (min === undefined && maxV === undefined) return undefined;
+  const out: Range = {};
+  if (min !== undefined) out.min = min;
+  if (maxV !== undefined) out.max = maxV;
+  return out;
 }
 
 /**
@@ -105,10 +155,28 @@ export function normalizeFilterConfig(input: unknown): FilterConfig {
   // Force mode=off when no codes — avoids "include with empty list → 0 results" surprise
   const effectiveMode: ZipMode = codes.length === 0 ? 'off' : mode;
 
-  return {
+  const out: FilterConfig = {
     locations,
     zips: { mode: effectiveMode, codes },
   };
+
+  // Optional property-detail fields
+  if (src.dealType === 'all' || src.dealType === 'owner_finance' || src.dealType === 'cash_deal') {
+    out.dealType = src.dealType;
+  }
+  const price = normalizeRange(src.price, MAX_PRICE);
+  if (price) out.price = price;
+  const beds = clampInt(src.beds, 0, MAX_BEDS);
+  if (beds !== undefined && beds > 0) out.beds = beds;
+  const baths = clampFloat(src.baths, 0, MAX_BATHS);
+  if (baths !== undefined && baths > 0) out.baths = baths;
+  const sqft = normalizeRange(src.sqft, MAX_SQFT);
+  if (sqft) out.sqft = sqft;
+  if (src.excludeLand === true) out.excludeLand = true;
+  const maxArv = clampFloat(src.maxArvPercent, 0, MAX_ARV_PERCENT);
+  if (maxArv !== undefined && maxArv > 0) out.maxArvPercent = maxArv;
+
+  return out;
 }
 
 /**
@@ -144,8 +212,9 @@ export function filterConfigFromLegacy(profile: LegacyProfileShape | null | unde
   const city = (profile.preferredCity || profile.city || '').trim();
   const state = (profile.preferredState || profile.state || '').trim().toUpperCase();
   if (!city || !STATE_RE.test(state)) return EMPTY_FILTER;
-  const radiusMiles = Number.isFinite(profile.filter?.radiusMiles)
-    ? profile.filter!.radiusMiles!
+  const rawRadius = Number(profile.filter?.radiusMiles);
+  const radiusMiles = Number.isFinite(rawRadius)
+    ? Math.min(MAX_RADIUS, Math.max(MIN_RADIUS, rawRadius))
     : DEFAULT_RADIUS;
   return {
     locations: [{ city, state, radiusMiles }],
@@ -159,4 +228,10 @@ export const FILTER_LIMITS = {
   MAX_RADIUS,
   MIN_RADIUS,
   DEFAULT_RADIUS,
+  MAX_PRICE,
+  MAX_SQFT,
+  MAX_BEDS,
+  MAX_BATHS,
+  MAX_ARV_PERCENT,
+  MAX_SAVED_SEARCHES: 50,
 } as const;

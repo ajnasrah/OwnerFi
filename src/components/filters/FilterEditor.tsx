@@ -198,9 +198,9 @@ export function FilterEditor({ initialFilter, onSave, saving = false, headerNote
             <h3 className="text-white font-semibold text-sm">Zip Codes</h3>
             <p className="text-xs text-slate-400 mt-0.5">
               {zipMode === 'include'
-                ? 'Include: properties in these zips are added to your locations (union).'
+                ? 'Include: only these zip codes are searched — cities are ignored.'
                 : zipMode === 'exclude'
-                ? 'Exclude: properties in these zips are removed from your locations.'
+                ? 'Exclude: properties in these zips are removed from your city results.'
                 : 'Off: zip codes are ignored.'}
             </p>
           </div>

@@ -50,6 +50,13 @@ export interface InvestorDeal {
   needsWork?: boolean;
   // Land detection
   isLand?: boolean;
+  // Distressed-listing flags — price is NOT a standard asking price
+  // (auction opening bid, foreclosure filing price, REO estimate).
+  // UI renders "Est." prefix and a badge when any is true.
+  isAuction?: boolean;
+  isForeclosure?: boolean;
+  isBankOwned?: boolean;
+  listingSubType?: string;
   // Common
   yearBuilt?: number;
   propertyType?: string;
@@ -181,28 +188,23 @@ export async function GET(request: NextRequest) {
       console.log(`⚠️  [investor-deals] Legacy on-the-fly: ${nearbyCities.length} cities (radius: ${radiusUsed}mi)`);
     }
 
+    // Precedence: if zips.include has codes, those zips are THE search set
+    // (cities ignored). Otherwise search cities. Exclude zips still subtract
+    // from whatever the base set is.
+    const zipsOverride = userFilter.zips.mode === 'include' && userFilter.zips.codes.length > 0;
+
     try {
       const client = getTypesenseSearchClient();
       if (client) {
-        // Fetch by locations (only if we have any)
-        if (nearbyCities.length > 0) {
+        if (zipsOverride) {
+          // Zip-only mode — cities are ignored entirely.
+          allDeals = await searchTypesenseByZips(client, userFilter.zips.codes, {
+            minPrice, maxPrice, maxArvPercent, excludeLand,
+          });
+        } else if (nearbyCities.length > 0) {
           allDeals = await searchTypesense(client, nearbyCities, allowedStates, 'all', {
             minPrice, maxPrice, maxArvPercent, excludeLand,
           });
-        }
-        // Additionally fetch by include-zips (anywhere in US, union with locations)
-        if (userFilter.zips.mode === 'include' && userFilter.zips.codes.length > 0) {
-          const zipDeals = await searchTypesenseByZips(client, userFilter.zips.codes, {
-            minPrice, maxPrice, maxArvPercent, excludeLand,
-          });
-          // Merge (dedupe by id — locations + zips can overlap)
-          const seen = new Set<string>(allDeals.map(d => d.id));
-          for (const d of zipDeals) {
-            if (!seen.has(d.id)) {
-              seen.add(d.id);
-              allDeals.push(d);
-            }
-          }
         }
       } else {
         throw new Error('Typesense not available');
@@ -450,7 +452,7 @@ async function runTypesenseSearch(
         sort_by: 'listPrice:asc',
         per_page: perPage,
         page,
-        include_fields: 'id,address,city,state,zipCode,bedrooms,bathrooms,squareFeet,yearBuilt,listPrice,monthlyPayment,downPaymentAmount,downPaymentPercent,interestRate,termYears,balloonYears,propertyType,primaryImage,galleryImages,dealType,zestimate,rentEstimate,needsWork,percentOfArv,isLand,url,zpid,homeStatus',
+        include_fields: 'id,address,city,state,zipCode,bedrooms,bathrooms,squareFeet,yearBuilt,listPrice,monthlyPayment,downPaymentAmount,downPaymentPercent,interestRate,termYears,balloonYears,propertyType,primaryImage,galleryImages,dealType,zestimate,rentEstimate,needsWork,percentOfArv,isLand,isAuction,isForeclosure,isBankOwned,listingSubType,url,zpid,homeStatus',
       });
 
     const hits = result.hits || [];
@@ -465,9 +467,14 @@ async function runTypesenseSearch(
   return allHits.map((hit: any) => {
     const doc = hit.document as Record<string, unknown>;
 
-    // Skip non-FOR_SALE properties (PENDING, SOLD, etc.)
+    // Skip non-FOR_SALE properties (PENDING, SOLD, etc.).
+    // Auction / foreclosure / pre-foreclosure stay visible — the UI labels
+    // them with a badge + "Est." price prefix so investors see them as deals.
+    const ALLOWED_STATUSES_INVESTOR = new Set([
+      'FOR_SALE', 'FOR_AUCTION', 'FORECLOSURE', 'FORECLOSED', 'PRE_FORECLOSURE',
+    ]);
     const homeStatus = ((doc.homeStatus as string) || '').toUpperCase();
-    if (homeStatus && homeStatus !== 'FOR_SALE') return null;
+    if (homeStatus && !ALLOWED_STATUSES_INVESTOR.has(homeStatus)) return null;
 
     const price = (doc.listPrice as number) || 0;
     const arv = (doc.zestimate as number) || 0;
@@ -533,6 +540,11 @@ async function runTypesenseSearch(
       needsWork,
       // Land detection
       isLand: doc.isLand === true || LAND_TYPES.has((doc.propertyType as string || '').toLowerCase()),
+      // Distressed-listing flags
+      isAuction: doc.isAuction === true || undefined,
+      isForeclosure: doc.isForeclosure === true || undefined,
+      isBankOwned: doc.isBankOwned === true || undefined,
+      listingSubType: (doc.listingSubType as string) || undefined,
       // Common
       yearBuilt: (doc.yearBuilt as number) || undefined,
       propertyType: (doc.propertyType as string) || undefined,
@@ -603,9 +615,14 @@ async function searchFirestore(
 
         const data = doc.data();
 
-        // Skip non-FOR_SALE properties (PENDING, SOLD, FOR_RENT, etc.)
+        // Skip non-FOR_SALE properties (PENDING, SOLD, FOR_RENT, etc.).
+        // Auction / foreclosure / pre-foreclosure stay visible — UI labels
+        // them with a badge + "Est." price prefix.
+        const ALLOWED_STATUSES_INVESTOR_FS = new Set([
+          'FOR_SALE', 'FOR_AUCTION', 'FORECLOSURE', 'FORECLOSED', 'PRE_FORECLOSURE',
+        ]);
         const homeStatus = ((data.homeStatus as string) || '').toUpperCase();
-        if (homeStatus && homeStatus !== 'FOR_SALE') continue;
+        if (homeStatus && !ALLOWED_STATUSES_INVESTOR_FS.has(homeStatus)) continue;
 
         const price = (data.price as number) || (data.listPrice as number) || 0;
         const arv = (data.estimate as number) || (data.zestimate as number) || 0;
@@ -671,6 +688,10 @@ async function searchFirestore(
           arv: arv > 0 ? arv : undefined,
           needsWork,
           isLand: data.isLand === true || LAND_TYPES.has(((data.homeType as string) || (data.propertyType as string) || '').toLowerCase()),
+          isAuction: data.isAuction === true || undefined,
+          isForeclosure: data.isForeclosure === true || undefined,
+          isBankOwned: data.isBankOwned === true || undefined,
+          listingSubType: (data.listingSubType as string) || undefined,
           yearBuilt: (data.yearBuilt as number) || undefined,
           propertyType: (data.homeType as string) || (data.propertyType as string) || undefined,
           zestimate: arv > 0 ? arv : undefined,

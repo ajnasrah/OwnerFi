@@ -137,12 +137,32 @@ export default function TermsOfService() {
                   </li>
                 </ul>
               </div>
-              <p className="text-slate-700 text-sm">
+              <p className="text-slate-700 text-sm mb-3">
                 You agree that costs you incur in reliance on these tags — including travel, inspections,
                 appraisals, attorney fees, application fees, and earnest money — are your own
                 responsibility. Ownerfi is not liable for any such costs whether or not the listing
                 turns out to be available, accurate, or suitable.
               </p>
+
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 text-sm text-slate-700">
+                <p className="font-bold mb-2">Mortgage Licensing &amp; Servicemember Notes</p>
+                <ul className="list-disc ml-6 space-y-2">
+                  <li>
+                    <strong>Seller licensing (Dodd-Frank / SAFE Act):</strong> Owner financing offered by
+                    a non-institutional seller may, in some states and depending on volume, require the
+                    seller to be a licensed Mortgage Loan Originator. This is the seller&apos;s
+                    obligation, not Ownerfi&apos;s and not the buyer&apos;s, but it can affect the
+                    enforceability and terms of any seller-financed loan. Buyers and sellers should
+                    consult an attorney before structuring an owner-finance transaction.
+                  </li>
+                  <li>
+                    <strong>Active-duty servicemembers:</strong> The Servicemembers Civil Relief Act
+                    (SCRA) provides interest-rate caps, foreclosure protections, and other rights for
+                    active-duty members of the US Armed Forces. If you are a servicemember, raise SCRA
+                    protections with your closing attorney before signing any owner-finance note.
+                  </li>
+                </ul>
+              </div>
             </section>
 
             <section>
@@ -445,10 +465,27 @@ export default function TermsOfService() {
                 </p>
               </div>
 
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
                 <p className="font-bold text-blue-800 mb-2">Small Claims Exception</p>
                 <p className="text-blue-700 text-sm">
                   Either party may bring qualifying claims in small claims court in the county of your residence or in Nashville, Tennessee, if the claims fall within that court&apos;s jurisdiction.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+                <p className="font-bold text-slate-900 mb-2">Arbitration Administrator &amp; Fees</p>
+                <p className="text-slate-700 text-sm mb-2">
+                  Arbitration is conducted by the <strong>American Arbitration Association (AAA)</strong>
+                  under its Consumer Arbitration Rules (available at <span className="font-mono text-xs">adr.org</span>),
+                  or, if AAA is unavailable, by another mutually agreed administrator.
+                </p>
+                <p className="text-slate-700 text-sm">
+                  Consistent with AAA Consumer Rules, for any consumer claim Ownerfi will pay all
+                  arbitration filing, administrative, and arbitrator fees that exceed the equivalent
+                  filing fee in your local state court (typically all fees over US$200). You remain
+                  responsible for your own attorney&apos;s fees unless a statute or the arbitrator
+                  awards them. The arbitration may be conducted in person, by phone, by video, or on
+                  documents only, at your election where the AAA rules permit.
                 </p>
               </div>
             </section>
@@ -458,6 +495,26 @@ export default function TermsOfService() {
               <p>
                 We may modify these Terms at any time. Continued use constitutes acceptance.
               </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-primary-text mb-4">13A. Accessibility</h2>
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 text-sm text-slate-700">
+                <p className="mb-2">
+                  Ownerfi strives to make our website usable by people with disabilities and aims to
+                  conform to <strong>WCAG 2.1 Level AA</strong> guidelines where reasonably feasible.
+                  We test with screen readers and keyboard navigation and address accessibility issues
+                  on an ongoing basis.
+                </p>
+                <p>
+                  If you encounter an accessibility barrier on our site, or need information presented
+                  in an alternative format, please email{' '}
+                  <a href="mailto:support@ownerfi.ai" className="underline">support@ownerfi.ai</a> with
+                  &quot;ACCESSIBILITY&quot; in the subject line. We&apos;ll work in good faith to
+                  address the issue or provide the requested information through an alternative
+                  channel.
+                </p>
+              </div>
             </section>
 
             <section>

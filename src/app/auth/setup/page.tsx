@@ -399,7 +399,8 @@ export default function AuthSetup() {
                   required
                 />
                 <label htmlFor="terms" className="text-xs text-slate-300 leading-relaxed cursor-pointer">
-                  I agree to the{' '}
+                  <strong>I confirm I am at least 18 years of age</strong> and a US resident, and I
+                  agree to the{' '}
                   <Link href="/terms" className="text-[#00BC7D] hover:text-[#00d68f] font-semibold underline" target="_blank">
                     Terms and Conditions
                   </Link>

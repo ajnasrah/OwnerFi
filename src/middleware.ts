@@ -41,6 +41,23 @@ const BYPASS_PATHS = [
   '/sitemap',
 ];
 
+// EU/EEA + UK + Switzerland — countries with comprehensive personal-data laws
+// (GDPR, UK GDPR, Swiss FADP). Ownerfi is a US-only service; we redirect rather
+// than serve to avoid extraterritorial GDPR exposure.
+const RESTRICTED_COUNTRIES = new Set([
+  'AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT',
+  'LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE',  // EU 27
+  'IS','LI','NO',                                                 // EEA non-EU
+  'GB',                                                           // UK
+  'CH',                                                           // Switzerland
+]);
+
+const GEO_BYPASS_PATHS = [
+  '/eu-restricted',  // The block page itself must always be reachable
+  '/api/',           // APIs already auth-gated; let webhooks/crons through
+  '/_next/',
+];
+
 function isBot(userAgent: string): boolean {
   const ua = userAgent.toLowerCase();
 
@@ -90,6 +107,19 @@ export function middleware(request: NextRequest) {
   // Allow bypass paths (webhooks, static assets, etc.)
   if (BYPASS_PATHS.some(path => pathname.startsWith(path))) {
     return NextResponse.next();
+  }
+
+  // EU / EEA / UK / Switzerland → redirect to /eu-restricted so we don't
+  // process personal data of users in jurisdictions covered by GDPR / UK GDPR
+  // / Swiss FADP. The block page itself + APIs are exempt from this redirect.
+  if (!GEO_BYPASS_PATHS.some(path => pathname.startsWith(path))) {
+    const country = (request.headers.get('x-vercel-ip-country') || '').toUpperCase();
+    if (country && RESTRICTED_COUNTRIES.has(country)) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/eu-restricted';
+      url.search = '';
+      return NextResponse.redirect(url, 307);
+    }
   }
 
   // Block known bad bots

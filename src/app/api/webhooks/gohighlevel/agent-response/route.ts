@@ -120,11 +120,25 @@ export async function POST(request: NextRequest) {
     } else {
       console.log('✅ [AGENT RESPONSE WEBHOOK] Auth bypassed (GHL_BYPASS_SIGNATURE=true)');
     }
-    // Accept both firebaseId and firebase_id (GHL uses snake_case)
-    const firebaseId = body.firebaseId || body.firebase_id;
-    const response = body.response;
-    const agentNote = body.agentNote || body.agent_note;
-    const _opportunityId = body.opportunityId || body.opportunity_id;
+    // GHL can nest custom values inside `customData`, `custom_data`,
+    // `data`, or `contact.customFields` depending on how the workflow
+    // action was configured. Walk the payload to find the fields
+    // wherever they live.
+    const findKey = (obj: any, keys: string[]): any => {
+      if (!obj || typeof obj !== 'object') return undefined;
+      for (const k of keys) if (obj[k] !== undefined && obj[k] !== null) return obj[k];
+      for (const v of Object.values(obj)) {
+        if (v && typeof v === 'object') {
+          const found = findKey(v, keys);
+          if (found !== undefined) return found;
+        }
+      }
+      return undefined;
+    };
+
+    const firebaseId = findKey(body, ['firebaseId', 'firebase_id']);
+    const response = findKey(body, ['response', 'agent_response', 'agentResponse']);
+    const agentNote = findKey(body, ['agentNote', 'agent_note', 'note']);
 
     console.log(`📋 [AGENT RESPONSE WEBHOOK] Processing response for ${firebaseId}`);
     console.log(`   Response: ${response}`);
@@ -135,8 +149,24 @@ export async function POST(request: NextRequest) {
     // Validate required fields
     if (!firebaseId || !response) {
       console.error('❌ [AGENT RESPONSE WEBHOOK] Missing required fields');
+      console.error('   Raw body keys:', Object.keys(body));
+      // Log the full failed payload so we can inspect GHL's envelope shape
+      try {
+        await db.collection('webhook_debug_logs').add({
+          endpoint: 'agent-response',
+          status: 'missing_fields',
+          firebaseIdFound: !!firebaseId,
+          responseFound: !!response,
+          rawBody: body,
+          receivedAt: new Date(),
+        });
+      } catch (e) { console.error('failed to log webhook debug:', e); }
       return NextResponse.json(
-        { error: 'Missing required fields: firebaseId and response' },
+        {
+          error: 'Missing required fields: firebaseId and response',
+          hint: 'Ensure GHL workflow passes firebase_id and response at top level of webhook body',
+          bodyKeys: Object.keys(body),
+        },
         { status: 400 }
       );
     }

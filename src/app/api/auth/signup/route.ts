@@ -100,6 +100,27 @@ export async function POST(request: NextRequest) {
 
         await setDoc(doc(db, 'buyerProfiles', buyerId), buyerData);
 
+        // Persist TCPA consent evidence (email-signup channel uses the
+        // /auth/setup checkbox text). Best-effort — don't block signup.
+        try {
+          if (buyerData.phone) {
+            const { recordTCPAConsent, PHONE_CONSENT_TEXT_SETUP } = await import('@/lib/tcpa-consent');
+            await recordTCPAConsent({
+              phone: buyerData.phone,
+              consentText: PHONE_CONSENT_TEXT_SETUP,
+              channel: 'signup-form',
+              userId: newUser.id,
+              buyerProfileId: buyerId,
+              pageUrl: '/auth/setup',
+              headers: request.headers,
+              checkboxChecked: true,
+            });
+          }
+        } catch (consentError) {
+          console.error('⚠️ [SIGNUP] TCPA consent record failed (signup continuing):',
+            consentError instanceof Error ? consentError.message : consentError);
+        }
+
         // Send new buyer to GHL webhook immediately
         syncBuyerToGHL({
           id: buyerId,

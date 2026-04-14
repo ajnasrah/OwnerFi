@@ -384,6 +384,27 @@ export async function POST(request: NextRequest) {
           console.error('❌ [SIGNUP-PHONE] Failed to create buyerProfile:', profileError.message);
           throw profileError;
         }
+
+        // Persist TCPA consent evidence — best-effort. If this fails we don't
+        // block signup but we DO log so the gap is visible. Without this
+        // record we cannot defend a TCPA suit (Van Patten, FCC 2012 order).
+        try {
+          const { recordTCPAConsent, PHONE_CONSENT_TEXT_AUTH } = await import('@/lib/tcpa-consent');
+          await recordTCPAConsent({
+            phone: normalizedPhone,
+            consentText: PHONE_CONSENT_TEXT_AUTH,
+            channel: 'phone-otp',
+            userId: newUser.id,
+            buyerProfileId: buyerId,
+            pageUrl: '/auth',
+            headers: request.headers,
+            // OTP-flow consent is the act of submitting the phone — no checkbox.
+            checkboxChecked: undefined,
+          });
+        } catch (consentError) {
+          console.error('⚠️ [SIGNUP-PHONE] TCPA consent record failed (signup continuing):',
+            consentError instanceof Error ? consentError.message : consentError);
+        }
       }
 
       // Sync to GHL in background (non-blocking)

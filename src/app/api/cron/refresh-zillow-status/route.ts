@@ -599,6 +599,93 @@ export async function GET(request: NextRequest) {
     const totalSynced = updated;
 
     // ============================================
+    // STEP 4.5: Typesense reconciliation (once per 24h)
+    //
+    // Cloud Function sync occasionally drifts — scripts that write directly
+    // to Typesense without checking Firestore, CF failures, etc. Scan a page
+    // of active Typesense docs and delete any whose Firestore is missing,
+    // inactive, or permanently-deleted-status.
+    // ============================================
+    const RECONCILE_INTERVAL_MS = 24 * 60 * 60 * 1000;
+    const RECONCILE_MAX_SCAN = 2500;
+    const reconcileMetaRef = db.collection('cron_meta').doc('typesense_reconcile');
+    const reconcileMeta = await reconcileMetaRef.get();
+    const lastReconcile = reconcileMeta.exists
+      ? (reconcileMeta.data()?.lastRun?.toMillis?.() || 0)
+      : 0;
+    let reconcileDeleted = 0;
+    let reconcileScanned = 0;
+    let reconcileRan = false;
+
+    if (tsCollection && Date.now() - lastReconcile > RECONCILE_INTERVAL_MS) {
+      reconcileRan = true;
+      console.log(`🧹 Typesense reconciliation starting (last run: ${lastReconcile ? new Date(lastReconcile).toISOString() : 'never'})`);
+
+      const PAGE_SIZE = 250;
+      let tsPage = 1;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const driftIds: string[] = [];
+
+      while (reconcileScanned < RECONCILE_MAX_SCAN && Date.now() - startTime < MAX_RUNTIME_MS) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let searchRes: any;
+        try {
+          searchRes = await tsCollection.documents().search({
+            q: '*',
+            filter_by: 'isActive:=true',
+            per_page: PAGE_SIZE,
+            page: tsPage,
+            include_fields: 'id,homeStatus',
+          });
+        } catch (err) {
+          console.error('[reconcile] Typesense search failed:', err);
+          break;
+        }
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const hits = (searchRes.hits || []) as Array<{ document: any }>;
+        if (hits.length === 0) break;
+        reconcileScanned += hits.length;
+
+        // Batch Firestore reads in chunks of 30 (in-query limit)
+        const ids = hits.map(h => String(h.document.id));
+        for (let i = 0; i < ids.length; i += 30) {
+          const chunk = ids.slice(i, i + 30);
+          const snaps = await Promise.all(chunk.map(id => db.collection('properties').doc(id).get()));
+          snaps.forEach((snap, idx) => {
+            const id = chunk[idx];
+            if (!snap.exists) { driftIds.push(id); return; }
+            const data = snap.data();
+            if (!data) return;
+            if (data.isActive === false) { driftIds.push(id); return; }
+            const status = String(data.homeStatus || '').toUpperCase();
+            if (PERMANENT_DELETE_STATUSES.has(status)) { driftIds.push(id); }
+          });
+        }
+
+        if (hits.length < PAGE_SIZE) break;
+        tsPage++;
+      }
+
+      if (driftIds.length > 0) {
+        console.log(`🧹 Reconcile: deleting ${driftIds.length} drifted Typesense docs`);
+        await Promise.all(driftIds.map(deleteFromTypesense));
+        reconcileDeleted = driftIds.length;
+      }
+
+      await reconcileMetaRef.set({
+        lastRun: new Date(),
+        scanned: reconcileScanned,
+        drift: reconcileDeleted,
+      }, { merge: true });
+
+      console.log(`🧹 Reconcile done: scanned ${reconcileScanned}, drift ${reconcileDeleted}`);
+    } else if (tsCollection) {
+      const hoursSince = ((Date.now() - lastReconcile) / 3600000).toFixed(1);
+      console.log(`🧹 Reconcile skipped (last run ${hoursSince}h ago, interval 24h)`);
+    }
+
+    // ============================================
     // STEP 5: Save report and log completion
     // ============================================
     const duration = Date.now() - startTime;
@@ -625,6 +712,7 @@ export async function GET(request: NextRequest) {
       status: 'completed',
       completedAt: new Date(),
       durationMs: duration,
+      reconcile: reconcileRan ? { scanned: reconcileScanned, drift: reconcileDeleted } : null,
       results: {
         processed: toProcess.length,
         updated,

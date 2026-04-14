@@ -150,6 +150,7 @@ export default function AdminUserFiltersPage({
             onSave={handleSave}
             saving={saving}
             headerNote={`Editing as admin. Changes take effect immediately on the user's next dashboard load.`}
+            disableSavedSearches
           />
         )}
       </div>

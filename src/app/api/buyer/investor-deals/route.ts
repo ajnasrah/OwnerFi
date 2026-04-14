@@ -126,21 +126,41 @@ export async function GET(request: NextRequest) {
     if (!useNewFilter && (!searchCity || !searchState)) {
       return NextResponse.json({ deals: [], total: 0, message: 'Please set your preferred location.' });
     }
-    const rawDealType = searchParams.get('dealType') || 'all';
-    const dealTypeFilter = (['all', 'owner_finance', 'cash_deal'].includes(rawDealType)
-      ? rawDealType : 'all') as 'all' | 'owner_finance' | 'cash_deal';
+    // URL params override FilterConfig (inline chips are session overrides).
+    // If no URL param, fall back to FilterConfig value. If neither, use default.
+    const qpDealType = searchParams.get('dealType');
+    const dealTypeFilter = (
+      qpDealType && ['all', 'owner_finance', 'cash_deal'].includes(qpDealType)
+        ? qpDealType
+        : userFilter.dealType ?? 'all'
+    ) as 'all' | 'owner_finance' | 'cash_deal';
+
     const rawSortBy = searchParams.get('sortBy') || 'price';
     const sortBy = (['price', 'percentOfArv', 'discount', 'monthlyPayment'].includes(rawSortBy)
       ? rawSortBy : 'price') as SortField;
     const rawSortOrder = searchParams.get('sortOrder') || 'asc';
     const sortOrder = (rawSortOrder === 'desc' ? 'desc' : 'asc') as 'asc' | 'desc';
-    const rawMinPrice = searchParams.get('minPrice') ? Number(searchParams.get('minPrice')) : undefined;
-    const minPrice = rawMinPrice !== undefined && isFinite(rawMinPrice) ? rawMinPrice : undefined;
-    const rawMaxPrice = searchParams.get('maxPrice') ? Number(searchParams.get('maxPrice')) : undefined;
-    const maxPrice = rawMaxPrice !== undefined && isFinite(rawMaxPrice) ? rawMaxPrice : undefined;
-    const rawMaxArvPercent = searchParams.get('maxArvPercent') ? Number(searchParams.get('maxArvPercent')) : undefined;
-    const maxArvPercent = rawMaxArvPercent !== undefined && isFinite(rawMaxArvPercent) ? rawMaxArvPercent : undefined;
-    const excludeLand = searchParams.get('excludeLand') === 'true';
+
+    const readNumQP = (key: string): number | undefined => {
+      const v = searchParams.get(key);
+      if (v === null || v === '') return undefined;
+      const n = Number(v);
+      return Number.isFinite(n) ? n : undefined;
+    };
+
+    const minPrice = readNumQP('minPrice') ?? userFilter.price?.min;
+    const maxPrice = readNumQP('maxPrice') ?? userFilter.price?.max;
+    const maxArvPercent = readNumQP('maxArvPercent') ?? userFilter.maxArvPercent;
+    const minBeds = readNumQP('minBeds') ?? userFilter.beds;
+    const minBaths = readNumQP('minBaths') ?? userFilter.baths;
+    const minSqft = readNumQP('minSqft') ?? userFilter.sqft?.min;
+    const maxSqft = readNumQP('maxSqft') ?? userFilter.sqft?.max;
+
+    const qpExcludeLand = searchParams.get('excludeLand');
+    const excludeLand = qpExcludeLand !== null
+      ? qpExcludeLand === 'true'
+      : (userFilter.excludeLand ?? false);
+
     const showHidden = searchParams.get('showHidden') === 'true';
     const page = Math.max(1, Number(searchParams.get('page') || '1') || 1);
     const pageSize = Math.min(48, Math.max(1, Number(searchParams.get('pageSize') || '24') || 24));
@@ -264,6 +284,20 @@ export async function GET(request: NextRequest) {
       allDeals = allDeals.filter(d =>
         d.percentOfArv !== null && d.percentOfArv !== undefined && d.percentOfArv <= maxArvPercent
       );
+    }
+    // Bed/bath/sqft minimums — always post-filter (fast, and handles hits that
+    // came from zip-override path which doesn't push these to Typesense).
+    if (minBeds !== undefined && minBeds > 0) {
+      allDeals = allDeals.filter(d => (d.beds ?? 0) >= minBeds);
+    }
+    if (minBaths !== undefined && minBaths > 0) {
+      allDeals = allDeals.filter(d => (d.baths ?? 0) >= minBaths);
+    }
+    if (minSqft !== undefined && minSqft > 0) {
+      allDeals = allDeals.filter(d => (d.sqft ?? 0) >= minSqft);
+    }
+    if (maxSqft !== undefined && maxSqft > 0) {
+      allDeals = allDeals.filter(d => (d.sqft ?? Infinity) <= maxSqft);
     }
 
     // Count breakdown by actual qualification (before dealType filtering)

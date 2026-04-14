@@ -5,6 +5,8 @@ import { db } from '@/lib/firebase';
 import { requireAuth } from '@/lib/auth-helpers';
 import { ErrorResponses, logError } from '@/lib/api-error-handler';
 import { getCitiesWithinRadiusWithExpansion, getCitiesWithinRadiusComprehensive } from '@/lib/comprehensive-cities';
+import { getUserFilter } from '@/lib/filter-store';
+import { FilterConfig } from '@/lib/filter-schema';
 
 /**
  * INVESTOR DEALS API
@@ -102,7 +104,19 @@ export async function GET(request: NextRequest) {
     const likedPropertyIds = new Set<string>(profile.likedPropertyIds || profile.likedProperties || []);
     const passedPropertyIds = new Set<string>(profile.passedPropertyIds || profile.passedProperties || []);
 
-    if (!searchCity || !searchState) {
+    // Load the user's FilterConfig (locations + zips). userFilters is keyed by
+    // auth userId; for admin preview, use the target profile's userId so admins
+    // see the filter the buyer actually has.
+    const filterUserId: string | undefined =
+      previewBuyerId && session.user.role === 'admin'
+        ? (profile.userId as string | undefined)
+        : session.user.id;
+    const userFilter: FilterConfig = filterUserId
+      ? await getUserFilter(filterUserId)
+      : { locations: [], zips: { mode: 'off', codes: [] } };
+    const useNewFilter = userFilter.locations.length > 0 || userFilter.zips.codes.length > 0;
+
+    if (!useNewFilter && (!searchCity || !searchState)) {
       return NextResponse.json({ deals: [], total: 0, message: 'Please set your preferred location.' });
     }
     const rawDealType = searchParams.get('dealType') || 'all';
@@ -129,38 +143,67 @@ export async function GET(request: NextRequest) {
     let allDeals: InvestorDeal[] = [];
     let typesenseError = null;
 
-    // Use buyer's pre-computed nearby cities for radius-based search
-    let nearbyCities: string[];
-    let allowedStates: string[];
-    if (profile.filter?.nearbyCities?.length > 0) {
+    // Compute nearbyCities/allowedStates — either from new FilterConfig locations
+    // (union of per-city radii) or from legacy profile.filter.nearbyCities.
+    let nearbyCities: string[] = [];
+    let allowedStates: string[] = [];
+
+    if (useNewFilter && userFilter.locations.length > 0) {
+      const citySet = new Set<string>();
+      const stateSet = new Set<string>();
+      for (const loc of userFilter.locations) {
+        const cities = getCitiesWithinRadiusComprehensive(loc.city, loc.state, loc.radiusMiles);
+        citySet.add(loc.city);
+        stateSet.add(loc.state);
+        for (const c of cities) {
+          citySet.add(c.name);
+          stateSet.add(c.state);
+        }
+      }
+      nearbyCities = [...citySet];
+      allowedStates = [...stateSet];
+      console.log(`✅ [investor-deals] FilterConfig: ${userFilter.locations.length} locations → ${nearbyCities.length} cities, states: [${allowedStates.join(', ')}], zips: ${userFilter.zips.mode} (${userFilter.zips.codes.length})`);
+    } else if (profile.filter?.nearbyCities?.length > 0) {
       nearbyCities = profile.filter.nearbyCities;
-      // Derive allowed states from stored filter or recalculate
       if (profile.filter.nearbyStates?.length > 0) {
         allowedStates = profile.filter.nearbyStates;
       } else {
-        // Recalculate states from the comprehensive cities DB for the stored city list
         const citiesWithState = getCitiesWithinRadiusComprehensive(searchCity, searchState, profile.filter.radiusMiles || 30);
         allowedStates = [...new Set(citiesWithState.map(c => c.state))];
         if (allowedStates.length === 0) allowedStates = [searchState];
       }
-      console.log(`✅ [investor-deals] Using stored filter: ${nearbyCities.length} nearby cities, states: [${allowedStates.join(', ')}]`);
-    } else {
-      // Fallback: Calculate on-the-fly if no filter exists
-      // Uses automatic radius expansion: 30mi → 60mi → 120mi if needed
-      console.log(`⚠️  [investor-deals] No stored filter found, calculating on-the-fly`);
+      console.log(`✅ [investor-deals] Legacy stored filter: ${nearbyCities.length} cities, states: [${allowedStates.join(', ')}]`);
+    } else if (searchCity && searchState) {
       const { cities: nearbyCitiesList, radiusUsed } = getCitiesWithinRadiusWithExpansion(searchCity, searchState, 30, 5);
       nearbyCities = nearbyCitiesList.map(city => city.name);
       allowedStates = [...new Set(nearbyCitiesList.map(city => city.state))];
       if (allowedStates.length === 0) allowedStates = [searchState];
-      console.log(`✅ [investor-deals] Calculated ${nearbyCities.length} nearby cities as fallback (radius: ${radiusUsed}mi), states: [${allowedStates.join(', ')}]`);
+      console.log(`⚠️  [investor-deals] Legacy on-the-fly: ${nearbyCities.length} cities (radius: ${radiusUsed}mi)`);
     }
 
     try {
       const client = getTypesenseSearchClient();
       if (client) {
-        allDeals = await searchTypesense(client, nearbyCities, allowedStates, 'all', {
-          minPrice, maxPrice, maxArvPercent, excludeLand,
-        });
+        // Fetch by locations (only if we have any)
+        if (nearbyCities.length > 0) {
+          allDeals = await searchTypesense(client, nearbyCities, allowedStates, 'all', {
+            minPrice, maxPrice, maxArvPercent, excludeLand,
+          });
+        }
+        // Additionally fetch by include-zips (anywhere in US, union with locations)
+        if (userFilter.zips.mode === 'include' && userFilter.zips.codes.length > 0) {
+          const zipDeals = await searchTypesenseByZips(client, userFilter.zips.codes, {
+            minPrice, maxPrice, maxArvPercent, excludeLand,
+          });
+          // Merge (dedupe by id — locations + zips can overlap)
+          const seen = new Set<string>(allDeals.map(d => d.id));
+          for (const d of zipDeals) {
+            if (!seen.has(d.id)) {
+              seen.add(d.id);
+              allDeals.push(d);
+            }
+          }
+        }
       } else {
         throw new Error('Typesense not available');
       }
@@ -171,6 +214,12 @@ export async function GET(request: NextRequest) {
 
     if (typesenseError) {
       allDeals = await searchFirestore(nearbyCities, allowedStates, 'all');
+    }
+
+    // Apply exclude-zip filter (zip codes user wants cut out)
+    if (userFilter.zips.mode === 'exclude' && userFilter.zips.codes.length > 0) {
+      const excludeSet = new Set(userFilter.zips.codes);
+      allDeals = allDeals.filter(d => !excludeSet.has(d.zipCode));
     }
 
     // Filter by passed status and mark liked properties (O(1) Set lookups)
@@ -323,6 +372,48 @@ async function searchTypesense(
     stateFilter,
     dealTypeClause,
   ];
+
+  return runTypesenseSearch(client, filters, dealTypeFilter, extraFilters);
+}
+
+/**
+ * Search Typesense by an explicit zip-code list. Used for FilterConfig
+ * zips.include — zips can be anywhere in the US, so we bypass city/state.
+ */
+async function searchTypesenseByZips(
+  client: ReturnType<typeof getTypesenseSearchClient>,
+  zipCodes: string[],
+  extraFilters?: {
+    minPrice?: number;
+    maxPrice?: number;
+    maxArvPercent?: number;
+    excludeLand?: boolean;
+  },
+): Promise<InvestorDeal[]> {
+  if (!client) throw new Error('Typesense client is null');
+  if (zipCodes.length === 0) return [];
+
+  const zipFilter = `zipCode:=[${zipCodes.map(z => `\`${z}\``).join(',')}]`;
+  const dealTypeClause = '(dealType:=[owner_finance, cash_deal, both] || needsWork:=true)';
+  const filters = ['isActive:=true', zipFilter, dealTypeClause];
+  return runTypesenseSearch(client, filters, 'all', extraFilters);
+}
+
+/**
+ * Shared paginated Typesense fetch + hit-to-InvestorDeal mapping.
+ */
+async function runTypesenseSearch(
+  client: ReturnType<typeof getTypesenseSearchClient>,
+  baseFilters: string[],
+  dealTypeFilter: 'all' | 'owner_finance' | 'cash_deal',
+  extraFilters?: {
+    minPrice?: number;
+    maxPrice?: number;
+    maxArvPercent?: number;
+    excludeLand?: boolean;
+  },
+): Promise<InvestorDeal[]> {
+  const filters = [...baseFilters];
 
   // Push filters into Typesense query for accurate results and pagination
   // NOTE: For optional boolean fields, use !=true instead of =false

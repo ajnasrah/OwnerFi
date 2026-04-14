@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ApifyClient } from 'apify-client';
+import * as admin from 'firebase-admin';
 import { getFirebaseAdmin } from '@/lib/scraper-v2/firebase-admin';
 import { withCronLock } from '@/lib/scraper-v2/cron-lock';
 import { sanitizeDescription } from '@/lib/description-sanitizer';
@@ -411,6 +412,7 @@ export async function GET(request: NextRequest) {
       // A listing can transition between FOR_SALE and FOR_AUCTION over its life,
       // so we must keep these flags in sync with the current Zillow state.
       const subTypeFlags = detectListingSubType(result);
+      const isDistressedNow = subTypeFlags.isAuction || subTypeFlags.isForeclosure || subTypeFlags.isBankOwned;
 
       // Build update data
       const updateData: Record<string, unknown> = {
@@ -423,6 +425,17 @@ export async function GET(request: NextRequest) {
         isForeclosure: subTypeFlags.isForeclosure,
         isBankOwned: subTypeFlags.isBankOwned,
         listingSubType: subTypeFlags.listingSubType,
+
+        // Distressed listings are never owner-finance — strip any stale OF
+        // tagging on this refresh pass. Scraper-v2 ingest already handles new
+        // properties; this catches docs that transitioned to distressed state
+        // after being tagged OF.
+        ...(isDistressedNow
+          ? {
+              isOwnerfinance: false,
+              dealTypes: admin.firestore.FieldValue.arrayRemove('owner_finance'),
+            }
+          : {}),
         daysOnZillow: result.daysOnZillow || 0,
         description: sanitizeDescription(result.description),
         lastStatusCheck: new Date(),

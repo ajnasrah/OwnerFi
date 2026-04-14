@@ -61,6 +61,7 @@ export default function InvestorDashboard() {
   const [sortBy, setSortBy] = useState<SortField>('price');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [excludeLand, setExcludeLand] = useState(true); // Default: hide land properties
+  const [excludeAuctions, setExcludeAuctions] = useState(false);
   const [showHidden, setShowHidden] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const PAGE_SIZE = 24;
@@ -261,7 +262,7 @@ export default function InvestorDashboard() {
       setDealsLoading(true);
       setDealsError(false);
       try {
-        const filterParams = getFilterParams(dealType, priceFilter, excludeLand);
+        const filterParams = getFilterParams(dealType, priceFilter, excludeLand, excludeAuctions);
         const params = new URLSearchParams({
           dealType: filterParams.dealType,
           sortBy,
@@ -273,6 +274,7 @@ export default function InvestorDashboard() {
         if (filterParams.maxPrice) params.set('maxPrice', String(filterParams.maxPrice));
         if (filterParams.maxArvPercent) params.set('maxArvPercent', String(filterParams.maxArvPercent));
         if (filterParams.excludeLand) params.set('excludeLand', 'true');
+        if (filterParams.excludeAuctions) params.set('excludeAuctions', 'true');
         if (showHidden) params.set('showHidden', 'true');
 
         const res = await fetch(`/api/buyer/investor-deals?${params}`, {
@@ -306,7 +308,7 @@ export default function InvestorDashboard() {
 
     fetchDeals();
     return () => abortController.abort();
-  }, [profile, dealType, priceFilter, sortBy, sortOrder, excludeLand, showHidden, currentPage, fetchKey]);
+  }, [profile, dealType, priceFilter, sortBy, sortOrder, excludeLand, excludeAuctions, showHidden, currentPage, fetchKey]);
 
   // Reset page when filters change (handled via wrapper functions below)
 
@@ -587,6 +589,8 @@ export default function InvestorDashboard() {
           }}
           excludeLand={excludeLand}
           onExcludeLandChange={(exclude) => { setExcludeLand(exclude); setCurrentPage(1); }}
+          excludeAuctions={excludeAuctions}
+          onExcludeAuctionsChange={(exclude) => { setExcludeAuctions(exclude); setCurrentPage(1); }}
           showHidden={showHidden}
           onShowHiddenChange={(show) => { setShowHidden(show); setCurrentPage(1); }}
           stats={stats}

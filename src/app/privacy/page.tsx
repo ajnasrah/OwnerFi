@@ -152,7 +152,7 @@ export default function PrivacyPolicy() {
               <ul className="list-disc ml-6 space-y-1">
                 <li>refer you to licensed real estate agents in your area</li>
                 <li>allow agents to contact you</li>
-                <li>show you properties that may offer owner financing</li>
+                <li>show you owner-finance candidate listings (sellers who <em>may</em> consider owner financing — not confirmed) and cash-deal listings intended for investors</li>
                 <li>provide account services</li>
                 <li>improve the Service</li>
                 <li>maintain security and fraud detection</li>

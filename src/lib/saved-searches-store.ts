@@ -60,7 +60,7 @@ export async function listSavedSearches(userId: string): Promise<SavedSearch[]> 
       name: String(data.name || ''),
       filter: normalizeFilterConfig({ locations: data.locations, zips: data.zips,
         dealType: data.dealType, price: data.price, beds: data.beds, baths: data.baths,
-        sqft: data.sqft, excludeLand: data.excludeLand, maxArvPercent: data.maxArvPercent }),
+        sqft: data.sqft, excludeLand: data.excludeLand, excludeAuctions: data.excludeAuctions, maxArvPercent: data.maxArvPercent }),
       createdAt: timestampToIso(data.createdAt),
       updatedAt: timestampToIso(data.updatedAt),
     };
@@ -81,7 +81,7 @@ export async function getSavedSearch(userId: string, id: string): Promise<SavedS
     name: String(data.name || ''),
     filter: normalizeFilterConfig({ locations: data.locations, zips: data.zips,
       dealType: data.dealType, price: data.price, beds: data.beds, baths: data.baths,
-      sqft: data.sqft, excludeLand: data.excludeLand, maxArvPercent: data.maxArvPercent }),
+      sqft: data.sqft, excludeLand: data.excludeLand, excludeAuctions: data.excludeAuctions, maxArvPercent: data.maxArvPercent }),
     createdAt: timestampToIso(data.createdAt),
     updatedAt: timestampToIso(data.updatedAt),
   };
@@ -125,6 +125,7 @@ export async function createSavedSearch(userId: string, input: CreateSavedSearch
     baths: filter.baths ?? null,
     sqft: filter.sqft ?? null,
     excludeLand: filter.excludeLand ?? false,
+    excludeAuctions: filter.excludeAuctions ?? false,
     maxArvPercent: filter.maxArvPercent ?? null,
     createdAt: now,
     updatedAt: now,
@@ -175,6 +176,7 @@ export async function updateSavedSearch(
     patch.baths = filter.baths ?? null;
     patch.sqft = filter.sqft ?? null;
     patch.excludeLand = filter.excludeLand ?? false;
+    patch.excludeAuctions = filter.excludeAuctions ?? false;
     patch.maxArvPercent = filter.maxArvPercent ?? null;
   }
 

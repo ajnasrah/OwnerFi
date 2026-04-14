@@ -40,6 +40,8 @@ export interface FilterConfig {
   baths?: number;         // minimum baths
   sqft?: Range;
   excludeLand?: boolean;
+  /** Hides auction / foreclosure / bank-owned ("distressed") listings. */
+  excludeAuctions?: boolean;
   maxArvPercent?: number; // show only deals at or below this % of Zestimate
 }
 
@@ -175,6 +177,7 @@ export function normalizeFilterConfig(input: unknown): FilterConfig {
   const sqft = normalizeRange(src.sqft, MAX_SQFT);
   if (sqft) out.sqft = sqft;
   if (src.excludeLand === true) out.excludeLand = true;
+  if (src.excludeAuctions === true) out.excludeAuctions = true;
   const maxArv = clampFloat(src.maxArvPercent, 0, MAX_ARV_PERCENT);
   if (maxArv !== undefined && maxArv > 0) out.maxArvPercent = maxArv;
 
@@ -204,6 +207,7 @@ export function isFilterEmpty(cfg: FilterConfig): boolean {
   if (cfg.baths !== undefined) return false;
   if (cfg.sqft && (cfg.sqft.min !== undefined || cfg.sqft.max !== undefined)) return false;
   if (cfg.excludeLand) return false;
+  if (cfg.excludeAuctions) return false;
   if (cfg.maxArvPercent !== undefined) return false;
   return true;
 }
@@ -231,6 +235,7 @@ export function serializeFilter(cfg: FilterConfig): string {
     `smin:${cfg.sqft?.min ?? ''}`,
     `smax:${cfg.sqft?.max ?? ''}`,
     `el:${cfg.excludeLand ? 1 : 0}`,
+    `ea:${cfg.excludeAuctions ? 1 : 0}`,
     `arv:${cfg.maxArvPercent ?? ''}`,
   ];
   return parts.join('||');

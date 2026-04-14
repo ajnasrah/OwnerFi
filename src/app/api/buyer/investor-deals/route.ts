@@ -161,6 +161,11 @@ export async function GET(request: NextRequest) {
       ? qpExcludeLand === 'true'
       : (userFilter.excludeLand ?? false);
 
+    const qpExcludeAuctions = searchParams.get('excludeAuctions');
+    const excludeAuctions = qpExcludeAuctions !== null
+      ? qpExcludeAuctions === 'true'
+      : (userFilter.excludeAuctions ?? false);
+
     const showHidden = searchParams.get('showHidden') === 'true';
     const page = Math.max(1, Number(searchParams.get('page') || '1') || 1);
     const pageSize = Math.min(48, Math.max(1, Number(searchParams.get('pageSize') || '24') || 24));
@@ -277,6 +282,12 @@ export async function GET(request: NextRequest) {
     // lack isLand:true in Typesense but get detected via LAND_TYPES propertyType fallback
     if (excludeLand) {
       allDeals = allDeals.filter(d => !d.isLand);
+    }
+    // Auction / foreclosure / bank-owned filter — distressed listings have a
+    // misleading price (auction opening bid, REO estimate). Hide all three when
+    // user opts in.
+    if (excludeAuctions) {
+      allDeals = allDeals.filter(d => !d.isAuction && !d.isForeclosure && !d.isBankOwned);
     }
     // ARV filter always applied client-side (percentOfArv is optional in Typesense,
     // filtering at query level would exclude properties missing the field entirely)

@@ -46,6 +46,7 @@ export default function InvestorPreview() {
   const [sortBy, setSortBy] = useState<SortField>('price');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [excludeLand, setExcludeLand] = useState(true);
+  const [excludeAuctions, setExcludeAuctions] = useState(false);
   const [showHidden, setShowHidden] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const PAGE_SIZE = 24;
@@ -104,7 +105,7 @@ export default function InvestorPreview() {
     const fetchDeals = async () => {
       setDealsLoading(true);
       try {
-        const filterParams = getFilterParams(dealType, priceFilter, excludeLand);
+        const filterParams = getFilterParams(dealType, priceFilter, excludeLand, excludeAuctions);
         const searchParams = new URLSearchParams({
           dealType: filterParams.dealType,
           sortBy,
@@ -117,6 +118,7 @@ export default function InvestorPreview() {
         if (filterParams.maxPrice) searchParams.set('maxPrice', String(filterParams.maxPrice));
         if (filterParams.maxArvPercent) searchParams.set('maxArvPercent', String(filterParams.maxArvPercent));
         if (filterParams.excludeLand) searchParams.set('excludeLand', 'true');
+        if (filterParams.excludeAuctions) searchParams.set('excludeAuctions', 'true');
 
         const res = await fetch(`/api/buyer/investor-deals?${searchParams}`, {
           signal: abortController.signal,
@@ -147,7 +149,7 @@ export default function InvestorPreview() {
 
     fetchDeals();
     return () => abortController.abort();
-  }, [profile, dealType, priceFilter, sortBy, sortOrder, excludeLand, currentPage]);
+  }, [profile, dealType, priceFilter, sortBy, sortOrder, excludeLand, excludeAuctions, currentPage]);
 
   // Like toggle - UI only, no server calls (admin preview)
   const toggleLike = useCallback((dealId: string) => {
@@ -209,6 +211,8 @@ export default function InvestorPreview() {
           }}
           excludeLand={excludeLand}
           onExcludeLandChange={(exclude) => { setExcludeLand(exclude); setCurrentPage(1); }}
+          excludeAuctions={excludeAuctions}
+          onExcludeAuctionsChange={(exclude) => { setExcludeAuctions(exclude); setCurrentPage(1); }}
           showHidden={showHidden}
           onShowHiddenChange={(show) => { setShowHidden(show); setCurrentPage(1); }}
           stats={stats}

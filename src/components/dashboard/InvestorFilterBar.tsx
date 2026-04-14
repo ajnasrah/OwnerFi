@@ -18,6 +18,8 @@ interface InvestorFilterBarProps {
   onSortChange: (sortBy: SortField, sortOrder: 'asc' | 'desc') => void;
   excludeLand: boolean;
   onExcludeLandChange: (exclude: boolean) => void;
+  excludeAuctions: boolean;
+  onExcludeAuctionsChange: (exclude: boolean) => void;
   showHidden: boolean;
   onShowHiddenChange: (show: boolean) => void;
   stats: {
@@ -62,6 +64,8 @@ export function InvestorFilterBar({
   onSortChange,
   excludeLand,
   onExcludeLandChange,
+  excludeAuctions,
+  onExcludeAuctionsChange,
   showHidden,
   onShowHiddenChange,
   stats,
@@ -213,6 +217,7 @@ export function InvestorFilterBar({
 
         {/* Hide Land toggle */}
         <button
+          type="button"
           onClick={() => onExcludeLandChange(!excludeLand)}
           aria-pressed={excludeLand}
           className={`flex-shrink-0 px-3 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap ${
@@ -222,6 +227,21 @@ export function InvestorFilterBar({
           }`}
         >
           {excludeLand ? 'Land Hidden' : 'Hide Land'}
+        </button>
+
+        {/* Hide Auctions toggle — also hides foreclosure / bank-owned */}
+        <button
+          type="button"
+          onClick={() => onExcludeAuctionsChange(!excludeAuctions)}
+          aria-pressed={excludeAuctions}
+          className={`flex-shrink-0 px-3 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap ${
+            excludeAuctions
+              ? 'bg-amber-600 text-white shadow-lg shadow-amber-600/25'
+              : 'bg-slate-700/60 text-slate-300 hover:bg-slate-600/60 border border-slate-600/50'
+          }`}
+          title="Hides auctions, foreclosures, and bank-owned listings"
+        >
+          {excludeAuctions ? 'Auctions Hidden' : 'Hide Auctions'}
         </button>
 
         {/* Show Hidden toggle */}
@@ -311,16 +331,23 @@ export function InvestorFilterBar({
 }
 
 // Helper to convert filters to API params
-export function getFilterParams(dealType: DealTypeFilter, priceFilter: PriceFilter, excludeLand: boolean): {
+export function getFilterParams(
+  dealType: DealTypeFilter,
+  priceFilter: PriceFilter,
+  excludeLand: boolean,
+  excludeAuctions: boolean = false,
+): {
   dealType: DealTypeFilter;
   minPrice?: number;
   maxPrice?: number;
   maxArvPercent?: number;
   excludeLand?: boolean;
+  excludeAuctions?: boolean;
 } {
   const base = {
     dealType,
     excludeLand: excludeLand || undefined,
+    excludeAuctions: excludeAuctions || undefined,
   };
 
   switch (priceFilter) {

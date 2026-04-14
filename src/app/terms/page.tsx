@@ -49,7 +49,12 @@ export default function TermsOfService() {
               <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8">
                 <h2 className="text-2xl font-semibold text-blue-800 mb-4">📋 What You Need to Know (Plain English)</h2>
                 <ul className="space-y-2 text-blue-700">
-                  <li>• <strong>Ownerfi is a property search and lead-generation platform</strong> — we show properties that may offer owner financing</li>
+                  <li>• <strong>Ownerfi shows two kinds of properties</strong>:
+                    <ul className="ml-6 mt-1 space-y-1">
+                      <li>– <strong>Owner-finance candidates</strong>: listings where the seller <em>may</em> consider owner financing. We do <strong>not</strong> know whether the seller will actually accept owner financing, and we make no promise that they will. You or your agent must ask the seller directly.</li>
+                      <li>– <strong>Cash deals</strong>: properties priced below market estimates, intended for <strong>investors</strong> looking to buy with cash. These are not for retail buyers seeking owner financing.</li>
+                    </ul>
+                  </li>
                   <li>• <strong>We share your contact info with licensed real estate agents</strong> who will call/text/email you to offer help</li>
                   <li>• <strong>Agents pay Ownerfi a referral fee (30% of their commission)</strong> when they help you close on a home</li>
                   <li>• <strong>Agents will offer to show properties, write offers, and represent you</strong> (optional)</li>
@@ -72,7 +77,12 @@ export default function TermsOfService() {
               <p className="mb-2">We:</p>
               <ul className="list-disc ml-6 space-y-1 mb-4">
                 <li>Collect publicly available listing data</li>
-                <li>Display properties that appear to offer owner financing</li>
+                <li>Display two distinct categories of properties:
+                  <ul className="list-circle ml-6 mt-1 space-y-1">
+                    <li><strong>Owner-finance candidates</strong> — listings where signals in the public data suggest the seller <em>may</em> be open to owner financing. We have not contacted the seller and have <strong>no confirmation</strong> that owner financing will actually be offered. The seller may decline owner financing for any reason or no reason.</li>
+                    <li><strong>Cash deals</strong> — listings priced below independent market estimates (Zestimate / ARV), surfaced for <strong>investors</strong> looking to purchase with cash. The cash-deal section is not intended for buyers seeking owner financing.</li>
+                  </ul>
+                </li>
                 <li>Allow users to sign up and express interest in properties</li>
                 <li>Share user contact information with licensed real estate agents ("Partner Agents") in the user's local market</li>
                 <li>Allow Partner Agents to contact the user to offer:
@@ -198,8 +208,9 @@ export default function TermsOfService() {
                 <li>approve buyers</li>
                 <li>prequalify buyers</li>
                 <li>guarantee financing</li>
-                <li>guarantee owner-finance availability</li>
+                <li>guarantee that any seller will accept owner financing — properties are surfaced as <em>candidates</em> based on public-data signals, not seller commitments</li>
                 <li>promise any property is still available</li>
+                <li>represent that cash-deal listings are suitable for retail (non-investor) buyers</li>
               </ul>
             </section>
 

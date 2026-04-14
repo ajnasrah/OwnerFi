@@ -80,6 +80,7 @@ export function FilterEditor({
   const [sqftMin, setSqftMin] = useState<string>(initialFilter.sqft?.min?.toString() ?? '');
   const [sqftMax, setSqftMax] = useState<string>(initialFilter.sqft?.max?.toString() ?? '');
   const [excludeLand, setExcludeLand] = useState<boolean>(initialFilter.excludeLand ?? false);
+  const [excludeAuctions, setExcludeAuctions] = useState<boolean>(initialFilter.excludeAuctions ?? false);
   const [maxArvPercent, setMaxArvPercent] = useState<string>(
     initialFilter.maxArvPercent !== undefined ? String(initialFilter.maxArvPercent) : '',
   );
@@ -104,6 +105,7 @@ export function FilterEditor({
     setSqftMin(initialFilter.sqft?.min?.toString() ?? '');
     setSqftMax(initialFilter.sqft?.max?.toString() ?? '');
     setExcludeLand(initialFilter.excludeLand ?? false);
+    setExcludeAuctions(initialFilter.excludeAuctions ?? false);
     setMaxArvPercent(initialFilter.maxArvPercent !== undefined ? String(initialFilter.maxArvPercent) : '');
     setZipError(null);
     setZipInput('');
@@ -133,12 +135,13 @@ export function FilterEditor({
       if (Number.isFinite(sMax)) cfg.sqft.max = sMax!;
     }
     if (excludeLand) cfg.excludeLand = true;
+    if (excludeAuctions) cfg.excludeAuctions = true;
     const arv = maxArvPercent.trim() ? Number(maxArvPercent) : undefined;
     if (Number.isFinite(arv) && arv! > 0) cfg.maxArvPercent = arv;
     return cfg;
   }, [
     locations, zipMode, zipCodes, dealType, priceMin, priceMax,
-    beds, baths, sqftMin, sqftMax, excludeLand, maxArvPercent,
+    beds, baths, sqftMin, sqftMax, excludeLand, excludeAuctions, maxArvPercent,
   ]);
 
   const searchable = isFilterSearchable(current);
@@ -772,6 +775,19 @@ export function FilterEditor({
             className="w-4 h-4 accent-[#00BC7D]"
           />
           <span className="text-sm text-slate-300">Exclude land / vacant lots</span>
+        </label>
+
+        {/* Exclude auctions / foreclosures / bank-owned */}
+        <label className="flex items-center gap-2 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={excludeAuctions}
+            onChange={e => setExcludeAuctions(e.target.checked)}
+            className="w-4 h-4 accent-[#00BC7D]"
+          />
+          <span className="text-sm text-slate-300">
+            Exclude auctions / foreclosures / bank-owned
+          </span>
         </label>
       </section>
 

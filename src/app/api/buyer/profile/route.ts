@@ -359,10 +359,27 @@ export async function POST(request: NextRequest) {
       });
       console.log(`✅ [PROFILE] Created new buyer profile: ${buyerId}`);
     } else {
-      // Update existing profile
+      // Update existing profile.
+      // CRITICAL: do NOT re-enable smsNotifications/marketingOptOut on a
+      // buyer who has previously revoked TCPA consent. The existing profile
+      // already carries the revocation flags; preserve them by stripping any
+      // attempt (intentional or default) to flip them back.
       buyerId = existing.docs[0].id;
-      await updateDoc(doc(db, 'buyerProfiles', buyerId), profileData);
-      console.log(`✅ [PROFILE] Updated existing buyer profile: ${buyerId}`);
+      const existingData = existing.docs[0].data() as Record<string, unknown>;
+      const wasRevoked = existingData.tcpaRevokedAt != null;
+      const safeProfileData = wasRevoked
+        ? (() => {
+            // Remove any field that would re-enroll a TCPA-revoked buyer.
+            const { smsNotifications, marketingOptOut, ...rest } = profileData as Record<string, unknown>;
+            // Reference the unused destructured vars so eslint stays quiet
+            // (and so a future reviewer sees what was stripped).
+            void smsNotifications;
+            void marketingOptOut;
+            return rest;
+          })()
+        : profileData;
+      await updateDoc(doc(db, 'buyerProfiles', buyerId), safeProfileData);
+      console.log(`✅ [PROFILE] Updated existing buyer profile: ${buyerId}${wasRevoked ? ' (TCPA flags preserved)' : ''}`);
     }
 
     // Lead selling fields are now part of the main profile - no separate buyerLinks needed

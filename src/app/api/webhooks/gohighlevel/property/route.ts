@@ -916,6 +916,14 @@ export async function POST(request: NextRequest) {
 
           for (const buyerDoc of buyerDocs.docs) {
             const buyerData = buyerDoc.data();
+
+            // TCPA: skip buyers who have revoked consent or opted out. The
+            // revocation pipeline sets these flags; honoring them here
+            // prevents silent re-spam after a STOP / REVOKE CONSENT.
+            if (buyerData.tcpaRevokedAt || buyerData.marketingOptOut === true || buyerData.smsNotifications === false) {
+              continue;
+            }
+
             const criteria = buyerData.searchCriteria || {};
             const buyerCities = criteria.cities || [buyerData.preferredCity];
 

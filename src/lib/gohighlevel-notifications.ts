@@ -41,12 +41,18 @@ export async function sendPropertyMatchNotification(
       };
     }
 
-    // Check if buyer has SMS notifications enabled
-    if (buyer.smsNotifications === false) {
-      console.log(`[GoHighLevel] Buyer ${buyer.id} has SMS notifications disabled`);
+    // Check SMS / TCPA opt-outs (defense in depth — three flags any of which
+    // means do not send: explicit smsNotifications=false, marketingOptOut, or
+    // tcpaRevokedAt timestamp set by the revocation pipeline).
+    const b = buyer as typeof buyer & {
+      marketingOptOut?: boolean;
+      tcpaRevokedAt?: unknown;
+    };
+    if (b.smsNotifications === false || b.marketingOptOut === true || b.tcpaRevokedAt) {
+      console.log(`[GoHighLevel] Buyer ${buyer.id} has SMS disabled or TCPA-revoked — skipping`);
       return {
         success: false,
-        error: 'Buyer has SMS notifications disabled',
+        error: 'Buyer has SMS notifications disabled or TCPA consent revoked',
       };
     }
 
@@ -289,11 +295,15 @@ export function shouldNotifyBuyer(
   property: PropertyListing,
   recentNotifications: string[] = []
 ): { shouldNotify: boolean; reason?: string } {
-  // Check if buyer has SMS enabled
-  if (buyer.smsNotifications === false) {
+  // Check if buyer has SMS enabled / hasn't revoked TCPA consent
+  const b = buyer as typeof buyer & {
+    marketingOptOut?: boolean;
+    tcpaRevokedAt?: unknown;
+  };
+  if (b.smsNotifications === false || b.marketingOptOut === true || b.tcpaRevokedAt) {
     return {
       shouldNotify: false,
-      reason: 'SMS notifications disabled',
+      reason: 'SMS notifications disabled or TCPA consent revoked',
     };
   }
 

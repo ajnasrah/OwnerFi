@@ -21,9 +21,21 @@ import {
   formatAskingSellerAcknowledgment,
 } from '@/lib/agent-outreach/sms-templates';
 
-// Exact-match opt-out keywords (TCPA compliance).
-// Using word-boundary regex to avoid false positives (e.g. "weekend", "friend", "lender").
-const OPT_OUT_PATTERN = /\b(stop|stopall|unsubscribe|cancel|quit|opt\s?out|remove me|do not (text|contact))\b/i;
+// CTIA / carrier standard opt-out keywords. Matches only when the entire
+// trimmed message is one of these (case-insensitive, trailing punctuation
+// allowed). Substring matching causes false positives like "I want to stop
+// by tomorrow" which would silently revoke the user's TCPA consent and
+// permanently disable SMS — not what they meant.
+const OPT_OUT_KEYWORDS = new Set([
+  'STOP', 'STOPALL', 'UNSUBSCRIBE', 'CANCEL', 'END', 'QUIT', 'REVOKE', 'OPTOUT', 'OPT OUT',
+]);
+
+function isOptOutMessage(body: string): boolean {
+  if (!body) return false;
+  // Strip trailing punctuation/whitespace, uppercase, collapse internal whitespace.
+  const cleaned = body.trim().replace(/[.!?,;:\s]+$/, '').toUpperCase().replace(/\s+/g, ' ');
+  return OPT_OUT_KEYWORDS.has(cleaned);
+}
 
 /**
  * Validate Twilio webhook signature (X-Twilio-Signature).
@@ -142,8 +154,9 @@ async function processInboundSMS(normalizedPhone: string, body: string, messageS
   // All SMS in this function are RESPONSES to inbound messages — bypass business hours
   const responseOpts = { isResponse: true };
 
-  // Check for opt-out keywords first (TCPA compliance)
-  if (OPT_OUT_PATTERN.test(body)) {
+  // Check for opt-out keywords first (TCPA compliance) — strict whole-message
+  // match against the CTIA keyword set, NOT substring matching.
+  if (isOptOutMessage(body)) {
     console.log('   🚫 Opt-out keyword detected');
     // Agent-outreach side: opt out the phone from agent-outreach SMS flow
     await optOut(normalizedPhone);
@@ -151,13 +164,35 @@ async function processInboundSMS(normalizedPhone: string, body: string, messageS
     // matching buyer exists — most STOPs are from listing agents, not buyers,
     // but a buyer who replied STOP to a property-match SMS hits this path too).
     try {
-      const result = await revokeBuyerTCPAConsent(normalizedPhone, 'sms-stop');
+      const result = await revokeBuyerTCPAConsent(normalizedPhone, 'sms-stop', {
+        inboundMessageSid: messageSid,
+        inboundBody: body,
+      });
       if (result.buyerProfilesUpdated > 0) {
         console.log(`   📵 TCPA revocation: ${result.buyerProfilesUpdated} buyer profile(s) flagged (case ${result.caseId})`);
       }
     } catch (err) {
-      // Don't let buyer-side scrub failure block the agent-side opt-out reply.
-      console.error('   ⚠️ TCPA buyer-side scrub failed:', err instanceof Error ? err.message : err);
+      // Don't let buyer-side scrub failure block the agent-side opt-out reply,
+      // but write a failure record so a follow-up cron / operator can replay
+      // the scrub. TCPA exposure is too high to swallow this silently.
+      const errMsg = err instanceof Error ? err.message : String(err);
+      console.error('   ⚠️ TCPA buyer-side scrub failed:', errMsg);
+      try {
+        const { db } = (await import('@/lib/scraper-v2/firebase-admin')).getFirebaseAdmin();
+        if (db) {
+          await db.collection('tcpa_revocation_failures').add({
+            phone: normalizedPhone,
+            channel: 'sms-stop',
+            inboundMessageSid: messageSid,
+            inboundBody: body.slice(0, 500),
+            error: errMsg,
+            failedAt: new Date(),
+            retryCount: 0,
+          });
+        }
+      } catch {
+        // Last-resort path failed too — at least the console.error above is logged.
+      }
     }
     await sendSMS(normalizedPhone, formatOptOutConfirmation(), responseOpts);
     return;

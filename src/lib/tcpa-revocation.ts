@@ -16,7 +16,7 @@
  */
 
 import { getFirebaseAdmin } from './scraper-v2/firebase-admin';
-import { normalizePhone } from './phone-utils';
+import { normalizePhone, getAllPhoneFormats } from './phone-utils';
 
 export type RevocationChannel =
   | 'sms-stop'        // user replied STOP to one of our SMS
@@ -33,6 +33,33 @@ export interface RevocationResult {
   caseId: string;
 }
 
+/** Random suffix to defuse caseId collisions when two scrubs happen in the same ms. */
+function randomSuffix(): string {
+  return Math.random().toString(36).slice(2, 8);
+}
+
+/**
+ * Look up every buyerProfiles doc that matches any historical phone format for
+ * `phone`. Legacy profiles were stored in 10-digit, 11-digit, formatted, and
+ * E.164 — we have to check them all or we silently miss buyers and scrub
+ * nothing. Dedupes by doc id.
+ */
+async function findBuyerProfilesByPhone(
+  db: FirebaseFirestore.Firestore,
+  phone: string,
+): Promise<FirebaseFirestore.QueryDocumentSnapshot[]> {
+  const formats = getAllPhoneFormats(phone);
+  if (formats.length === 0) return [];
+
+  // Firestore `in` supports up to 30 values — we have at most 4 formats.
+  const snap = await db.collection('buyerProfiles').where('phone', 'in', formats).get();
+  // Dedupe by id (a single buyer cannot appear twice with different ids per
+  // format query when using `in`, but defensive belt for future format growth).
+  const seen = new Map<string, FirebaseFirestore.QueryDocumentSnapshot>();
+  for (const d of snap.docs) seen.set(d.id, d);
+  return Array.from(seen.values());
+}
+
 /**
  * Mark all buyer profiles matching this phone as TCPA-revoked.
  * Idempotent — safe to call repeatedly. Does NOT notify Partner Agents
@@ -42,7 +69,13 @@ export interface RevocationResult {
 export async function revokeBuyerTCPAConsent(
   phone: string,
   channel: RevocationChannel,
-  metadata: { actor?: string; note?: string } = {},
+  metadata: {
+    actor?: string;
+    note?: string;
+    inboundMessageSid?: string;
+    inboundBody?: string;
+    twilioNumber?: string;
+  } = {},
 ): Promise<RevocationResult> {
   if (!phone) throw new Error('phone is required');
   const { db } = getFirebaseAdmin();
@@ -50,25 +83,17 @@ export async function revokeBuyerTCPAConsent(
 
   const normalizedPhone = normalizePhone(phone);
   const revokedAt = new Date();
-  const caseId = `tcpa_${normalizedPhone}_${revokedAt.getTime()}`;
+  const caseId = `tcpa_${normalizedPhone}_${revokedAt.getTime()}_${randomSuffix()}`;
 
-  // Find every buyer profile with this phone (rare to have multiple, but
-  // historical bugs sometimes left dupes — scrub them all).
-  const profilesQuery = await db
-    .collection('buyerProfiles')
-    .where('phone', '==', normalizedPhone)
-    .get();
+  const profiles = await findBuyerProfilesByPhone(db, phone);
 
   const batch = db.batch();
-  for (const doc of profilesQuery.docs) {
+  for (const doc of profiles) {
     batch.update(doc.ref, {
       smsNotifications: false,
       marketingOptOut: true,
       tcpaRevokedAt: revokedAt,
       tcpaRevokedVia: channel,
-      // Don't overwrite `notifiedPropertyIds`; leaving the dedupe set in
-      // place prevents accidental re-notification if the buyer later
-      // re-consents and we fail to clear stale state.
     });
   }
 
@@ -77,18 +102,24 @@ export async function revokeBuyerTCPAConsent(
   batch.set(auditRef, {
     caseId,
     phone: normalizedPhone,
+    phoneFormatsChecked: getAllPhoneFormats(phone),
     channel,
     revokedAt,
     actor: metadata.actor || null,
     note: metadata.note || null,
-    buyerProfilesUpdated: profilesQuery.size,
+    inboundMessageSid: metadata.inboundMessageSid || null,
+    inboundBody: metadata.inboundBody ? metadata.inboundBody.slice(0, 500) : null,
+    twilioNumber: metadata.twilioNumber || null,
+    buyerProfilesUpdated: profiles.length,
+    profileIds: profiles.map(d => d.id),
+    retentionCategory: 'tcpa-compliance',
   });
 
   await batch.commit();
 
   return {
     phone: normalizedPhone,
-    buyerProfilesUpdated: profilesQuery.size,
+    buyerProfilesUpdated: profiles.length,
     channel,
     revokedAt,
     caseId,
@@ -96,60 +127,65 @@ export async function revokeBuyerTCPAConsent(
 }
 
 /**
- * Look up the active referral agreements involving this buyer (by phone),
- * so the caller can notify each agent. Returns the agent IDs + emails.
+ * Look up the active referral agreements involving this buyer (by phone), so
+ * the caller can notify each agent. Returns the agent IDs + contact info.
  *
- * Does NOT void the agreements — that is a separate manual decision per
- * agreement (buyer may want a mid-transaction agreement to continue).
+ * Uses the actual schema field names from src/lib/firebase-models.ts:
+ *   - referralAgreements.buyerId (NOT buyerProfileId)
+ *   - referralAgreements.realtorName / realtorEmail / realtorPhone
+ *   - status one of: 'pending' | 'signed' | 'expired' | 'voided' | 'completed'
+ *     "active" (= agent currently has the buyer's contact and may still
+ *     call/text) is the union of pending + signed.
+ *
+ * Does NOT void the agreements — that is a per-case decision (buyer may want
+ * a mid-transaction agreement to continue).
  */
 export async function findAgentsToNotifyOnRevocation(phone: string): Promise<Array<{
   agreementId: string;
   agentId: string;
   agentName?: string;
   agentEmail?: string;
+  agentPhone?: string;
   status?: string;
 }>> {
   if (!phone) return [];
   const { db } = getFirebaseAdmin();
   if (!db) return [];
-  const normalizedPhone = normalizePhone(phone);
 
-  // Look up the buyer profile to get the buyerProfileId/userId so we can
-  // find related referral agreements.
-  const profile = await db
-    .collection('buyerProfiles')
-    .where('phone', '==', normalizedPhone)
-    .limit(1)
-    .get();
-  if (profile.empty) return [];
-  const buyerProfileId = profile.docs[0].id;
+  // A single phone may map to multiple buyerProfiles (legacy duplicates).
+  // Each may have its own agreements. Iterate all profile ids.
+  const profiles = await findBuyerProfilesByPhone(db, phone);
+  if (profiles.length === 0) return [];
+  const profileIds = profiles.map(d => d.id);
 
-  // Active referral agreements for this buyer.
-  const agreementsSnap = await db
-    .collection('referralAgreements')
-    .where('buyerProfileId', '==', buyerProfileId)
-    .get();
-
-  const out: Array<{
+  const out = new Map<string, {
     agreementId: string;
     agentId: string;
     agentName?: string;
     agentEmail?: string;
+    agentPhone?: string;
     status?: string;
-  }> = [];
+  }>();
 
-  for (const doc of agreementsSnap.docs) {
-    const data = doc.data();
-    const status = (data.status as string) || 'unknown';
-    if (status === 'voided' || status === 'closed' || status === 'expired') continue;
-    out.push({
-      agreementId: doc.id,
-      agentId: String(data.agentId || ''),
-      agentName: data.agentName as string | undefined,
-      agentEmail: data.agentEmail as string | undefined,
-      status,
-    });
+  for (const buyerProfileId of profileIds) {
+    const snap = await db
+      .collection('referralAgreements')
+      .where('buyerId', '==', buyerProfileId)
+      .where('status', 'in', ['pending', 'signed'])
+      .get();
+
+    for (const doc of snap.docs) {
+      const data = doc.data() as Record<string, unknown>;
+      out.set(doc.id, {
+        agreementId: doc.id,
+        agentId: String(data.realtorId || data.agentId || ''),
+        agentName: (data.realtorName as string) || (data.agentName as string) || undefined,
+        agentEmail: (data.realtorEmail as string) || (data.agentEmail as string) || undefined,
+        agentPhone: (data.realtorPhone as string) || (data.agentPhone as string) || undefined,
+        status: (data.status as string) || undefined,
+      });
+    }
   }
 
-  return out;
+  return Array.from(out.values());
 }

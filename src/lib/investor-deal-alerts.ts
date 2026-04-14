@@ -47,7 +47,10 @@ async function getActiveSubscribers(): Promise<SubscribedBuyer[]> {
     .map(doc => {
       const data = doc.data();
       if (!data.phone) return null;
+      // TCPA: any of these three flags means do not send
       if (data.smsNotifications === false) return null;
+      if (data.marketingOptOut === true) return null;
+      if (data.tcpaRevokedAt) return null;
       return {
         id: doc.id,
         phone: data.phone,

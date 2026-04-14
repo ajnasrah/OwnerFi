@@ -172,6 +172,13 @@ export interface UnifiedProperty {
   // Land detection (Zestimate unreliable for land - uses SFR comps)
   isLand?: boolean;
 
+  // Distressed-listing flags — `listPrice` is an opening bid or estimated value,
+  // NOT a seller's asking price. UI must render "Est." prefix and a badge.
+  isAuction?: boolean;
+  isForeclosure?: boolean;
+  isBankOwned?: boolean;
+  listingSubType?: string;              // Display label: "Auction" | "Foreclosure" | "Bank Owned"
+
   // Status
   status: 'active' | 'pending' | 'sold' | 'off_market' | 'expired';
   isActive: boolean;

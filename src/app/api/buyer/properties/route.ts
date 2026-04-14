@@ -94,7 +94,7 @@ async function searchWithTypesense(params: {
         filter_by: filters.join(' && '),
         sort_by: 'monthlyPayment:asc,listPrice:asc',
         per_page: Math.min(params.limit, 250),
-        include_fields: 'id,address,city,state,zipCode,bedrooms,bathrooms,squareFeet,yearBuilt,listPrice,monthlyPayment,downPaymentAmount,propertyType,primaryImage,nearbyCities,ownerFinanceKeywords,financingType,description,sourceType,manuallyVerified,zestimate,rentEstimate,homeStatus',
+        include_fields: 'id,address,city,state,zipCode,bedrooms,bathrooms,squareFeet,yearBuilt,listPrice,monthlyPayment,downPaymentAmount,propertyType,primaryImage,nearbyCities,ownerFinanceKeywords,financingType,description,sourceType,manuallyVerified,zestimate,rentEstimate,homeStatus,isAuction,isForeclosure,isBankOwned,listingSubType',
       });
 
     // Debug: log first result to see what fields are returned
@@ -146,6 +146,12 @@ async function searchWithTypesense(params: {
         // Third-party estimates (from Zillow)
         zestimate: doc.zestimate || null,
         rentEstimate: doc.rentEstimate || null,
+        // Distressed-listing flags — PropertyCard uses these to render "Est."
+        // prefix + badge instead of misrepresenting as asking price.
+        isAuction: doc.isAuction === true,
+        isForeclosure: doc.isForeclosure === true,
+        isBankOwned: doc.isBankOwned === true,
+        listingSubType: doc.listingSubType || '',
       } as PropertyListing & { id: string; source: string; manuallyVerified?: boolean; zestimate?: number; rentEstimate?: number };
     });
 

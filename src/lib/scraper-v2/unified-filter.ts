@@ -56,22 +56,36 @@ export interface FilterResult {
 /**
  * Run both filters on a property
  * @param homeType - Normalized home type (e.g. 'land', 'single-family'). Used to flag land properties.
+ * @param listingFlags - Auction / foreclosure / bank-owned flags. Distressed listings
+ *   are never tagged owner_finance (price is a starting bid / estimate, not asking).
  */
 export function runUnifiedFilter(
   description: string | null | undefined,
   price: number | undefined,
   zestimate: number | undefined,
-  homeType?: string
+  homeType?: string,
+  listingFlags?: { isAuction?: boolean; isForeclosure?: boolean; isBankOwned?: boolean }
 ): FilterResult {
   // ===== LAND DETECTION =====
   const isLand = homeType === 'land';
+
+  // ===== DISTRESSED LISTING DETECTION =====
+  // Auctions, foreclosures, and bank-owned properties never qualify for
+  // owner-finance classification — the posted price isn't a seller's asking
+  // price, and the concept of "owner financing" doesn't apply to these sales.
+  const isDistressedListing = Boolean(
+    listingFlags?.isAuction || listingFlags?.isForeclosure || listingFlags?.isBankOwned
+  );
+
   // ===== OWNER FINANCE FILTER =====
   const ownerFinanceResult = hasStrictOwnerfinancing(description);
   const negativeResult = hasNegativeKeywords(description);
   const financingType = detectFinancingType(description);
 
   // Owner finance passes if: has positive keywords AND no negative keywords
-  const passesOwnerfinance = ownerFinanceResult.passes && !negativeResult.hasNegative;
+  // AND the listing is not distressed (auction/foreclosure/REO).
+  const passesOwnerfinance =
+    ownerFinanceResult.passes && !negativeResult.hasNegative && !isDistressedListing;
 
   // ===== CASH DEAL FILTER =====
   // Use combined function for single-pass efficiency (avoids scanning description twice)

@@ -4,6 +4,7 @@ import { getFirebaseAdmin } from '@/lib/scraper-v2/firebase-admin';
 import { withCronLock } from '@/lib/scraper-v2/cron-lock';
 import { sanitizeDescription } from '@/lib/description-sanitizer';
 import { hasStrictOwnerfinancing } from '@/lib/owner-financing-filter-strict';
+import { detectListingSubType } from '@/lib/scraper-v2/property-transformer';
 
 // Type for Apify Zillow scraper response
 interface ZillowApifyItem {
@@ -406,11 +407,22 @@ export async function GET(request: NextRequest) {
         }
       }
 
+      // Re-detect auction / foreclosure / bank-owned status on each refresh.
+      // A listing can transition between FOR_SALE and FOR_AUCTION over its life,
+      // so we must keep these flags in sync with the current Zillow state.
+      const subTypeFlags = detectListingSubType(result);
+
       // Build update data
       const updateData: Record<string, unknown> = {
         homeStatus: newStatus,
         price: result.listPrice || result.price || 0,
         listPrice: result.listPrice || result.price || 0,
+
+        // Distressed-listing flags
+        isAuction: subTypeFlags.isAuction,
+        isForeclosure: subTypeFlags.isForeclosure,
+        isBankOwned: subTypeFlags.isBankOwned,
+        listingSubType: subTypeFlags.listingSubType,
         daysOnZillow: result.daysOnZillow || 0,
         description: sanitizeDescription(result.description),
         lastStatusCheck: new Date(),

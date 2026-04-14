@@ -61,6 +61,56 @@ export function normalizeHomeType(rawHomeType: string | undefined | null): Norma
   return HOME_TYPE_MAP[upper] || 'other';
 }
 
+/**
+ * Detect whether a Zillow listing is an auction, foreclosure, or bank-owned (REO).
+ * These listings have a `price` that is an opening bid or estimated value, not
+ * an asking price — so they must be labeled clearly on our site.
+ *
+ * Sources checked (any one triggers the flag):
+ *   - raw.listing_sub_type.{is_forAuction, is_foreclosure, is_bankOwned}
+ *   - raw.listingSubType.{...} (camelCase variant some Apify actors emit)
+ *   - raw.hdpTypeDimension ("Auction", "Foreclosure", "Bank Owned")
+ *   - raw.homeStatus (FOR_AUCTION, FORECLOSED, PRE_FORECLOSURE)
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function detectListingSubType(raw: any): {
+  isAuction: boolean;
+  isForeclosure: boolean;
+  isBankOwned: boolean;
+  listingSubType: string;
+} {
+  const sub = raw?.listing_sub_type || raw?.listingSubType || {};
+  const hdp = String(raw?.hdpTypeDimension || '').toLowerCase();
+  const status = String(raw?.homeStatus || '').toUpperCase();
+
+  const isAuction =
+    Boolean(sub.is_forAuction) ||
+    Boolean(sub.isForAuction) ||
+    hdp.includes('auction') ||
+    status === 'FOR_AUCTION';
+
+  const isBankOwned =
+    Boolean(sub.is_bankOwned) ||
+    Boolean(sub.isBankOwned) ||
+    /bank\s*owned|\breo\b/.test(hdp);
+
+  const isForeclosure =
+    Boolean(sub.is_foreclosure) ||
+    Boolean(sub.isForeclosure) ||
+    hdp.includes('foreclosure') ||
+    status === 'FORECLOSED' ||
+    status === 'FORECLOSURE' ||
+    status === 'PRE_FORECLOSURE';
+
+  // Display label precedence: Auction > Bank Owned > Foreclosure
+  let listingSubType = '';
+  if (isAuction) listingSubType = 'Auction';
+  else if (isBankOwned) listingSubType = 'Bank Owned';
+  else if (isForeclosure) listingSubType = 'Foreclosure';
+
+  return { isAuction, isForeclosure, isBankOwned, listingSubType };
+}
+
 
 export interface TransformedProperty {
   // URLs
@@ -89,6 +139,13 @@ export interface TransformedProperty {
   yearBuilt: number;
   homeType: string;
   homeStatus: string;
+
+  // Listing sub-type flags — distressed / non-standard listings where
+  // `price` is an opening bid or estimated value, NOT an asking price.
+  isAuction: boolean;
+  isForeclosure: boolean;
+  isBankOwned: boolean;
+  listingSubType: string;
 
   // Location
   latitude: number;
@@ -263,6 +320,10 @@ export function transformProperty(
 
   const cashFlow = calculateCashFlow(price, rentEstimate, annualTax, hoa);
 
+  // Detect auction / foreclosure / bank-owned listings. These are NOT standard
+  // asking-price listings — price is an opening bid or estimated value.
+  const subTypeFlags = detectListingSubType(raw);
+
   return {
     url,
     hdpUrl: raw.hdpUrl || '',
@@ -286,6 +347,11 @@ export function transformProperty(
     yearBuilt: raw.yearBuilt || 0,
     homeType: normalizeHomeType(raw.homeType || raw.propertyType),
     homeStatus: raw.homeStatus || '',
+
+    isAuction: subTypeFlags.isAuction,
+    isForeclosure: subTypeFlags.isForeclosure,
+    isBankOwned: subTypeFlags.isBankOwned,
+    listingSubType: subTypeFlags.listingSubType,
 
     latitude: raw.latitude || 0,
     longitude: raw.longitude || 0,
@@ -352,9 +418,19 @@ export function validateProperty(property: TransformedProperty): {
     return { valid: false, reason: 'Missing city or state' };
   }
 
-  // Reject non-FOR_SALE listings (rentals, sold, pending, etc.)
+  // Reject non-FOR_SALE listings (rentals, sold, pending, etc.).
+  // Allow auction + foreclosure statuses — these are tagged via isAuction /
+  // isForeclosure / isBankOwned flags so the UI can label the price as "Est."
+  // and avoid misrepresenting the listing as a standard asking-price sale.
+  const ALLOWED_STATUSES = new Set([
+    'FOR_SALE',
+    'FOR_AUCTION',
+    'FORECLOSURE',
+    'FORECLOSED',
+    'PRE_FORECLOSURE',
+  ]);
   const status = property.homeStatus?.toUpperCase();
-  if (status && status !== 'FOR_SALE') {
+  if (status && !ALLOWED_STATUSES.has(status)) {
     return { valid: false, reason: `Not for sale (status: ${status})` };
   }
 

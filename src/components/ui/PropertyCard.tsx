@@ -144,6 +144,21 @@ export const PropertyCard = React.memo(function PropertyCard({ property, isFavor
                 <span>Agent Verified</span>
               </div>
             )}
+            {/* Distressed listing badge — auction/foreclosure/REO: price is NOT asking price */}
+            {(() => {
+              const rec = property as Record<string, unknown>;
+              const isDistressed = rec.isAuction === true || rec.isForeclosure === true || rec.isBankOwned === true;
+              if (!isDistressed) return null;
+              const label = (rec.listingSubType as string) || 'Auction';
+              return (
+                <div
+                  className="bg-amber-500/95 backdrop-blur-sm text-slate-900 px-3 py-1.5 rounded-full text-xs font-bold shadow-lg"
+                  title="This listing is not a standard sale. The price shown is an opening bid or estimated value, not a seller's asking price."
+                >
+                  {label}
+                </div>
+              );
+            })()}
           </div>
 
           {/* Favorite Badge */}
@@ -217,16 +232,29 @@ export const PropertyCard = React.memo(function PropertyCard({ property, isFavor
               onMouseUp={(e) => e.stopPropagation()}
             >
               {/* Price */}
-              <div className="mb-2">
-                <div className="text-3xl font-black text-slate-900">
-                  ${property.listPrice?.toLocaleString()}
-                </div>
-                {property.pricePerSqFt && (
-                  <div className="text-slate-500 text-xs">
-                    ${property.pricePerSqFt.toLocaleString()}/sq ft
+              {(() => {
+                const rec = property as Record<string, unknown>;
+                const isDistressed = rec.isAuction === true || rec.isForeclosure === true || rec.isBankOwned === true;
+                const label = (rec.listingSubType as string) || 'Auction';
+                return (
+                  <div className="mb-2">
+                    <div className="text-3xl font-black text-slate-900">
+                      {isDistressed && <span className="text-sm font-semibold text-amber-700 align-middle mr-1">Est.</span>}
+                      ${property.listPrice?.toLocaleString()}
+                    </div>
+                    {isDistressed && (
+                      <div className="text-amber-700 text-xs font-semibold mt-0.5">
+                        {label} — not a standard asking price
+                      </div>
+                    )}
+                    {property.pricePerSqFt && (
+                      <div className="text-slate-500 text-xs">
+                        ${property.pricePerSqFt.toLocaleString()}/sq ft
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                );
+              })()}
 
               {/* Address */}
               <div className="mb-3">

@@ -262,6 +262,15 @@ export function InvestorPropertyCard({ deal, isLiked, onToggleLike, onHide, isPr
               Fixer
             </span>
           )}
+          {/* Distressed listing badge — auction/foreclosure/REO price is NOT asking price */}
+          {(deal.isAuction || deal.isForeclosure || deal.isBankOwned) && (
+            <span
+              className="px-2 py-1 text-xs font-bold bg-amber-500/95 text-slate-900 rounded-lg backdrop-blur-sm"
+              title={`This is a ${deal.listingSubType || 'distressed'} listing. The price shown is an opening bid or estimated value, not a seller's asking price.`}
+            >
+              {deal.listingSubType || 'Auction'}
+            </span>
+          )}
         </div>
 
         {/* Top right: Hide + Like buttons — 44px min touch targets for driving safety */}
@@ -307,8 +316,12 @@ export function InvestorPropertyCard({ deal, isLiked, onToggleLike, onHide, isPr
         )}
 
         {/* Price overlay - bottom of image */}
+        {(() => {
+          const isDistressed = deal.isAuction || deal.isForeclosure || deal.isBankOwned;
+          return (
         <div className="absolute bottom-2.5 left-2.5 z-10">
           <div className="text-3xl sm:text-2xl font-black text-white drop-shadow-lg">
+            {isDistressed && <span className="text-xs font-semibold align-middle mr-1 opacity-90">Est.</span>}
             ${(deal.price || 0).toLocaleString()}
           </div>
           {/* Key metric right under price for at-a-glance driving */}
@@ -323,6 +336,8 @@ export function InvestorPropertyCard({ deal, isLiked, onToggleLike, onHide, isPr
             </div>
           )}
         </div>
+          );
+        })()}
       </div>
 
       {/* Info Section */}

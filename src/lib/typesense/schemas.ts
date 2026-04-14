@@ -69,6 +69,14 @@ export const propertiesSchema: CollectionSchema = {
     { name: 'isLand', type: 'bool', optional: true },
     { name: 'manuallyVerified', type: 'bool', optional: true },
 
+    // Listing sub-type flags: price is NOT a standard asking price
+    // (auction opening bid, foreclosure filing price, REO estimate).
+    // UI prefixes "Est." and shows a badge when any of these is true.
+    { name: 'isAuction', type: 'bool', facet: true, optional: true },
+    { name: 'isForeclosure', type: 'bool', facet: true, optional: true },
+    { name: 'isBankOwned', type: 'bool', facet: true, optional: true },
+    { name: 'listingSubType', type: 'string', facet: true, optional: true },
+
     // Metadata
     { name: 'sourceType', type: 'string', facet: true, optional: true },
     { name: 'propertyType', type: 'string', facet: true },

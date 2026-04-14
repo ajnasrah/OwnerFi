@@ -385,12 +385,19 @@ async function runUnifiedScraper(): Promise<{
           continue;
         }
 
-        // Run unified filter (BOTH filters on every property)
+        // Run unified filter (BOTH filters on every property).
+        // Pass distressed-listing flags so auctions/foreclosures are excluded
+        // from owner_finance (price is a starting bid / estimate, not asking).
         const filterResult = runUnifiedFilter(
           property.description,
           property.price,
           property.estimate,
-          property.homeType
+          property.homeType,
+          {
+            isAuction: property.isAuction,
+            isForeclosure: property.isForeclosure,
+            isBankOwned: property.isBankOwned,
+          }
         );
         filterResults.push(filterResult);
 
@@ -456,7 +463,10 @@ async function runUnifiedScraper(): Promise<{
           // Collect for Abdullah's SMS alerts (regional cash deals under 80% only)
           // Skip land properties - Zestimate is unreliable for land (based on SFR comps)
           // Skip suspicious discounts (< 50% Zestimate) - likely bad data
-          if (isRegionalProperty && property.price && property.estimate && !filterResult.isLand && !filterResult.suspiciousDiscount) {
+          // Skip auction/foreclosure/REO - "askingPrice" in GHL template would misrepresent
+          // an opening bid or estimated value as a seller's asking price.
+          const isDistressedListing = property.isAuction || property.isForeclosure || property.isBankOwned;
+          if (isRegionalProperty && property.price && property.estimate && !filterResult.isLand && !filterResult.suspiciousDiscount && !isDistressedListing) {
             abdullahCashDeals.push({
               streetAddress: property.streetAddress || property.fullAddress || '',
               askingPrice: property.price,
@@ -468,7 +478,8 @@ async function runUnifiedScraper(): Promise<{
           // Collect for investor subscriber alerts (nationwide)
           // Skip land properties - Zestimate is unreliable for land (based on SFR comps)
           // Skip suspicious discounts (< 50% Zestimate) - likely bad data
-          if (property.price && property.estimate && !filterResult.isLand && !filterResult.suspiciousDiscount) {
+          // Skip auction/foreclosure/REO - see note above.
+          if (property.price && property.estimate && !filterResult.isLand && !filterResult.suspiciousDiscount && !isDistressedListing) {
             investorAlertDeals.push({
               streetAddress: property.streetAddress || property.fullAddress || '',
               askingPrice: property.price,
@@ -483,7 +494,9 @@ async function runUnifiedScraper(): Promise<{
 
         // Collect near-deals (80-90% ARV) for investor alerts with higher thresholds
         // Skip land properties - Zestimate is unreliable for land
-        if (!filterResult.isCashDeal && !filterResult.isLand && property.price && property.estimate && property.estimate > 0) {
+        // Skip auction/foreclosure/REO — price is a starting bid / estimate
+        const isDistressedListingNear = property.isAuction || property.isForeclosure || property.isBankOwned;
+        if (!filterResult.isCashDeal && !filterResult.isLand && !isDistressedListingNear && property.price && property.estimate && property.estimate > 0) {
           const pctOfArv = (property.price / property.estimate) * 100;
           if (pctOfArv < 90) {
             investorAlertDeals.push({
@@ -535,6 +548,10 @@ async function runUnifiedScraper(): Promise<{
           longitude: property.longitude,
           propertyType: (property.homeType || 'other') as any,
           isLand: filterResult.isLand || false,
+          isAuction: property.isAuction || false,
+          isForeclosure: property.isForeclosure || false,
+          isBankOwned: property.isBankOwned || false,
+          listingSubType: property.listingSubType || '',
           bedrooms: property.bedrooms || 0,
           bathrooms: property.bathrooms || 0,
           squareFeet: property.squareFoot,

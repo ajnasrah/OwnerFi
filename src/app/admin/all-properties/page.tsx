@@ -76,7 +76,9 @@ export default function AllPropertiesPage() {
 
       const res = await fetch(`/api/search/properties?${params}`);
       if (res.ok) {
-        const data = await res.json();
+        const raw = await res.json();
+        // API wraps payload in { success, data } via createSuccessResponse
+        const data = raw?.data ?? raw;
         // Normalize field names from search API to our Property interface
         const normalized = (data.properties || []).map((p: any) => ({
           ...p,

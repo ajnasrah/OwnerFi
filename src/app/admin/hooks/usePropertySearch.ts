@@ -164,7 +164,9 @@ export function usePropertySearch() {
       if (flt.minBeds) params.set('minBeds', flt.minBeds);
 
       const res = await fetch(`/api/search/properties?${params.toString()}`);
-      const data = await res.json();
+      const raw = await res.json();
+      // API wraps payload in { success, data } via createSuccessResponse
+      const data = raw?.data ?? raw;
 
       setProperties((data.properties || []).map(transformToAdminProperty));
       setTotal(data.total || 0);

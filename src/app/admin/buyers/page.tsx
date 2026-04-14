@@ -1053,9 +1053,20 @@ export default function AdminBuyers() {
                             className="inline-flex items-center gap-1 text-amber-400 hover:text-amber-300 font-semibold text-sm transition-colors hover:underline"
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                             </svg>
                             Investor
+                          </Link>
+                        )}
+                        {buyer.userId && (
+                          <Link
+                            href={`/admin/users/${encodeURIComponent(buyer.userId)}/filters?name=${encodeURIComponent(`${buyer.firstName} ${buyer.lastName}`.trim())}&role=buyer`}
+                            className="inline-flex items-center gap-1 text-blue-400 hover:text-blue-300 font-semibold text-sm transition-colors hover:underline"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M6 12h12M10 18h4" />
+                            </svg>
+                            Filters
                           </Link>
                         )}
                       </div>

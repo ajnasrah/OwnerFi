@@ -44,7 +44,7 @@ async function main() {
 
   const urls = zips.map(zip => buildZipSearchUrl(zip));
 
-  console.log('\n[APIFY] Running search across all 21 zips...');
+  console.log(`\n[APIFY] Running search across ${zips.length} zips...`);
   const results = await runSearchScraper(urls, {
     maxResults: 2500,
     mode: 'pagination',

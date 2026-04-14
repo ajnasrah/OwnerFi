@@ -405,6 +405,11 @@ export function InvestorPropertyCard({ deal, isLiked, onToggleLike, onHide, isPr
               {deal.balloonYears != null && (
                 <span className="text-amber-400 text-[10px] font-semibold">Balloon {deal.balloonYears}yr</span>
               )}
+              {deal.percentOfArv != null && (
+                <span className={`font-bold ${deal.percentOfArv <= 60 ? 'text-green-400' : deal.percentOfArv <= 70 ? 'text-[#00BC7D]' : deal.percentOfArv <= 85 ? 'text-amber-400' : deal.percentOfArv <= 100 ? 'text-orange-400' : 'text-red-400'}`}>
+                  {deal.percentOfArv}% of Zest
+                </span>
+              )}
               {deal.zestimate && deal.zestimate > 0 && (
                 <span className="text-slate-400">Zest ${(deal.zestimate / 1000).toFixed(0)}K</span>
               )}

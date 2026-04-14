@@ -6,6 +6,48 @@ import { withCronLock } from '@/lib/scraper-v2/cron-lock';
 import { sanitizeDescription } from '@/lib/description-sanitizer';
 import { hasStrictOwnerfinancing } from '@/lib/owner-financing-filter-strict';
 import { detectListingSubType } from '@/lib/scraper-v2/property-transformer';
+import { getTypesenseAdminClient, TYPESENSE_COLLECTIONS } from '@/lib/typesense/client';
+
+/**
+ * Statuses that mean the property is gone for good — delete from both
+ * Firestore and Typesense. SOLD never reverts; FOR_RENT is a different
+ * market segment we don't serve.
+ */
+const PERMANENT_DELETE_STATUSES = new Set(['SOLD', 'RECENTLY_SOLD', 'FOR_RENT']);
+
+/**
+ * Statuses that make a listing temporarily inactive but still worth
+ * re-checking — PENDING deals can fall through, OFF_MARKET can relist.
+ */
+const TRANSIENT_INACTIVE_STATUSES = new Set([
+  'PENDING', 'CONTINGENT', 'OFF_MARKET', 'OTHER', 'UNKNOWN',
+]);
+
+/**
+ * How many consecutive "no Apify result" checks before a property is
+ * permanently deleted. Zillow delists properties it stops tracking.
+ */
+const NO_RESULT_DELETE_THRESHOLD = 3;
+
+/**
+ * Maximum acceptable staleness for inactive-property re-checks. Adaptive
+ * batch sizing aims to rotate every inactive property within this window.
+ * Small backlogs check daily, large backlogs spread across 14 days.
+ */
+const INACTIVE_RECHECK_TARGET_DAYS = 14;
+
+/**
+ * Skip re-checking a property that was scraped or confirmed by the main
+ * scraper within this window — data is already fresh.
+ */
+const FRESH_SKIP_HOURS = 12;
+
+/**
+ * Number of consecutive OF-keyword misses before we strip the
+ * isOwnerfinance flag. Prevents false positives where Zillow edits the
+ * description and drops keywords for a cycle but the deal is still live.
+ */
+const OF_MISS_THRESHOLD = 2;
 
 // Type for Apify Zillow scraper response
 interface ZillowApifyItem {
@@ -107,6 +149,24 @@ export async function GET(request: NextRequest) {
     const runId = `run_${Date.now()}`;
     console.log(`🔄 [CRON ${runId}] Starting Zillow status refresh`);
 
+    // Typesense client for direct deletes — the Cloud Function sync is a
+    // nice-to-have but we can't rely on it for cleanup correctness.
+    const tsClient = getTypesenseAdminClient();
+    const tsCollection = tsClient?.collections(TYPESENSE_COLLECTIONS.PROPERTIES);
+
+    async function deleteFromTypesense(docId: string): Promise<void> {
+      if (!tsCollection) return;
+      try {
+        await tsCollection.documents(docId).delete();
+      } catch (err: unknown) {
+        // 404 is fine — already gone
+        const httpStatus = (err as { httpStatus?: number })?.httpStatus;
+        if (httpStatus !== 404) {
+          console.error(`[TS-delete] ${docId} failed:`, err);
+        }
+      }
+    }
+
   // Log cron start
   const logRef = db.collection('cron_logs').doc(runId);
   await logRef.set({
@@ -125,31 +185,44 @@ export async function GET(request: NextRequest) {
     const MAX_BATCH_SIZE = 100; // Maximum to keep Apify costs reasonable
 
     // ============================================
-    // STEP 1: Gather all properties from unified collection + agent outreach
+    // STEP 1: Gather ALL properties (active + inactive) + agent outreach.
+    // Inactive properties are rechecked on a separate rotation so Zillow
+    // relistings get caught, and sold/delisted get permanently deleted.
     // ============================================
-    const [propertiesSnap, agentOutreachSnap] = await Promise.all([
+    const [activePropsSnap, inactivePropsSnap, agentOutreachSnap] = await Promise.all([
       db.collection('properties').where('isActive', '==', true).get(),
+      db.collection('properties').where('isActive', '==', false).get(),
       db.collection('agent_outreach_queue').where('status', '==', 'sent_to_ghl').get(),
     ]);
 
-    console.log(`📊 Collections: ${propertiesSnap.size} properties, ${agentOutreachSnap.size} agent outreach`);
+    console.log(`📊 Collections: ${activePropsSnap.size} active, ${inactivePropsSnap.size} inactive, ${agentOutreachSnap.size} agent outreach`);
 
-    if (propertiesSnap.empty && agentOutreachSnap.empty) {
+    if (activePropsSnap.empty && inactivePropsSnap.empty && agentOutreachSnap.empty) {
       await logRef.update({ status: 'completed', message: 'No properties', completedAt: new Date() });
       return NextResponse.json({ success: true, message: 'No properties' });
     }
 
-    // Build combined list sorted by lastStatusCheck (oldest first)
-    const allProperties: PropertyDoc[] = [];
+    // Track which active properties we've already added so inactive rechecks
+    // don't double-up, and dedup zpids across both collections.
+    const seenDocIds = new Set<string>();
+    const seenZpids = new Set<string>();
+    const activeProperties: PropertyDoc[] = [];
+    const inactiveProperties: PropertyDoc[] = [];
 
-    // Add properties from unified collection
-    propertiesSnap.docs.forEach(doc => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const addProp = (doc: any, collection: 'properties' | 'agent_outreach_queue', isActive: boolean) => {
       const data = doc.data();
       if (!data.url) return;
+      if (seenDocIds.has(doc.id)) return;
+      const zpid = String(data.zpid || '');
+      if (zpid && seenZpids.has(zpid)) return;
 
-      allProperties.push({
+      seenDocIds.add(doc.id);
+      if (zpid) seenZpids.add(zpid);
+
+      const prop: PropertyDoc = {
         id: doc.id,
-        collection: 'properties',
+        collection,
         url: data.url,
         zpid: data.zpid || '',
         address: data.fullAddress || data.streetAddress || data.address || 'Unknown',
@@ -158,87 +231,61 @@ export async function GET(request: NextRequest) {
         isOwnerfinance: data.isOwnerfinance || false,
         agentConfirmedOwnerfinance: data.agentConfirmedOwnerfinance,
         source: data.source,
-      });
-    });
+      };
+      if (isActive) activeProperties.push(prop);
+      else inactiveProperties.push(prop);
+    };
 
-    // Add agent outreach queue
-    agentOutreachSnap.docs.forEach(doc => {
-      const data = doc.data();
-      if (!data.url) return;
+    activePropsSnap.docs.forEach(doc => addProp(doc, 'properties', true));
+    inactivePropsSnap.docs.forEach(doc => addProp(doc, 'properties', false));
+    agentOutreachSnap.docs.forEach(doc => addProp(doc, 'agent_outreach_queue', true));
 
-      allProperties.push({
-        id: doc.id,
-        collection: 'agent_outreach_queue',
-        url: data.url,
-        zpid: data.zpid || '',
-        address: data.fullAddress || data.streetAddress || data.address || 'Unknown',
-        currentStatus: data.homeStatus || 'UNKNOWN',
-        lastCheck: data.lastStatusCheck?.toDate?.() || null,
-        isOwnerfinance: false,
-        agentConfirmedOwnerfinance: data.agentConfirmedOwnerfinance,
-        source: data.source,
-      });
-    });
+    const allProperties: PropertyDoc[] = [...activeProperties, ...inactiveProperties];
 
     // ============================================
-    // STEP 2: Filter to only properties that NEED checking (cost optimization)
+    // STEP 2: Build priority queue with adaptive batch sizing
     // ============================================
     const now = Date.now();
-    const ONE_DAY_MS = 1 * 24 * 60 * 60 * 1000;
-    const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
+    const FRESH_MS = FRESH_SKIP_HOURS * 60 * 60 * 1000;
 
-    // Categorize properties by staleness
-    const neverChecked = allProperties.filter(p => !p.lastCheck);
-    const over3Days = allProperties.filter(p => {
-      if (!p.lastCheck) return false;
-      return (now - p.lastCheck.getTime()) > THREE_DAYS_MS;
-    });
-    const oneTo3Days = allProperties.filter(p => {
-      if (!p.lastCheck) return false;
-      const age = now - p.lastCheck.getTime();
-      return age > ONE_DAY_MS && age <= THREE_DAYS_MS;
-    });
-    const fresh = allProperties.filter(p => {
-      if (!p.lastCheck) return false;
-      return (now - p.lastCheck.getTime()) <= ONE_DAY_MS;
-    });
-
-    console.log(`📊 Property freshness breakdown:`);
-    console.log(`   Never checked: ${neverChecked.length}`);
-    console.log(`   >3 days old: ${over3Days.length}`);
-    console.log(`   1-3 days old: ${oneTo3Days.length}`);
-    console.log(`   Fresh (<1 day): ${fresh.length} (SKIPPING)`);
-
-    // Build priority queue: never checked → >3 days → 1-3 days
-    // SKIP fresh properties (checked within last 24h) to save Apify credits
-    const needsChecking = [...neverChecked, ...over3Days, ...oneTo3Days];
-
-    // Sort by lastCheck (null/oldest first)
-    needsChecking.sort((a, b) => {
+    // ---- ACTIVE bucket: normal 3-day rotation, skip <12h fresh ----
+    const activeFresh = activeProperties.filter(p => p.lastCheck && (now - p.lastCheck.getTime()) < FRESH_MS);
+    const activeNeedsCheck = activeProperties.filter(p => !p.lastCheck || (now - p.lastCheck.getTime()) >= FRESH_MS);
+    activeNeedsCheck.sort((a, b) => {
       if (!a.lastCheck && !b.lastCheck) return 0;
       if (!a.lastCheck) return -1;
       if (!b.lastCheck) return 1;
       return a.lastCheck.getTime() - b.lastCheck.getTime();
     });
+    const activeTotalSlots = TARGET_ROTATION_DAYS * RUNS_PER_DAY;
+    const activeOptimalBatch = Math.ceil(activeProperties.length / activeTotalSlots);
+    const activeBatchSize = Math.max(MIN_BATCH_SIZE, Math.min(MAX_BATCH_SIZE, activeOptimalBatch));
 
-    // Calculate optimal batch size to complete rotation in TARGET_ROTATION_DAYS
-    // Formula: totalProperties / (TARGET_ROTATION_DAYS * RUNS_PER_DAY)
-    const totalRuns = TARGET_ROTATION_DAYS * RUNS_PER_DAY;
-    const optimalBatchSize = Math.ceil(allProperties.length / totalRuns);
-    const batchSize = Math.max(MIN_BATCH_SIZE, Math.min(MAX_BATCH_SIZE, optimalBatchSize));
+    // ---- INACTIVE bucket: adaptive 1-14 day rotation ----
+    // Small backlogs (e.g. 50 pending) finish within hours; large backlogs
+    // (thousands) spread across 14 days. Formula same as active but with
+    // a longer target window and separate cap.
+    const inactiveNeedsCheck = [...inactiveProperties];
+    inactiveNeedsCheck.sort((a, b) => {
+      if (!a.lastCheck && !b.lastCheck) return 0;
+      if (!a.lastCheck) return -1;
+      if (!b.lastCheck) return 1;
+      return a.lastCheck.getTime() - b.lastCheck.getTime();
+    });
+    const inactiveTotalSlots = INACTIVE_RECHECK_TARGET_DAYS * RUNS_PER_DAY;
+    const inactiveOptimalBatch = Math.ceil(inactiveNeedsCheck.length / inactiveTotalSlots);
+    // Inactive batch capped separately — give active priority.
+    const inactiveBatchSize = Math.min(Math.max(0, inactiveOptimalBatch), 25);
 
-    const dailyProperties = batchSize * RUNS_PER_DAY;
-    const actualRotationDays = allProperties.length / dailyProperties;
+    const toProcess = [
+      ...activeNeedsCheck.slice(0, activeBatchSize),
+      ...inactiveNeedsCheck.slice(0, inactiveBatchSize),
+    ];
 
-    console.log(`📊 Cost optimization:`);
-    console.log(`   Total properties: ${allProperties.length}`);
-    console.log(`   Target rotation: ${TARGET_ROTATION_DAYS} days`);
-    console.log(`   Optimal batch: ${optimalBatchSize} → Capped: ${batchSize}`);
-    console.log(`   Daily checks: ${dailyProperties} | Actual rotation: ${actualRotationDays.toFixed(1)} days`);
-    console.log(`   Need checking now: ${needsChecking.length} (skipping ${fresh.length} fresh)`);
-
-    // Select properties to process (only from those that need it)
-    const toProcess = needsChecking.slice(0, batchSize);
+    console.log(`📊 Adaptive rotation:`);
+    console.log(`   Active:   ${activeProperties.length} total → batch ${activeBatchSize}  (skipping ${activeFresh.length} fresh <${FRESH_SKIP_HOURS}h)`);
+    console.log(`   Inactive: ${inactiveProperties.length} total → batch ${inactiveBatchSize}  (target ${INACTIVE_RECHECK_TARGET_DAYS}d rotation)`);
+    console.log(`   Total this run: ${toProcess.length}`);
 
     if (toProcess.length === 0) {
       await logRef.update({ status: 'completed', message: 'No properties to process', completedAt: new Date() });
@@ -248,11 +295,14 @@ export async function GET(request: NextRequest) {
     // Update log with batch info
     await logRef.update({
       totalProperties: allProperties.length,
-      needsChecking: needsChecking.length,
-      freshSkipped: fresh.length,
+      activeTotal: activeProperties.length,
+      inactiveTotal: inactiveProperties.length,
+      activeBatch: activeBatchSize,
+      inactiveBatch: inactiveBatchSize,
+      activeFreshSkipped: activeFresh.length,
       batchSize: toProcess.length,
       targetRotationDays: TARGET_ROTATION_DAYS,
-      actualRotationDays: parseFloat(actualRotationDays.toFixed(1)),
+      inactiveRotationDays: INACTIVE_RECHECK_TARGET_DAYS,
     });
 
     // ============================================
@@ -293,7 +343,9 @@ export async function GET(request: NextRequest) {
     });
 
     let updated = 0;
-    let deleted = 0;
+    let deleted = 0;          // permanent deletes (SOLD / delisted / price error)
+    let deactivated = 0;      // marked inactive but retained for recheck
+    let reactivated = 0;      // previously inactive, now FOR_SALE again
     let statusChanged = 0;
     let noResult = 0;
 
@@ -301,8 +353,17 @@ export async function GET(request: NextRequest) {
     const deletions: Array<{ address: string; reason: string }> = [];
 
     // Process in Firestore batches (max 500 per batch)
-    const firestoreBatch = db.batch();
+    let firestoreBatch = db.batch();
     let batchCount = 0;
+    // Typesense deletes to run after Firestore commit (so we don't delete from
+    // TS for a Firestore write that ended up failing).
+    const typesenseDeletesAfterCommit: string[] = [];
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const getExistingField = async (docRef: FirebaseFirestore.DocumentReference, field: string): Promise<any> => {
+      const snap = await docRef.get();
+      return snap.data()?.[field];
+    };
 
     for (const prop of toProcess) {
       // Check timeout
@@ -313,52 +374,64 @@ export async function GET(request: NextRequest) {
 
       const zpid = String(prop.zpid || '');
       const result = zpidToResult.get(zpid);
-
       const docRef = db.collection(prop.collection).doc(prop.id);
 
+      // ===== NO APIFY RESULT =====
+      // Property delisted from Zillow. Escalate after N consecutive misses.
       if (!result) {
-        // No Apify result - property likely off-market
         noResult++;
+        const currentMisses = (await getExistingField(docRef, 'consecutiveNoResults')) || 0;
+        const newMisses = currentMisses + 1;
 
-        if (prop.collection === 'properties') {
-          // Mark as inactive in unified collection (don't delete)
+        if (newMisses >= NO_RESULT_DELETE_THRESHOLD) {
+          // Permanent delete — Zillow has forgotten this property.
+          await docRef.delete();
+          if (prop.collection === 'properties') typesenseDeletesAfterCommit.push(prop.id);
+          deleted++;
+          deletions.push({ address: prop.address, reason: `Delisted (${newMisses} consecutive misses)` });
+        } else {
+          // Soft inactive — retry on future rotations.
           firestoreBatch.update(docRef, {
             isActive: false,
-            offMarketReason: 'No Apify result (likely off-market)',
+            offMarketReason: `No Apify result (${newMisses}/${NO_RESULT_DELETE_THRESHOLD} misses)`,
+            consecutiveNoResults: newMisses,
             lastStatusCheck: new Date(),
           });
-          deleted++;
-          deletions.push({ address: prop.address, reason: 'No Apify result (likely off-market)' });
-        } else {
-          // agent_outreach_queue
-          firestoreBatch.update(docRef, {
-            status: 'property_off_market',
-            offMarketReason: 'No Apify result',
-            lastStatusCheck: new Date(),
-          });
+          if (prop.collection === 'properties') typesenseDeletesAfterCommit.push(prop.id);
+          deactivated++;
+          batchCount++;
         }
-        batchCount++;
         continue;
       }
 
-      const newStatus = result.homeStatus || 'UNKNOWN';
-      const oldStatus = prop.currentStatus;
+      const newStatus = String(result.homeStatus || 'UNKNOWN').toUpperCase();
+      const oldStatus = (prop.currentStatus || '').toUpperCase();
 
-      // Track status changes
       if (oldStatus !== newStatus) {
         statusChanged++;
         statusChanges.push({ address: prop.address, old: oldStatus, new: newStatus });
       }
 
-      // Check if property is inactive
-      const inactiveStatuses = ['PENDING', 'SOLD', 'RECENTLY_SOLD', 'OFF_MARKET', 'FOR_RENT', 'CONTINGENT', 'OTHER', 'UNKNOWN'];
-      const isInactive = inactiveStatuses.includes(newStatus);
       const hasNoPrice = !result.price && !result.listPrice;
       const isPriceZero = result.price === 0 || result.listPrice === 0;
 
-      if (isInactive || hasNoPrice || isPriceZero) {
-        const reason = isInactive ? `Status: ${newStatus}` : 'No/zero price';
+      // ===== PERMANENT DELETE =====
+      // SOLD / RECENTLY_SOLD / FOR_RENT — gone for good. Clean from DB + TS.
+      if (PERMANENT_DELETE_STATUSES.has(newStatus)) {
+        await docRef.delete();
+        if (prop.collection === 'properties') typesenseDeletesAfterCommit.push(prop.id);
+        deleted++;
+        deletions.push({ address: prop.address, reason: `Deleted (status: ${newStatus})` });
+        continue;
+      }
 
+      // ===== TRANSIENT INACTIVE =====
+      // PENDING / CONTINGENT / OFF_MARKET — deal might fall through, keep for
+      // recheck on the inactive rotation bucket.
+      if (TRANSIENT_INACTIVE_STATUSES.has(newStatus) || hasNoPrice || isPriceZero) {
+        const reason = TRANSIENT_INACTIVE_STATUSES.has(newStatus)
+          ? `Status: ${newStatus}`
+          : 'No/zero price';
         if (prop.collection === 'agent_outreach_queue') {
           firestoreBatch.update(docRef, {
             status: 'property_off_market',
@@ -367,25 +440,31 @@ export async function GET(request: NextRequest) {
             lastStatusCheck: new Date(),
           });
         } else {
-          // Unified properties collection - mark as inactive instead of deleting
           firestoreBatch.update(docRef, {
             isActive: false,
             homeStatus: newStatus,
             offMarketReason: reason,
             lastStatusCheck: new Date(),
+            consecutiveNoResults: 0,
           });
-          deleted++;
-          deletions.push({ address: prop.address, reason });
+          if (prop.collection === 'properties') typesenseDeletesAfterCommit.push(prop.id);
         }
+        deactivated++;
         batchCount++;
         continue;
       }
 
+      // If we reach here, property is FOR_SALE (or similar active state).
+      // If it was previously inactive, track reactivation.
+      if (oldStatus && TRANSIENT_INACTIVE_STATUSES.has(oldStatus)) {
+        reactivated++;
+      }
+
       // Property is still active - check owner financing for owner finance properties
+      // Gated on OF_MISS_THRESHOLD consecutive misses to absorb Zillow
+      // description edits that temporarily drop keywords.
+      let ofMissIncrement: number | null = null;
       if (prop.collection === 'properties' && prop.isOwnerfinance) {
-        // Trust manually added properties and agent-confirmed properties
-        // These sources indicate human verification that the property offers owner financing,
-        // even if the Zillow description doesn't contain explicit keywords
         const manualSources = ['manual-add-v2', 'manual-add', 'admin-upload', 'manual', 'bookmarklet'];
         const isManuallyAdded = manualSources.includes(prop.source || '');
         const isAgentConfirmed = prop.agentConfirmedOwnerfinance || prop.source === 'agent_outreach';
@@ -394,17 +473,27 @@ export async function GET(request: NextRequest) {
         const ownerFinanceCheck = hasStrictOwnerfinancing(result.description);
 
         if (!ownerFinanceCheck.passes && !isTrustedSource) {
-          // No longer offers owner financing - mark as inactive instead of deleting
-          firestoreBatch.update(docRef, {
-            isOwnerfinance: false,
-            isActive: false,
-            offMarketReason: 'Owner financing removed from listing',
-            lastStatusCheck: new Date(),
-          });
-          deleted++;
-          deletions.push({ address: prop.address, reason: 'Owner financing removed from listing' });
-          batchCount++;
-          continue;
+          const currentMisses = (await getExistingField(docRef, 'ofMissCount')) || 0;
+          const newMisses = currentMisses + 1;
+          if (newMisses >= OF_MISS_THRESHOLD) {
+            firestoreBatch.update(docRef, {
+              isOwnerfinance: false,
+              isActive: false,
+              offMarketReason: `Owner financing removed from listing (${newMisses} consecutive misses)`,
+              lastStatusCheck: new Date(),
+              ofMissCount: newMisses,
+            });
+            if (prop.collection === 'properties') typesenseDeletesAfterCommit.push(prop.id);
+            deactivated++;
+            deletions.push({ address: prop.address, reason: 'OF keywords removed' });
+            batchCount++;
+            continue;
+          } else {
+            ofMissIncrement = newMisses;
+          }
+        } else {
+          // Keywords present — reset counter.
+          ofMissIncrement = 0;
         }
       }
 
@@ -419,6 +508,12 @@ export async function GET(request: NextRequest) {
         homeStatus: newStatus,
         price: result.listPrice || result.price || 0,
         listPrice: result.listPrice || result.price || 0,
+
+        // Reactivation: property is FOR_SALE again.
+        isActive: true,
+        offMarketReason: admin.firestore.FieldValue.delete(),
+        consecutiveNoResults: 0,
+        ...(ofMissIncrement !== null ? { ofMissCount: ofMissIncrement } : {}),
 
         // Distressed-listing flags
         isAuction: subTypeFlags.isAuction,
@@ -440,7 +535,6 @@ export async function GET(request: NextRequest) {
         description: sanitizeDescription(result.description),
         lastStatusCheck: new Date(),
         lastScrapedAt: new Date(),
-        consecutiveNoResults: 0,
 
         // Property details
         bedrooms: result.bedrooms ?? null,
@@ -492,6 +586,15 @@ export async function GET(request: NextRequest) {
       await firestoreBatch.commit();
     }
 
+    // Process Typesense deletes ONLY after Firestore commit succeeds. This
+    // prevents drift where Firestore still has active data but Typesense was
+    // cleared (or vice versa). We also belt-and-suspender this: the Cloud
+    // Function may have already deleted — that's a 404 we swallow.
+    if (typesenseDeletesAfterCommit.length > 0) {
+      console.log(`🧹 Typesense deletes: ${typesenseDeletesAfterCommit.length}`);
+      await Promise.all(typesenseDeletesAfterCommit.map(deleteFromTypesense));
+    }
+
     // NOTE: No longer need separate sync step since we're operating directly on unified 'properties' collection
     const totalSynced = updated;
 
@@ -505,10 +608,12 @@ export async function GET(request: NextRequest) {
       date: new Date(),
       totalChecked: toProcess.length,
       updated,
+      deactivated,
+      deleted,
+      reactivated,
       statusChanges: statusChanges.length,
-      deleted: deletions.length,
       noResult,
-      changes: statusChanges.slice(0, 50), // Limit stored
+      changes: statusChanges.slice(0, 50),
       deletions: deletions.slice(0, 50),
       synced: totalSynced,
       durationMs: duration,
@@ -523,7 +628,9 @@ export async function GET(request: NextRequest) {
       results: {
         processed: toProcess.length,
         updated,
+        deactivated,
         deleted,
+        reactivated,
         noResult,
         statusChanged,
         synced: totalSynced,
@@ -532,25 +639,32 @@ export async function GET(request: NextRequest) {
 
     console.log('\n' + '='.repeat(50));
     console.log('✅ Status refresh complete');
-    console.log(`   Processed: ${toProcess.length}`);
-    console.log(`   Updated: ${updated}`);
-    console.log(`   Deleted: ${deleted}`);
-    console.log(`   No result: ${noResult}`);
+    console.log(`   Processed:    ${toProcess.length}`);
+    console.log(`   Updated:      ${updated}`);
+    console.log(`   Deactivated:  ${deactivated}`);
+    console.log(`   Deleted:      ${deleted}`);
+    console.log(`   Reactivated:  ${reactivated}`);
+    console.log(`   No result:    ${noResult}`);
     console.log(`   Status changes: ${statusChanged}`);
     console.log(`   Synced to properties: ${totalSynced}`);
     console.log(`   Duration: ${(duration / 1000).toFixed(1)}s`);
 
-    // Calculate backlog percentage (properties not checked in last 3 days)
-    const backlogPercent = needsChecking.length > 0 ? (needsChecking.length / allProperties.length) * 100 : 0;
+    // Calculate backlog percentage based on active bucket only
+    const activeNeedsCount = activeNeedsCheck.length;
+    const backlogPercent = activeProperties.length > 0 ? (activeNeedsCount / activeProperties.length) * 100 : 0;
 
     return NextResponse.json({
       success: true,
       runId,
       stats: {
         total: allProperties.length,
+        active: activeProperties.length,
+        inactive: inactiveProperties.length,
         processed: toProcess.length,
         updated,
+        deactivated,
         deleted,
+        reactivated,
         noResult,
         statusChanged,
         synced: totalSynced,

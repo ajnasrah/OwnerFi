@@ -323,6 +323,18 @@ export async function GET(request: NextRequest) {
     const startIndex = (page - 1) * pageSize;
     const paginatedDeals = allDeals.slice(startIndex, startIndex + pageSize);
 
+    // When zips are in play, include a per-zip hit count so the UI (and
+    // debugging) can see which zips returned deals and which were empty.
+    let zipHitCounts: Record<string, number> | undefined;
+    if (userFilter.zips.codes.length > 0) {
+      zipHitCounts = Object.fromEntries(userFilter.zips.codes.map(z => [z, 0]));
+      for (const d of allDeals) {
+        if (d.zipCode && zipHitCounts[d.zipCode] !== undefined) {
+          zipHitCounts[d.zipCode]++;
+        }
+      }
+    }
+
     const response = NextResponse.json({
       deals: paginatedDeals,
       total,
@@ -331,7 +343,15 @@ export async function GET(request: NextRequest) {
       totalPages,
       hasMore: startIndex + pageSize < total,
       breakdown,
-      searchCriteria: { city: searchCity, state: searchState, allowedStates, radiusMiles: profile.filter?.radiusMiles || 30, nearbyCitiesCount: nearbyCities.length },
+      searchCriteria: {
+        city: searchCity,
+        state: searchState,
+        allowedStates,
+        radiusMiles: profile.filter?.radiusMiles || 30,
+        nearbyCitiesCount: nearbyCities.length,
+        filterMode: zipsOverride ? 'zips-override' : (userFilter.locations.length > 0 ? 'new-locations' : 'legacy'),
+        zipHitCounts,
+      },
     });
     // No browser caching — city is determined server-side from the profile,
     // so the URL doesn't change when the user switches cities.

@@ -27,6 +27,9 @@ interface InvestorFilterBarProps {
   };
   /** Fires after the user saves their location/zip filter so the parent can refetch deals. */
   onLocationsChanged?: () => void;
+  /** Hides the location/zip editor chip. Used by admin preview pages where
+   *  edits would write under the admin's session, not the previewed buyer's. */
+  previewMode?: boolean;
 }
 
 const DEAL_TYPE_FILTERS: { key: DealTypeFilter; label: string; shortLabel: string }[] = [
@@ -63,6 +66,7 @@ export function InvestorFilterBar({
   onShowHiddenChange,
   stats,
   onLocationsChanged,
+  previewMode = false,
 }: InvestorFilterBarProps) {
   const [editorOpen, setEditorOpen] = useState(false);
   const [editorLoading, setEditorLoading] = useState(false);
@@ -71,7 +75,10 @@ export function InvestorFilterBar({
   const [summary, setSummary] = useState<FilterConfig>(EMPTY_FILTER);
 
   // Load summary once for the chip text; refresh when parent signals changes.
+  // Skipped in previewMode — we'd be loading the admin's filter, not the
+  // previewed buyer's.
   const loadSummary = useCallback(async () => {
+    if (previewMode) return;
     try {
       const res = await fetch('/api/user/filters', { cache: 'no-store' });
       if (!res.ok) return;
@@ -80,7 +87,7 @@ export function InvestorFilterBar({
     } catch {
       // non-fatal — chip just shows "Locations" with no count
     }
-  }, []);
+  }, [previewMode]);
 
   useEffect(() => {
     loadSummary();
@@ -130,24 +137,27 @@ export function InvestorFilterBar({
 
   return (
     <div className="space-y-2">
-      {/* Row 0: Locations + zips chip */}
-      <button
-        onClick={openEditor}
-        className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-slate-800/60 border border-slate-700/50 hover:bg-slate-700/60 transition-colors text-left"
-      >
-        <div className="flex items-center gap-2 min-w-0">
-          <svg className="w-4 h-4 text-[#00BC7D] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
-          <span className="text-sm text-white font-medium truncate">
-            {locCount === 0 && !zipLabel && 'Set locations'}
-            {locCount > 0 && `${locCount} ${locCount === 1 ? 'city' : 'cities'}`}
-            {locCount > 0 && zipLabel && ' · '}
-            {zipLabel}
-          </span>
-        </div>
-        <span className="text-xs text-slate-400 flex-shrink-0">Edit →</span>
-      </button>
+      {/* Row 0: Locations + zips chip — hidden in admin preview mode */}
+      {!previewMode && (
+        <button
+          type="button"
+          onClick={openEditor}
+          className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-slate-800/60 border border-slate-700/50 hover:bg-slate-700/60 transition-colors text-left"
+        >
+          <div className="flex items-center gap-2 min-w-0">
+            <svg className="w-4 h-4 text-[#00BC7D] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <span className="text-sm text-white font-medium truncate">
+              {locCount === 0 && !zipLabel && 'Set locations'}
+              {locCount > 0 && `${locCount} ${locCount === 1 ? 'city' : 'cities'}`}
+              {locCount > 0 && zipLabel && ' · '}
+              {zipLabel}
+            </span>
+          </div>
+          <span className="text-xs text-slate-400 flex-shrink-0">Edit →</span>
+        </button>
+      )}
 
       {/* Row 1: Deal type tabs with counts */}
       <div className="grid grid-cols-3 gap-1.5" role="toolbar" aria-label="Deal type filters">

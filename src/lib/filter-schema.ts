@@ -84,12 +84,14 @@ export function normalizeLocation(raw: unknown): LocationEntry | null {
 }
 
 function clampInt(raw: unknown, min: number, max: number): number | undefined {
+  if (raw === null || raw === undefined || raw === '') return undefined;
   const n = typeof raw === 'number' ? raw : Number(raw);
   if (!Number.isFinite(n)) return undefined;
   return Math.max(min, Math.min(max, Math.trunc(n)));
 }
 
 function clampFloat(raw: unknown, min: number, max: number): number | undefined {
+  if (raw === null || raw === undefined || raw === '') return undefined;
   const n = typeof raw === 'number' ? raw : Number(raw);
   if (!Number.isFinite(n)) return undefined;
   return Math.max(min, Math.min(max, n));
@@ -187,6 +189,55 @@ export function isFilterSearchable(cfg: FilterConfig): boolean {
   if (cfg.locations.length > 0) return true;
   if (cfg.zips.mode === 'include' && cfg.zips.codes.length > 0) return true;
   return false;
+}
+
+/**
+ * True when the filter has no criteria at all — no locations, no zips, no
+ * property-detail restrictions. Used to reject empty saved-searches.
+ */
+export function isFilterEmpty(cfg: FilterConfig): boolean {
+  if (cfg.locations.length > 0) return false;
+  if (cfg.zips.codes.length > 0) return false;
+  if (cfg.dealType && cfg.dealType !== 'all') return false;
+  if (cfg.price && (cfg.price.min !== undefined || cfg.price.max !== undefined)) return false;
+  if (cfg.beds !== undefined) return false;
+  if (cfg.baths !== undefined) return false;
+  if (cfg.sqft && (cfg.sqft.min !== undefined || cfg.sqft.max !== undefined)) return false;
+  if (cfg.excludeLand) return false;
+  if (cfg.maxArvPercent !== undefined) return false;
+  return true;
+}
+
+/**
+ * Deterministic serialization of a FilterConfig for equality checks.
+ * Key order is fixed, so server-sent and client-built configs compare equal
+ * when they represent the same filter (fixes the JSON.stringify key-order
+ * dirty flicker).
+ */
+export function serializeFilter(cfg: FilterConfig): string {
+  const locs = cfg.locations
+    .map(l => `${l.city.toLowerCase()}|${l.state}|${l.radiusMiles}`)
+    .sort();
+  const zips = [...cfg.zips.codes].sort();
+  const parts: string[] = [
+    `loc:${locs.join(',')}`,
+    `zm:${cfg.zips.mode}`,
+    `zc:${zips.join(',')}`,
+    `dt:${cfg.dealType || ''}`,
+    `pmin:${cfg.price?.min ?? ''}`,
+    `pmax:${cfg.price?.max ?? ''}`,
+    `b:${cfg.beds ?? ''}`,
+    `ba:${cfg.baths ?? ''}`,
+    `smin:${cfg.sqft?.min ?? ''}`,
+    `smax:${cfg.sqft?.max ?? ''}`,
+    `el:${cfg.excludeLand ? 1 : 0}`,
+    `arv:${cfg.maxArvPercent ?? ''}`,
+  ];
+  return parts.join('||');
+}
+
+export function filterEquals(a: FilterConfig, b: FilterConfig): boolean {
+  return serializeFilter(a) === serializeFilter(b);
 }
 
 // ─── Legacy compat ───────────────────────────────────────────────────────────

@@ -15,7 +15,7 @@
  *   /realtor-dashboard/deals modal      (realtor self-edit)
  */
 
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import {
   FilterConfig,
   LocationEntry,
@@ -25,6 +25,8 @@ import {
   EMPTY_FILTER,
   normalizeZip,
   isFilterSearchable,
+  filterEquals,
+  serializeFilter,
 } from '@/lib/filter-schema';
 import { US_STATES } from '@/lib/us-states';
 import type { SavedSearch } from '@/lib/saved-searches-store';
@@ -54,9 +56,7 @@ const BATH_PRESETS: Array<{ label: string; value: number }> = [
   { label: '3+', value: 3 },
 ];
 
-function fcEquals(a: FilterConfig, b: FilterConfig): boolean {
-  return JSON.stringify(a) === JSON.stringify(b);
-}
+const fcEquals = filterEquals;
 
 export function FilterEditor({
   initialFilter,
@@ -84,9 +84,15 @@ export function FilterEditor({
     initialFilter.maxArvPercent !== undefined ? String(initialFilter.maxArvPercent) : '',
   );
 
-  // Re-seed from prop when the parent passes a new initialFilter (e.g. after save
-  // or when a saved search is loaded).
+  // Re-seed from prop only when the incoming FilterConfig is semantically
+  // different. Using filterEquals (stable serializer) prevents wiping
+  // user edits when a parent re-render passes an equivalent config with a
+  // new object reference.
+  const prevInitialKey = useRef(serializeFilter(initialFilter));
   useEffect(() => {
+    const nextKey = serializeFilter(initialFilter);
+    if (nextKey === prevInitialKey.current) return;
+    prevInitialKey.current = nextKey;
     setLocations(initialFilter.locations);
     setZipMode(initialFilter.zips.mode);
     setZipCodes(initialFilter.zips.codes);
@@ -371,6 +377,16 @@ export function FilterEditor({
                         onKeyDown={e => {
                           if (e.key === 'Enter') { e.preventDefault(); renameSavedSearch(s.id); }
                           if (e.key === 'Escape') { setRenameId(null); }
+                        }}
+                        onBlur={() => {
+                          // Commit rename on blur if the value changed and isn't empty;
+                          // otherwise just cancel out of rename mode.
+                          const trimmed = renameValue.trim();
+                          if (trimmed && trimmed !== s.name) {
+                            renameSavedSearch(s.id);
+                          } else {
+                            setRenameId(null);
+                          }
                         }}
                         autoFocus
                         className="px-2 py-1 bg-transparent text-white text-xs w-32 focus:outline-none"
@@ -731,9 +747,17 @@ export function FilterEditor({
           </label>
           <input
             type="text"
-            inputMode="numeric"
+            inputMode="decimal"
             value={maxArvPercent}
-            onChange={e => setMaxArvPercent(e.target.value.replace(/[^\d.]/g, ''))}
+            onChange={e => {
+              const raw = e.target.value.replace(/[^\d.]/g, '');
+              // Allow only one dot
+              const firstDot = raw.indexOf('.');
+              const normalized = firstDot === -1
+                ? raw
+                : raw.slice(0, firstDot + 1) + raw.slice(firstDot + 1).replace(/\./g, '');
+              setMaxArvPercent(normalized);
+            }}
             placeholder="e.g. 80"
             className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white text-sm focus:border-[#00BC7D] focus:outline-none"
           />

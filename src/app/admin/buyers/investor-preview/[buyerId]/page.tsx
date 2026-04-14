@@ -212,6 +212,7 @@ export default function InvestorPreview() {
           showHidden={showHidden}
           onShowHiddenChange={(show) => { setShowHidden(show); setCurrentPage(1); }}
           stats={stats}
+          previewMode
         />
 
         {/* Deals Grid */}

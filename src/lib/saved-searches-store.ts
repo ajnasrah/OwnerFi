@@ -10,7 +10,7 @@
  */
 
 import { getAdminDb } from './firebase-admin';
-import { FilterConfig, FILTER_LIMITS, normalizeFilterConfig } from './filter-schema';
+import { FilterConfig, FILTER_LIMITS, normalizeFilterConfig, isFilterEmpty } from './filter-schema';
 
 const COLLECTION = 'savedSearches';
 const MAX_NAME_LENGTH = 80;
@@ -101,6 +101,9 @@ export async function createSavedSearch(userId: string, input: CreateSavedSearch
   if (!name) throw new Error('Name is required');
 
   const filter = normalizeFilterConfig(input.filter);
+  if (isFilterEmpty(filter)) {
+    throw new Error('Cannot save an empty filter — set at least one location, zip, or property detail.');
+  }
 
   // Enforce per-user cap
   const countSnap = await db.collection(COLLECTION).where('userId', '==', userId).count().get();

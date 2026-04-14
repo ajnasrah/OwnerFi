@@ -198,19 +198,33 @@ async function runUnifiedScraper(): Promise<{
     const allProperties: ScrapedProperty[] = [];
 
     for (const config of SEARCH_CONFIGS) {
+      const configUrls = config.urls ?? [config.url];
       console.log(`\n[SEARCH] ${config.name}`);
-      console.log(`  URL: ${config.url.substring(0, 80)}...`);
+      console.log(`  URLs: ${configUrls.length} (first: ${configUrls[0].substring(0, 80)}...)`);
       console.log(`  Max items: ${config.maxItems}`);
       console.log(`  Send to GHL: ${config.sendToGHL}`);
 
       try {
-        // Run search scraper
-        const searchResults = await runSearchScraper([config.url], {
+        // Run search scraper (api-ninja accepts multiple searchUrls in one run)
+        let searchResults = await runSearchScraper(configUrls, {
           maxResults: config.maxItems,
           mode: 'pagination',
         });
 
         console.log(`  Found: ${searchResults.length} properties`);
+
+        // Apply zip filter if configured (for per-zip searches where Zillow
+        // mapBounds bleed into neighboring zips).
+        if (config.zipFilter && config.zipFilter.length > 0) {
+          const allowedZips = new Set(config.zipFilter);
+          const before = searchResults.length;
+          searchResults = searchResults.filter(p => {
+            const zip = (p as any).zipcode || (p as any).addressZipcode;
+            return zip && allowedZips.has(String(zip));
+          });
+          console.log(`  After zip filter: ${searchResults.length} (dropped ${before - searchResults.length})`);
+        }
+
         metrics.propertiesBySearch[config.id] = searchResults.length;
 
         // Store for GHL routing
@@ -226,13 +240,17 @@ async function runUnifiedScraper(): Promise<{
     metrics.totalPropertiesFound = allProperties.length;
     console.log(`\n[SEARCH] Total properties found: ${allProperties.length}`);
 
-    // Track which ZPIDs came from regional search (for GHL)
+    // Track which ZPIDs came from GHL-routed searches (regional AR/TN +
+    // targeted-zips). These flow through the GHL webhook + Abdullah SMS.
     const regionalZpids = new Set<number>();
-    const regionalProperties = propertiesBySearchId.get('cash-deals-regional') || [];
-    regionalProperties.forEach(p => {
-      if (p.zpid) regionalZpids.add(typeof p.zpid === 'string' ? parseInt(p.zpid, 10) : p.zpid);
-    });
-    console.log(`[REGIONAL] ${regionalZpids.size} properties from regional search (will send to GHL)`);
+    for (const config of SEARCH_CONFIGS) {
+      if (!config.sendToGHL) continue;
+      const configProps = propertiesBySearchId.get(config.id) || [];
+      configProps.forEach(p => {
+        if (p.zpid) regionalZpids.add(typeof p.zpid === 'string' ? parseInt(p.zpid, 10) : p.zpid);
+      });
+    }
+    console.log(`[REGIONAL] ${regionalZpids.size} properties from GHL-routed searches (will send to GHL)`);
 
     if (allProperties.length === 0) {
       return {

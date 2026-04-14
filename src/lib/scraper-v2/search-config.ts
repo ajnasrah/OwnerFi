@@ -26,10 +26,182 @@ export interface SearchConfig {
   name: string;
   description: string;
   url: string;
+  // Optional: when set, scraper runs these URLs instead of `url`.
+  // Used for multi-URL searches (e.g. per-zip fan-out). `url` still holds
+  // the first/representative URL for logging.
+  urls?: string[];
   maxItems: number;
   type: 'owner_finance' | 'cash_deals';
   sendToGHL: boolean;
+  // Optional: when set, runner discards any scraped property whose zipcode
+  // is not in this list. Needed for per-zip searches where the Zillow
+  // mapBounds bleed into neighboring zips.
+  zipFilter?: string[];
 }
+
+/**
+ * Targeted cash-deal zip codes (Memphis TN, Birmingham AL, Huntsville AL,
+ * Indianapolis IN, Louisville KY). Same outreach path as AR/TN regional:
+ * GHL webhook + Abdullah SMS + investor subscriber alerts.
+ */
+export const TARGETED_CASH_ZIPS = [
+  // Memphis, TN
+  '38125', '38116', '38141', '38114', '38128',
+  // Birmingham, AL
+  '35214', '35215', '35235', '35206', '35217',
+  '35023', '35020', '35068', '35126', '35071',
+  // Huntsville, AL
+  '35810', '35816', '35805', '35811', '35763',
+  '35756', '35748', '35754', '35757',
+  // Indianapolis, IN
+  '46241', '46219', '46222', '46227', '46203',
+  '46201', '46107', '46237', '46239', '46221',
+  // Louisville, KY
+  '40215', '40216', '40218', '40214', '40213',
+  '40211', '40212', '40258', '40272', '40229',
+  // Dayton, OH
+  '45410', '45417', '45420', '45406', '45403',
+  // Montgomery, AL
+  '36116', '36109', '36111', '36106', '36110',
+  // Akron, OH
+  '44306', '44301', '44314', '44320', '44302',
+];
+
+/**
+ * Zip-code centroids (lat/lng). api-ninja/zillow-search-scraper requires
+ * `mapBounds` on every Zillow URL — we derive a bounding box per zip by
+ * padding ±0.08° around the centroid (~5 miles, safely covers any metro
+ * zip). Zillow further filters by the zip in the URL path, so
+ * over-coverage is harmless.
+ */
+const ZIP_CENTROIDS: Record<string, { lat: number; lng: number }> = {
+  // Memphis, TN
+  '38125': { lat: 35.05, lng: -89.80 },
+  '38116': { lat: 35.05, lng: -90.03 },
+  '38141': { lat: 35.03, lng: -89.81 },
+  '38114': { lat: 35.12, lng: -89.98 },
+  '38128': { lat: 35.22, lng: -89.91 },
+  // Birmingham, AL
+  '35214': { lat: 33.56, lng: -86.88 },
+  '35215': { lat: 33.62, lng: -86.70 },
+  '35235': { lat: 33.63, lng: -86.66 },
+  '35206': { lat: 33.57, lng: -86.74 },
+  '35217': { lat: 33.58, lng: -86.79 },
+  '35023': { lat: 33.41, lng: -86.96 },
+  '35020': { lat: 33.40, lng: -86.96 },
+  '35068': { lat: 33.57, lng: -86.97 },
+  '35126': { lat: 33.63, lng: -86.60 },
+  '35071': { lat: 33.64, lng: -86.84 },
+  // Huntsville, AL
+  '35810': { lat: 34.79, lng: -86.58 },
+  '35816': { lat: 34.74, lng: -86.64 },
+  '35805': { lat: 34.70, lng: -86.62 },
+  '35811': { lat: 34.80, lng: -86.53 },
+  '35763': { lat: 34.64, lng: -86.54 },
+  '35756': { lat: 34.64, lng: -86.77 },
+  '35748': { lat: 34.73, lng: -86.44 },
+  '35754': { lat: 34.79, lng: -86.77 },
+  '35757': { lat: 34.83, lng: -86.73 },
+  // Indianapolis, IN
+  '46241': { lat: 39.71, lng: -86.29 },
+  '46219': { lat: 39.78, lng: -86.04 },
+  '46222': { lat: 39.80, lng: -86.21 },
+  '46227': { lat: 39.69, lng: -86.13 },
+  '46203': { lat: 39.73, lng: -86.12 },
+  '46201': { lat: 39.77, lng: -86.09 },
+  '46107': { lat: 39.74, lng: -86.07 },
+  '46237': { lat: 39.67, lng: -86.08 },
+  '46239': { lat: 39.72, lng: -86.02 },
+  '46221': { lat: 39.72, lng: -86.22 },
+  // Louisville, KY
+  '40215': { lat: 38.19, lng: -85.79 },
+  '40216': { lat: 38.20, lng: -85.82 },
+  '40218': { lat: 38.21, lng: -85.68 },
+  '40214': { lat: 38.14, lng: -85.79 },
+  '40213': { lat: 38.19, lng: -85.71 },
+  '40211': { lat: 38.24, lng: -85.82 },
+  '40212': { lat: 38.26, lng: -85.79 },
+  '40258': { lat: 38.13, lng: -85.85 },
+  '40272': { lat: 38.10, lng: -85.84 },
+  '40229': { lat: 38.09, lng: -85.70 },
+  // Dayton, OH
+  '45410': { lat: 39.74, lng: -84.15 },
+  '45417': { lat: 39.73, lng: -84.24 },
+  '45420': { lat: 39.72, lng: -84.13 },
+  '45406': { lat: 39.78, lng: -84.22 },
+  '45403': { lat: 39.75, lng: -84.14 },
+  // Montgomery, AL
+  '36116': { lat: 32.31, lng: -86.25 },
+  '36109': { lat: 32.39, lng: -86.22 },
+  '36111': { lat: 32.33, lng: -86.26 },
+  '36106': { lat: 32.36, lng: -86.27 },
+  '36110': { lat: 32.42, lng: -86.27 },
+  // Akron, OH
+  '44306': { lat: 41.04, lng: -81.50 },
+  '44301': { lat: 41.05, lng: -81.53 },
+  '44314': { lat: 41.05, lng: -81.57 },
+  '44320': { lat: 41.08, lng: -81.56 },
+  '44302': { lat: 41.09, lng: -81.52 },
+};
+
+/**
+ * Shared filter state for the targeted-zip search. Mirrors the Zillow
+ * search URL the user provided: $60k–$150k, monthly payment ≤ $55k,
+ * SFR only (townhouse/multi-family/condo/land/apartment/manufactured/co-op
+ * all excluded).
+ */
+const TARGETED_ZIP_FILTER_STATE = {
+  sort: { value: 'globalrelevanceex' },
+  price: { min: 40000, max: 150000 },
+  mp: { max: 55000 },
+  tow: { value: false },
+  mf: { value: false },
+  con: { value: false },
+  land: { value: false },
+  apa: { value: false },
+  manu: { value: false },
+  apco: { value: false },
+  pf: { value: true },
+  pmf: { value: true },
+};
+
+/**
+ * Build a Zillow search URL for a single zip. Uses zip centroid ±0.08°
+ * for mapBounds (required by api-ninja), plus path + usersSearchTerm so
+ * Zillow restricts to the zip.
+ *
+ * `filterOverrides` lets callers override individual filters (e.g. a
+ * one-off script wanting doz=any can pass {}).
+ */
+export function buildZipSearchUrl(
+  zip: string,
+  filterOverrides: Record<string, unknown> = {}
+): string {
+  const centroid = ZIP_CENTROIDS[zip];
+  if (!centroid) throw new Error(`No centroid defined for zip ${zip}`);
+
+  const pad = 0.15;
+  const mapBounds = {
+    north: centroid.lat + pad,
+    south: centroid.lat - pad,
+    east: centroid.lng + pad,
+    west: centroid.lng - pad,
+  };
+
+  const searchQueryState = {
+    pagination: {},
+    isMapVisible: true,
+    mapBounds,
+    mapZoom: 12,
+    usersSearchTerm: zip,
+    filterState: { ...TARGETED_ZIP_FILTER_STATE, ...filterOverrides },
+    isListVisible: true,
+  };
+  const encoded = encodeURIComponent(JSON.stringify(searchQueryState));
+  return `https://www.zillow.com/homes/for_sale/${zip}_rb/?searchQueryState=${encoded}`;
+}
+
+const TARGETED_ZIP_URLS = TARGETED_CASH_ZIPS.map(zip => buildZipSearchUrl(zip));
 
 /**
  * GHL Webhook for Cash Deals Regional properties
@@ -83,13 +255,29 @@ export const SEARCH_CONFIGS: SearchConfig[] = [
     type: 'cash_deals',
     sendToGHL: true,
   },
+
+  // ===== SEARCH 3: CASH DEALS (Targeted Zips) =====
+  // 21 per-zip URLs (Memphis, Birmingham, Huntsville, Indianapolis, Louisville)
+  // Filters: $60k–$150k, monthly payment ≤ $55k, SFR only
+  // Same outreach as cash-deals-regional: GHL + Abdullah SMS + investor alerts
+  {
+    id: 'cash-deals-targeted-zips',
+    name: 'Cash Deals - Targeted Zips',
+    description: `Per-zip cash-deal search across ${TARGETED_CASH_ZIPS.length} zips - sends to GHL`,
+    url: TARGETED_ZIP_URLS[0],
+    urls: TARGETED_ZIP_URLS,
+    maxItems: 2500,
+    type: 'cash_deals',
+    sendToGHL: true,
+    zipFilter: TARGETED_CASH_ZIPS,
+  },
 ];
 
 /**
  * Get all search URLs for the scraper
  */
 export function getAllSearchUrls(): string[] {
-  return SEARCH_CONFIGS.map(config => config.url);
+  return SEARCH_CONFIGS.flatMap(config => config.urls ?? [config.url]);
 }
 
 /**

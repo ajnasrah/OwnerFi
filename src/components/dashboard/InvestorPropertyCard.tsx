@@ -263,14 +263,19 @@ export function InvestorPropertyCard({ deal, isLiked, onToggleLike, onHide, isPr
             </span>
           )}
           {/* Distressed listing badge — auction/foreclosure/REO price is NOT asking price */}
-          {(deal.isAuction || deal.isForeclosure || deal.isBankOwned) && (
-            <span
-              className="px-2 py-1 text-xs font-bold bg-amber-500/95 text-slate-900 rounded-lg backdrop-blur-sm"
-              title={`This is a ${deal.listingSubType || 'distressed'} listing. The price shown is an opening bid or estimated value, not a seller's asking price.`}
-            >
-              {deal.listingSubType || 'Auction'}
-            </span>
-          )}
+          {(deal.isAuction || deal.isForeclosure || deal.isBankOwned) && (() => {
+            // Precedence: Auction > Bank Owned > Foreclosure — matches detectListingSubType
+            const label = deal.listingSubType
+              || (deal.isAuction ? 'Auction' : deal.isBankOwned ? 'Bank Owned' : 'Foreclosure');
+            return (
+              <span
+                className="px-2 py-1 text-xs font-bold bg-orange-600/95 text-white rounded-lg backdrop-blur-sm"
+                title={`This is a ${label.toLowerCase()} listing. The price shown is an opening bid or estimated value, not a seller's asking price.`}
+              >
+                {label}
+              </span>
+            );
+          })()}
         </div>
 
         {/* Top right: Hide + Like buttons — 44px min touch targets for driving safety */}

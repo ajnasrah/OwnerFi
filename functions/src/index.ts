@@ -103,7 +103,9 @@ function transformToTypesense(docId: string, data: FirebaseFirestore.DocumentDat
     termYears: data.termYears || data.loanTermYears || undefined,
     balloonYears: data.balloonYears || undefined,
     financingType: data.financingType || undefined,
-    ownerFinanceVerified: data.ownerFinanceVerified || data.isOwnerfinance || false,
+    // ownerFinanceVerified: never true for distressed — auction/foreclosure/REO
+    // aren't traditional owner-finance sales, so verification doesn't apply.
+    ownerFinanceVerified: isDistressed ? false : (data.ownerFinanceVerified || data.isOwnerfinance || false),
     // Cash deal fields
     zestimate: zestimate || undefined,
     rentEstimate,

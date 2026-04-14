@@ -147,12 +147,16 @@ export const PropertyCard = React.memo(function PropertyCard({ property, isFavor
             {/* Distressed listing badge — auction/foreclosure/REO: price is NOT asking price */}
             {(() => {
               const rec = property as Record<string, unknown>;
-              const isDistressed = rec.isAuction === true || rec.isForeclosure === true || rec.isBankOwned === true;
-              if (!isDistressed) return null;
-              const label = (rec.listingSubType as string) || 'Auction';
+              const isAuction = rec.isAuction === true;
+              const isBankOwned = rec.isBankOwned === true;
+              const isForeclosure = rec.isForeclosure === true;
+              if (!isAuction && !isBankOwned && !isForeclosure) return null;
+              // Precedence: Auction > Bank Owned > Foreclosure — matches detectListingSubType
+              const label = (rec.listingSubType as string)
+                || (isAuction ? 'Auction' : isBankOwned ? 'Bank Owned' : 'Foreclosure');
               return (
                 <div
-                  className="bg-amber-500/95 backdrop-blur-sm text-slate-900 px-3 py-1.5 rounded-full text-xs font-bold shadow-lg"
+                  className="bg-orange-600 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg"
                   title="This listing is not a standard sale. The price shown is an opening bid or estimated value, not a seller's asking price."
                 >
                   {label}
@@ -234,8 +238,13 @@ export const PropertyCard = React.memo(function PropertyCard({ property, isFavor
               {/* Price */}
               {(() => {
                 const rec = property as Record<string, unknown>;
-                const isDistressed = rec.isAuction === true || rec.isForeclosure === true || rec.isBankOwned === true;
-                const label = (rec.listingSubType as string) || 'Auction';
+                const isAuction = rec.isAuction === true;
+                const isBankOwned = rec.isBankOwned === true;
+                const isForeclosure = rec.isForeclosure === true;
+                const isDistressed = isAuction || isBankOwned || isForeclosure;
+                // Precedence: Auction > Bank Owned > Foreclosure — matches detectListingSubType
+                const label = (rec.listingSubType as string)
+                  || (isAuction ? 'Auction' : isBankOwned ? 'Bank Owned' : 'Foreclosure');
                 return (
                   <div className="mb-2">
                     <div className="text-3xl font-black text-slate-900">

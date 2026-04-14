@@ -484,7 +484,15 @@ export async function GET(request: NextRequest) {
     });
 
     // Filter out non-active properties (PENDING, SOLD, etc.)
-    const activeProperties = allFetchedProperties.filter(p => p.isActive !== false);
+    // Also hide distressed listings (auction/foreclosure/REO) from the buyer
+    // dashboard even if legacy data has them tagged as isOwnerfinance=true —
+    // the `price` is a starting bid / estimate, never an asking price.
+    const activeProperties = allFetchedProperties.filter(p => {
+      if (p.isActive === false) return false;
+      const rec = p as Record<string, unknown>;
+      if (rec.isAuction === true || rec.isForeclosure === true || rec.isBankOwned === true) return false;
+      return true;
+    });
 
     // Filter out passed properties (unless includePassed=true)
     const allPropertiesBeforeFilter = activeProperties;

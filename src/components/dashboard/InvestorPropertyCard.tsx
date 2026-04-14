@@ -408,6 +408,9 @@ export function InvestorPropertyCard({ deal, isLiked, onToggleLike, onHide, isPr
               {deal.zestimate && deal.zestimate > 0 && (
                 <span className="text-slate-400">Zest ${(deal.zestimate / 1000).toFixed(0)}K</span>
               )}
+              {deal.rentEstimate && deal.rentEstimate > 0 && (
+                <span className="text-blue-400">Rent ~${deal.rentEstimate.toLocaleString()}</span>
+              )}
             </div>
           ) : (
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">

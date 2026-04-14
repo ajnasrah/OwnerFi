@@ -385,14 +385,6 @@ export async function GET(request: NextRequest) {
         nearbyCitiesCount: nearbyCities.length,
         filterMode: zipsOverride ? 'zips-override' : (userFilter.locations.length > 0 ? 'new-locations' : 'legacy'),
         zipHitCounts,
-        sort: { sortBy, sortOrder },
-        // First few percentOfArv values after sort — sanity check the order
-        sortedSample: paginatedDeals.slice(0, 5).map(d => ({
-          id: d.id,
-          zip: d.zipCode,
-          percentOfArv: d.percentOfArv,
-          price: d.price,
-        })),
       },
     });
     // No browser caching — city is determined server-side from the profile,

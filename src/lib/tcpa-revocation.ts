@@ -117,6 +117,63 @@ export async function revokeBuyerTCPAConsent(
 
   await batch.commit();
 
+  // Propagate DND to GoHighLevel contacts. Best-effort — failures are
+  // queued for later sync rather than blocking the local scrub.
+  try {
+    const { setGHLContactDND } = await import('./gohighlevel-api');
+    const ghlResult = await setGHLContactDND(
+      normalizedPhone,
+      `TCPA revocation case ${caseId}`,
+    );
+    if (!ghlResult.success && ghlResult.queued) {
+      // GHL not configured — write a pending doc so a future cron / operator
+      // can drain the backlog when keys are added.
+      await db.collection('tcpa_ghl_dnd_pending').doc(caseId).set({
+        caseId,
+        phone: normalizedPhone,
+        channel,
+        revokedAt,
+        reason: ghlResult.error || 'GHL not configured',
+        retryCount: 0,
+        createdAt: new Date(),
+      });
+    } else if (!ghlResult.success) {
+      // Real API failure — also queue for retry.
+      await db.collection('tcpa_ghl_dnd_pending').doc(caseId).set({
+        caseId,
+        phone: normalizedPhone,
+        channel,
+        revokedAt,
+        reason: ghlResult.error || 'GHL DND update failed',
+        retryCount: 0,
+        createdAt: new Date(),
+      });
+    } else {
+      // Annotate the audit record with what GHL did.
+      await auditRef.update({
+        ghlDndContactsUpdated: ghlResult.contactsUpdated,
+        ghlDndContactIds: ghlResult.contactIds,
+      });
+    }
+  } catch (ghlError) {
+    // Same fallback — never let GHL hiccup block the local scrub from
+    // being considered successful.
+    try {
+      await db.collection('tcpa_ghl_dnd_pending').doc(caseId).set({
+        caseId,
+        phone: normalizedPhone,
+        channel,
+        revokedAt,
+        reason: ghlError instanceof Error ? ghlError.message : String(ghlError),
+        retryCount: 0,
+        createdAt: new Date(),
+      });
+    } catch {
+      // Last-resort path failed; the audit doc itself still records the
+      // revocation, just without GHL annotation.
+    }
+  }
+
   return {
     phone: normalizedPhone,
     buyerProfilesUpdated: profiles.length,

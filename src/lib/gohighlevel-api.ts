@@ -299,3 +299,144 @@ export async function syncBuyerToGHL(buyer: BuyerData): Promise<{ success: boole
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }
+
+// ─── TCPA: Set DND on a GHL contact ──────────────────────────────────────────
+
+const GHL_API_VERSION = '2021-07-28';
+
+interface SetDNDResult {
+  success: boolean;
+  contactsUpdated: number;
+  contactIds: string[];
+  error?: string;
+  /** True when the call was queued for later sync (e.g. API key missing). */
+  queued?: boolean;
+}
+
+/**
+ * Set GoHighLevel DND on every contact matching the given phone number.
+ *
+ * GHL's DND model: per-contact `dnd: true` blocks all channels. We also set
+ * dndSettings.{Call,Email,SMS,GMB,FB} = active for explicitness.
+ *
+ * Without GHL_API_KEY/GHL_LOCATION_ID configured, this is a no-op that
+ * returns success=false + queued=true so the caller can fall back to
+ * writing a tcpa_ghl_dnd_pending Firestore doc for an operator to drain.
+ */
+export async function setGHLContactDND(phone: string, reason: string): Promise<SetDNDResult> {
+  if (!phone) return { success: false, contactsUpdated: 0, contactIds: [], error: 'phone required' };
+
+  if (!GHL_API_KEY || !GHL_LOCATION_ID) {
+    return {
+      success: false,
+      contactsUpdated: 0,
+      contactIds: [],
+      queued: true,
+      error: 'GHL_API_KEY or GHL_LOCATION_ID not configured',
+    };
+  }
+
+  try {
+    // Step 1 — find every contact matching this phone in the location.
+    const lookupRes = await fetchWithTimeout(
+      `${GHL_API_BASE}/contacts/search/duplicate?locationId=${encodeURIComponent(GHL_LOCATION_ID)}&number=${encodeURIComponent(phone)}`,
+      {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${GHL_API_KEY}`,
+          'Version': GHL_API_VERSION,
+          'Accept': 'application/json',
+        },
+        timeout: GHL_TIMEOUT,
+        retries: 2,
+        retryDelay: 500,
+      },
+    );
+
+    const contacts: Array<{ id: string }> = [];
+    if (lookupRes.ok) {
+      const data = await lookupRes.json().catch(() => ({}));
+      // GHL's contacts/search/duplicate returns either {contact:{id}} or {contacts:[...]}
+      if (data?.contact?.id) contacts.push({ id: data.contact.id });
+      if (Array.isArray(data?.contacts)) {
+        for (const c of data.contacts) if (c?.id) contacts.push({ id: c.id });
+      }
+    }
+    // Fallback: try the broader search endpoint if duplicate-search returned nothing
+    if (contacts.length === 0) {
+      const searchRes = await fetchWithTimeout(
+        `${GHL_API_BASE}/contacts/search?locationId=${encodeURIComponent(GHL_LOCATION_ID)}&query=${encodeURIComponent(phone)}`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${GHL_API_KEY}`,
+            'Version': GHL_API_VERSION,
+            'Accept': 'application/json',
+          },
+          timeout: GHL_TIMEOUT,
+          retries: 2,
+          retryDelay: 500,
+        },
+      );
+      if (searchRes.ok) {
+        const data = await searchRes.json().catch(() => ({}));
+        const list = Array.isArray(data?.contacts) ? data.contacts : [];
+        for (const c of list) if (c?.id) contacts.push({ id: c.id });
+      }
+    }
+
+    if (contacts.length === 0) {
+      return { success: true, contactsUpdated: 0, contactIds: [] };
+    }
+
+    // Step 2 — PUT each contact with dnd:true.
+    const updated: string[] = [];
+    for (const c of contacts) {
+      const updateRes = await fetchWithTimeout(`${GHL_API_BASE}/contacts/${encodeURIComponent(c.id)}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${GHL_API_KEY}`,
+          'Version': GHL_API_VERSION,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          dnd: true,
+          dndSettings: {
+            Call:  { status: 'active', message: reason },
+            SMS:   { status: 'active', message: reason },
+            Email: { status: 'active', message: reason },
+            GMB:   { status: 'active', message: reason },
+            FB:    { status: 'active', message: reason },
+          },
+        }),
+        timeout: GHL_TIMEOUT,
+        retries: 2,
+        retryDelay: 500,
+      });
+      if (updateRes.ok) {
+        updated.push(c.id);
+      } else {
+        const errorText = await updateRes.text().catch(() => 'Unknown error');
+        logError('GHL DND update failed for contact', {
+          action: 'ghl_dnd_update_error',
+          metadata: { contactId: c.id, status: updateRes.status, error: errorText },
+        });
+      }
+    }
+
+    return {
+      success: updated.length > 0,
+      contactsUpdated: updated.length,
+      contactIds: updated,
+    };
+  } catch (error) {
+    logError('Failed to set GHL DND', { action: 'ghl_dnd_error' }, error as Error);
+    return {
+      success: false,
+      contactsUpdated: 0,
+      contactIds: [],
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+}

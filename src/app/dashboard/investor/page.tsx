@@ -438,12 +438,14 @@ export default function InvestorDashboard() {
     );
   }
 
+  const isRealtor = (session as unknown as ExtendedSession)?.user?.role === 'realtor';
+
   return (
     <div className="min-h-screen bg-[#111625]">
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-4 pb-20 md:pb-4">
-        {/* Deal Alert Subscription Card */}
-        {profile?.dealAlertStatus === 'active' ? (
+        {/* Deal Alert Subscription Card — hidden for realtors (not applicable) */}
+        {isRealtor ? null : profile?.dealAlertStatus === 'active' ? (
           /* ── Active subscription ── */
           <div className="mb-4 bg-gradient-to-r from-[#004D33]/30 to-slate-800/50 border border-[#00BC7D]/30 rounded-xl p-4">
             {subscriptionSuccess && (

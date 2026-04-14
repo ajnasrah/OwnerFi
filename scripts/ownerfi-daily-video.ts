@@ -347,9 +347,11 @@ async function submitVideo(label: string, scenes: any[]): Promise<string | null>
   const payload = { video_inputs: scenes, aspect_ratio: '9x16' };
   console.log(`\nSubmitting ${label} (${scenes.length} scenes, ~${scenes.length * 5} credits)...`);
 
-  const res = await fetch(`${CREATIFY_API}/lipsyncs_v2/`, {
-    method: 'POST', headers: CREATIFY_HEADERS, body: JSON.stringify(payload),
-  });
+  const res = await fetchWithRetry(
+    `${CREATIFY_API}/lipsyncs_v2/`,
+    { method: 'POST', headers: CREATIFY_HEADERS, body: JSON.stringify(payload) },
+    { timeoutMs: 30_000, retries: 3, label: `Creatify submit ${label}` },
+  );
   const data = await res.json();
 
   if (res.status !== 200 && res.status !== 201) {
@@ -365,7 +367,11 @@ async function pollVideo(id: string, label: string): Promise<string | null> {
   for (let i = 0; i < 30; i++) {
     await new Promise(r => setTimeout(r, 20000));
     try {
-      const res = await fetch(`${CREATIFY_API}/lipsyncs_v2/${id}/`, { headers: CREATIFY_HEADERS });
+      const res = await fetchWithRetry(
+        `${CREATIFY_API}/lipsyncs_v2/${id}/`,
+        { headers: CREATIFY_HEADERS },
+        { timeoutMs: 15_000, retries: 2, label: `Creatify poll ${label}` },
+      );
       if (!res.ok) {
         console.warn(`[${label}] Poll HTTP ${res.status} — retrying...`);
         continue;
@@ -596,7 +602,11 @@ async function main() {
 
   // Check credits (skip on dry-run)
   if (!DRY_RUN) {
-    const creditRes = await fetch(`${CREATIFY_API}/remaining_credits/`, { headers: CREATIFY_HEADERS });
+    const creditRes = await fetchWithRetry(
+      `${CREATIFY_API}/remaining_credits/`,
+      { headers: CREATIFY_HEADERS },
+      { timeoutMs: 10_000, retries: 2, label: 'Creatify credits' },
+    );
     if (creditRes.ok) {
       const credits = await creditRes.json();
       const scenesPerVideo = cards.length + 2; // houses + intro + cta

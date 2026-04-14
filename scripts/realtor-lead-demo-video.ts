@@ -39,6 +39,36 @@ const LATE_BASE_URL = 'https://getlate.dev/api/v1';
 const DRY_RUN = process.argv.includes('--dry-run');
 const SCREENS_PATH = '/tmp/lead-demo-screens.json';
 
+async function fetchWithRetry(
+  url: string,
+  init: RequestInit,
+  opts: { timeoutMs?: number; retries?: number; label?: string } = {},
+): Promise<Response> {
+  const { timeoutMs = 60_000, retries = 3, label = url } = opts;
+  let lastErr: unknown;
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const res = await fetch(url, { ...init, signal: controller.signal });
+      clearTimeout(timer);
+      if (res.status >= 500 && attempt < retries) {
+        console.warn(`[${label}] HTTP ${res.status} (attempt ${attempt}/${retries}) — retrying...`);
+        await new Promise(r => setTimeout(r, 2000 * attempt));
+        continue;
+      }
+      return res;
+    } catch (err) {
+      clearTimeout(timer);
+      lastErr = err;
+      const msg = err instanceof Error ? err.message : String(err);
+      console.warn(`[${label}] fetch failed (attempt ${attempt}/${retries}): ${msg}`);
+      if (attempt < retries) await new Promise(r => setTimeout(r, 2000 * attempt));
+    }
+  }
+  throw lastErr instanceof Error ? lastErr : new Error(String(lastErr));
+}
+
 interface ScreenData {
   step: number;
   label: string;
@@ -203,9 +233,11 @@ async function submitVideo(label: string, scenes: any[]): Promise<string | null>
   const payload = { video_inputs: scenes, aspect_ratio: '9x16' };
   console.log(`\nSubmitting ${label} (${scenes.length} scenes, ~${scenes.length * 5} credits)...`);
 
-  const res = await fetch(`${CREATIFY_API}/lipsyncs_v2/`, {
-    method: 'POST', headers: CREATIFY_HEADERS, body: JSON.stringify(payload),
-  });
+  const res = await fetchWithRetry(
+    `${CREATIFY_API}/lipsyncs_v2/`,
+    { method: 'POST', headers: CREATIFY_HEADERS, body: JSON.stringify(payload) },
+    { timeoutMs: 30_000, retries: 3, label: `Creatify submit ${label}` },
+  );
   const data = await res.json();
 
   if (res.status !== 200 && res.status !== 201) {
@@ -221,7 +253,11 @@ async function pollVideo(id: string, label: string): Promise<string | null> {
   for (let i = 0; i < 30; i++) {
     await new Promise(r => setTimeout(r, 20000));
     try {
-      const res = await fetch(`${CREATIFY_API}/lipsyncs_v2/${id}/`, { headers: CREATIFY_HEADERS });
+      const res = await fetchWithRetry(
+        `${CREATIFY_API}/lipsyncs_v2/${id}/`,
+        { headers: CREATIFY_HEADERS },
+        { timeoutMs: 15_000, retries: 2, label: `Creatify poll ${label}` },
+      );
       if (!res.ok) {
         console.warn(`[${label}] Poll HTTP ${res.status} — retrying...`);
         continue;
@@ -258,9 +294,11 @@ async function postToLate(videoUrl: string, caption: string, title?: string): Pr
   }
 
   // Get accounts for profile
-  const accountsRes = await fetch(`${LATE_BASE_URL}/accounts?profileId=${profileId}`, {
-    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-  });
+  const accountsRes = await fetchWithRetry(
+    `${LATE_BASE_URL}/accounts?profileId=${profileId}`,
+    { headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' } },
+    { timeoutMs: 30_000, retries: 3, label: 'Late accounts' },
+  );
   if (!accountsRes.ok) {
     console.error('Failed to fetch Late accounts:', await accountsRes.text());
     return false;
@@ -315,11 +353,15 @@ async function postToLate(videoUrl: string, caption: string, title?: string): Pr
   };
   if (title) body.title = title;
 
-  const res = await fetch(`${LATE_BASE_URL}/posts`, {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
+  const res = await fetchWithRetry(
+    `${LATE_BASE_URL}/posts`,
+    {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    },
+    { timeoutMs: 90_000, retries: 3, label: 'Late posts' },
+  );
 
   const responseText = await res.text();
   if (!res.ok) {
@@ -394,7 +436,11 @@ async function main() {
   }
 
   // Check credits
-  const creditRes = await fetch(`${CREATIFY_API}/remaining_credits/`, { headers: CREATIFY_HEADERS });
+  const creditRes = await fetchWithRetry(
+    `${CREATIFY_API}/remaining_credits/`,
+    { headers: CREATIFY_HEADERS },
+    { timeoutMs: 10_000, retries: 2, label: 'Creatify credits' },
+  );
   if (creditRes.ok) {
     const credits = await creditRes.json();
     const scenesCount = screens.length + 2; // screens + intro + CTA

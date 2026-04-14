@@ -1,5 +1,9 @@
 'use client';
 
+import { useState, useEffect, useCallback } from 'react';
+import { FilterEditor } from '@/components/filters/FilterEditor';
+import { FilterConfig, EMPTY_FILTER } from '@/lib/filter-schema';
+
 export type DealTypeFilter = 'all' | 'owner_finance' | 'cash_deal';
 export type PriceFilter = 'none' | 'under80' | 'under100k' | '100k-200k' | '200k-300k';
 type SortField = 'price' | 'percentOfArv' | 'discount' | 'monthlyPayment';
@@ -21,6 +25,8 @@ interface InvestorFilterBarProps {
     ownerFinance: number;
     cashDeal: number;
   };
+  /** Fires after the user saves their location/zip filter so the parent can refetch deals. */
+  onLocationsChanged?: () => void;
 }
 
 const DEAL_TYPE_FILTERS: { key: DealTypeFilter; label: string; shortLabel: string }[] = [
@@ -56,9 +62,93 @@ export function InvestorFilterBar({
   showHidden,
   onShowHiddenChange,
   stats,
+  onLocationsChanged,
 }: InvestorFilterBarProps) {
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [editorLoading, setEditorLoading] = useState(false);
+  const [editorSaving, setEditorSaving] = useState(false);
+  const [currentFilter, setCurrentFilter] = useState<FilterConfig | null>(null);
+  const [summary, setSummary] = useState<FilterConfig>(EMPTY_FILTER);
+
+  // Load summary once for the chip text; refresh when parent signals changes.
+  const loadSummary = useCallback(async () => {
+    try {
+      const res = await fetch('/api/user/filters', { cache: 'no-store' });
+      if (!res.ok) return;
+      const data = await res.json();
+      setSummary(data.filter || EMPTY_FILTER);
+    } catch {
+      // non-fatal — chip just shows "Locations" with no count
+    }
+  }, []);
+
+  useEffect(() => {
+    loadSummary();
+  }, [loadSummary]);
+
+  const openEditor = async () => {
+    setEditorOpen(true);
+    setEditorLoading(true);
+    try {
+      const res = await fetch('/api/user/filters', { cache: 'no-store' });
+      const data = res.ok ? await res.json() : {};
+      setCurrentFilter(data.filter || EMPTY_FILTER);
+    } catch {
+      setCurrentFilter(EMPTY_FILTER);
+    } finally {
+      setEditorLoading(false);
+    }
+  };
+
+  const saveEditor = async (next: FilterConfig) => {
+    setEditorSaving(true);
+    try {
+      const res = await fetch('/api/user/filters', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(next),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      setSummary(data.filter || next);
+      setCurrentFilter(data.filter || next);
+      setEditorOpen(false);
+      onLocationsChanged?.();
+    } finally {
+      setEditorSaving(false);
+    }
+  };
+
+  const locCount = summary.locations.length;
+  const zipCount = summary.zips.codes.length;
+  const zipLabel =
+    summary.zips.mode === 'include'
+      ? `${zipCount} zip${zipCount === 1 ? '' : 's'} included`
+      : summary.zips.mode === 'exclude'
+      ? `${zipCount} zip${zipCount === 1 ? '' : 's'} excluded`
+      : null;
+
   return (
     <div className="space-y-2">
+      {/* Row 0: Locations + zips chip */}
+      <button
+        onClick={openEditor}
+        className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-slate-800/60 border border-slate-700/50 hover:bg-slate-700/60 transition-colors text-left"
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          <svg className="w-4 h-4 text-[#00BC7D] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          <span className="text-sm text-white font-medium truncate">
+            {locCount === 0 && !zipLabel && 'Set locations'}
+            {locCount > 0 && `${locCount} ${locCount === 1 ? 'city' : 'cities'}`}
+            {locCount > 0 && zipLabel && ' · '}
+            {zipLabel}
+          </span>
+        </div>
+        <span className="text-xs text-slate-400 flex-shrink-0">Edit →</span>
+      </button>
+
       {/* Row 1: Deal type tabs with counts */}
       <div className="grid grid-cols-3 gap-1.5" role="toolbar" aria-label="Deal type filters">
         {DEAL_TYPE_FILTERS.map((option) => {
@@ -176,6 +266,36 @@ export function InvestorFilterBar({
           <span className="text-[11px] text-slate-500 ml-1">Viewing hidden deals - tap X to unhide</span>
         )}
       </div>
+
+      {/* Locations & Zips editor modal */}
+      {editorOpen && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-modal flex items-start justify-center p-4 overflow-y-auto" onClick={() => setEditorOpen(false)}>
+          <div
+            className="bg-[#111625] border border-slate-700 rounded-2xl max-w-2xl w-full my-8 p-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-white">Locations & Zip Codes</h2>
+              <button
+                onClick={() => setEditorOpen(false)}
+                aria-label="Close"
+                className="text-slate-400 hover:text-white w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-800"
+              >
+                ✕
+              </button>
+            </div>
+            {editorLoading || !currentFilter ? (
+              <div className="py-12 text-center text-slate-400 text-sm">Loading…</div>
+            ) : (
+              <FilterEditor
+                initialFilter={currentFilter}
+                onSave={saveEditor}
+                saving={editorSaving}
+              />
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -590,6 +590,7 @@ export default function InvestorDashboard() {
           showHidden={showHidden}
           onShowHiddenChange={(show) => { setShowHidden(show); setCurrentPage(1); }}
           stats={stats}
+          onLocationsChanged={() => { setCurrentPage(1); setFetchKey(k => k + 1); }}
         />
 
         {/* Deals Grid */}

@@ -293,6 +293,18 @@ export const PropertySwiper2 = memo(function PropertySwiper2({
       onMouseLeave={handleEnd}
       style={{ width: '100vw', maxWidth: '100vw', overflowX: 'hidden' }}
     >
+      {/* Filter button — top-right of swiper */}
+      <Link
+        href="/dashboard/settings"
+        className="absolute top-3 right-3 z-overlay w-11 h-11 rounded-full bg-slate-900/70 hover:bg-slate-900/90 backdrop-blur-md border border-white/10 flex items-center justify-center text-white shadow-lg transition-all active:scale-95"
+        aria-label="Filters"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M6 12h12M10 18h4" />
+        </svg>
+      </Link>
+
       {/* Cards Stack */}
       <div className="absolute top-1 left-1 right-1 bottom-24 sm:top-2 sm:left-2 sm:right-2 flex items-center justify-center" style={{ maxWidth: '100%' }}>
         {/* Next Card (Behind) - hidden to avoid overlap */}

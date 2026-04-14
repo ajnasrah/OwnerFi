@@ -21,12 +21,18 @@ export function Footer({ className = '' }: FooterProps) {
       </div>
 
       {/* Mobile-friendly links */}
-      <div className="flex justify-center space-x-8 mb-8">
+      <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 mb-8">
         <Link href="/privacy" className="text-slate-400 hover:text-[#00BC7D] transition-colors text-base">
           Privacy
         </Link>
         <Link href="/terms" className="text-slate-400 hover:text-[#00BC7D] transition-colors text-base">
           Terms
+        </Link>
+        <Link
+          href="/privacy#do-not-sell"
+          className="text-slate-400 hover:text-[#00BC7D] transition-colors text-base"
+        >
+          Do Not Sell or Share My Info
         </Link>
         <Link href="/auth" className="text-slate-400 hover:text-[#00BC7D] transition-colors text-base">
           Get Started

@@ -267,9 +267,22 @@ export default function PrivacyPolicy() {
                 <li>Secure data storage practices</li>
                 <li>Access controls and authentication measures</li>
               </ul>
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
                 <p className="text-yellow-700">
                   <strong>Disclaimer:</strong> We cannot guarantee absolute security.
+                </p>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="font-bold text-blue-900 mb-2">🔔 Data Breach Notification</p>
+                <p className="text-blue-900 text-sm">
+                  If we become aware of a security incident that materially compromises your personal
+                  information, we will notify affected users in accordance with applicable state
+                  breach-notification laws (typically within 30–60 days of discovery, depending on the
+                  state). Notice will be sent to the email address on file. Where required by state law,
+                  we will also notify the appropriate state Attorney General and credit-reporting
+                  agencies. We will provide information about the incident, the categories of data
+                  involved, and steps you can take to protect yourself.
                 </p>
               </div>
             </section>
@@ -307,8 +320,8 @@ export default function PrivacyPolicy() {
                 </p>
               </div>
 
-              <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
-                <p className="font-bold text-orange-800 mb-2">CCPA &quot;Sale&quot; and &quot;Sharing&quot; Disclosure</p>
+              <div id="do-not-sell" className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4 scroll-mt-24">
+                <p className="font-bold text-orange-800 mb-2">CCPA &quot;Sale&quot; and &quot;Sharing&quot; Disclosure — Do Not Sell or Share My Info</p>
                 <p className="text-orange-700 mb-3">
                   <strong>Important:</strong> Under the CCPA, sharing your contact information with real estate agents in exchange for referral fees may constitute a &quot;sale&quot; or &quot;sharing&quot; of personal information.
                 </p>
@@ -324,6 +337,20 @@ export default function PrivacyPolicy() {
                 </p>
                 <p className="text-orange-600 text-sm">
                   We also honor the Global Privacy Control (GPC) signal. If your browser sends a GPC signal, we will treat it as a valid opt-out request.
+                </p>
+              </div>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-primary-text mb-4">8A. Service Geographic Scope (EU / GDPR)</h2>
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+                <p className="text-slate-700">
+                  Ownerfi is a U.S.-only service. We do not target, market to, or knowingly accept users
+                  in the European Economic Area (EEA), United Kingdom, or other jurisdictions with
+                  comprehensive personal-data laws (such as GDPR or UK GDPR). The properties on our
+                  platform are U.S. real estate. If you access the Service from outside the United
+                  States, you do so at your own initiative and you consent to your personal data being
+                  processed in the United States under U.S. law.
                 </p>
               </div>
             </section>
@@ -512,9 +539,19 @@ export default function PrivacyPolicy() {
                     <li>Regular security assessments</li>
                     <li>Secure cloud infrastructure</li>
                   </ul>
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
                     <p className="text-yellow-700">
                       <strong>Disclaimer:</strong> While we implement industry-standard security measures, no system is completely secure. We cannot guarantee absolute security of your data.
+                    </p>
+                  </div>
+
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p className="font-bold text-blue-900 mb-2">🔔 Breach Notification</p>
+                    <p className="text-blue-900 text-sm">
+                      If a security incident materially compromises agent information (license details,
+                      transaction records, signed agreements, or buyer-lead data we transmitted to you),
+                      we will notify affected agents in accordance with applicable state
+                      breach-notification laws and any contractual obligations to your brokerage.
                     </p>
                   </div>
                 </section>

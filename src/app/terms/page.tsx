@@ -103,6 +103,49 @@ export default function TermsOfService() {
             </section>
 
             <section>
+              <h2 className="text-2xl font-semibold text-primary-text mb-4">1A. Owner-Finance Candidates, Cash Deals, and Distressed Listings — What These Tags Mean</h2>
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
+                <p className="font-bold text-amber-900 mb-2">⚠️ Read Before You Tour, Travel, or Sign Anything</p>
+                <ul className="list-disc ml-6 space-y-2 text-amber-900 text-sm">
+                  <li>
+                    <strong>"Owner Finance" / Owner-Finance Candidate</strong> means our automated systems
+                    detected language or signals in the public listing that the seller <em>may</em> consider
+                    owner financing. We have <strong>not</strong> contacted the seller.
+                    Owner financing is <strong>not</strong> guaranteed, may have terms wildly different from
+                    any payment estimate shown, and the seller may decline owner financing for any reason or
+                    no reason. <strong>Always confirm directly with the seller's listing agent before
+                    incurring any cost</strong> (travel, inspection, attorney, application fees).
+                  </li>
+                  <li>
+                    <strong>"Cash Deal"</strong> listings are surfaced for <strong>investors purchasing with
+                    cash</strong> based on price-to-Zestimate ratio. Owner financing is generally
+                    <strong> NOT</strong> available on these. Retail buyers seeking owner financing should
+                    look only at Owner Finance listings.
+                  </li>
+                  <li>
+                    <strong>"Auction" / "Foreclosure" / "Bank Owned" / "Pre-Foreclosure"</strong> listings
+                    display a price prefixed with <strong>"Est."</strong> — that price is an
+                    <strong> opening bid, foreclosure filing amount, or bank estimate</strong>, NOT a
+                    seller's asking price. Final sale price typically differs significantly. These
+                    listings frequently come with title issues, occupancy issues (someone living there),
+                    sold-as-is condition, and additional fees. Use the <strong>"Hide Auctions"</strong>
+                    filter on the dashboard to exclude them. Engage an attorney before bidding.
+                  </li>
+                  <li>
+                    <strong>"Land" / vacant lots</strong> appear unless you toggle "Hide Land". Verify the
+                    property type before viewing.
+                  </li>
+                </ul>
+              </div>
+              <p className="text-slate-700 text-sm">
+                You agree that costs you incur in reliance on these tags — including travel, inspections,
+                appraisals, attorney fees, application fees, and earnest money — are your own
+                responsibility. Ownerfi is not liable for any such costs whether or not the listing
+                turns out to be available, accurate, or suitable.
+              </p>
+            </section>
+
+            <section>
               <h2 className="text-2xl font-semibold text-primary-text mb-4">2. Ownerfi Is NOT Your Agent</h2>
               <p className="mb-3">Ownerfi:</p>
               <ul className="list-disc ml-6 space-y-1 mb-4">
@@ -141,12 +184,38 @@ export default function TermsOfService() {
                 </ul>
               </div>
               <p className="mb-2">Their goal is to help you:</p>
-              <ul className="list-disc ml-6 space-y-1">
+              <ul className="list-disc ml-6 space-y-1 mb-4">
                 <li>schedule showings</li>
                 <li>make offers</li>
                 <li>understand owner-finance options</li>
                 <li>navigate the purchase process</li>
               </ul>
+
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
+                <p className="font-bold text-orange-900 mb-2">📱 Express Consent to Contact (TCPA / Do-Not-Call)</p>
+                <p className="text-orange-900 text-sm mb-2">
+                  By submitting your phone number, email address, or other contact information to Ownerfi,
+                  you <strong>expressly consent</strong> to receive calls, text messages, and emails from
+                  Ownerfi and from Partner Agents we share your information with, including:
+                </p>
+                <ul className="list-disc ml-6 space-y-1 text-orange-900 text-sm mb-2">
+                  <li>calls and SMS placed using <strong>automatic dialing systems</strong> or
+                    <strong> pre-recorded / artificial voice messages</strong></li>
+                  <li>contact <strong>even if your number is on a federal or state Do-Not-Call list</strong></li>
+                  <li>contact at the number(s) you provide, including mobile numbers (standard message and
+                    data rates may apply)</li>
+                </ul>
+                <p className="text-orange-900 text-sm mb-2">
+                  Consent is <strong>not a condition of purchasing</strong> any goods or services. You may
+                  revoke consent at any time by:
+                </p>
+                <ul className="list-disc ml-6 space-y-1 text-orange-900 text-sm">
+                  <li>Replying <strong>STOP</strong> to any text message</li>
+                  <li>Telling the agent on a call or in writing to stop contacting you</li>
+                  <li>Emailing <a href="mailto:support@ownerfi.ai" className="underline">support@ownerfi.ai</a> with
+                    "REVOKE CONSENT" in the subject line</li>
+                </ul>
+              </div>
             </section>
 
             <section>
@@ -170,7 +239,7 @@ export default function TermsOfService() {
                 <li>consumer protection requirements</li>
                 <li>Do-Not-Call rules (once you ask them to stop)</li>
               </ul>
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
                 <p className="font-bold text-red-800 mb-2">⚠️ Ownerfi Is Not Responsible For:</p>
                 <ul className="list-disc ml-6 space-y-1 text-red-700">
                   <li>agent conduct</li>
@@ -178,6 +247,38 @@ export default function TermsOfService() {
                   <li>advice provided by agents</li>
                   <li>negotiation outcomes</li>
                 </ul>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <p className="font-bold text-blue-900 mb-2">🏠 Fair Housing Complaints</p>
+                <p className="text-blue-900 text-sm mb-2">
+                  Partner Agents must comply with the <strong>federal Fair Housing Act</strong> and your
+                  state's fair-housing laws. It is illegal for an agent to refuse service, treat you
+                  differently, or steer you based on race, color, national origin, religion, sex
+                  (including gender identity and sexual orientation), familial status, disability, or any
+                  other protected class.
+                </p>
+                <p className="text-blue-900 text-sm mb-2">If you believe an agent has discriminated against you:</p>
+                <ul className="list-disc ml-6 space-y-1 text-blue-900 text-sm">
+                  <li>File a complaint with <strong>HUD</strong>: <strong>1-800-669-9777</strong> (TTY 1-800-927-9275)
+                    or online at <span className="font-mono text-xs">hud.gov/fairhousing</span></li>
+                  <li>Contact your <strong>state fair-housing or real estate commission</strong></li>
+                  <li>Report the agent to Ownerfi at <a href="mailto:support@ownerfi.ai" className="underline">support@ownerfi.ai</a> with
+                    "FAIR HOUSING" in the subject line — we will investigate and may suspend or remove the
+                    agent's account</li>
+                </ul>
+              </div>
+
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                <p className="font-bold text-orange-900 mb-2">📣 Report Agent Abuse or Harassment</p>
+                <p className="text-orange-900 text-sm">
+                  If a Partner Agent contacts you after you've asked them to stop, behaves
+                  unprofessionally, makes deceptive statements about a property, or pressures you, email
+                  <a href="mailto:support@ownerfi.ai" className="underline"> support@ownerfi.ai</a> with
+                  "AGENT REPORT" in the subject line. Include the agent's name and the date(s) of contact.
+                  We commit to reviewing reports and may suspend or remove agents found in violation of
+                  these Terms.
+                </p>
               </div>
             </section>
 
@@ -247,7 +348,7 @@ export default function TermsOfService() {
 
             <section>
               <h2 className="text-2xl font-semibold text-primary-text mb-4">10. Limitation of Liability</h2>
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
                 <p className="font-bold text-red-800 mb-2">⚠️ Liability Limitation</p>
                 <p className="text-red-700 mb-2">Ownerfi is not liable for:</p>
                 <ul className="list-disc ml-6 space-y-1 text-red-700">
@@ -255,9 +356,39 @@ export default function TermsOfService() {
                   <li>communication from agents</li>
                   <li>decisions made based on Ownerfi's displays</li>
                   <li>losses, disputes, failed offers, or denied approvals</li>
+                  <li>any earnest money deposit, escrow funds, financing failure, contract breach,
+                    title defects, inspection findings, repair costs, or closing-related dispute</li>
+                  <li>any cost you incur before, during, or after attempting to purchase a property,
+                    including travel, lodging, attorney fees, inspection fees, application fees, or
+                    appraisal fees</li>
+                  <li>actions or inactions of any Partner Agent, seller, lender, escrow agent, title
+                    company, attorney, or third-party service provider</li>
                 </ul>
                 <p className="text-red-700 mt-3 font-bold">
                   Your sole remedy is to stop using the Service.
+                </p>
+                <p className="text-red-700 mt-2 text-sm">
+                  To the maximum extent permitted by law, Ownerfi's total aggregate liability for any
+                  claim arising out of or related to the Service or these Terms is limited to one hundred
+                  dollars (US$100).
+                </p>
+              </div>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-primary-text mb-4">10A. Transactions, Deposits, and Closing Risk</h2>
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                <p className="text-orange-900 mb-2">
+                  Ownerfi has <strong>no role</strong> in any purchase contract, earnest money deposit,
+                  escrow, financing, title work, inspection, appraisal, or closing. We do not hold,
+                  transfer, or insure any funds.
+                </p>
+                <p className="text-orange-900 text-sm">
+                  Real estate transactions involve significant financial risk. Owner-finance terms (down
+                  payment, interest rate, balloon, default remedies) should be reviewed by a licensed
+                  attorney before you sign anything. Auctions and foreclosures carry additional risks
+                  including title defects, occupancy disputes, and as-is condition. Cash deals from
+                  distressed sellers can involve fraud — verify every counterparty independently.
                 </p>
               </div>
             </section>
@@ -314,6 +445,44 @@ export default function TermsOfService() {
               <p>
                 We may modify these Terms at any time. Continued use constitutes acceptance.
               </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-primary-text mb-4">14. General Terms</h2>
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-3 text-sm text-slate-700">
+                <p>
+                  <strong>Force Majeure.</strong> Ownerfi is not liable for delays or failures caused by
+                  events beyond our reasonable control, including natural disasters, internet or hosting
+                  outages, third-party API failures (data providers, payment processors, SMS/email
+                  carriers), governmental action, or labor disputes.
+                </p>
+                <p>
+                  <strong>Severability.</strong> If any provision of these Terms is held unenforceable,
+                  the remaining provisions remain in full force and effect.
+                </p>
+                <p>
+                  <strong>Survival.</strong> Sections covering Limitation of Liability, Indemnification,
+                  Dispute Resolution, Class Action Waiver, Refund Policy, and these General Terms survive
+                  termination or expiration of these Terms.
+                </p>
+                <p>
+                  <strong>No Assignment.</strong> You may not assign these Terms or your account to anyone
+                  else without our written consent. Ownerfi may assign these Terms to an affiliate,
+                  acquirer, or successor.
+                </p>
+                <p>
+                  <strong>Entire Agreement.</strong> These Terms, together with our Privacy Policy and any
+                  referral agreements you sign, constitute the entire agreement between you and Ownerfi
+                  and supersede any prior understanding.
+                </p>
+                <p>
+                  <strong>Service Outside the United States.</strong> The Service is offered to users in
+                  the United States. We do not target, market, or knowingly accept users in the European
+                  Economic Area, United Kingdom, or other jurisdictions with comprehensive personal-data
+                  laws (such as GDPR). If you access the Service from outside the U.S., you do so at your
+                  own risk and agree that U.S. law governs.
+                </p>
+              </div>
             </section>
 
             <div className="border-t pt-8 mt-8">
@@ -407,6 +576,59 @@ export default function TermsOfService() {
                   <p className="mb-4">
                     By signing a referral agreement through the Ownerfi platform, you enter into a <strong>legally binding contract</strong> to pay the specified referral fee upon closing any transaction with the referred buyer.
                   </p>
+
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                    <p className="font-bold text-blue-900 mb-2">"Closed Transaction" — Triggers and Calculation</p>
+                    <p className="text-blue-900 text-sm mb-2">A "closed transaction" means <strong>all of the following</strong> have occurred for a property purchased by a referred buyer:</p>
+                    <ol className="list-decimal ml-6 space-y-1 text-blue-900 text-sm">
+                      <li>Deed has been recorded with the county;</li>
+                      <li>Funds have been disbursed at closing; AND</li>
+                      <li>You (or your brokerage on your behalf) have received the commission from the
+                        seller, listing brokerage, or escrow agent.</li>
+                    </ol>
+                    <p className="text-blue-900 text-sm mt-2">
+                      The <strong>"gross commission"</strong> means the total commission paid to your side
+                      of the transaction <em>before</em> any brokerage split, transaction fees, MLS dues,
+                      desk fees, or other deductions. The 30% referral fee is calculated on this gross
+                      number; how you and your brokerage split the remaining 70% is between you and your
+                      brokerage.
+                    </p>
+                  </div>
+
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
+                    <p className="font-bold text-amber-900 mb-2">⚠️ Broker Authority Warranty + Personal Liability</p>
+                    <p className="text-amber-900 text-sm mb-2">
+                      By signing a referral agreement on this platform, you <strong>represent and warrant</strong> that:
+                    </p>
+                    <ul className="list-disc ml-6 space-y-1 text-amber-900 text-sm mb-2">
+                      <li>You have <strong>obtained your broker's authorization</strong> to enter into
+                        referral arrangements through Ownerfi;</li>
+                      <li>You have authority to <strong>bind your brokerage</strong> to the referral fee
+                        obligation;</li>
+                      <li>If your state requires referral arrangements to be between brokerages (rather
+                        than between Ownerfi and an individual licensee), you have arranged for your
+                        broker to be the contracting party or you have obtained equivalent broker consent.</li>
+                    </ul>
+                    <p className="text-amber-900 text-sm font-semibold">
+                      If your broker refuses to honor the referral fee for any reason — including lack of
+                      prior authorization, state-law restrictions, or internal brokerage policy —
+                      <strong> you remain personally liable</strong> to Ownerfi for the full referral fee
+                      amount.
+                    </p>
+                  </div>
+
+                  <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+                    <p className="font-bold text-slate-900 mb-2">RESPA Section 8 — Service Classification</p>
+                    <p className="text-slate-700 text-sm">
+                      Ownerfi is a <strong>marketing and lead-generation service</strong>. Fees paid to
+                      Ownerfi are paid for advertising, lead-acquisition, and platform access — they are
+                      <strong> not</strong> compensation for "settlement services" as defined under the
+                      Real Estate Settlement Procedures Act (RESPA). Ownerfi does not provide loan
+                      originations, title services, escrow services, or other RESPA-regulated services,
+                      and does not steer transactions to or from any particular settlement-service
+                      provider.
+                    </p>
+                  </div>
                 </section>
 
                 <section>
@@ -547,13 +769,24 @@ export default function TermsOfService() {
                   <p className="mb-4">
                     You agree to indemnify and hold harmless Ownerfi, its officers, employees, and affiliates from any claims, damages, or expenses arising from:
                   </p>
-                  <ul className="list-disc ml-6 space-y-1">
+                  <ul className="list-disc ml-6 space-y-1 mb-4">
                     <li>Your use of the platform</li>
                     <li>Your real estate activities with referred leads</li>
                     <li>Violation of these Terms</li>
-                    <li>Violation of any law or third-party rights</li>
+                    <li>Violation of any law or third-party rights — including TCPA, CAN-SPAM, federal or
+                      state Do-Not-Call lists, the Fair Housing Act, state real-estate licensing laws,
+                      and state-specific referral-arrangement rules (e.g. requirements that referrals be
+                      between brokerages rather than individual licensees)</li>
                     <li>Disputes with buyers or other agents</li>
+                    <li>Any claim that your referral arrangement with Ownerfi violates your state's
+                      real-estate or settlement-procedure laws</li>
                   </ul>
+                  <p className="text-slate-700 text-sm">
+                    You are responsible for understanding and complying with the laws of every state in
+                    which you serve referred leads. Ownerfi makes no representation that participation in
+                    this platform is permissible under any particular state's real-estate or
+                    settlement-procedure laws.
+                  </p>
                 </section>
 
                 <section>
@@ -600,6 +833,39 @@ export default function TermsOfService() {
                   <p>
                     We may modify these Terms at any time. Material changes will be communicated via email or platform notification. Continued use after changes constitutes acceptance.
                   </p>
+                </section>
+
+                <section>
+                  <h2 className="text-2xl font-semibold text-primary-text mb-4">16. General Terms</h2>
+                  <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-3 text-sm text-slate-700">
+                    <p>
+                      <strong>Force Majeure.</strong> Ownerfi is not liable for delays or failures caused
+                      by events beyond our reasonable control, including outages of third-party data
+                      sources, payment processors, SMS/email carriers, or governmental action.
+                    </p>
+                    <p>
+                      <strong>Severability.</strong> If any provision of these Terms is held
+                      unenforceable, the remaining provisions remain in full force and effect.
+                    </p>
+                    <p>
+                      <strong>Survival.</strong> Sections covering Referral Fee Agreement, Indemnification,
+                      Limitation of Liability, Dispute Resolution, Class Action Waiver, and these General
+                      Terms <strong>survive</strong> termination of your account or these Terms. Your
+                      obligation to pay referral fees on transactions arising from leads you accepted
+                      while your account was active continues after termination.
+                    </p>
+                    <p>
+                      <strong>No Assignment.</strong> You may not transfer your account, your rights, or
+                      your obligations under these Terms to another agent or entity without our written
+                      consent. Ownerfi may assign these Terms to an affiliate, acquirer, or successor.
+                    </p>
+                    <p>
+                      <strong>Electronic Signatures.</strong> The parties consent to the use of electronic
+                      signatures and electronic records under the federal ESIGN Act and applicable state
+                      counterparts. A typed-name signature with checkbox confirmation has the same legal
+                      force as a handwritten signature.
+                    </p>
+                  </div>
                 </section>
 
                 <div className="border-t pt-8 mt-8">

@@ -41,9 +41,16 @@ function getTypesenseClient() {
 
 // Transform Firestore doc to Typesense doc
 function transformToTypesense(docId: string, data: FirebaseFirestore.DocumentData) {
+  // Distressed listings (auction, foreclosure, bank-owned) are never
+  // owner_finance — the posted price is an opening bid or estimated value,
+  // not a seller's asking price.
+  const isDistressed = data.isAuction === true || data.isForeclosure === true || data.isBankOwned === true;
+
   // Determine dealType from boolean flags or existing dealType string
   let dealType = data.dealType || 'unknown';
-  if (data.isOwnerfinance && data.isCashDeal) {
+  if (isDistressed) {
+    dealType = 'cash_deal';
+  } else if (data.isOwnerfinance && data.isCashDeal) {
     dealType = 'both';
   } else if (data.isCashDeal) {
     dealType = 'cash_deal';
@@ -104,6 +111,12 @@ function transformToTypesense(docId: string, data: FirebaseFirestore.DocumentDat
     discountPercent: data.discountPercentage || data.discount || undefined,
     needsWork: data.needsWork || false,
     isLand: data.isLand || LAND_TYPES.has((data.homeType || data.propertyType || '').toLowerCase()) || false,
+    // Distressed-listing flags — `listPrice` is an opening bid or estimated
+    // value, not a seller's asking price. UI renders "Est." + badge.
+    isAuction: data.isAuction === true,
+    isForeclosure: data.isForeclosure === true,
+    isBankOwned: data.isBankOwned === true,
+    listingSubType: data.listingSubType || '',
     // Status & metadata
     manuallyVerified: data.manuallyVerified || undefined,
     homeStatus: data.homeStatus || data.status || undefined,

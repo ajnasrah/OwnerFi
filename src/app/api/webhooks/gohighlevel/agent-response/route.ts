@@ -95,8 +95,21 @@ export async function POST(request: NextRequest) {
     // Read raw body
     const rawBody = await request.text();
 
-    // Parse body
-    const body = JSON.parse(rawBody);
+    // Parse body — accept JSON OR form-urlencoded (GHL occasionally sends
+    // x-www-form-urlencoded depending on how the action was configured).
+    let body: any = {};
+    const ct = request.headers.get('content-type') || '';
+    try {
+      if (ct.includes('application/x-www-form-urlencoded')) {
+        body = Object.fromEntries(new URLSearchParams(rawBody));
+      } else if (rawBody.trim()) {
+        body = JSON.parse(rawBody);
+      }
+    } catch {
+      // Try urlencoded as fallback if JSON parse fails
+      try { body = Object.fromEntries(new URLSearchParams(rawBody)); } catch { body = {}; }
+    }
+    if (!body || typeof body !== 'object') body = {};
 
     // GHL custom webhooks don't support HMAC signatures natively.
     // When GHL_BYPASS_SIGNATURE is "true" (set in Vercel production), skip auth entirely.
@@ -136,9 +149,22 @@ export async function POST(request: NextRequest) {
       return undefined;
     };
 
-    const firebaseId = findKey(body, ['firebaseId', 'firebase_id']);
-    const response = findKey(body, ['response', 'agent_response', 'agentResponse']);
-    const agentNote = findKey(body, ['agentNote', 'agent_note', 'note']);
+    const firebaseId = findKey(body, ['firebaseId', 'firebase_id', 'firebase_doc_id', 'queueId', 'queue_id']);
+    const rawResponse = findKey(body, ['response', 'agent_response', 'agentResponse', 'answer', 'reply', 'status']);
+    const agentNote = findKey(body, ['agentNote', 'agent_note', 'note', 'message']);
+
+    // Normalize response — accept "yes"/"no"/"YES"/"No"/"1"/"0"/"true"/"false"/
+    // "interested"/"not interested"/"not_interested"/"nope"
+    const normalizeResponse = (v: unknown): 'yes' | 'no' | null => {
+      if (v === true || v === 1) return 'yes';
+      if (v === false || v === 0) return 'no';
+      if (typeof v !== 'string') return null;
+      const s = v.trim().toLowerCase();
+      if (['yes', 'y', 'true', '1', 'interested', 'agree', 'accept', 'accepted'].includes(s)) return 'yes';
+      if (['no', 'n', 'false', '0', 'nope', 'not interested', 'not_interested', 'notinterested', 'reject', 'rejected', 'decline', 'declined'].includes(s)) return 'no';
+      return null;
+    };
+    const response = normalizeResponse(rawResponse);
 
     console.log(`📋 [AGENT RESPONSE WEBHOOK] Processing response for ${firebaseId}`);
     console.log(`   Response: ${response}`);
@@ -171,11 +197,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate response value
+    // Validate response value (already normalized — if still null, raw value was unrecognized)
     if (response !== 'yes' && response !== 'no') {
-      console.error('❌ [AGENT RESPONSE WEBHOOK] Invalid response value:', response);
+      console.error('❌ [AGENT RESPONSE WEBHOOK] Invalid response value:', rawResponse);
+      try {
+        await db.collection('webhook_debug_logs').add({
+          endpoint: 'agent-response',
+          status: 'invalid_response',
+          firebaseId,
+          rawResponse,
+          rawBody: body,
+          receivedAt: new Date(),
+        });
+      } catch (e) { console.error('failed to log webhook debug:', e); }
       return NextResponse.json(
-        { error: 'Invalid response value. Must be "yes" or "no"' },
+        {
+          error: 'Invalid response value',
+          hint: 'Accepted: yes/no, true/false, 1/0, interested/not interested, accepted/rejected',
+          received: rawResponse,
+        },
         { status: 400 }
       );
     }
@@ -196,6 +236,20 @@ export async function POST(request: NextRequest) {
 
     console.log(`   Property: ${property.address}`);
     console.log(`   Deal Type: ${property.dealType}`);
+
+    // Idempotency: if the same response was already recorded, return 200
+    // without re-running side effects. Prevents double-sending / double-writes
+    // on GHL retry.
+    if (property.agentResponse === response && property.status && property.status.startsWith('agent_')) {
+      console.log('⏭️  [AGENT RESPONSE WEBHOOK] Duplicate — already processed');
+      return NextResponse.json({
+        success: true,
+        duplicate: true,
+        message: 'Response already processed (idempotent replay)',
+        firebaseId,
+        response,
+      });
+    }
 
     // Handle agent response
     if (response === 'yes') {
@@ -352,4 +406,22 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+/**
+ * GET handler — returns a friendly status so testing the URL in a browser
+ * or misconfigured GHL action returns a clear message instead of 405.
+ */
+export async function GET() {
+  return NextResponse.json({
+    ok: true,
+    endpoint: 'agent-response',
+    method: 'POST',
+    expects: {
+      firebase_id: 'string (queue doc id; also accepts firebaseId)',
+      response: 'yes|no|true|false|1|0|interested|not interested|accepted|rejected',
+      agent_note: 'string (optional)',
+    },
+    docs: 'POST with application/json or x-www-form-urlencoded. Fields may be nested inside customData/custom_data/data/contact — we walk the payload.',
+  });
 }

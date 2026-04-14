@@ -49,28 +49,73 @@ export async function POST(request: NextRequest) {
   console.log('[STAGE CHANGE] Received webhook');
 
   try {
-    const body = await request.json();
+    const rawBody = await request.text();
+    const ct = request.headers.get('content-type') || '';
+    let body: any = {};
+    try {
+      if (ct.includes('application/x-www-form-urlencoded')) {
+        body = Object.fromEntries(new URLSearchParams(rawBody));
+      } else if (rawBody.trim()) {
+        body = JSON.parse(rawBody);
+      }
+    } catch {
+      try { body = Object.fromEntries(new URLSearchParams(rawBody)); } catch { body = {}; }
+    }
+    if (!body || typeof body !== 'object') body = {};
 
-    // Auth: check secret in body (GHL sends it as custom field in workflow)
-    const bodySecret = body['GHL_WEBHOOK'] || body['webhook_secret'] || body['secret'];
+    // Recursive field extractor — GHL may nest values inside customData
+    const findKey = (obj: any, keys: string[]): any => {
+      if (!obj || typeof obj !== 'object') return undefined;
+      for (const k of keys) if (obj[k] !== undefined && obj[k] !== null) return obj[k];
+      for (const v of Object.values(obj)) {
+        if (v && typeof v === 'object') {
+          const found = findKey(v, keys);
+          if (found !== undefined) return found;
+        }
+      }
+      return undefined;
+    };
+
+    // Auth: check secret anywhere in payload
+    const bodySecret = findKey(body, ['GHL_WEBHOOK', 'webhook_secret', 'secret']);
     const expectedSecret = process.env.GHL_WEBHOOK_SECRET;
 
-    if (!expectedSecret || !bodySecret || bodySecret.trim() !== expectedSecret.trim()) {
+    if (!expectedSecret || !bodySecret || String(bodySecret).trim() !== expectedSecret.trim()) {
       console.error('[STAGE CHANGE] Auth failed');
+      try {
+        await db.collection('webhook_debug_logs').add({
+          endpoint: 'opportunity-stage-change',
+          status: 'auth_failed',
+          secretFound: !!bodySecret,
+          rawBody: body,
+          receivedAt: new Date(),
+        });
+      } catch {}
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const firebaseId = body.firebase_id || body.firebaseId;
-    const phone = body.phone || body.contact_phone || '';
-    const email = body.email || body.contact_email || '';
-    const stage = (body.stage || '').trim().toLowerCase();
-    const note = body.note || body.agent_note || '';
-    const pipeline = (body.pipeline || '').trim().toLowerCase();
+    const firebaseId = findKey(body, ['firebase_id', 'firebaseId', 'firebase_doc_id', 'queueId']);
+    const phone = findKey(body, ['phone', 'contact_phone', 'contactPhone']) || '';
+    const email = findKey(body, ['email', 'contact_email', 'contactEmail']) || '';
+    const stage = String(findKey(body, ['stage', 'pipeline_stage', 'pipelineStage']) || '').trim().toLowerCase();
+    const note = findKey(body, ['note', 'agent_note', 'agentNote', 'message']) || '';
+    const pipeline = String(findKey(body, ['pipeline', 'pipeline_name', 'pipelineName']) || '').trim().toLowerCase();
 
     console.log(`[STAGE CHANGE] firebase_id=${firebaseId}, phone=${phone}, stage="${stage}", pipeline="${pipeline}"`);
 
     if (!stage) {
-      return NextResponse.json({ error: 'Missing stage' }, { status: 400 });
+      try {
+        await db.collection('webhook_debug_logs').add({
+          endpoint: 'opportunity-stage-change',
+          status: 'missing_stage',
+          rawBody: body,
+          receivedAt: new Date(),
+        });
+      } catch {}
+      return NextResponse.json(
+        { error: 'Missing stage', hint: 'Include "stage" field at top level or in customData', bodyKeys: Object.keys(body) },
+        { status: 400 }
+      );
     }
 
     // Map stage to action

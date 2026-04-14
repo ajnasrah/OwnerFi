@@ -86,3 +86,11 @@ firebase-debug.*.log
 # Firebase Functions
 functions/node_modules/
 functions/lib/
+
+# Local Claude state
+.claude/scheduled_tasks.lock
+
+# Brand assets (kept on disk, not in repo)
+Brand Assets/
+LOGO Brand Assets*.zip
+LOGO Final Look*.pdf

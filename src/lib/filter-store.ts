@@ -17,12 +17,6 @@ import {
 
 const COLLECTION = 'userFilters';
 
-export interface StoredFilter extends FilterConfig {
-  userId: string;
-  updatedAt: Date;
-  updatedBy: string; // 'self' | `admin:${uid}`
-}
-
 /**
  * Read a user's filter config. If no doc exists, tries to synthesize from the
  * buyer profile's legacy fields (preferredCity/State, filter.radiusMiles).

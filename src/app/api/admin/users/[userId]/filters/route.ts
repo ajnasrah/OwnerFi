@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 import { authOptions } from '@/lib/auth';
 import { ExtendedSession } from '@/types/session';
 import { getUserFilter, setUserFilter } from '@/lib/filter-store';

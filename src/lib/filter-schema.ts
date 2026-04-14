@@ -19,7 +19,7 @@ export type ZipMode = 'include' | 'exclude' | 'off';
 
 export interface ZipFilter {
   mode: ZipMode;
-  codes: string[]; // 5-digit, deduped, uppercased N/A — digits only
+  codes: string[]; // 5-digit strings, deduped
 }
 
 export interface FilterConfig {
@@ -62,9 +62,13 @@ export function normalizeLocation(raw: unknown): LocationEntry | null {
 }
 
 /**
- * Normalize and validate an incoming FilterConfig payload.
- * Drops invalid entries silently; caps sizes; dedupes zips (case-insensitive).
- * Returns null if the entire payload is unusable.
+ * Normalize an incoming FilterConfig payload. Drops invalid entries silently,
+ * dedupes, enforces caps (MAX_LOCATIONS, MAX_ZIPS). Always returns a valid
+ * FilterConfig — unusable input produces EMPTY_FILTER.
+ *
+ * Side-effect worth knowing: an include-mode payload with zero valid codes is
+ * downgraded to mode='off' so callers can't accidentally save a filter that
+ * matches nothing.
  */
 export function normalizeFilterConfig(input: unknown): FilterConfig {
   const src = (input && typeof input === 'object' ? input : {}) as Record<string, unknown>;

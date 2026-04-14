@@ -215,7 +215,22 @@ export async function GET(request: NextRequest) {
     }
 
     if (typesenseError) {
-      allDeals = await searchFirestore(nearbyCities, allowedStates, 'all');
+      // In zip-override mode the Firestore fallback can't honor a nationwide
+      // zip query (it searches by city), so we'd rather return empty than
+      // leak the legacy city results.
+      if (zipsOverride) {
+        allDeals = [];
+      } else {
+        allDeals = await searchFirestore(nearbyCities, allowedStates, 'all');
+      }
+    }
+
+    // Apply include-zip filter as a safety net. Typesense usually enforces it
+    // via filter_by, but if the hit comes back from the Firestore fallback or
+    // any future code path that bypasses the zip query, we still clamp here.
+    if (zipsOverride) {
+      const includeSet = new Set(userFilter.zips.codes);
+      allDeals = allDeals.filter(d => includeSet.has(d.zipCode));
     }
 
     // Apply exclude-zip filter (zip codes user wants cut out)
@@ -395,7 +410,10 @@ async function searchTypesenseByZips(
   if (!client) throw new Error('Typesense client is null');
   if (zipCodes.length === 0) return [];
 
-  const zipFilter = `zipCode:=[${zipCodes.map(z => `\`${z}\``).join(',')}]`;
+  // Zips are 5-digit numerics — no backtick escaping needed, and backticks can
+  // trip Typesense's filter parser for pure-numeric string fields. Values are
+  // already validated by normalizeFilterConfig → ZIP_RE.
+  const zipFilter = `zipCode:=[${zipCodes.join(',')}]`;
   const dealTypeClause = '(dealType:=[owner_finance, cash_deal, both] || needsWork:=true)';
   const filters = ['isActive:=true', zipFilter, dealTypeClause];
   return runTypesenseSearch(client, filters, 'all', extraFilters);

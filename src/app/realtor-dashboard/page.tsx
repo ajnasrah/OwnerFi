@@ -20,15 +20,6 @@ export default function RealtorDashboardHub() {
     }
   }, [status, session, router]);
 
-  // On mobile, skip the hub and go straight to buyer leads
-  // (Header "Dashboard" button links directly to /realtor-dashboard/buyers on mobile,
-  //  so this redirect only fires if someone navigates here directly)
-  useEffect(() => {
-    if (status === 'authenticated' && window.innerWidth < 768) {
-      router.replace('/realtor-dashboard/buyers');
-    }
-  }, [status, router]);
-
   if (status === 'loading') {
     return (
       <div className="min-h-screen bg-[#111625] flex items-center justify-center">
@@ -51,12 +42,10 @@ export default function RealtorDashboardHub() {
           <p className="text-slate-300 text-sm md:text-lg">
             What would you like to do today?
           </p>
-          {/* Mobile hint */}
-          <p className="text-slate-500 text-xs mt-2 md:hidden">Use the tabs below to navigate</p>
         </div>
 
-        {/* Hub Cards - hidden on mobile, tab bar handles nav */}
-        <div className="hidden md:grid md:grid-cols-2 gap-6">
+        {/* Hub Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
 
           {/* View Buyer Leads */}
           <Link

@@ -144,7 +144,7 @@ export default function AuthPage() {
             } else if (checkData.isInvestor === true) {
               redirectTo = '/dashboard/investor';
             } else if (checkData.role === 'realtor') {
-              redirectTo = '/realtor-dashboard/buyers';
+              redirectTo = '/realtor-dashboard';
             }
           }
 

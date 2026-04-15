@@ -33,17 +33,26 @@ import { getFirebaseAdmin } from '../src/lib/scraper-v2/firebase-admin';
 //   nHTr1RfVWiNOTYRet2MA  (nataly abuhalimeh — operator confirmed real)
 
 const USER_IDS: string[] = [
+  // Already scrubbed in the first run — listed here for audit continuity.
+  // The script skips already-deleted users so re-running is a no-op on these.
   'FIb7pDM6aGZ5AqVCdT0i',
   '5JozoqQhOcCuS5rvgDBS',
   'TFIbP9gBXllKzgKuIgRl',
   'SxJzsVBTNex6czrZSXG1',
   'RYYKkoMilRfNf0qFCURp',
+  // Round 2 — buyer users flagged after diagnostic scan:
+  'Gb8m7Bj5PstQ4ougsOc6',   // Ghena Abunasrah (family test)
+  'ccYVz9Obxcksy9kDSRVr',   // Jana Abunasrah (family test)
 ];
 
 // Standalone buyerProfile IDs (not linked to any user in USER_IDS above)
 // that should also be scrubbed.
 const BUYER_PROFILE_IDS: string[] = [
-  'buyer_1766119989144_s5te8b6ce', // "test test" — abdusklj@famsfa.com
+  'buyer_1766119989144_s5te8b6ce', // "test test" — abdusklj@famsfa.com (round 1)
+  // Round 2 — obvious test buyer profiles:
+  'buyer_1765643662123_j38jwevyl', // ABDULLAH ABUNASRAH / abdullah@abdullah.abdullah / +19998887777
+  'buyer_1765947896696_8gvitfdrj', // abdulla / ajsfnafjk.coim / +18889998888
+  'buyer_1770751854561_nya7a2eo6', // abdullah / +19898999898
 ];
 
 // ─── Script ─────────────────────────────────────────────────────────────────

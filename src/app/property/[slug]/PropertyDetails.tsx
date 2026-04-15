@@ -9,15 +9,30 @@ interface PropertyDetailsProps {
 }
 
 export default function PropertyDetails({ property }: PropertyDetailsProps) {
+  // The refresh-zillow-status cron writes flat `lotSquareFoot` and `hoa:number`;
+  // older docs may use nested `lotSize` or `hoa.hasHOA/.monthlyFee`. Read both.
+  const lotSqFt: number | undefined =
+    (typeof property.lotSize === 'number' ? property.lotSize : undefined) ||
+    (typeof property.lotSquareFoot === 'number' ? property.lotSquareFoot : undefined);
+
+  let hoaLabel = 'None';
+  if (typeof property.hoa === 'number' && property.hoa > 0) {
+    hoaLabel = `$${property.hoa}/mo`;
+  } else if (property.hoa?.hasHOA && property.hoa?.monthlyFee) {
+    hoaLabel = `$${property.hoa.monthlyFee}/mo`;
+  } else if (typeof property.monthlyHOAFee === 'number' && property.monthlyHOAFee > 0) {
+    hoaLabel = `$${property.monthlyHOAFee}/mo`;
+  }
+
   const details = [
     { label: 'Property Type', value: formatPropertyType(property.propertyType || property.homeType) },
     { label: 'Year Built', value: property.yearBuilt || '—' },
-    { label: 'Lot Size', value: property.lotSize ? `${property.lotSize.toLocaleString()} sq ft` : '—' },
+    { label: 'Lot Size', value: lotSqFt ? `${lotSqFt.toLocaleString()} sq ft` : '—' },
     { label: 'Stories', value: property.stories || '—' },
     { label: 'Garage', value: property.garage ? `${property.garage} car` : '—' },
     { label: 'Heating', value: property.heating || '—' },
     { label: 'Cooling', value: property.cooling || '—' },
-    { label: 'HOA', value: property.hoa?.hasHOA ? `$${property.hoa.monthlyFee}/mo` : 'None' },
+    { label: 'HOA', value: hoaLabel },
   ].filter(d => d.value && d.value !== '—');
 
   const features = property.features || [];

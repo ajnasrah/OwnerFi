@@ -128,6 +128,15 @@ export async function GET(request: NextRequest) {
         otherTerms: ''
       };
 
+      // For signed agreements, prefer the frozen snapshot written at signing
+      // time so a later template change doesn't retroactively alter what the
+      // user "signed". Falls back to re-rendering for legacy docs that were
+      // signed before the snapshot field existed.
+      const storedSnapshot = (agreement as unknown as { signedAgreementHTML?: string }).signedAgreementHTML;
+      const agreementHTML = storedSnapshot && agreement.status === 'signed'
+        ? storedSnapshot
+        : generateAgreementHTML(templateData);
+
       return NextResponse.json({
         success: true,
         agreement: {
@@ -140,7 +149,8 @@ export async function GET(request: NextRequest) {
           updatedAt: (agreement.updatedAt as unknown as { toDate: () => Date }).toDate().toISOString()
         },
         agreementText: generateAgreementText(templateData),
-        agreementHTML: generateAgreementHTML(templateData)
+        agreementHTML,
+        usedSnapshot: Boolean(storedSnapshot && agreement.status === 'signed'),
       });
     }
 

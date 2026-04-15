@@ -35,6 +35,10 @@ export default function BuyerSettings() {
     maxSquareFeet: '',
     minPrice: '',
     maxPrice: '',
+    // Communication preferences — granular SMS toggle separate from STOP
+    // (STOP via Twilio fully revokes TCPA consent; this toggle just pauses
+    // marketing/deal-alert SMS while keeping the account and consent intact).
+    smsNotifications: true,
   });
 
   // Form tracking
@@ -91,6 +95,8 @@ export default function BuyerSettings() {
           maxSquareFeet: data.profile.maxSquareFeet?.toString() || '',
           minPrice: data.profile.minPrice?.toString() || '',
           maxPrice: data.profile.maxPrice?.toString() || '',
+          // Default true; respect explicit false if user has already opted out.
+          smsNotifications: data.profile.smsNotifications !== false,
         });
       }
     } catch {
@@ -187,6 +193,9 @@ export default function BuyerSettings() {
           ...(formData.maxSquareFeet && { maxSquareFeet: Number(formData.maxSquareFeet) }),
           ...(formData.minPrice && { minPrice: Number(formData.minPrice) }),
           ...(formData.maxPrice && { maxPrice: Number(formData.maxPrice) }),
+          // Communication preferences — write explicitly so toggling back to
+          // true is persisted (not just captured on initial signup).
+          smsNotifications: formData.smsNotifications,
         }),
       });
 
@@ -286,6 +295,34 @@ export default function BuyerSettings() {
               onChange={(city) => setFormData(prev => ({ ...prev, city }))}
               placeholder="Dallas, TX"
             />
+          </div>
+
+          {/* Communication Preferences Card */}
+          <div className="bg-gradient-to-br from-slate-800/50 to-slate-800/30 border border-slate-700/50 rounded-xl p-4 backdrop-blur-xl shadow-lg">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-lg">💬</span>
+              <h2 className="text-base font-bold text-white">Communication Preferences</h2>
+            </div>
+
+            <label className="flex items-center gap-3 p-3 bg-[#111625]/30 rounded-lg cursor-pointer hover:bg-[#111625]/50 transition-all group">
+              <input
+                type="checkbox"
+                checked={formData.smsNotifications}
+                onChange={(e) => setFormData(prev => ({ ...prev, smsNotifications: e.target.checked }))}
+                className="w-5 h-5 text-[#00BC7D] bg-slate-700 border-slate-600 rounded focus:ring-[#00BC7D] cursor-pointer"
+              />
+              <div className="flex-1">
+                <span className="text-sm font-semibold text-white group-hover:text-[#00BC7D] transition-colors">
+                  Marketing and deal-alert SMS
+                </span>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  When off, we&apos;ll stop sending you property-match and deal-alert SMS. Transactional texts (like OTP codes) still go through.
+                </p>
+              </div>
+            </label>
+            <p className="text-[11px] text-slate-500 mt-2 px-1">
+              To fully revoke consent and stop all messaging, reply <strong>STOP</strong> to any text or use <a href="/do-not-sell" className="text-[#00BC7D] hover:underline">the Do Not Sell/Share form</a>.
+            </p>
           </div>
 
           {/* User Type Card */}
@@ -621,6 +658,50 @@ export default function BuyerSettings() {
               </span>
             )}
           </button>
+        </div>
+
+        {/* Privacy rights — data export + account deletion (CCPA/GDPR) */}
+        <div className="mt-3 bg-gradient-to-br from-slate-800/50 to-slate-800/30 border border-slate-700/50 rounded-xl p-4 backdrop-blur-xl shadow-lg">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-lg">🔒</span>
+            <h2 className="text-base font-bold text-white">Your Privacy Rights</h2>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => { window.location.href = '/api/account/export'; }}
+            className="w-full mb-2 bg-slate-700 hover:bg-slate-600 text-white py-2.5 px-4 rounded-lg font-semibold text-sm transition-colors"
+          >
+            Download a copy of my data
+          </button>
+
+          <button
+            type="button"
+            onClick={async () => {
+              const confirm = window.prompt(
+                'This will delete your account and stop all messaging. Type DELETE to confirm.',
+              );
+              if (confirm !== 'DELETE') return;
+              const res = await fetch('/api/account/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ confirm }),
+              });
+              const data = await res.json().catch(() => ({}));
+              if (res.ok) {
+                window.alert(data.message || 'Account deleted.');
+                signOut({ callbackUrl: '/' });
+              } else {
+                window.alert(data.error || 'Failed to delete account.');
+              }
+            }}
+            className="w-full bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 py-2.5 px-4 rounded-lg font-semibold text-sm transition-colors"
+          >
+            Delete my account
+          </button>
+          <p className="text-[11px] text-slate-500 mt-2 px-1">
+            Deletion stops all messaging and scrubs your contact information. Audit records required for legal compliance (TCPA, 4-year retention) are retained.
+          </p>
         </div>
 
         {/* Sign Out - visible on mobile since header logout is hidden */}

@@ -62,6 +62,10 @@ export interface InvestorDeal {
   propertyType?: string;
   zestimate?: number;
   rentEstimate?: number;
+  /** Days-on-Zillow — critical go/no-go field for flippers (stale = lower bid). */
+  daysOnZillow?: number;
+  /** Lot size in square feet (surfaced for investor analysis). */
+  lotSize?: number;
   url?: string;
 }
 
@@ -535,7 +539,7 @@ async function runTypesenseSearch(
         sort_by: 'listPrice:asc',
         per_page: perPage,
         page,
-        include_fields: 'id,address,city,state,zipCode,bedrooms,bathrooms,squareFeet,yearBuilt,listPrice,monthlyPayment,downPaymentAmount,downPaymentPercent,interestRate,termYears,balloonYears,propertyType,primaryImage,galleryImages,dealType,zestimate,rentEstimate,needsWork,percentOfArv,isLand,isAuction,isForeclosure,isBankOwned,listingSubType,url,zpid,homeStatus',
+        include_fields: 'id,address,city,state,zipCode,bedrooms,bathrooms,squareFeet,yearBuilt,listPrice,monthlyPayment,downPaymentAmount,downPaymentPercent,interestRate,termYears,balloonYears,propertyType,primaryImage,galleryImages,dealType,zestimate,rentEstimate,needsWork,percentOfArv,isLand,isAuction,isForeclosure,isBankOwned,listingSubType,url,zpid,homeStatus,daysOnZillow,lotSize',
       });
 
     const hits = result.hits || [];
@@ -633,6 +637,8 @@ async function runTypesenseSearch(
       propertyType: (doc.propertyType as string) || undefined,
       zestimate: arv > 0 ? arv : undefined,
       rentEstimate: (doc.rentEstimate as number) || undefined,
+      daysOnZillow: (doc.daysOnZillow as number) || undefined,
+      lotSize: (doc.lotSize as number) || undefined,
       url: (doc.url as string) || (doc.zpid ? `https://www.zillow.com/homedetails/${doc.zpid}_zpid/` : undefined) || undefined,
     } as InvestorDeal;
   }).filter(Boolean) as InvestorDeal[];
@@ -779,6 +785,8 @@ async function searchFirestore(
           propertyType: (data.homeType as string) || (data.propertyType as string) || undefined,
           zestimate: arv > 0 ? arv : undefined,
           rentEstimate: (data.rentEstimate as number) || undefined,
+          daysOnZillow: (data.daysOnZillow as number) || undefined,
+          lotSize: (data.lotSize as number) || (data.lotSquareFoot as number) || undefined,
           url: ((data.url as string)?.startsWith('http') ? data.url as string : data.url ? `https://www.zillow.com${data.url}` : undefined)
             || (data.hdpUrl ? `https://www.zillow.com${data.hdpUrl}` : undefined)
             || undefined,

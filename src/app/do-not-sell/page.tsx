@@ -32,7 +32,7 @@ export default function DoNotSellPage() {
       if (data.success) {
         setResult({
           success: true,
-          message: 'Your request has been processed. Your information will no longer be shared with third parties.'
+          message: 'Your opt-out request has been processed. Your information will no longer be shared with third parties, and all marketing SMS and calls from us will stop within 24 hours. If you gave consent to receive messages, that consent is now revoked.'
         });
         setPhone('');
         setEmail('');
@@ -67,9 +67,14 @@ export default function DoNotSellPage() {
             to opt out of the sale or sharing of your personal information.
           </p>
           <p className="text-slate-300 mb-4">
-            By submitting this form, your information will be marked as unavailable and will no longer be
-            shared with real estate professionals or other third parties.
+            By submitting this form:
           </p>
+          <ul className="text-slate-300 mb-4 list-disc pl-6 space-y-1">
+            <li>Your information will no longer be shared with real estate professionals or other third parties.</li>
+            <li>All marketing SMS and calls from us will stop within 24 hours.</li>
+            <li>Any TCPA consent you previously gave us is revoked.</li>
+            <li>Your account will be deactivated (contact support to delete it entirely).</li>
+          </ul>
           <p className="text-slate-400 text-sm">
             Please enter the phone number or email address associated with your account.
           </p>

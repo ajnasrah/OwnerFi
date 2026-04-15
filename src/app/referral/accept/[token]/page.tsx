@@ -216,12 +216,12 @@ export default function AcceptReferralPage() {
   return (
     <div className="min-h-screen bg-[#111625] py-8 px-4">
       <div className="max-w-2xl mx-auto">
-        {/* Ownerfi Branding */}
+        {/* eXp Realty branding (matches the agreement document) */}
         <div className="flex justify-center mb-6">
-          <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <svg width="36" height="36" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="lg" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stopColor="#00BC7D"/><stop offset="100%" stopColor="#3B82F6"/></linearGradient></defs><circle cx="50" cy="50" r="45" stroke="url(#lg)" strokeWidth="7" fill="none"/><ellipse cx="50" cy="50" rx="42" ry="22" stroke="url(#lg)" strokeWidth="5.5" fill="none" transform="rotate(-25 50 50)"/><ellipse cx="50" cy="50" rx="22" ry="42" stroke="url(#lg)" strokeWidth="5.5" fill="none" transform="rotate(-25 50 50)"/></svg>
-            <span className="text-xl font-bold text-white">Ownerfi</span>
-          </Link>
+          <div className="flex items-center justify-center gap-2 bg-white px-3 py-1 rounded">
+            <span className="text-2xl font-black text-[#0b3a64]">e<span className="italic">X</span>p<sup className="text-xs">&reg;</sup></span>
+            <span className="text-xs font-bold tracking-[0.3em] text-[#0b3a64]">REALTY</span>
+          </div>
         </div>
 
         {/* Header */}

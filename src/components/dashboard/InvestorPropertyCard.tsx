@@ -401,6 +401,14 @@ export function InvestorPropertyCard({ deal, isLiked, onToggleLike, onHide, isPr
           {deal.yearBuilt && deal.yearBuilt > 0 && (
             <span className="text-slate-500">Built {deal.yearBuilt}</span>
           )}
+          {deal.daysOnZillow != null && deal.daysOnZillow > 0 && (
+            <span
+              className={`text-slate-500 ${deal.daysOnZillow > 90 ? 'text-amber-400' : ''}`}
+              title={deal.daysOnZillow > 90 ? 'Extended time on market — price may be negotiable' : undefined}
+            >
+              {deal.daysOnZillow}d on market
+            </span>
+          )}
         </div>
 
         {/* Deal-specific info */}
@@ -426,7 +434,10 @@ export function InvestorPropertyCard({ deal, isLiked, onToggleLike, onHide, isPr
                 <span className="text-amber-400 text-[10px] font-semibold">Balloon {deal.balloonYears}yr</span>
               )}
               {deal.percentOfArv != null && (
-                <span className={`font-bold ${deal.percentOfArv <= 60 ? 'text-green-400' : deal.percentOfArv <= 70 ? 'text-[#00BC7D]' : deal.percentOfArv <= 85 ? 'text-amber-400' : deal.percentOfArv <= 100 ? 'text-orange-400' : 'text-red-400'}`}>
+                <span
+                  className={`font-bold ${deal.percentOfArv <= 60 ? 'text-green-400' : deal.percentOfArv <= 70 ? 'text-[#00BC7D]' : deal.percentOfArv <= 85 ? 'text-amber-400' : deal.percentOfArv <= 100 ? 'text-orange-400' : 'text-red-400'}`}
+                  title="Zestimate is Zillow's automated home-value estimate (median error ~7% on-market, higher on distressed properties). Not an appraisal. Verify independently."
+                >
                   {deal.percentOfArv}% of Zest
                 </span>
               )}
@@ -440,7 +451,10 @@ export function InvestorPropertyCard({ deal, isLiked, onToggleLike, onHide, isPr
           ) : (
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
               {deal.percentOfArv != null && (
-                <span className={`font-bold ${deal.percentOfArv <= 60 ? 'text-green-400' : deal.percentOfArv <= 70 ? 'text-[#00BC7D]' : deal.percentOfArv <= 85 ? 'text-amber-400' : deal.percentOfArv <= 100 ? 'text-orange-400' : 'text-red-400'}`}>
+                <span
+                  className={`font-bold ${deal.percentOfArv <= 60 ? 'text-green-400' : deal.percentOfArv <= 70 ? 'text-[#00BC7D]' : deal.percentOfArv <= 85 ? 'text-amber-400' : deal.percentOfArv <= 100 ? 'text-orange-400' : 'text-red-400'}`}
+                  title="Zestimate is Zillow's automated home-value estimate (median error ~7% on-market, higher on distressed properties). Not an appraisal. Verify independently."
+                >
                   {deal.percentOfArv}% of Zest
                 </span>
               )}

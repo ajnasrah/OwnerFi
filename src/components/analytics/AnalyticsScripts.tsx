@@ -1,6 +1,8 @@
 'use client';
 
 import Script from 'next/script';
+import { useEffect, useState } from 'react';
+import { hasAnalyticsConsent } from './CookieBanner';
 
 interface AnalyticsScriptsProps {
   ga4Id?: string;
@@ -13,6 +15,21 @@ export default function AnalyticsScripts({
   metaPixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID,
   tiktokPixelId = process.env.NEXT_PUBLIC_TIKTOK_PIXEL_ID,
 }: AnalyticsScriptsProps) {
+  // Gate ALL pixel loaders behind explicit consent. GPC signal override is
+  // handled inside hasAnalyticsConsent(). Until the user either accepts the
+  // cookie banner or an effect subscribes to the consent-changed event, the
+  // scripts do not render — no network requests, no cookies, no pixel calls.
+  const [consented, setConsented] = useState(false);
+
+  useEffect(() => {
+    setConsented(hasAnalyticsConsent());
+    const onChange = () => setConsented(hasAnalyticsConsent());
+    window.addEventListener('ownerfi:consent-changed', onChange);
+    return () => window.removeEventListener('ownerfi:consent-changed', onChange);
+  }, []);
+
+  if (!consented) return null;
+
   return (
     <>
       {/* Google Analytics 4 */}

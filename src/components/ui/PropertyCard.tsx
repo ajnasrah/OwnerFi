@@ -591,7 +591,7 @@ export const PropertyCard = React.memo(function PropertyCard({ property, isFavor
                     </a>
 
                     <a
-                      href={property.agentPhone ? `sms:${property.agentPhone}&body=${encodeURIComponent(`I'm interested in the property at ${property.address}, ${property.city}, ${property.state}. Found through Ownerfi.`)}` : `https://www.zillow.com/homedetails/${property.id}_zpid/`}
+                      href={property.agentPhone ? `sms:${property.agentPhone}?body=${encodeURIComponent(`Hi, I'm interested in the property at ${property.address}, ${property.city}, ${property.state}.`)}` : `https://www.zillow.com/homedetails/${property.id}_zpid/`}
                       target={property.agentPhone ? '_self' : '_blank'}
                       rel={property.agentPhone ? undefined : 'noopener noreferrer'}
                       className="block w-full bg-gradient-to-r from-[#00BC7D]/50 to-[#00BC7D] hover:from-[#00BC7D] hover:to-[#009B66] text-white py-2.5 px-3 rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-95 transition-all"

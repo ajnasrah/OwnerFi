@@ -29,6 +29,10 @@ interface SubscribedBuyer {
   phone: string;
   firstName: string;
   arvThreshold: number;
+  /** Max asking price the investor will consider. null = no cap. */
+  maxPrice: number | null;
+  /** Min asking price. null = no floor. */
+  minPrice: number | null;
   dealAlertNotifiedPropertyIds: string[];
 }
 
@@ -56,6 +60,10 @@ async function getActiveSubscribers(): Promise<SubscribedBuyer[]> {
         phone: data.phone,
         firstName: data.firstName || 'Investor',
         arvThreshold: data.arvThreshold || 85,
+        // Price caps from investor settings. Null when unset so the filter
+        // below correctly no-ops instead of rejecting all deals.
+        maxPrice: typeof data.maxPrice === 'number' && data.maxPrice > 0 ? data.maxPrice : null,
+        minPrice: typeof data.minPrice === 'number' && data.minPrice > 0 ? data.minPrice : null,
         dealAlertNotifiedPropertyIds: data.dealAlertNotifiedPropertyIds || [],
       };
     })
@@ -281,6 +289,12 @@ export async function sendInvestorDealAlerts(
     for (const buyer of subscribers) {
       // Check if this deal is below the buyer's threshold
       if (percentOfArv >= buyer.arvThreshold) continue;
+
+      // Respect buyer's price caps set in /dashboard/settings. Previously the
+      // alert loop ignored maxPrice/minPrice entirely — investors would get
+      // $2M alerts after setting $300k max.
+      if (buyer.maxPrice != null && deal.askingPrice > buyer.maxPrice) continue;
+      if (buyer.minPrice != null && deal.askingPrice < buyer.minPrice) continue;
 
       // In-memory dedup check
       if (buyer.dealAlertNotifiedPropertyIds.includes(dealId)) continue;

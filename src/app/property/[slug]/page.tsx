@@ -158,6 +158,45 @@ export default async function PropertyPage({ params }: PageProps) {
     notFound();
   }
 
+  // Sold properties are kept in Firestore (not deleted) so bookmarks + indexed
+  // search results land on a friendly "sold" page instead of a 404. Render a
+  // minimal notice and guide the visitor back to active listings.
+  const propertyStatus = (property as unknown as { status?: string }).status;
+  const homeStatus = ((property as unknown as { homeStatus?: string }).homeStatus || '').toUpperCase();
+  const isSold = propertyStatus === 'sold' || homeStatus === 'SOLD' || homeStatus === 'RECENTLY_SOLD';
+  if (isSold) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-6">
+        <div className="max-w-lg w-full bg-slate-800/60 border border-slate-700 rounded-2xl p-8 text-center">
+          <div className="inline-block px-3 py-1 rounded-full bg-slate-700 text-slate-300 text-xs font-semibold tracking-wider mb-4">
+            NO LONGER AVAILABLE
+          </div>
+          <h1 className="text-2xl md:text-3xl font-bold text-white mb-3">
+            This property has sold
+          </h1>
+          <p className="text-slate-300 mb-6">
+            {property.address}, {property.city}, {property.state} is no longer on the market.
+            Browse other owner-financed properties and we&apos;ll help you find a similar one.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-[#00BC7D] hover:bg-[#00d68f] text-white font-semibold transition-colors"
+            >
+              Browse Available Homes
+            </Link>
+            <Link
+              href="/"
+              className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-semibold transition-colors"
+            >
+              Home
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const imageUrl = property.imageUrls?.[0] || property.firstPropertyImage || '/placeholder-house.jpg';
   const price = property.listPrice || property.price || 0;
 

@@ -5,6 +5,7 @@ import "./globals.css";
 import { Providers } from './providers';
 import AnalyticsScripts from '@/components/analytics/AnalyticsScripts';
 import AnalyticsProvider from '@/components/analytics/AnalyticsProvider';
+import CookieBanner from '@/components/analytics/CookieBanner';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 
@@ -110,35 +111,20 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
         <link rel="dns-prefetch" href="https://maps.googleapis.com" />
 
-        {/* Google Analytics 4 - Direct injection for reliability */}
-        {process.env.NEXT_PUBLIC_GA4_ID && (
-          <>
-            <script
-              async
-              src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA4_ID}`}
-            />
-            <script
-              dangerouslySetInnerHTML={{
-                __html: `
-                  window.dataLayer = window.dataLayer || [];
-                  function gtag(){dataLayer.push(arguments);}
-                  gtag('js', new Date());
-                  gtag('config', '${process.env.NEXT_PUBLIC_GA4_ID}', {
-                    page_path: window.location.pathname,
-                    send_page_view: true
-                  });
-                `
-              }}
-            />
-          </>
-        )}
+        {/* Google Analytics moved into AnalyticsScripts (consent-gated) below —
+            direct <head> injection would fire before consent and create the
+            CCPA/CPRA "sale/share" problem the /do-not-sell flow is supposed
+            to solve. See src/components/analytics/AnalyticsScripts.tsx. */}
       </head>
       <body
         className={`${inter.variable} antialiased bg-[#111625] h-full`}
       >
         <AnalyticsScripts
           ga4Id={process.env.NEXT_PUBLIC_GA4_ID}
+          metaPixelId={process.env.NEXT_PUBLIC_META_PIXEL_ID}
+          tiktokPixelId={process.env.NEXT_PUBLIC_TIKTOK_PIXEL_ID}
         />
+        <CookieBanner />
         <Providers>
           <AnalyticsProvider>
             <Suspense fallback={<div>Loading...</div>}>

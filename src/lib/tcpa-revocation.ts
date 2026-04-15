@@ -176,6 +176,45 @@ export async function revokeBuyerTCPAConsent(
     }
   }
 
+  // Notify downstream agents who already received this buyer's contact
+  // (signed or pending referral agreements). Without this, the agent keeps
+  // calling a STOP'd buyer → vicarious TCPA liability for the platform.
+  // We do NOT auto-send SMS/email here — that would itself be a call to a
+  // person who has potentially opted out of a platform channel. Instead, we
+  // queue notification tasks that an operator or a downstream cron drains.
+  try {
+    const agents = await findAgentsToNotifyOnRevocation(phone);
+    const notifyBatch = db.batch();
+    for (const agent of agents) {
+      // Flag the agreement with revocation metadata so the agent dashboard
+      // + admin UI can surface a "buyer revoked" banner.
+      const agreementRef = db.collection('referralAgreements').doc(agent.agreementId);
+      notifyBatch.update(agreementRef, {
+        buyerRevokedAt: revokedAt,
+        buyerRevocationCaseId: caseId,
+        buyerRevocationChannel: channel,
+      });
+      // Queue a notification task for the ops/drainer to send.
+      const notifRef = db.collection('tcpa_agent_notifications_pending').doc(`${caseId}_${agent.agentId || agent.agreementId}`);
+      notifyBatch.set(notifRef, {
+        caseId,
+        agreementId: agent.agreementId,
+        agentId: agent.agentId || null,
+        agentName: agent.agentName || null,
+        agentEmail: agent.agentEmail || null,
+        agentPhone: agent.agentPhone || null,
+        channel,
+        revokedAt,
+        notificationSent: false,
+        createdAt: new Date(),
+        retentionCategory: 'tcpa-compliance',
+      });
+    }
+    if (agents.length > 0) await notifyBatch.commit();
+  } catch {
+    // Do not let notification-queue failure undo the revocation itself.
+  }
+
   return {
     phone: normalizedPhone,
     buyerProfilesUpdated: profiles.length,

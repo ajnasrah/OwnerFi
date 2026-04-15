@@ -67,7 +67,7 @@ export function OwnedLeadsTab({ ownedBuyers, agreements, onOpenDispute }: OwnedL
                 View More Details
               </button>
               <a
-                href={`sms:${buyer.phone}?body=${encodeURIComponent("Hi, I see you're interested in owner finance properties through Ownerfi, how is everything going so far?")}`}
+                href={`sms:${buyer.phone}?body=${encodeURIComponent("Hi, I see you're interested in owner-financed properties. How is everything going so far?")}`}
                 className="flex-1 bg-green-500/20 hover:bg-green-500/30 text-green-400 py-2 px-3 rounded-lg text-sm font-medium transition-colors text-center"
               >
                 Text

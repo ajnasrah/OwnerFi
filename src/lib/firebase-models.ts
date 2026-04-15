@@ -79,7 +79,7 @@ export interface BuyerProfile {
 
   // Deal Alert Subscription ($5/month investor alerts)
   dealAlertSubscription?: {
-    status: 'active' | 'canceled' | 'payment_failed';
+    status: 'active' | 'paused' | 'canceled' | 'payment_failed';
     stripeCustomerId?: string;
     stripeSubscriptionId?: string;
     subscribedAt?: Timestamp;

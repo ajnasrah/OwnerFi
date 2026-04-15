@@ -219,10 +219,10 @@ export default async function HomePage() {
               <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
                 {/* Left: Main Message */}
                 <div className="text-center lg:text-left">
-                  {/* Trust Badge */}
+                  {/* Trust Badge — generic, non-numeric until we have verified, audited counts. */}
                   <div className="inline-flex items-center gap-2 bg-[#00BC7D]/10 border border-[#00BC7D]/30 rounded-full px-3 py-1.5 mb-4">
                     <div className="w-2 h-2 bg-[#00BC7D] rounded-full animate-pulse" />
-                    <span className="text-[#00BC7D] text-xs font-semibold" data-translate="hero.trustBadge">Trusted by 1,000+ Homebuyers</span>
+                    <span className="text-[#00BC7D] text-xs font-semibold" data-translate="hero.trustBadge">Owner-Financed Properties Across the US</span>
                   </div>
 
                   <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-black text-white leading-tight mb-4">
@@ -393,9 +393,9 @@ export default async function HomePage() {
                       1
                     </div>
                     <div className="text-4xl mb-4 mt-2">📝</div>
-                    <h3 className="text-base font-bold text-white mb-2" data-translate="howItWorks.step1Title">Set Your Budget</h3>
+                    <h3 className="text-base font-bold text-white mb-2" data-translate="howItWorks.step1Title">Tell Us Where</h3>
                     <p className="text-sm text-slate-300" data-translate="howItWorks.step1Text">
-                      Tell us your max monthly payment and down payment. We'll only show homes you can afford.
+                      Share your preferred city and state. We'll match you with owner-financed properties nearby.
                     </p>
                   </div>
                 </div>
@@ -522,19 +522,19 @@ export default async function HomePage() {
                 * Testimonials reflect individual experiences and may not be typical. Results vary based on individual circumstances.
               </p>
 
-              {/* Trust Stats */}
+              {/* Trust Stats — neutral copy until we have audit-ready counts to claim. */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                 <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6 text-center">
-                  <div className="text-4xl font-black text-[#00BC7D] mb-2">1,000+</div>
-                  <div className="text-slate-300 text-sm" data-translate="testimonials.stat1">Registered Users</div>
+                  <div className="text-2xl font-black text-[#00BC7D] mb-2">Free</div>
+                  <div className="text-slate-300 text-sm" data-translate="testimonials.stat1">To Join &amp; Browse</div>
                 </div>
                 <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6 text-center">
-                  <div className="text-4xl font-black text-blue-400 mb-2">500+</div>
-                  <div className="text-slate-300 text-sm" data-translate="testimonials.stat2">Active Properties</div>
+                  <div className="text-2xl font-black text-blue-400 mb-2">Daily</div>
+                  <div className="text-slate-300 text-sm" data-translate="testimonials.stat2">New Listings Added</div>
                 </div>
                 <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6 text-center">
-                  <div className="text-4xl font-black text-purple-400 mb-2">50</div>
-                  <div className="text-slate-300 text-sm" data-translate="testimonials.stat3">States Covered</div>
+                  <div className="text-2xl font-black text-purple-400 mb-2">TX, FL, GA</div>
+                  <div className="text-slate-300 text-sm" data-translate="testimonials.stat3">Growing Coverage</div>
                 </div>
                 <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6 text-center">
                   <div className="text-4xl font-black text-yellow-400 mb-2">4.8★</div>

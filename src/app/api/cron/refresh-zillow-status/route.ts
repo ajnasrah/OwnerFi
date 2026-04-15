@@ -9,11 +9,20 @@ import { detectListingSubType } from '@/lib/scraper-v2/property-transformer';
 import { getTypesenseAdminClient, TYPESENSE_COLLECTIONS } from '@/lib/typesense/client';
 
 /**
- * Statuses that mean the property is gone for good — delete from both
- * Firestore and Typesense. SOLD never reverts; FOR_RENT is a different
- * market segment we don't serve.
+ * Statuses that mean the property is gone for good — delete from Firestore
+ * AND Typesense. FOR_RENT is a different market segment we don't serve.
+ * SOLD is handled separately below (see SOLD_STATUSES): we keep the Firestore
+ * doc so bookmarks show a friendly "sold" page instead of 404, but still
+ * drop it from the Typesense search index.
  */
-const PERMANENT_DELETE_STATUSES = new Set(['SOLD', 'RECENTLY_SOLD', 'FOR_RENT']);
+const PERMANENT_DELETE_STATUSES = new Set(['FOR_RENT']);
+
+/**
+ * Statuses meaning the property closed. Keep the Firestore doc (for SEO
+ * continuity on bookmarks / search-engine cached links), drop from Typesense,
+ * stamp with soldAt. /property/[slug] will render a "sold" state + 410 Gone.
+ */
+const SOLD_STATUSES = new Set(['SOLD', 'RECENTLY_SOLD']);
 
 /**
  * Statuses that make a listing temporarily inactive but still worth
@@ -416,12 +425,31 @@ export async function GET(request: NextRequest) {
       const isPriceZero = result.price === 0 || result.listPrice === 0;
 
       // ===== PERMANENT DELETE =====
-      // SOLD / RECENTLY_SOLD / FOR_RENT — gone for good. Clean from DB + TS.
+      // FOR_RENT → wrong market segment, clean from DB + TS entirely.
       if (PERMANENT_DELETE_STATUSES.has(newStatus)) {
         await docRef.delete();
         if (prop.collection === 'properties') typesenseDeletesAfterCommit.push(prop.id);
         deleted++;
         deletions.push({ address: prop.address, reason: `Deleted (status: ${newStatus})` });
+        continue;
+      }
+
+      // ===== SOLD =====
+      // SOLD / RECENTLY_SOLD → keep the Firestore doc so bookmarks / indexed
+      // search results land on a friendly "sold" page instead of 404. Drop
+      // from Typesense so the property stops appearing in search results.
+      if (SOLD_STATUSES.has(newStatus)) {
+        firestoreBatch.update(docRef, {
+          isActive: false,
+          homeStatus: newStatus,
+          status: 'sold',
+          soldAt: new Date(),
+          lastStatusCheck: new Date(),
+          consecutiveNoResults: 0,
+        });
+        if (prop.collection === 'properties') typesenseDeletesAfterCommit.push(prop.id);
+        deactivated++;
+        batchCount++;
         continue;
       }
 

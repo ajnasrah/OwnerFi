@@ -11,6 +11,38 @@ interface AgreementsTabProps {
   onOpenReferralModal: (agreement: Agreement) => void;
 }
 
+/**
+ * Days remaining until `expirationDate`. Negative = already expired.
+ * Returns null if the field isn't present/parseable on legacy docs.
+ */
+function daysUntilExpiry(value: unknown): number | null {
+  if (!value) return null;
+  try {
+    const d = typeof value === 'string' ? new Date(value)
+      : value instanceof Date ? value
+      : typeof (value as { toDate?: unknown }).toDate === 'function' ? (value as { toDate: () => Date }).toDate()
+      : null;
+    if (!d || isNaN(d.getTime())) return null;
+    return Math.ceil((d.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+  } catch {
+    return null;
+  }
+}
+
+function ExpiryBadge({ days }: { days: number | null }) {
+  if (days === null) return null;
+  if (days < 0) {
+    return <span className="bg-red-500/20 text-red-400 px-2 py-0.5 rounded text-[10px] font-medium">Expired</span>;
+  }
+  if (days <= 14) {
+    return <span className="bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded text-[10px] font-medium">{days}d left</span>;
+  }
+  if (days <= 30) {
+    return <span className="bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded text-[10px] font-medium">{days}d left</span>;
+  }
+  return <span className="text-slate-500 text-[10px]">{days}d left</span>;
+}
+
 async function openAgreementInNewTab(agreementId: string) {
   const res = await fetch(`/api/realtor/agreements?id=${agreementId}`);
   const data = await res.json();
@@ -104,13 +136,16 @@ export function AgreementsTab({
                 </div>
                 <div className="flex items-center justify-between text-xs text-slate-500 mt-3 pt-3 border-t border-slate-700">
                   <span>#{agreement.agreementNumber}</span>
-                  <span>{agreement.referralFeePercent}% referral fee</span>
+                  <div className="flex items-center gap-2">
+                    <span>{agreement.referralFeePercent}% referral fee</span>
+                    <ExpiryBadge days={daysUntilExpiry(agreement.expirationDate)} />
+                  </div>
                 </div>
                 {(agreement.buyerPhone || agreement.buyerEmail) && (
                   <div className="flex gap-2 mt-3">
                     {agreement.buyerPhone && (
                       <a
-                        href={`sms:${agreement.buyerPhone}?body=${encodeURIComponent("Hi, I see you're interested in owner finance properties through Ownerfi, how is everything going so far?")}`}
+                        href={`sms:${agreement.buyerPhone}?body=${encodeURIComponent("Hi, I see you're interested in owner-financed properties. How is everything going so far?")}`}
                         className="flex-1 bg-green-500/20 hover:bg-green-500/30 text-green-400 py-2 px-3 rounded-lg text-sm font-medium transition-colors text-center"
                       >
                         Text
@@ -163,6 +198,27 @@ export function AgreementsTab({
                     Already referred to another agent
                   </div>
                 )}
+                <button
+                  onClick={async () => {
+                    const reason = window.prompt('Optional: why are you voiding this agreement?') || '';
+                    if (reason === null) return; // user cancelled prompt
+                    if (!window.confirm('Void this agreement? The buyer will be released back to the available pool. This cannot be undone.')) return;
+                    const res = await fetch('/api/realtor/agreements/void', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ agreementId: agreement.id, reason }),
+                    });
+                    if (res.ok) {
+                      window.location.reload();
+                    } else {
+                      const data = await res.json().catch(() => ({ error: 'Failed to void' }));
+                      window.alert(data.error || 'Failed to void the agreement');
+                    }
+                  }}
+                  className="w-full mt-2 text-xs text-red-400 hover:text-red-300 py-1 transition-colors"
+                >
+                  Void agreement
+                </button>
               </div>
             ))}
           </div>

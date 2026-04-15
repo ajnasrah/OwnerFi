@@ -202,9 +202,9 @@ export default function RealtorDashboard() {
 
   const sendShareEmail = useCallback(() => {
     if (!referralModal.inviteUrl || !referralModal.shareEmail) return;
-    const subject = encodeURIComponent('Lead Referral from Ownerfi');
+    const subject = encodeURIComponent('Buyer Lead Referral — eXp Realty');
     const body = encodeURIComponent(
-      `I'm referring a buyer lead to you through Ownerfi.\n\nClick this link to view the lead details and accept the referral:\n${referralModal.inviteUrl}\n\nYou'll earn commission when you close this deal!`
+      `I'm referring a buyer lead to you under an eXp Realty Tennessee Referral Agreement.\n\nClick this link to view the lead details and accept the referral:\n${referralModal.inviteUrl}\n\nYou'll earn commission when you close this deal!`
     );
     window.location.href = `mailto:${referralModal.shareEmail}?subject=${subject}&body=${body}`;
   }, [referralModal.inviteUrl, referralModal.shareEmail]);
@@ -212,7 +212,7 @@ export default function RealtorDashboard() {
   const sendShareText = useCallback(() => {
     if (!referralModal.inviteUrl || !referralModal.sharePhone) return;
     const body = encodeURIComponent(
-      `I'm referring a buyer lead to you through Ownerfi. Accept it here: ${referralModal.inviteUrl}`
+      `I'm referring a buyer lead to you under an eXp Realty TN Referral Agreement. Accept it here: ${referralModal.inviteUrl}`
     );
     window.location.href = `sms:${referralModal.sharePhone}?body=${body}`;
   }, [referralModal.inviteUrl, referralModal.sharePhone]);

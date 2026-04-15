@@ -33,7 +33,10 @@ export const PropertySwiper2 = memo(function PropertySwiper2({
   const [isDragging, setIsDragging] = useState(false);
   const [swipeLocked, setSwipeLocked] = useState<'horizontal' | 'vertical' | null>(null);
   const [animating, setAnimating] = useState(false);
-  const [showAction, setShowAction] = useState<'like' | 'pass' | null>(null);
+  // showAction drives the like/pass indicator overlay during drag; it's set
+  // but read via setShowAction-only in the current layout (the indicator uses
+  // dragOffset.x polarity to render). Kept for future overlay wiring.
+  const [, setShowAction] = useState<'like' | 'pass' | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const hasTrackedFirstSwipe = useRef(false);
 
@@ -53,6 +56,16 @@ export const PropertySwiper2 = memo(function PropertySwiper2({
     setSwipeLocked(null);
     setAnimating(false);
   }, [currentIndex]);
+
+  // Clamp currentIndex when visibleProperties shrinks (after like/pass) so
+  // we don't render an undefined card. Falling off the end triggers the
+  // "ALL CAUGHT UP!" empty state naturally.
+  useEffect(() => {
+    if (visibleProperties.length === 0) return;
+    if (currentIndex >= visibleProperties.length) {
+      setCurrentIndex(Math.max(0, visibleProperties.length - 1));
+    }
+  }, [visibleProperties.length, currentIndex]);
 
   // Handle touch/mouse start
   const handleStart = (e: React.TouchEvent | React.MouseEvent) => {
@@ -90,7 +103,10 @@ export const PropertySwiper2 = memo(function PropertySwiper2({
     }
   };
 
-  // Handle touch/mouse end - Navigation only, no auto-like/pass
+  // Handle touch/mouse end — right swipe = like, left swipe = pass.
+  // This matches the hero tagline ("Swipe Your Way Into Your Dream Home") and
+  // matches the `showAction` indicator that already telegraphs like/pass
+  // during the drag.
   const handleEnd = () => {
     if (!isDragging || animating) return;
 
@@ -105,23 +121,25 @@ export const PropertySwiper2 = memo(function PropertySwiper2({
     const isIntentionalSwipe = swipeLocked === 'horizontal' && (velocity > 0.5 || absX > screenThreshold);
 
     if (isIntentionalSwipe && currentProperty) {
-      // Swipe detected - just navigate, don't like/pass
-      setAnimating(true);
-
       if (dragOffset.x > 0) {
-        // Swiped right - Go to next property
-        goToNext();
+        // Swiped right → like the current property
+        if (!hasTrackedFirstSwipe.current) {
+          hasTrackedFirstSwipe.current = true;
+          trackEvent('swipe_first', { action: 'like' });
+        }
+        setAnimating(true);
+        onLike(currentProperty);
+        animateCard('like');
       } else {
-        // Swiped left - Go to previous property
-        goToPrevious();
+        // Swiped left → pass on the current property
+        if (!hasTrackedFirstSwipe.current) {
+          hasTrackedFirstSwipe.current = true;
+          trackEvent('swipe_first', { action: 'pass' });
+        }
+        setAnimating(true);
+        onPass(currentProperty);
+        animateCard('pass');
       }
-
-      setTimeout(() => {
-        setAnimating(false);
-        setDragOffset({ x: 0, y: 0 });
-        setShowAction(null);
-        setSwipeLocked(null);
-      }, 200);
     } else {
       // Not enough swipe - reset
       setDragOffset({ x: 0, y: 0 });
@@ -132,21 +150,10 @@ export const PropertySwiper2 = memo(function PropertySwiper2({
     setDragStart(null);
   };
 
-  // Navigation helpers
+  // Navigation helpers — goToNext no longer loops once we hit the end,
+  // so the "ALL CAUGHT UP!" empty state is reachable again.
   const goToNext = () => {
-    if (currentIndex < visibleProperties.length - 1) {
-      setCurrentIndex(prev => prev + 1);
-    } else {
-      setCurrentIndex(0); // Loop to first
-    }
-  };
-
-  const goToPrevious = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex(prev => prev - 1);
-    } else {
-      setCurrentIndex(visibleProperties.length - 1); // Loop to last
-    }
+    setCurrentIndex(prev => Math.min(prev + 1, visibleProperties.length - 1));
   };
 
   // Animate card off screen - Faster animation

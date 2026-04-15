@@ -238,8 +238,24 @@ function validateRealtorRegistration(data: unknown): { isValid: boolean; error?:
     return { isValid: false, error: 'Company name must be less than 100 characters' };
   }
 
-  if (dataRecord.licenseNumber && (dataRecord.licenseNumber as string).length > 50) {
-    return { isValid: false, error: 'License number must be less than 50 characters' };
+  if (dataRecord.licenseNumber) {
+    const raw = String(dataRecord.licenseNumber).trim();
+    if (raw.length === 0 || raw.length > 50) {
+      return { isValid: false, error: 'License number must be between 1 and 50 characters' };
+    }
+    // Minimum plausibility check. State real-estate licenses are typically
+    // 4-12 alphanumeric characters (hyphens sometimes allowed). This rejects
+    // obvious non-license strings like "asdf" or "n/a" without claiming
+    // to verify the license actually exists (that's an ARELLO API call).
+    if (!/^[A-Za-z0-9-]{4,20}$/.test(raw)) {
+      return {
+        isValid: false,
+        error: 'License number must be 4-20 alphanumeric characters (letters, digits, hyphens only)',
+      };
+    }
+    if (/^(none|n\/a|na|unknown|test|abc|xyz|asdf|1234)$/i.test(raw)) {
+      return { isValid: false, error: 'Please enter your real state real-estate license number' };
+    }
   }
 
   return { isValid: true };

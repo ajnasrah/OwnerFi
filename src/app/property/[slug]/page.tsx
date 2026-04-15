@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { Suspense } from 'react';
 import { getPropertyBySlug, getAllPropertySlugs } from '@/lib/property-seo';
+import { US_STATES } from '@/lib/us-states';
 import PropertyJsonLd from './PropertyJsonLd';
 import PropertyDetails from './PropertyDetails';
 import PropertyImage from './PropertyImage';
@@ -261,12 +262,21 @@ export default async function PropertyPage({ params }: PageProps) {
               </li>
               <li>/</li>
               <li>
-                <Link
-                  href={`/owner-financing-${property.state?.toLowerCase().replace(/\s+/g, '-')}`}
-                  className="hover:text-[#00BC7D] transition-colors"
-                >
-                  {property.state}
-                </Link>
+                {(() => {
+                  const stateCode = property.state?.toUpperCase();
+                  const stateName = US_STATES.find(s => s.code === stateCode)?.name;
+                  const stateSlug = stateName?.toLowerCase().replace(/\s+/g, '-');
+                  return stateSlug ? (
+                    <Link
+                      href={`/owner-financing-${stateSlug}`}
+                      className="hover:text-[#00BC7D] transition-colors"
+                    >
+                      {stateName}
+                    </Link>
+                  ) : (
+                    <span>{property.state}</span>
+                  );
+                })()}
               </li>
               <li>/</li>
               <li className="text-white truncate max-w-[200px]" title={property.address}>

@@ -127,33 +127,9 @@ export default function HomePageClient() {
     document.querySelectorAll('[data-translate="testimonials.subtitle"]').forEach(el => {
       el.textContent = t.testimonials.subtitle
     })
-    document.querySelectorAll('[data-translate="testimonials.testimonial1"]').forEach(el => {
-      el.textContent = t.testimonials.testimonial1
-    })
-    document.querySelectorAll('[data-translate="testimonials.name1"]').forEach(el => {
-      el.textContent = t.testimonials.name1
-    })
-    document.querySelectorAll('[data-translate="testimonials.location1"]').forEach(el => {
-      el.textContent = t.testimonials.location1
-    })
-    document.querySelectorAll('[data-translate="testimonials.testimonial2"]').forEach(el => {
-      el.textContent = t.testimonials.testimonial2
-    })
-    document.querySelectorAll('[data-translate="testimonials.name2"]').forEach(el => {
-      el.textContent = t.testimonials.name2
-    })
-    document.querySelectorAll('[data-translate="testimonials.location2"]').forEach(el => {
-      el.textContent = t.testimonials.location2
-    })
-    document.querySelectorAll('[data-translate="testimonials.testimonial3"]').forEach(el => {
-      el.textContent = t.testimonials.testimonial3
-    })
-    document.querySelectorAll('[data-translate="testimonials.name3"]').forEach(el => {
-      el.textContent = t.testimonials.name3
-    })
-    document.querySelectorAll('[data-translate="testimonials.location3"]').forEach(el => {
-      el.textContent = t.testimonials.location3
-    })
+    // Testimonial / name / location hooks removed when the testimonial
+    // block was deleted from page.tsx (no FTC-compliant signed-release
+    // endorsements on file). Stat-label hooks below remain.
     document.querySelectorAll('[data-translate="testimonials.stat1"]').forEach(el => {
       el.textContent = t.testimonials.stat1
     })

@@ -48,23 +48,16 @@ export const translations = {
       step3Text: "Found your dream home? We refer you to a licensed buying agent in your area to write an offer and represent you. No bank needed.",
     },
 
-    // Testimonials Section
+    // Stats block (formerly "testimonials" — user testimonials were
+    // removed pending real signed-release endorsements; stat labels kept
+    // under this key for backward translation-key compat).
     testimonials: {
-      title: "Real People, Real Homes",
-      subtitle: "Join thousands who found their dream home",
-      testimonial1: "I was stuck renting for years because of my credit. Ownerfi showed me owner-finance homes I never knew existed. Now I'm a homeowner!",
-      name1: "Sarah M.",
-      location1: "Houston, TX",
-      testimonial2: "The app is so easy to use. Swiping through houses felt natural and fun. Found my home in just 2 weeks!",
-      name2: "Marcus T.",
-      location2: "Atlanta, GA",
-      testimonial3: "Self-employed and couldn't get bank approval. Owner financing through Ownerfi was the perfect solution.",
-      name3: "Jennifer K.",
-      location3: "Miami, FL",
-      stat1: "Happy Homeowners",
-      stat2: "Active Properties",
-      stat3: "States Covered",
-      stat4: "Average Rating",
+      title: "Why Owner Finance",
+      subtitle: "Skip the bank. Buy direct from sellers who finance your purchase.",
+      stat1: "Free to Join",
+      stat2: "Daily New Listings",
+      stat3: "TX · FL · GA Coverage",
+      stat4: "Owner-Financed",
     },
 
     // No-Bank Options Section
@@ -205,23 +198,15 @@ export const translations = {
       step3Text: "¿Encontraste tu casa ideal? Te conectamos directamente con los vendedores. Sin banco necesario.",
     },
 
-    // Sección Testimonios
+    // Bloque de estadísticas (antes "testimonios" — se retiraron los
+    // testimonios de usuarios hasta tener autorizaciones firmadas reales).
     testimonials: {
-      title: "Gente Real, Casas Reales",
-      subtitle: "Únete a miles que encontraron la casa de sus sueños",
-      testimonial1: "Estuve rentando por años debido a mi crédito. Ownerfi me ayudó a encontrar una casa que realmente podía comprar. ¡Ahora soy propietaria!",
-      name1: "Sarah M.",
-      location1: "Houston, TX",
-      testimonial2: "¡La aplicación es tan fácil de usar! Deslizar por casas se sintió natural y divertido. ¡Encontré mi casa en solo 2 semanas!",
-      name2: "Marcus T.",
-      location2: "Atlanta, GA",
-      testimonial3: "Soy trabajador independiente y no pude obtener aprobación bancaria. El financiamiento del propietario a través de Ownerfi fue la solución perfecta.",
-      name3: "Jennifer K.",
-      location3: "Miami, FL",
-      stat1: "Propietarios Felices",
-      stat2: "Propiedades Activas",
-      stat3: "Estados Cubiertos",
-      stat4: "Calificación Promedio",
+      title: "Por Qué Financiamiento del Propietario",
+      subtitle: "Evita el banco. Compra directo a vendedores que financian tu compra.",
+      stat1: "Gratis Registrarse",
+      stat2: "Listados Nuevos a Diario",
+      stat3: "TX · FL · GA",
+      stat4: "Con Financiamiento",
     },
 
     // Sección Opciones Sin Banco

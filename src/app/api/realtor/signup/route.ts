@@ -31,6 +31,7 @@ function formatPhoneNumber(phone: string): string {
 }
 import { Timestamp } from 'firebase/firestore';
 import { logInfo, logError } from '@/lib/logger';
+import { sendAgentOutreach } from '@/lib/agent-signup-outreach';
 
 export async function POST(request: NextRequest) {
   try {
@@ -159,6 +160,17 @@ export async function POST(request: NextRequest) {
         metadata: { userId: user.id }
       }, err instanceof Error ? err : new Error(String(err))));
     }
+
+    // Fire agent outreach webhook (fire-and-forget). Helper marks
+    // agentOutreachSentAt on the user doc so backfills skip this one.
+    sendAgentOutreach({
+      id: user.id,
+      phone: normalizedPhone,
+      first_name: firstName,
+      last_name: lastName,
+      target_city: serviceArea.primaryCity.name,
+      target_state: serviceArea.primaryCity.state,
+    }).catch(() => { /* already logged inside helper */ });
 
     // Log successful registration
     await logInfo('Realtor registered successfully', {

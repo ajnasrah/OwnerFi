@@ -19,7 +19,7 @@
     },
     {
       "path": "/api/cron/process-agent-outreach-queue",
-      "schedule": "0 */2 * * *"
+      "schedule": "0 * * * *"
     },
     {
       "path": "/api/cron/refresh-zillow-status",
@@ -32,6 +32,10 @@
     {
       "path": "/api/cron/monthly-realtor-credits",
       "schedule": "0 0 1 * *"
+    },
+    {
+      "path": "/api/cron/drain-tcpa-pending",
+      "schedule": "*/15 * * * *"
     }
   ],
   "functions": {
@@ -57,6 +61,9 @@
       "maxDuration": 120
     },
     "src/app/api/cron/monthly-realtor-credits/route.ts": {
+      "maxDuration": 300
+    },
+    "src/app/api/cron/drain-tcpa-pending/route.ts": {
       "maxDuration": 300
     }
   },

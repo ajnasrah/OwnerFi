@@ -74,16 +74,12 @@ async function uploadToR2(pngBuffer: Buffer, fileName: string): Promise<string> 
 // HTML Template — Exact replica of PropertyCard.tsx + PropertySwiper2.tsx
 // ============================================================================
 
-function buildCardHTML(property: Property): string {
+export function buildCardHTML(property: Property): string {
   const price = `$${Math.round(property.listPrice).toLocaleString()}`;
-  const pricePerSqFt = property.squareFeet && property.listPrice
-    ? `$${Math.round(property.listPrice / property.squareFeet).toLocaleString()}/sq ft`
+  const monthly = property.monthlyPayment && property.monthlyPayment > 0
+    ? `$${Math.round(property.monthlyPayment).toLocaleString()}`
     : null;
 
-  const street = (() => {
-    const parts = property.address.split(',');
-    return parts[0]?.trim() || property.address;
-  })();
   const location = `${property.city}, ${property.state}${property.zipCode ? ' ' + property.zipCode : ''}`;
 
   // Badge config — video always narrates owner financing, so prioritize OF badge
@@ -96,6 +92,11 @@ function buildCardHTML(property: Property): string {
   const badgeBg = isCashDealOnly ? 'background: #eab308;' : 'background: #00BC7D;';
   const badgeColor = isCashDealOnly ? 'color: #000;' : 'color: #fff;';
   const badgeIcon = isCashDealOnly ? '💵' : '💰';
+
+  // Stamp — the tilted attention-grabber sticker top-right of photo
+  const stampText = isCashDealOnly ? 'BELOW MARKET' : 'NO BANK NEEDED';
+  const stampBg = isCashDealOnly ? '#dc2626' : '#dc2626'; // red in both cases — it's the "pay attention" color
+  const stampAccent = isCashDealOnly ? '#fbbf24' : '#fef08a'; // yellow secondary line
 
   return `<!DOCTYPE html>
 <html>
@@ -132,13 +133,13 @@ function buildCardHTML(property: Property): string {
       box-shadow: 0 25px 50px -12px rgba(0,0,0,0.4);
     }
 
-    /* Image Section — Top 48% */
+    /* Image Section — Top 58% (taller now that fake UI is gone) */
     .image-section {
       position: absolute;
       top: 0;
       left: 0;
       right: 0;
-      height: 48%;
+      height: 58%;
       overflow: hidden;
     }
     .property-image {
@@ -146,294 +147,270 @@ function buildCardHTML(property: Property): string {
       height: 100%;
       object-fit: cover;
     }
-    /* from-black/20 via-transparent to-black/90 */
+    /* Strong bottom gradient — guarantees legibility for the info panel seam */
     .image-gradient {
       position: absolute;
       inset: 0;
       background: linear-gradient(
         to bottom,
-        rgba(0,0,0,0.20) 0%,
-        transparent 40%,
-        rgba(0,0,0,0.90) 100%
+        rgba(0,0,0,0.10) 0%,
+        transparent 35%,
+        rgba(0,0,0,0.55) 85%,
+        rgba(0,0,0,0.95) 100%
       );
     }
 
-    /* Badge — top left, matches bg-cash-green-600 backdrop-blur-sm rounded-full */
+    /* Brand accent bar — thick green stripe on the left edge of the photo */
+    .accent-bar {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      width: 16px;
+      background: linear-gradient(to bottom, #00BC7D, #3b82f6);
+      z-index: 10;
+    }
+
+    /* Badge — top left, bolder + bigger */
     .badge {
       position: absolute;
-      top: 28px;
-      left: 28px;
+      top: 36px;
+      left: 44px;
       ${badgeBg}
       ${badgeColor}
-      padding: 14px 28px;
+      padding: 18px 34px;
       border-radius: 999px;
-      font-size: 24px;
-      font-weight: 700;
+      font-size: 30px;
+      font-weight: 800;
       display: flex;
       align-items: center;
-      gap: 10px;
-      backdrop-filter: blur(8px);
-      box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+      gap: 12px;
+      letter-spacing: 0.5px;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.35);
+      z-index: 15;
     }
-    .badge-icon { font-size: 22px; }
+    .badge-icon { font-size: 28px; }
 
-    /* Swipe instruction — centered at 46%, matches bg-white/95 backdrop-blur-sm rounded-full */
-    .swipe-indicator {
+    /* Attention stamp — tilted sticker, top-right of photo */
+    .stamp {
       position: absolute;
-      top: 46%;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(255,255,255,0.95);
-      backdrop-filter: blur(8px);
-      padding: 18px 36px;
-      border-radius: 999px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-      border: 1px solid #e2e8f0;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      z-index: 20;
-    }
-    .swipe-arrow { color: #94a3b8; font-size: 26px; }
-    .swipe-text { color: #334155; font-weight: 700; font-size: 24px; }
-
-    /* Ownerfi URL — big branding in the gap between swipe indicator and info panel */
-    .ownerfi-url {
-      position: absolute;
-      top: 52%;
-      left: 0;
-      right: 0;
+      top: 52px;
+      right: 28px;
+      background: ${stampBg};
+      color: white;
+      padding: 14px 22px;
+      border-radius: 10px;
+      transform: rotate(-8deg);
+      box-shadow: 0 12px 30px rgba(220,38,38,0.5), 0 0 0 4px ${stampAccent};
+      z-index: 15;
       text-align: center;
-      z-index: 20;
-      padding: 20px 0;
+      line-height: 1;
     }
-    .ownerfi-url-text {
-      font-size: 88px;
+    .stamp-text {
+      font-size: 32px;
       font-weight: 900;
-      letter-spacing: 4px;
-      background: linear-gradient(135deg, #00BC7D, #3b82f6);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      letter-spacing: 1.5px;
+      display: block;
+    }
+    .stamp-sub {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      color: ${stampAccent};
+      margin-top: 6px;
+      text-transform: uppercase;
+      display: block;
     }
 
-    /* Bottom Info Panel — bg-white/98 backdrop-blur-sm rounded-t-3xl */
+    /* Corner brand stamp — small, top-right area doesn't conflict with sticker */
+    .corner-brand {
+      position: absolute;
+      bottom: 36px;
+      right: 36px;
+      background: rgba(0,0,0,0.55);
+      backdrop-filter: blur(10px);
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-size: 22px;
+      font-weight: 700;
+      color: white;
+      letter-spacing: 1px;
+      z-index: 15;
+    }
+
+    /* Bottom Info Panel */
     .info-panel {
       position: absolute;
       bottom: 0;
       left: 0;
       right: 0;
-      background: rgba(255,255,255,0.98);
+      background: rgba(255,255,255,0.99);
       backdrop-filter: blur(8px);
       border-top-left-radius: 48px;
       border-top-right-radius: 48px;
-      padding: 0 44px 40px;
-      box-shadow: 0 -15px 40px rgba(0,0,0,0.06);
+      padding: 42px 48px 56px;
+      box-shadow: 0 -15px 40px rgba(0,0,0,0.08);
     }
 
-    /* Handle bar — w-20 h-1.5 bg-slate-300 rounded-full */
-    .handle-bar-wrap {
+    /* Hero monthly payment — THE number people react to */
+    .monthly-hero {
       display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 28px 0 16px;
+      align-items: baseline;
       gap: 16px;
+      margin-bottom: 10px;
     }
-    .handle-bar {
-      width: 80px;
-      height: 6px;
-      border-radius: 999px;
-      background: linear-gradient(to right, #94a3b8, #64748b);
+    .monthly-number {
+      font-size: 110px;
+      font-weight: 900;
+      line-height: 1;
+      background: linear-gradient(135deg, #00BC7D, #16a34a);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -2px;
+    }
+    .monthly-suffix {
+      font-size: 46px;
+      font-weight: 800;
+      color: #64748b;
+    }
+    .monthly-label {
+      font-size: 22px;
+      font-weight: 700;
+      color: #64748b;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 24px;
     }
 
-    /* "Tap for details" — bg-cash-green-500 text-white rounded-full */
-    .details-btn {
+    /* Secondary: list price (smaller, subdued) */
+    .list-price {
       display: inline-flex;
       align-items: center;
       gap: 10px;
-      background: #00BC7D;
-      color: white;
-      padding: 14px 28px;
-      border-radius: 999px;
-      font-weight: 700;
-      font-size: 24px;
-      box-shadow: 0 6px 16px rgba(16,185,129,0.35);
-    }
-    .details-btn svg {
-      width: 18px;
-      height: 18px;
-    }
-
-    /* Price — text-3xl font-black text-slate-900 */
-    .price {
-      font-size: 52px;
-      font-weight: 900;
-      color: #111625;
-      margin-top: 16px;
-      margin-bottom: 4px;
-    }
-    .price-sqft {
-      font-size: 22px;
-      color: #64748b;
-      margin-bottom: 12px;
-    }
-
-    /* Address */
-    .street {
-      font-size: 26px;
-      font-weight: 700;
-      color: #111625;
-      line-height: 1.2;
-      margin-bottom: 4px;
-    }
-    .location {
-      font-size: 20px;
-      color: #64748b;
-      margin-bottom: 28px;
-    }
-
-    /* Quick Stats — flex gap-3, bg-slate-100 rounded-lg px-2 py-1 */
-    .stats-row {
-      display: flex;
-      gap: 14px;
-      flex-wrap: wrap;
-      margin-bottom: 28px;
-    }
-    .stat {
       background: #f1f5f9;
-      border-radius: 14px;
-      padding: 14px 22px;
-      display: flex;
+      padding: 10px 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+    .list-price-label {
+      font-size: 18px;
+      font-weight: 700;
+      color: #64748b;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .list-price-value {
+      font-size: 28px;
+      font-weight: 800;
+      color: #334155;
+    }
+
+    /* Location pill — city, state */
+    .location-pill {
+      display: inline-flex;
       align-items: center;
       gap: 10px;
+      background: linear-gradient(135deg, #ecfdf5, #dbeafe);
+      border: 2px solid #00BC7D;
+      padding: 12px 22px;
+      border-radius: 999px;
+      margin-bottom: 32px;
     }
-    .stat-icon { font-size: 20px; }
-    .stat-value { font-size: 24px; font-weight: 700; color: #111625; }
-    .stat-label { font-size: 18px; color: #64748b; }
+    .location-pin { font-size: 22px; }
+    .location-text {
+      font-size: 26px;
+      font-weight: 800;
+      color: #111625;
+      letter-spacing: 0.5px;
+    }
 
-    /* Action buttons — grid-cols-3 gap-2 */
-    .actions {
+    /* Quick Stats — bigger, bolder, colored */
+    .stats-row {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
       gap: 14px;
-      margin-bottom: 24px;
     }
-    .action-btn {
-      padding: 18px 12px;
-      border-radius: 18px;
-      color: white;
-      font-weight: 700;
-      font-size: 24px;
-      text-align: center;
+    .stat {
+      background: linear-gradient(135deg, #f0fdf4, #dbeafe);
+      border: 2px solid #e2e8f0;
+      border-radius: 20px;
+      padding: 20px 12px;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: center;
       gap: 8px;
-      box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.04);
     }
-    .btn-search { background: linear-gradient(to right, #3b82f6, #2563eb); }
-    .btn-contact { background: linear-gradient(to right, #00BC7D, #00BC7D); }
-    .btn-share { background: linear-gradient(to right, #8b5cf6, #7c3aed); }
-    .btn-icon { font-size: 20px; }
-
-    /* Branding bar */
-    .branding {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      padding-top: 20px;
-      border-top: 2px solid #f1f5f9;
-    }
-    .brand-logo {
-      width: 44px;
-      height: 44px;
-      background: linear-gradient(135deg, #00BC7D, #3b82f6);
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-size: 24px;
-      font-weight: 800;
-    }
-    .brand-name { font-size: 28px; font-weight: 700; color: #111625; }
-    .brand-url { margin-left: auto; font-size: 22px; color: #94a3b8; }
+    .stat-icon { font-size: 36px; }
+    .stat-value { font-size: 36px; font-weight: 900; color: #111625; line-height: 1; }
+    .stat-label { font-size: 18px; font-weight: 700; color: #64748b; letter-spacing: 1px; text-transform: uppercase; }
 
   </style>
 </head>
 <body>
   <div class="card">
-    <!-- Image Section — Top 48% -->
+    <!-- Image Section — Top 52% -->
     <div class="image-section">
       <img class="property-image" src="${property.primaryImage}" alt="Property" />
       <div class="image-gradient"></div>
+      <div class="accent-bar"></div>
       <div class="badge">
         <span class="badge-icon">${badgeIcon}</span>
         <span>${badgeText}</span>
       </div>
-    </div>
-
-    <!-- Swipe Indicator -->
-    <div class="swipe-indicator">
-      <span class="swipe-arrow">&larr;</span>
-      <span class="swipe-text">Swipe to browse</span>
-      <span class="swipe-arrow">&rarr;</span>
-    </div>
-
-    <!-- Ownerfi URL Branding -->
-    <div class="ownerfi-url">
-      <div class="ownerfi-url-text">www.ownerfi.ai</div>
+      <div class="stamp">
+        <span class="stamp-text">${stampText}</span>
+        <span class="stamp-sub">ownerfi.ai</span>
+      </div>
+      <div class="corner-brand">ownerfi.ai</div>
     </div>
 
     <!-- Bottom Info Panel -->
     <div class="info-panel">
-      <div class="handle-bar-wrap">
-        <div class="handle-bar"></div>
-        <div class="details-btn">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 15l7-7 7 7"/></svg>
-          Tap for details
+      ${monthly ? `
+        <div class="monthly-hero">
+          <span class="monthly-number">${monthly}</span>
+          <span class="monthly-suffix">/mo</span>
         </div>
+        <div class="monthly-label">Estimated monthly</div>
+        <div class="list-price">
+          <span class="list-price-label">List</span>
+          <span class="list-price-value">${price}</span>
+        </div>
+      ` : `
+        <div class="monthly-hero">
+          <span class="monthly-number">${price}</span>
+        </div>
+        <div class="monthly-label">List price</div>
+      `}
+
+      <div style="height: 8px;"></div>
+
+      <div class="location-pill">
+        <span class="location-pin">📍</span>
+        <span class="location-text">${location}</span>
       </div>
-
-      <div class="price">${price}</div>
-      ${pricePerSqFt ? `<div class="price-sqft">${pricePerSqFt}</div>` : ''}
-
-      <div class="street">${street}</div>
-      <div class="location">${location}</div>
 
       <div class="stats-row">
         <div class="stat">
           <span class="stat-icon">🛏️</span>
           <span class="stat-value">${property.bedrooms}</span>
-          <span class="stat-label">beds</span>
+          <span class="stat-label">Beds</span>
         </div>
         <div class="stat">
           <span class="stat-icon">🚿</span>
           <span class="stat-value">${property.bathrooms}</span>
-          <span class="stat-label">baths</span>
+          <span class="stat-label">Baths</span>
         </div>
         <div class="stat">
-          <span class="stat-icon">📏</span>
+          <span class="stat-icon">📐</span>
           <span class="stat-value">${(property.squareFeet || 0).toLocaleString()}</span>
-          <span class="stat-label">sq ft</span>
+          <span class="stat-label">Sq Ft</span>
         </div>
-      </div>
-
-      <div class="actions">
-        <div class="action-btn btn-search"><span class="btn-icon">🔍</span> Search</div>
-        <div class="action-btn btn-contact"><span class="btn-icon">💬</span> Contact</div>
-        <div class="action-btn btn-share"><span class="btn-icon">🔗</span> Share</div>
-      </div>
-
-      <div class="branding">
-        <div class="brand-logo">O</div>
-        <span class="brand-name">Ownerfi</span>
-        <span class="brand-url">ownerfi.ai</span>
       </div>
     </div>
   </div>
-
-  <!-- Nav buttons removed for clean video background -->
 </body>
 </html>`;
 }
@@ -692,7 +669,10 @@ async function main() {
   console.log(`\nRotation saved. Next auto state: ${availableStates[nextIdx]}\n`);
 }
 
-main().catch(err => {
-  console.error(err);
-  process.exit(1);
-});
+// Only run when invoked directly, not when imported by preview/tests.
+if (require.main === module) {
+  main().catch(err => {
+    console.error(err);
+    process.exit(1);
+  });
+}

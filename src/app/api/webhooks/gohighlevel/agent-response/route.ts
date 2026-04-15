@@ -149,7 +149,7 @@ export async function POST(request: NextRequest) {
       return undefined;
     };
 
-    const firebaseId = findKey(body, ['firebaseId', 'firebase_id', 'firebase_doc_id', 'queueId', 'queue_id']);
+    let firebaseId = findKey(body, ['firebaseId', 'firebase_id', 'firebase_doc_id', 'queueId', 'queue_id']);
     const rawResponse = findKey(body, ['response', 'agent_response', 'agentResponse', 'answer', 'reply', 'status']);
     const agentNote = findKey(body, ['agentNote', 'agent_note', 'note', 'message']);
 
@@ -164,10 +164,79 @@ export async function POST(request: NextRequest) {
       if (['no', 'n', 'false', '0', 'nope', 'not interested', 'not_interested', 'notinterested', 'reject', 'rejected', 'decline', 'declined'].includes(s)) return 'no';
       return null;
     };
-    const response = normalizeResponse(rawResponse);
+    let response = normalizeResponse(rawResponse);
+
+    // Extract identifiers we may need for fallback + for persisting back to the queue doc
+    const ghlOpportunityId = findKey(body, ['opportunityId', 'opportunity_id']) || body?.id || null;
+    const ghlContactId = findKey(body, ['contact_id', 'contactId']) || null;
+    const phoneRaw = findKey(body, ['phone', 'phoneNumber', 'Phone']);
+    const oppName = findKey(body, ['opportunity_name', 'opportunityName']);
+
+    // FALLBACK 1: resolve firebaseId when GHL didn't send one (stale/missing
+    // custom field on opportunity). Chain:
+    //   a) opportunityId → queue.ghlOpportunityId (self-healed on prior hit)
+    //   b) phone + normalized address → exactly one sent_to_ghl queue doc
+    let fallbackMethod: string | null = null;
+    if (!firebaseId) {
+      // (a) opportunityId lookup
+      if (ghlOpportunityId) {
+        const q = await db.collection('agent_outreach_queue')
+          .where('ghlOpportunityId', '==', ghlOpportunityId)
+          .limit(2).get();
+        if (q.size === 1) {
+          firebaseId = q.docs[0].id;
+          fallbackMethod = 'ghlOpportunityId';
+        }
+      }
+      // (b) phone + address match
+      if (!firebaseId && phoneRaw && oppName) {
+        const phoneNorm = String(phoneRaw).trim();
+        const addrNorm = String(oppName).toLowerCase().trim().replace(/[#,\.]/g, '').replace(/\s+/g, ' ');
+        const q = await db.collection('agent_outreach_queue')
+          .where('phoneNormalized', '==', phoneNorm)
+          .where('addressNormalized', '==', addrNorm)
+          .get();
+        const live = q.docs.filter(d => d.data().status === 'sent_to_ghl');
+        const pool = live.length > 0 ? live : q.docs; // fall back to any match if no sent_to_ghl
+        if (pool.length === 1) {
+          firebaseId = pool[0].id;
+          fallbackMethod = 'phone+address';
+        } else if (pool.length > 1) {
+          try {
+            await db.collection('webhook_debug_logs').add({
+              endpoint: 'agent-response',
+              status: 'ambiguous_fallback',
+              phone: phoneRaw, oppName,
+              matchCount: pool.length,
+              matchIds: pool.map(d => d.id),
+              rawBody: body,
+              receivedAt: new Date(),
+            });
+          } catch (e) { console.error('failed to log webhook debug:', e); }
+          return NextResponse.json(
+            { error: 'Ambiguous match on phone + address; firebase_id required', matches: pool.length },
+            { status: 400 }
+          );
+        }
+      }
+    }
+
+    // FALLBACK 2: infer response from workflow.name / pipleline_stage when the
+    // response field is missing (GHL dropped empty custom data).
+    if (!response) {
+      const workflowName = String(body?.workflow?.name || '');
+      const pipelineStage = String(body?.pipleline_stage || body?.pipeline_stage || '');
+      const searchText = `${workflowName} ${pipelineStage}`.toLowerCase();
+      // Order matters: "not interested" must be checked before "interested"
+      if (/not[\s_-]?interested|declined|rejected|nope|no thanks/.test(searchText)) {
+        response = 'no';
+      } else if (/interested|list properties|accepted|\byes\b/.test(searchText)) {
+        response = 'yes';
+      }
+    }
 
     console.log(`📋 [AGENT RESPONSE WEBHOOK] Processing response for ${firebaseId}`);
-    console.log(`   Response: ${response}`);
+    console.log(`   Response: ${response}${fallbackMethod ? ` (resolved via ${fallbackMethod})` : ''}`);
     if (agentNote) {
       console.log(`   Note: ${agentNote}`);
     }
@@ -176,7 +245,6 @@ export async function POST(request: NextRequest) {
     if (!firebaseId || !response) {
       console.error('❌ [AGENT RESPONSE WEBHOOK] Missing required fields');
       console.error('   Raw body keys:', Object.keys(body));
-      // Log the full failed payload so we can inspect GHL's envelope shape
       try {
         await db.collection('webhook_debug_logs').add({
           endpoint: 'agent-response',
@@ -190,7 +258,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: 'Missing required fields: firebaseId and response',
-          hint: 'Ensure GHL workflow passes firebase_id and response at top level of webhook body',
+          hint: 'Pass firebase_id + response in custom data, OR include phone + opportunity_name + workflow.name so we can resolve by fallback.',
           bodyKeys: Object.keys(body),
         },
         { status: 400 }
@@ -227,9 +295,26 @@ export async function POST(request: NextRequest) {
     if (!doc.exists) {
       console.error('❌ [AGENT RESPONSE WEBHOOK] Property not found:', firebaseId);
       return NextResponse.json(
-        { error: 'Property not found in queue' },
+        { error: 'Property not found in queue', firebaseId },
         { status: 404 }
       );
+    }
+
+    // Audit log the fallback resolution so we can monitor hit rate / drift
+    if (fallbackMethod) {
+      try {
+        await db.collection('webhook_debug_logs').add({
+          endpoint: 'agent-response',
+          status: 'resolved_via_fallback',
+          method: fallbackMethod,
+          firebaseId,
+          ghlOpportunityId,
+          ghlContactId,
+          phone: phoneRaw,
+          oppName,
+          receivedAt: new Date(),
+        });
+      } catch (e) { console.error('failed to log webhook debug:', e); }
     }
 
     const property = doc.data()!;
@@ -358,13 +443,16 @@ export async function POST(request: NextRequest) {
         console.error(`   ⚠️ Typesense sync failed: ${errMsg}`);
       }
 
-      // Update agent_outreach_queue
+      // Update agent_outreach_queue — persist GHL IDs so next webhook for this
+      // opportunity resolves directly via ghlOpportunityId without fallback.
       await docRef.update({
         status: 'agent_yes',
         agentResponse: 'yes',
         agentResponseAt: new Date(),
         agentNote: agentNote || null,
         routedTo: 'properties',
+        ...(ghlOpportunityId && !property.ghlOpportunityId ? { ghlOpportunityId } : {}),
+        ...(ghlContactId && !property.ghlContactId ? { ghlContactId } : {}),
         updatedAt: new Date(),
       });
 
@@ -378,6 +466,8 @@ export async function POST(request: NextRequest) {
         agentResponseAt: new Date(),
         agentNote: agentNote || null,
         routedTo: 'rejected',
+        ...(ghlOpportunityId && !property.ghlOpportunityId ? { ghlOpportunityId } : {}),
+        ...(ghlContactId && !property.ghlContactId ? { ghlContactId } : {}),
         updatedAt: new Date(),
       });
 

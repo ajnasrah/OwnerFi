@@ -339,15 +339,23 @@ export interface ReferralAgreement {
   signatureIpAddress?: string;
   signatureUserAgent?: string;
 
-  // Ownerfi Addendum Acknowledgments (Sections 8-12)
-  acknowledgeTCPA?: boolean;                // Section 9: TCPA & Contact Compliance
+  // Platform usage acknowledgments — separate from the brokerage agreement
+  // body. The agreement document itself is the standard eXp Tennessee
+  // Referral Agreement (no addendum). These three flags record consent to
+  // platform-level terms collected at the same moment.
+  acknowledgeTCPA?: boolean;
   acknowledgeTCPAAt?: Timestamp;
-  acknowledgeCreativeFinance?: boolean;     // Section 11: Creative Finance Disclaimer
+  acknowledgeCreativeFinance?: boolean;
   acknowledgeCreativeFinanceAt?: Timestamp;
-  acknowledgeDataAsIs?: boolean;            // Section 12: Data As-Is Acceptance
+  acknowledgeDataAsIs?: boolean;
   acknowledgeDataAsIsAt?: Timestamp;
-  acknowledgeIndemnification?: boolean;     // Section 8: Indemnification
-  acknowledgeRESPA?: boolean;               // Section 10: RESPA Compliance
+  /** @deprecated removed when OwnerFi Addendum was dropped — kept optional for legacy docs only */
+  acknowledgeIndemnification?: boolean;
+  /** @deprecated removed when OwnerFi Addendum was dropped — kept optional for legacy docs only */
+  acknowledgeRESPA?: boolean;
+
+  /** Frozen HTML snapshot of the signed agreement (verbatim eXp form). */
+  signedAgreementHTML?: string;
 
   // After signing - lead info released
   leadInfoReleased: boolean;

@@ -16,6 +16,7 @@ interface ReferralDetails {
   ownerFiCutPercent: number;
   agreementTermDays: number;
   expiresAt: string | null;
+  agreementHTML?: string;
 }
 
 interface LeadDetails {
@@ -145,11 +146,10 @@ export default function AcceptReferralPage() {
     return (
       <div className="min-h-screen bg-[#111625] flex items-center justify-center">
         <div className="text-center">
-          {/* Ownerfi Branding */}
-          <Link href="/" className="flex items-center justify-center gap-2 mb-6 hover:opacity-80 transition-opacity">
-            <svg width="36" height="36" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="lg" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stopColor="#00BC7D"/><stop offset="100%" stopColor="#3B82F6"/></linearGradient></defs><circle cx="50" cy="50" r="45" stroke="url(#lg)" strokeWidth="7" fill="none"/><ellipse cx="50" cy="50" rx="42" ry="22" stroke="url(#lg)" strokeWidth="5.5" fill="none" transform="rotate(-25 50 50)"/><ellipse cx="50" cy="50" rx="22" ry="42" stroke="url(#lg)" strokeWidth="5.5" fill="none" transform="rotate(-25 50 50)"/></svg>
-            <span className="text-xl font-bold text-white">Ownerfi</span>
-          </Link>
+          {/* eXp Realty branding (text wordmark — swap with /public/exp-logo.png when added) */}
+          <div className="flex items-center justify-center gap-2 mb-6">
+            <div className="text-2xl font-black text-[#0b3a64] bg-white px-3 py-1 rounded">e<span className="italic">X</span>p<sup className="text-xs">®</sup> <span className="text-xs font-bold tracking-[0.3em] align-middle">REALTY</span></div>
+          </div>
           <div className="w-8 h-8 border-4 border-[#00BC7D] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <div className="text-white text-lg">Loading referral...</div>
         </div>
@@ -161,11 +161,10 @@ export default function AcceptReferralPage() {
     return (
       <div className="min-h-screen bg-[#111625] flex items-center justify-center p-4">
         <div className="bg-slate-800 rounded-xl p-8 max-w-md w-full text-center">
-          {/* Ownerfi Branding */}
-          <Link href="/" className="flex items-center justify-center gap-2 mb-6 hover:opacity-80 transition-opacity">
-            <svg width="36" height="36" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="lg" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stopColor="#00BC7D"/><stop offset="100%" stopColor="#3B82F6"/></linearGradient></defs><circle cx="50" cy="50" r="45" stroke="url(#lg)" strokeWidth="7" fill="none"/><ellipse cx="50" cy="50" rx="42" ry="22" stroke="url(#lg)" strokeWidth="5.5" fill="none" transform="rotate(-25 50 50)"/><ellipse cx="50" cy="50" rx="22" ry="42" stroke="url(#lg)" strokeWidth="5.5" fill="none" transform="rotate(-25 50 50)"/></svg>
-            <span className="text-xl font-bold text-white">Ownerfi</span>
-          </Link>
+          {/* eXp Realty branding (text wordmark — swap with /public/exp-logo.png when added) */}
+          <div className="flex items-center justify-center gap-2 mb-6">
+            <div className="text-2xl font-black text-[#0b3a64] bg-white px-3 py-1 rounded">e<span className="italic">X</span>p<sup className="text-xs">®</sup> <span className="text-xs font-bold tracking-[0.3em] align-middle">REALTY</span></div>
+          </div>
           <div className="text-red-400 text-xl mb-4">{error}</div>
           <Link href="/" className="text-[#00BC7D] hover:text-[#00d68f]">
             Go to Homepage
@@ -179,11 +178,10 @@ export default function AcceptReferralPage() {
     return (
       <div className="min-h-screen bg-[#111625] flex items-center justify-center p-4">
         <div className="bg-slate-800 rounded-xl p-8 max-w-lg w-full">
-          {/* Ownerfi Branding */}
-          <Link href="/" className="flex items-center justify-center gap-2 mb-6 hover:opacity-80 transition-opacity">
-            <svg width="36" height="36" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="lg" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stopColor="#00BC7D"/><stop offset="100%" stopColor="#3B82F6"/></linearGradient></defs><circle cx="50" cy="50" r="45" stroke="url(#lg)" strokeWidth="7" fill="none"/><ellipse cx="50" cy="50" rx="42" ry="22" stroke="url(#lg)" strokeWidth="5.5" fill="none" transform="rotate(-25 50 50)"/><ellipse cx="50" cy="50" rx="22" ry="42" stroke="url(#lg)" strokeWidth="5.5" fill="none" transform="rotate(-25 50 50)"/></svg>
-            <span className="text-xl font-bold text-white">Ownerfi</span>
-          </Link>
+          {/* eXp Realty branding (text wordmark — swap with /public/exp-logo.png when added) */}
+          <div className="flex items-center justify-center gap-2 mb-6">
+            <div className="text-2xl font-black text-[#0b3a64] bg-white px-3 py-1 rounded">e<span className="italic">X</span>p<sup className="text-xs">®</sup> <span className="text-xs font-bold tracking-[0.3em] align-middle">REALTY</span></div>
+          </div>
           <div className="text-center mb-6">
             <div className="w-16 h-16 bg-[#00BC7D]/20 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-3xl text-[#00BC7D]">&#10003;</span>
@@ -229,8 +227,18 @@ export default function AcceptReferralPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">Buyer Lead Referral</h1>
-          <p className="text-slate-400">You&apos;ve been referred a buyer lead</p>
+          <p className="text-slate-400">You&apos;ve been referred a buyer lead under an eXp Realty Tennessee Referral Agreement</p>
         </div>
+
+        {/* Agreement Preview — rendered eXp Tennessee Referral Agreement */}
+        {referral?.agreementHTML && (
+          <div className="bg-white rounded-xl shadow-2xl overflow-hidden mb-6">
+            <div
+              className="p-3 md:p-6 overflow-x-auto"
+              dangerouslySetInnerHTML={{ __html: referral.agreementHTML }}
+            />
+          </div>
+        )}
 
         {/* Referral Details */}
         <div className="bg-slate-800 rounded-xl p-6 mb-6">
@@ -362,6 +370,10 @@ export default function AcceptReferralPage() {
                 </span>
               </label>
 
+              <p className="text-slate-400 text-xs mt-4 mb-2">
+                Platform usage terms (separate from the eXp Referral Agreement above):
+              </p>
+
               <label className="flex items-start gap-3 cursor-pointer">
                 <input
                   type="checkbox"
@@ -370,7 +382,7 @@ export default function AcceptReferralPage() {
                   className="w-5 h-5 mt-0.5 rounded border-slate-600 bg-slate-700 text-[#00BC7D] focus:ring-[#00BC7D]"
                 />
                 <span className="text-slate-300 text-sm">
-                  I acknowledge and agree to Ownerfi&apos;s <a href="/tcpa-compliance" target="_blank" className="text-[#00BC7D] hover:underline">TCPA Compliance Agreement</a>. I will comply with all telemarketing laws and honor opt-out requests within 24 hours.
+                  I acknowledge and agree to the platform&apos;s <a href="/tcpa-compliance" target="_blank" className="text-[#00BC7D] hover:underline">TCPA Compliance Agreement</a>. I will comply with all telemarketing laws and honor opt-out requests within 24 hours.
                 </span>
               </label>
 
@@ -382,7 +394,7 @@ export default function AcceptReferralPage() {
                   className="w-5 h-5 mt-0.5 rounded border-slate-600 bg-slate-700 text-[#00BC7D] focus:ring-[#00BC7D]"
                 />
                 <span className="text-slate-300 text-sm">
-                  I acknowledge Ownerfi&apos;s <a href="/creative-finance-disclaimer" target="_blank" className="text-[#00BC7D] hover:underline">Creative Finance Disclaimer</a>. I understand referred buyers may seek owner-financed properties and will direct them to verify all data with licensed professionals.
+                  I acknowledge the platform&apos;s <a href="/creative-finance-disclaimer" target="_blank" className="text-[#00BC7D] hover:underline">Creative Finance Disclaimer</a>. I understand referred buyers may seek owner-financed properties and will direct them to verify all data with licensed professionals.
                 </span>
               </label>
 
@@ -394,7 +406,7 @@ export default function AcceptReferralPage() {
                   className="w-5 h-5 mt-0.5 rounded border-slate-600 bg-slate-700 text-[#00BC7D] focus:ring-[#00BC7D]"
                 />
                 <span className="text-slate-300 text-sm">
-                  I accept that lead contact information is provided &quot;as-is&quot; without verification by Ownerfi. I will independently confirm all lead details before proceeding.
+                  I accept that lead contact information is provided &quot;as-is&quot; without independent verification. I will independently confirm all lead details before proceeding.
                 </span>
               </label>
             </div>

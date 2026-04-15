@@ -26,14 +26,17 @@ import { createHash } from 'crypto';
 import { getFirebaseAdmin } from './scraper-v2/firebase-admin';
 import { normalizePhone } from './phone-utils';
 
-export const CONSENT_TEXT_VERSION = '2026-04-14-v1';
+export const CONSENT_TEXT_VERSION = '2026-04-14-v2';
 
 /**
- * The literal text shown on /auth phone-entry. Keep this in sync with the
- * UI copy. When you change the UI, bump CONSENT_TEXT_VERSION and update
- * this constant.
+ * The literal text shown on /auth phone-entry. The text below is the
+ * full plain-text rendering of the JSX block at src/app/auth/page.tsx
+ * around line 357 (with <strong> formatting flattened and the trailing
+ * link labels included). Keep this string identical to what users see
+ * — when the UI changes, bump CONSENT_TEXT_VERSION and update this
+ * constant. The hash on disk is the source of truth for what was shown.
  */
-export const PHONE_CONSENT_TEXT_AUTH = `By entering your phone number and tapping Send Verification Code, you give express written consent to receive calls and SMS messages from Ownerfi and from licensed real estate agents we share your information with, including calls/SMS that use auto-dialing systems or pre-recorded messages, at the number you provided, even if it is on a federal or state Do-Not-Call list. Consent is not a condition of any purchase. Message and data rates may apply. Reply STOP to opt out of SMS at any time.`;
+export const PHONE_CONSENT_TEXT_AUTH = `By entering your phone number and tapping Send Verification Code, you give express written consent to receive calls and SMS messages from Ownerfi and from licensed real estate agents we share your information with, including calls/SMS that use auto-dialing systems or pre-recorded messages, at the number you provided, even if it is on a federal or state Do-Not-Call list. Consent is not a condition of any purchase. Message and data rates may apply. Reply STOP to opt out of SMS at any time. See our Privacy Notice at Collection and Terms.`;
 
 /**
  * The literal text in the /auth/setup terms checkbox.

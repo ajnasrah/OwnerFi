@@ -11,6 +11,13 @@ import { FirebaseDB } from '@/lib/firebase-db';
 import { COLLECTIONS, ReferralAgreement, generateAgreementNumber } from '@/lib/firebase-models';
 import { Timestamp } from 'firebase/firestore';
 import { logInfo, logError } from '@/lib/logger';
+import {
+  generateExpReferralAgreementHTML,
+  PLATFORM_REFERRAL_DEFAULTS,
+  formatCurrentDate,
+  calculateExpirationDate,
+  type ExpAgreementParties,
+} from '@/lib/referral-agreement-template';
 
 const OWNERFI_CUT_PERCENT = 30;
 const DEFAULT_AGREEMENT_TERM_DAYS = 180;
@@ -94,6 +101,51 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Render the eXp Tennessee Referral Agreement preview for Agent B.
+    // Originating side = Agent A (the current lead-holder). Receiving side =
+    // placeholder "[Your details]" since Agent B may not be logged in yet —
+    // their info is filled in once they sign.
+    const subReferralFeePercent = originalAgreement.referralInviteFeePercent || 25;
+    const previewParties: ExpAgreementParties = {
+      originating: {
+        brokerageName: referringAgentData?.realtorData?.company || 'Independent Agent',
+        brokeragePhone: referringAgentData?.realtorData?.phone || '',
+        brokerageEmail: referringAgentData?.email || '',
+        agentName: referringAgentName,
+        officeAddress: '',
+        agentPhone: referringAgentData?.realtorData?.phone || '',
+        agentEmail: referringAgentData?.email || '',
+        managingBrokerName: '',
+      },
+      receiving: {
+        brokerageName: '[Your Brokerage]',
+        agentName: '[Your Name]',
+        officeAddress: '[Your Office Address]',
+        agentPhone: '[Your Phone]',
+        agentEmail: '[Your Email]',
+        managingBrokerName: '',
+      },
+      client: {
+        type: 'buying',
+        names: `${originalAgreement.buyerFirstName || 'Unknown'} ${maskedLastName}`,
+        address: `${originalAgreement.buyerCity || 'Unknown'}${originalAgreement.buyerState ? ', ' + originalAgreement.buyerState : ''}`,
+        phone: '[Released after signing]',
+        email: '[Released after signing]',
+      },
+      fee: {
+        percent: subReferralFeePercent,
+        scope: 'buying',
+        paymentDays: PLATFORM_REFERRAL_DEFAULTS.PAYMENT_DAYS,
+        additionalTerms: '',
+      },
+      period: {
+        validTransactions: PLATFORM_REFERRAL_DEFAULTS.VALID_TRANSACTIONS,
+        beginDate: formatCurrentDate(),
+        expireDate: calculateExpirationDate(DEFAULT_AGREEMENT_TERM_DAYS),
+      },
+    };
+    const agreementHTML = generateExpReferralAgreementHTML(previewParties);
+
     return NextResponse.json({
       success: true,
       referral: {
@@ -106,11 +158,13 @@ export async function GET(request: NextRequest) {
         referringAgentName,
         referringAgentCompany: referringAgentData?.realtorData?.company || '',
         // Agreement terms
-        referralFeePercent: originalAgreement.referralInviteFeePercent || 25,
+        referralFeePercent: subReferralFeePercent,
         ownerFiCutPercent: OWNERFI_CUT_PERCENT,
         agreementTermDays: DEFAULT_AGREEMENT_TERM_DAYS,
         // Invite status
-        expiresAt: originalAgreement.referralInviteExpiresAt?.toDate().toISOString() || null
+        expiresAt: originalAgreement.referralInviteExpiresAt?.toDate().toISOString() || null,
+        // Rendered eXp Referral Agreement HTML for preview
+        agreementHTML,
       }
     });
 
@@ -173,7 +227,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate Ownerfi Addendum acknowledgments
+    // Validate platform usage acknowledgments (TCPA / Creative Finance / Data As-Is)
     if (agreeTCPA !== true) {
       return NextResponse.json(
         { error: 'You must acknowledge the TCPA Compliance Agreement to proceed' },
@@ -333,6 +387,51 @@ export async function POST(request: NextRequest) {
       new Date(Date.now() + DEFAULT_AGREEMENT_TERM_DAYS * 24 * 60 * 60 * 1000)
     );
 
+    // Render and persist the signed eXp Referral Agreement HTML for the
+    // sub-referral so the signed document can be reproduced verbatim later
+    // (compliance / disputes). Originating = Agent A; Receiving = Agent B.
+    const signedSubReferralFeePercent = originalAgreement.referralInviteFeePercent || 25;
+    const signedAgreementHTML = generateExpReferralAgreementHTML({
+      originating: {
+        brokerageName: agentA?.realtorData?.company || originalAgreement.realtorCompany || '',
+        brokeragePhone: agentA?.realtorData?.phone || originalAgreement.realtorPhone || '',
+        brokerageEmail: agentA?.email || originalAgreement.realtorEmail || '',
+        agentName: referringAgentNameForAgreement,
+        officeAddress: '',
+        agentPhone: agentA?.realtorData?.phone || originalAgreement.realtorPhone || '',
+        agentEmail: agentA?.email || originalAgreement.realtorEmail || '',
+        managingBrokerName: '',
+      },
+      receiving: {
+        brokerageName: agentB.realtorData.company || '',
+        brokeragePhone: agentB.realtorData.phone || agentB.phone || '',
+        brokerageEmail: agentB.email,
+        agentName: `${agentB.realtorData.firstName.trim()} ${agentB.realtorData.lastName.trim()}`,
+        officeAddress: '',
+        agentPhone: agentB.realtorData.phone || agentB.phone || '',
+        agentEmail: agentB.email,
+        managingBrokerName: '',
+      },
+      client: {
+        type: 'buying',
+        names: `${originalAgreement.buyerFirstName || ''} ${originalAgreement.buyerLastName || ''}`.trim(),
+        address: `${originalAgreement.buyerCity || ''}${originalAgreement.buyerState ? ', ' + originalAgreement.buyerState : ''}`,
+        phone: originalAgreement.buyerPhone || '',
+        email: originalAgreement.buyerEmail || '',
+      },
+      fee: {
+        percent: signedSubReferralFeePercent,
+        scope: 'buying',
+        paymentDays: PLATFORM_REFERRAL_DEFAULTS.PAYMENT_DAYS,
+        additionalTerms: '',
+      },
+      period: {
+        validTransactions: PLATFORM_REFERRAL_DEFAULTS.VALID_TRANSACTIONS,
+        beginDate: formatCurrentDate(),
+        expireDate: calculateExpirationDate(DEFAULT_AGREEMENT_TERM_DAYS),
+      },
+    });
+
     // Create new agreement for Agent B (re-referral)
     const newAgreement: Omit<ReferralAgreement, 'id'> = {
       agreementNumber: generateAgreementNumber(),
@@ -349,16 +448,17 @@ export async function POST(request: NextRequest) {
       realtorLicenseNumber: agentB.realtorData.licenseNumber || '',
       realtorLicenseState: agentB.realtorData.licenseState || '',
 
-      // RF-701 Section 1: Referring Company (Agent A - refers the buyer to Agent B)
-      referringCompanyName: agentA?.realtorData?.company || originalAgreement.realtorCompany || 'Independent Agent',
+      // eXp form Section 1: Originating Broker (Agent A — refers the buyer to Agent B)
+      referringCompanyName: agentA?.realtorData?.company || originalAgreement.realtorCompany || '',
+      referringCompanyAddress: '', // Agent A's office address — not stored on profile, fills at signing
       referringCompanyPhone: agentA?.realtorData?.phone || originalAgreement.realtorPhone || '',
       referringCompanyLicense: agentA?.realtorData?.licenseNumber || originalAgreement.realtorLicenseNumber || '',
       referringLicenseeName: referringAgentNameForAgreement,
       referringLicenseePhone: agentA?.realtorData?.phone || originalAgreement.realtorPhone || '',
       referringLicenseeEmail: agentA?.email || originalAgreement.realtorEmail || '',
 
-      // RF-701 Section 2: Receiving Company / Paying Fee (Agent B's brokerage)
-      receivingCompanyName: agentB.realtorData.company || 'Independent Agent',
+      // eXp form Section 2: Receiving Broker (Agent B's brokerage)
+      receivingCompanyName: agentB.realtorData.company || '',
       receivingLicenseeName: `${agentB.realtorData.firstName.trim()} ${agentB.realtorData.lastName.trim()}`,
       receivingLicenseePhone: agentB.realtorData.phone || agentB.phone || '',
       receivingLicenseeEmail: agentB.email,
@@ -373,7 +473,7 @@ export async function POST(request: NextRequest) {
       buyerState: originalAgreement.buyerState,
 
       // Agreement terms
-      referralFeePercent: originalAgreement.referralInviteFeePercent || 25,
+      referralFeePercent: signedSubReferralFeePercent,
       agreementTermDays: DEFAULT_AGREEMENT_TERM_DAYS,
       effectiveDate,
       expirationDate,
@@ -386,29 +486,35 @@ export async function POST(request: NextRequest) {
       signatureIpAddress: (request.headers.get('x-forwarded-for') || 'unknown').split(',')[0].trim() || 'unknown',
       signatureUserAgent: request.headers.get('user-agent')?.trim() || 'unknown',
 
-      // Ownerfi Addendum Acknowledgments (Sections 8-12)
+      // Frozen HTML snapshot of the signed agreement (compliance / disputes).
+      signedAgreementHTML,
+
+      // Platform usage acknowledgments (separate from the brokerage agreement
+      // body — these correspond to /tcpa-compliance, /creative-finance-disclaimer,
+      // and the data-as-is platform term).
       acknowledgeTCPA: true,
       acknowledgeTCPAAt: now,
       acknowledgeCreativeFinance: true,
       acknowledgeCreativeFinanceAt: now,
       acknowledgeDataAsIs: true,
       acknowledgeDataAsIsAt: now,
-      acknowledgeIndemnification: true,
-      acknowledgeRESPA: true,
 
       // Lead info released since signing
       leadInfoReleased: true,
       leadReleasedAt: now,
 
-      // Re-referral tracking
+      // Re-referral tracking. All fallbacks end in `|| ''` because Firestore
+      // rejects writes containing undefined — if agentA was deleted AND the
+      // legacy agreement lacks the realtor* field, the chain would otherwise
+      // resolve to undefined and crash the createDocument call.
       isReReferral: true,
       originalAgreementId: originalAgreement.id,
       referringAgentId: originalAgreement.realtorUserId,
       referringAgentName: referringAgentNameForAgreement,
-      referringAgentEmail: agentA?.email || originalAgreement.realtorEmail,
-      referringAgentPhone: agentA?.realtorData?.phone || originalAgreement.realtorPhone,
-      referringAgentCompany: agentA?.realtorData?.company || originalAgreement.realtorCompany,
-      referringAgentLicenseNumber: agentA?.realtorData?.licenseNumber || originalAgreement.realtorLicenseNumber,
+      referringAgentEmail: agentA?.email || originalAgreement.realtorEmail || '',
+      referringAgentPhone: agentA?.realtorData?.phone || originalAgreement.realtorPhone || '',
+      referringAgentCompany: agentA?.realtorData?.company || originalAgreement.realtorCompany || '',
+      referringAgentLicenseNumber: agentA?.realtorData?.licenseNumber || originalAgreement.realtorLicenseNumber || '',
       ownerFiCutPercent: OWNERFI_CUT_PERCENT,
 
       // Cannot be re-referred again

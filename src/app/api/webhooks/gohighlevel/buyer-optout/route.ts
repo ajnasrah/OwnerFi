@@ -25,6 +25,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAdminDb } from '@/lib/firebase-admin';
 import { isWebhookProcessed, markWebhookProcessed } from '@/lib/webhook-idempotency';
 import { getAllPhoneFormats } from '@/lib/phone-utils';
+import { revokeBuyerTCPAConsent } from '@/lib/tcpa-revocation';
 import crypto from 'crypto';
 
 // Webhook secret for signature validation (optional - GHL doesn't send signatures by default)
@@ -231,6 +232,26 @@ export async function POST(request: NextRequest) {
 
     console.log(`✅ [GHL Buyer Opt-Out] Marked buyer ${buyerDoc.id} as unavailable`);
 
+    // TCPA revocation — stopping outbound SMS eligibility and propagating DND
+    // to GoHighLevel. Without this, investor-deal-alerts and any flow gated on
+    // smsNotifications could still fire at a buyer who said "stop contacting me".
+    let tcpaRevocationCaseId: string | null = null;
+    const phoneForRevocation = (buyerData?.phone as string) || payload.phone;
+    if (phoneForRevocation) {
+      try {
+        const revResult = await revokeBuyerTCPAConsent(phoneForRevocation, 'ghl-webhook', {
+          note: `GHL buyer-optout webhook: ${optOutReason}`,
+        });
+        tcpaRevocationCaseId = revResult.caseId;
+        console.log(`📵 [GHL Buyer Opt-Out] TCPA revocation case ${revResult.caseId} — ${revResult.buyerProfilesUpdated} profile(s) scrubbed`);
+      } catch (revErr) {
+        // Do not fail the webhook — the buyer is already marked unavailable.
+        // The drain-tcpa-pending cron will catch any GHL-side retries.
+        const revMsg = revErr instanceof Error ? revErr.message : 'Unknown error';
+        console.error(`⚠️ [GHL Buyer Opt-Out] TCPA revocation failed (non-fatal): ${revMsg}`);
+      }
+    }
+
     // Void all active referral agreements for this buyer
     let voidedAgreements = 0;
     try {
@@ -291,6 +312,7 @@ export async function POST(request: NextRequest) {
       status: payload.status || null,
       reason: optOutReason,
       voidedAgreements,
+      tcpaRevocationCaseId,
       processingTimeMs: Date.now() - startTime,
     };
 

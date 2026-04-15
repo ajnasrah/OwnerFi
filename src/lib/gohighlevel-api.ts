@@ -1,6 +1,7 @@
 // GoHighLevel API Integration
 import { logError, logInfo } from './logger';
 import { fetchWithTimeout, ServiceTimeouts } from './fetch-with-timeout';
+import { normalizePhone } from './phone-utils';
 
 const GHL_API_KEY = process.env.GHL_API_KEY || '';
 const GHL_LOCATION_ID = process.env.GHL_LOCATION_ID || '';
@@ -308,20 +309,33 @@ interface SetDNDResult {
   success: boolean;
   contactsUpdated: number;
   contactIds: string[];
+  /** Contacts we found but failed to PUT — caller should retry these. */
+  failedContactIds?: string[];
   error?: string;
-  /** True when the call was queued for later sync (e.g. API key missing). */
+  /** True when the call was queued for later sync (e.g. API key missing, lookup 5xx/429). */
   queued?: boolean;
 }
+
+// GHL DND reason strings have historically caused 400s when long. Cap defensively.
+const GHL_DND_REASON_MAX = 250;
 
 /**
  * Set GoHighLevel DND on every contact matching the given phone number.
  *
  * GHL's DND model: per-contact `dnd: true` blocks all channels. We also set
- * dndSettings.{Call,Email,SMS,GMB,FB} = active for explicitness.
+ * dndSettings.{Call,Email,SMS,GMB,FB,WhatsApp} = permanent so downstream
+ * workflows cannot silently re-enable messaging (the 'active' status can be
+ * cleared by workflow actions; 'permanent' cannot).
  *
  * Without GHL_API_KEY/GHL_LOCATION_ID configured, this is a no-op that
  * returns success=false + queued=true so the caller can fall back to
  * writing a tcpa_ghl_dnd_pending Firestore doc for an operator to drain.
+ *
+ * Failure semantics:
+ *   - lookup 5xx / 429 / network error → success:false, queued:true
+ *   - lookup 200 w/ zero contacts     → success:true, contactsUpdated:0 (nothing to do)
+ *   - partial PUT failures            → success:false, failedContactIds populated
+ *   - all PUTs succeed                → success:true
  */
 export async function setGHLContactDND(phone: string, reason: string): Promise<SetDNDResult> {
   if (!phone) return { success: false, contactsUpdated: 0, contactIds: [], error: 'phone required' };
@@ -336,10 +350,29 @@ export async function setGHLContactDND(phone: string, reason: string): Promise<S
     };
   }
 
+  // Force E.164 — GHL's contacts/search/duplicate expects +1XXXXXXXXXX.
+  // Callers today pass a normalized phone, but normalize defensively so a
+  // bare 10-digit input doesn't silently drop the country code.
+  let e164: string;
+  try {
+    e164 = normalizePhone(phone);
+  } catch (err) {
+    return {
+      success: false,
+      contactsUpdated: 0,
+      contactIds: [],
+      error: err instanceof Error ? err.message : 'invalid phone',
+    };
+  }
+
+  const safeReason = (reason || '').slice(0, GHL_DND_REASON_MAX);
+
   try {
     // Step 1 — find every contact matching this phone in the location.
+    // duplicate-search is the only stable v2 lookup-by-phone endpoint;
+    // the older /contacts/search?query= GET does not exist in v2.
     const lookupRes = await fetchWithTimeout(
-      `${GHL_API_BASE}/contacts/search/duplicate?locationId=${encodeURIComponent(GHL_LOCATION_ID)}&number=${encodeURIComponent(phone)}`,
+      `${GHL_API_BASE}/contacts/search/duplicate?locationId=${encodeURIComponent(GHL_LOCATION_ID)}&number=${encodeURIComponent(e164)}`,
       {
         method: 'GET',
         headers: {
@@ -353,45 +386,44 @@ export async function setGHLContactDND(phone: string, reason: string): Promise<S
       },
     );
 
-    const contacts: Array<{ id: string }> = [];
-    if (lookupRes.ok) {
-      const data = await lookupRes.json().catch(() => ({}));
-      // GHL's contacts/search/duplicate returns either {contact:{id}} or {contacts:[...]}
-      if (data?.contact?.id) contacts.push({ id: data.contact.id });
-      if (Array.isArray(data?.contacts)) {
-        for (const c of data.contacts) if (c?.id) contacts.push({ id: c.id });
-      }
+    // Transient lookup failure (5xx / 429 / auth). DO NOT treat as "no contacts".
+    // Queue for retry so the revocation is not silently a no-op.
+    if (!lookupRes.ok) {
+      const errorText = await lookupRes.text().catch(() => 'lookup failed');
+      logError('GHL DND lookup failed', {
+        action: 'ghl_dnd_lookup_error',
+        metadata: { status: lookupRes.status, error: errorText.slice(0, 500) },
+      });
+      return {
+        success: false,
+        contactsUpdated: 0,
+        contactIds: [],
+        queued: true,
+        error: `lookup failed (${lookupRes.status}): ${errorText.slice(0, 200)}`,
+      };
     }
-    // Fallback: try the broader search endpoint if duplicate-search returned nothing
-    if (contacts.length === 0) {
-      const searchRes = await fetchWithTimeout(
-        `${GHL_API_BASE}/contacts/search?locationId=${encodeURIComponent(GHL_LOCATION_ID)}&query=${encodeURIComponent(phone)}`,
-        {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${GHL_API_KEY}`,
-            'Version': GHL_API_VERSION,
-            'Accept': 'application/json',
-          },
-          timeout: GHL_TIMEOUT,
-          retries: 2,
-          retryDelay: 500,
-        },
-      );
-      if (searchRes.ok) {
-        const data = await searchRes.json().catch(() => ({}));
-        const list = Array.isArray(data?.contacts) ? data.contacts : [];
-        for (const c of list) if (c?.id) contacts.push({ id: c.id });
-      }
+
+    const contacts: Array<{ id: string }> = [];
+    const data = await lookupRes.json().catch(() => ({}));
+    // GHL's contacts/search/duplicate returns either {contact:{id}} or {contacts:[...]}
+    if (data?.contact?.id) contacts.push({ id: data.contact.id });
+    if (Array.isArray(data?.contacts)) {
+      for (const c of data.contacts) if (c?.id) contacts.push({ id: c.id });
     }
 
     if (contacts.length === 0) {
       return { success: true, contactsUpdated: 0, contactIds: [] };
     }
 
-    // Step 2 — PUT each contact with dnd:true.
+    // Step 2 — PUT each contact with dnd:true. Small throttle between calls
+    // to stay well under GHL's 100req/10s/location rate limit when a backlog
+    // drainer flushes many revocations in a row.
     const updated: string[] = [];
+    const failed: string[] = [];
+    let isFirst = true;
     for (const c of contacts) {
+      if (!isFirst) await new Promise(r => setTimeout(r, 100));
+      isFirst = false;
       const updateRes = await fetchWithTimeout(`${GHL_API_BASE}/contacts/${encodeURIComponent(c.id)}`, {
         method: 'PUT',
         headers: {
@@ -403,11 +435,12 @@ export async function setGHLContactDND(phone: string, reason: string): Promise<S
         body: JSON.stringify({
           dnd: true,
           dndSettings: {
-            Call:  { status: 'active', message: reason },
-            SMS:   { status: 'active', message: reason },
-            Email: { status: 'active', message: reason },
-            GMB:   { status: 'active', message: reason },
-            FB:    { status: 'active', message: reason },
+            Call:     { status: 'permanent', message: safeReason },
+            SMS:      { status: 'permanent', message: safeReason },
+            Email:    { status: 'permanent', message: safeReason },
+            GMB:      { status: 'permanent', message: safeReason },
+            FB:       { status: 'permanent', message: safeReason },
+            WhatsApp: { status: 'permanent', message: safeReason },
           },
         }),
         timeout: GHL_TIMEOUT,
@@ -417,18 +450,36 @@ export async function setGHLContactDND(phone: string, reason: string): Promise<S
       if (updateRes.ok) {
         updated.push(c.id);
       } else {
+        failed.push(c.id);
         const errorText = await updateRes.text().catch(() => 'Unknown error');
+        // Honor Retry-After on 429 so a backlog drainer doesn't hammer.
+        if (updateRes.status === 429) {
+          const retryAfter = updateRes.headers.get('retry-after');
+          const waitMs = retryAfter ? Math.min(Number(retryAfter) * 1000, 10_000) : 2_000;
+          await new Promise(r => setTimeout(r, waitMs));
+        }
         logError('GHL DND update failed for contact', {
           action: 'ghl_dnd_update_error',
-          metadata: { contactId: c.id, status: updateRes.status, error: errorText },
+          metadata: { contactId: c.id, status: updateRes.status, error: errorText.slice(0, 500) },
         });
       }
     }
 
+    const allSucceeded = failed.length === 0 && updated.length === contacts.length;
+    if (allSucceeded) {
+      logInfo('GHL DND set', {
+        action: 'ghl_dnd_set',
+        metadata: { contactsUpdated: updated.length, reason: safeReason },
+      });
+    }
+
     return {
-      success: updated.length > 0,
+      success: allSucceeded,
       contactsUpdated: updated.length,
       contactIds: updated,
+      failedContactIds: failed.length ? failed : undefined,
+      queued: failed.length > 0,
+      error: failed.length > 0 ? `${failed.length} of ${contacts.length} contacts failed` : undefined,
     };
   } catch (error) {
     logError('Failed to set GHL DND', { action: 'ghl_dnd_error' }, error as Error);
@@ -436,6 +487,7 @@ export async function setGHLContactDND(phone: string, reason: string): Promise<S
       success: false,
       contactsUpdated: 0,
       contactIds: [],
+      queued: true,
       error: error instanceof Error ? error.message : 'Unknown error',
     };
   }

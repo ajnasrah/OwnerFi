@@ -8,6 +8,13 @@ import { FirebaseDB } from '@/lib/firebase-db';
 import { Timestamp } from 'firebase/firestore';
 import { logError, logInfo, logWarn } from '@/lib/logger';
 import { COLLECTIONS } from '@/lib/firebase-models';
+import {
+  generateExpReferralAgreementHTML,
+  PLATFORM_ORIGINATING_AGENT,
+  PLATFORM_REFERRAL_DEFAULTS,
+  formatCurrentDate,
+  calculateExpirationDate,
+} from '@/lib/referral-agreement-template';
 
 interface SignAgreementRequest {
   agreementId: string;
@@ -225,7 +232,42 @@ export async function POST(request: NextRequest) {
 
     const signedAt = Timestamp.now();
 
-    // Update agreement with signature, acknowledgments, and release lead info
+    // Render and freeze the signed eXp Referral Agreement HTML so the
+    // signed document can be reproduced verbatim later (compliance / disputes).
+    // Originating = eXp + Abdullah; Receiving = the realtor signing now.
+    const signedAgreementHTML = generateExpReferralAgreementHTML({
+      originating: PLATFORM_ORIGINATING_AGENT,
+      receiving: {
+        brokerageName: (agreement as unknown as { realtorCompany?: string }).realtorCompany || '',
+        brokeragePhone: (agreement as unknown as { realtorPhone?: string }).realtorPhone || '',
+        brokerageEmail: (agreement as unknown as { realtorEmail?: string }).realtorEmail || '',
+        agentName: agreement.realtorName,
+        officeAddress: '',
+        agentPhone: (agreement as unknown as { realtorPhone?: string }).realtorPhone || '',
+        agentEmail: (agreement as unknown as { realtorEmail?: string }).realtorEmail || '',
+        managingBrokerName: '',
+      },
+      client: {
+        type: 'buying',
+        names: `${buyer.firstName} ${buyer.lastName}`,
+        address: `${buyer.preferredCity || buyer.city || ''}${(buyer.preferredState || buyer.state) ? ', ' + (buyer.preferredState || buyer.state) : ''}`,
+        phone: buyer.phone,
+        email: buyer.email,
+      },
+      fee: {
+        percent: PLATFORM_REFERRAL_DEFAULTS.REFERRAL_FEE_PERCENT,
+        scope: PLATFORM_REFERRAL_DEFAULTS.FEE_SCOPE,
+        paymentDays: PLATFORM_REFERRAL_DEFAULTS.PAYMENT_DAYS,
+        additionalTerms: '',
+      },
+      period: {
+        validTransactions: PLATFORM_REFERRAL_DEFAULTS.VALID_TRANSACTIONS,
+        beginDate: formatCurrentDate(),
+        expireDate: calculateExpirationDate(PLATFORM_REFERRAL_DEFAULTS.AGREEMENT_TERM_DAYS),
+      },
+    });
+
+    // Update agreement with signature, platform acknowledgments, and release lead info
     await FirebaseDB.updateDocument(COLLECTIONS.REFERRAL_AGREEMENTS, agreementId, {
       status: 'signed',
       signedAt,
@@ -233,18 +275,21 @@ export async function POST(request: NextRequest) {
       signatureCheckbox: true,
       signatureIpAddress: ipAddress,
       signatureUserAgent: userAgent,
+      signedAgreementHTML,
 
-      // Ownerfi Addendum Acknowledgments (Sections 8-12)
-      acknowledgeTCPA: true,              // Section 9: TCPA & Contact Compliance
+      // Platform usage acknowledgments — separate from the brokerage agreement.
+      // The agreement document itself is the standard eXp Tennessee Referral
+      // Agreement (no OwnerFi Addendum). These three flags record consent to
+      // platform-level terms (/tcpa-compliance, /creative-finance-disclaimer,
+      // and the data-as-is platform term).
+      acknowledgeTCPA: true,
       acknowledgeTCPAAt: signedAt,
-      acknowledgeCreativeFinance: true,   // Section 11: Creative Finance Disclaimer
+      acknowledgeCreativeFinance: true,
       acknowledgeCreativeFinanceAt: signedAt,
-      acknowledgeDataAsIs: true,          // Section 12: Data As-Is Acceptance
+      acknowledgeDataAsIs: true,
       acknowledgeDataAsIsAt: signedAt,
-      acknowledgeIndemnification: true,   // Section 8: Indemnification (implied by signing)
-      acknowledgeRESPA: true,             // Section 10: RESPA Compliance (implied by signing)
 
-      // Release full prospect (buyer) contact info - RF-701 fields
+      // Release full prospect (buyer) contact info
       prospectEmail: buyer.email,
       prospectPhone: buyer.phone,
       prospectCellPhone: buyer.phone,

@@ -12,6 +12,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminDb } from '@/lib/firebase-admin';
 import { getAllPhoneFormats } from '@/lib/phone-utils';
+import { revokeBuyerTCPAConsent } from '@/lib/tcpa-revocation';
 
 // Rate limiting configuration
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
@@ -212,6 +213,23 @@ export async function POST(request: NextRequest) {
       updatedAt: new Date(),
     });
 
+    // CCPA opt-out strongly implies withdrawal of TCPA consent — continuing to
+    // SMS/call after this is not defensible. Revoke and propagate DND to GHL.
+    let tcpaRevocationCaseId: string | null = null;
+    const phoneForRevocation = (buyerData?.phone as string) || phone;
+    if (phoneForRevocation) {
+      try {
+        const revResult = await revokeBuyerTCPAConsent(phoneForRevocation, 'ccpa', {
+          note: 'CCPA do-not-sell request via /api/do-not-sell',
+        });
+        tcpaRevocationCaseId = revResult.caseId;
+      } catch (revErr) {
+        // Non-fatal: buyer is already marked unavailable; pending drainer retries GHL.
+        const revMsg = revErr instanceof Error ? revErr.message : 'Unknown error';
+        console.error(`[Do Not Sell] TCPA revocation failed (non-fatal): ${revMsg}`);
+      }
+    }
+
     // Log the opt-out event
     await db.collection('buyerOptOutLogs').add({
       buyerId: buyerDoc.id,
@@ -220,6 +238,7 @@ export async function POST(request: NextRequest) {
       reason: 'ccpa_do_not_sell',
       source: 'website_form',
       lookupMethod,
+      tcpaRevocationCaseId,
       previousStatus: {
         isAvailableForPurchase: buyerData?.isAvailableForPurchase ?? null,
         isActive: buyerData?.isActive ?? null,
@@ -227,7 +246,7 @@ export async function POST(request: NextRequest) {
       createdAt: new Date(),
     });
 
-    console.log(`[Do Not Sell] Buyer ${buyerDoc.id} marked as unavailable via ${lookupMethod}`);
+    console.log(`[Do Not Sell] Buyer ${buyerDoc.id} marked as unavailable via ${lookupMethod}; TCPA case ${tcpaRevocationCaseId ?? 'n/a'}`);
 
     return NextResponse.json(
       {

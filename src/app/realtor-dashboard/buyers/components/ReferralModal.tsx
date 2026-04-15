@@ -99,7 +99,7 @@ export function ReferralModal({
                   <span className="text-white font-medium">{(modal.feePercent * 0.7).toFixed(1)}%</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Ownerfi&apos;s share (30% of referral):</span>
+                  <span className="text-slate-400">Platform share (30% of referral):</span>
                   <span className="text-slate-500">{(modal.feePercent * 0.3).toFixed(1)}%</span>
                 </div>
               </div>

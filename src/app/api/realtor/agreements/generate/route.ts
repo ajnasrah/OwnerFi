@@ -251,7 +251,10 @@ export async function POST(request: NextRequest) {
       prospectEmail: '', // Hidden until signed
       prospectBestTimeToCall: '',
       prospectRemarks: '',
-      otherTerms: 'Owner Finance Property Buyer Lead via Ownerfi.com'
+      // Additional Terms left blank — the agreement is the standard eXp form
+      // and adding platform-specific text inside the Additional Terms block
+      // would re-introduce the brokerage-vs-platform blur this rewrite fixed.
+      otherTerms: ''
     };
 
     // Create agreement document in Firestore

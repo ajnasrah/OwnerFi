@@ -124,7 +124,8 @@ export async function GET(request: NextRequest) {
         prospectEmail: agreement.leadInfoReleased ? (agreement.buyerEmail || '') : '',
         prospectBestTimeToCall: '',
         prospectRemarks: '',
-        otherTerms: 'Owner Finance Property Buyer Lead via Ownerfi.com'
+        // Additional Terms left blank — the agreement is the standard eXp form.
+        otherTerms: ''
       };
 
       return NextResponse.json({

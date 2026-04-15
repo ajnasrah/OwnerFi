@@ -1,20 +1,20 @@
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Sample RF-701 Referral Agreement | Ownerfi For Realtors',
-  description: 'View a sample RF-701 Referral Agreement used by Ownerfi. Tennessee Association of REALTORS standard form with 30% referral fee and 180-day term.',
-  keywords: 'RF-701 referral agreement, real estate referral form, realtor referral agreement, Tennessee REALTORS form, buyer referral contract',
+  title: 'Sample Referral Agreement | OwnerFi For Realtors',
+  description: 'View the eXp Realty Tennessee Referral Agreement (SkySlope® Forms) you sign when accepting a buyer lead through OwnerFi. 30% referral fee, paid only at closing.',
+  keywords: 'eXp Realty referral agreement, Tennessee referral agreement, real estate referral form, broker-to-broker referral, buyer referral contract',
   openGraph: {
-    title: 'Sample RF-701 Referral Agreement | Ownerfi',
-    description: 'View the standard referral agreement used when accepting buyer leads through Ownerfi.',
+    title: 'Sample Referral Agreement | OwnerFi',
+    description: 'View the eXp Realty Tennessee Referral Agreement used when accepting buyer leads through OwnerFi.',
     url: 'https://ownerfi.ai/for-realtors/sample-agreement',
-    siteName: 'Ownerfi',
+    siteName: 'OwnerFi',
     type: 'website',
   },
   twitter: {
     card: 'summary',
-    title: 'Sample RF-701 Referral Agreement | Ownerfi',
-    description: 'Standard referral agreement for real estate agents.',
+    title: 'Sample Referral Agreement | OwnerFi',
+    description: 'eXp Realty Tennessee Referral Agreement for real estate agents.',
   },
   alternates: {
     canonical: 'https://ownerfi.ai/for-realtors/sample-agreement',

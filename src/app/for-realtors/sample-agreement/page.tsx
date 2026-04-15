@@ -1,68 +1,51 @@
 'use client'
 
 import Link from 'next/link'
-import { generateAgreementHTML, REFERRING_COMPANY_DEFAULTS, calculateExpirationDate, formatCurrentDate } from '@/lib/referral-agreement-template'
-
-// Note: Metadata moved to separate file or handled differently for client components
-
-const pageTitle = 'Sample RF-701 Referral Agreement | Ownerfi For Realtors'
-const pageDescription = 'View a sample RF-701 Referral Agreement used by Ownerfi. Tennessee Association of REALTORS standard form with 30% referral fee and 180-day term.'
-
-// Metadata cannot be exported from client components, so we set document title in useEffect
-// For now, the parent layout handles base metadata
+import {
+  generateExpReferralAgreementHTML,
+  PLATFORM_ORIGINATING_AGENT,
+  PLATFORM_REFERRAL_DEFAULTS,
+  formatCurrentDate,
+  calculateExpirationDate,
+  type ExpAgreementParties,
+} from '@/lib/referral-agreement-template'
 
 export default function SampleAgreementPage() {
-  // Sample data for the agreement preview
-  const sampleAgreementData = {
-    agreementNumber: 'SAMPLE-2024-0001',
-    effectiveDate: formatCurrentDate(),
-    expirationDate: calculateExpirationDate(180),
-    timeZone: REFERRING_COMPANY_DEFAULTS.TIME_ZONE,
-
-    // Section 1: Referring Company (Ownerfi - finds and refers the buyer)
-    referringCompanyName: REFERRING_COMPANY_DEFAULTS.COMPANY_NAME,
-    referringCompanyAddress: REFERRING_COMPANY_DEFAULTS.COMPANY_ADDRESS,
-    referringCompanyPhone: REFERRING_COMPANY_DEFAULTS.COMPANY_PHONE,
-    referringCompanyLicense: REFERRING_COMPANY_DEFAULTS.COMPANY_LICENSE,
-    referringCompanyFederalId: REFERRING_COMPANY_DEFAULTS.COMPANY_FEDERAL_ID || '',
-    referringLicenseeName: REFERRING_COMPANY_DEFAULTS.LICENSEE_NAME,
-    referringLicenseePhone: REFERRING_COMPANY_DEFAULTS.LICENSEE_PHONE,
-    referringLicenseeEmail: REFERRING_COMPANY_DEFAULTS.LICENSEE_EMAIL,
-    referringRelocationDirector: REFERRING_COMPANY_DEFAULTS.RELOCATION_DIRECTOR,
-    referringRelocationEmail: REFERRING_COMPANY_DEFAULTS.RELOCATION_EMAIL,
-
-    // Section 2: Receiving Company / Paying Referral Fee (Realtor's Brokerage - placeholders)
-    receivingCompanyName: '[Your Brokerage Name]',
-    receivingCompanyAddress: '[Your Office Address]',
-    receivingCompanyPhone: '[Your Phone]',
-    receivingCompanyLicense: '[Your Firm License #]',
-    receivingLicenseeName: '[Your Name]',
-    receivingLicenseePhone: '[Your Phone]',
-    receivingLicenseeEmail: '[your.email@example.com]',
-    receivingRelocationDirector: 'N/A',
-    receivingRelocationEmail: 'N/A',
-
-    // Section 3: Prospect (Sample Buyer)
-    prospectName: 'John D. (Sample Buyer)',
-    referralType: 'buyer' as const,
-    prospectAgreedToReferral: true,
-
-    // Section 4: Referral Fee
-    referralFeeFixed: '',
-    referralFeePercent: REFERRING_COMPANY_DEFAULTS.REFERRAL_FEE_PERCENT,
-
-    // Contact Info (redacted for sample)
-    prospectCurrentAddress: '[Released after signing]',
-    prospectHomePhone: '[Released after signing]',
-    prospectWorkPhone: '[Released after signing]',
-    prospectCellPhone: '[Released after signing]',
-    prospectEmail: '[Released after signing]',
-    prospectBestTimeToCall: '[Released after signing]',
-    prospectRemarks: '',
-    otherTerms: 'Buyer is interested in owner-financed properties in the Houston, TX area.',
+  // Sample data — exact eXp Tennessee Referral Agreement preview with
+  // placeholder receiving-broker fields the agent fills in at signing.
+  const sampleParties: ExpAgreementParties = {
+    originating: PLATFORM_ORIGINATING_AGENT,
+    receiving: {
+      brokerageName: '[Your Brokerage Name]',
+      brokerageEmail: '',
+      brokeragePhone: '',
+      agentName: '[Your Name]',
+      officeAddress: '[Your Office Address]',
+      agentPhone: '[Your Phone]',
+      agentEmail: '[your.email@example.com]',
+      managingBrokerName: '',
+    },
+    client: {
+      type: 'buying',
+      names: 'John D. (Sample Buyer)',
+      address: '[Released after signing]',
+      phone: '[Released after signing]',
+      email: '[Released after signing]',
+    },
+    fee: {
+      percent: PLATFORM_REFERRAL_DEFAULTS.REFERRAL_FEE_PERCENT,
+      scope: PLATFORM_REFERRAL_DEFAULTS.FEE_SCOPE,
+      paymentDays: PLATFORM_REFERRAL_DEFAULTS.PAYMENT_DAYS,
+      additionalTerms: '',
+    },
+    period: {
+      validTransactions: PLATFORM_REFERRAL_DEFAULTS.VALID_TRANSACTIONS,
+      beginDate: formatCurrentDate(),
+      expireDate: calculateExpirationDate(PLATFORM_REFERRAL_DEFAULTS.AGREEMENT_TERM_DAYS),
+    },
   }
 
-  const agreementHTML = generateAgreementHTML(sampleAgreementData)
+  const agreementHTML = generateExpReferralAgreementHTML(sampleParties)
 
   return (
     <div className="min-h-screen bg-[#111625] text-white">
@@ -70,8 +53,7 @@ export default function SampleAgreementPage() {
       <header className="sticky top-0 z-50 bg-[#111625]/90 backdrop-blur-xl border-b border-white/[0.06] px-4 sm:px-6">
         <div className="max-w-6xl mx-auto flex items-center justify-between h-14 sm:h-16">
           <Link href="/" className="flex items-center gap-2">
-            <svg width="28" height="28" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="lg" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stopColor="#00BC7D"/><stop offset="100%" stopColor="#3B82F6"/></linearGradient></defs><circle cx="50" cy="50" r="45" stroke="url(#lg)" strokeWidth="7" fill="none"/><ellipse cx="50" cy="50" rx="42" ry="22" stroke="url(#lg)" strokeWidth="5.5" fill="none" transform="rotate(-25 50 50)"/><ellipse cx="50" cy="50" rx="22" ry="42" stroke="url(#lg)" strokeWidth="5.5" fill="none" transform="rotate(-25 50 50)"/></svg>
-            <span className="text-lg font-bold text-white">Ownerfi</span>
+            <span className="text-lg font-bold text-white">OwnerFi <span className="text-slate-400 text-sm font-normal">for Realtors</span></span>
           </Link>
           <nav className="flex items-center gap-4">
             <Link href="/for-realtors" className="hidden sm:inline-flex text-sm text-slate-400 hover:text-white px-3 py-2 rounded-lg transition-colors">
@@ -92,10 +74,10 @@ export default function SampleAgreementPage() {
           {/* Title */}
           <div className="text-center mb-8">
             <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Sample RF-701 Referral Agreement
+              Sample Referral Agreement
             </h1>
             <p className="text-slate-400 max-w-2xl mx-auto">
-              This is the Tennessee Association of REALTORS® standard referral agreement you&apos;ll sign when accepting a lead through Ownerfi.
+              This is the eXp Realty Tennessee Referral Agreement (SkySlope&reg; Forms, revised 5/6/2025) you&apos;ll sign when accepting a buyer lead. The Originating Brokerage is eXp Realty, LLC; the Receiving Brokerage is yours.
             </p>
           </div>
 
@@ -104,21 +86,21 @@ export default function SampleAgreementPage() {
             <h2 className="text-lg font-semibold text-white mb-4">Quick Summary</h2>
             <div className="grid md:grid-cols-3 gap-4 text-sm">
               <div className="flex items-center gap-3">
-                <span className="text-[#00BC7D]">💰</span>
+                <span className="text-[#00BC7D]">%</span>
                 <div>
-                  <div className="text-white font-medium">30% Referral Fee</div>
+                  <div className="text-white font-medium">{PLATFORM_REFERRAL_DEFAULTS.REFERRAL_FEE_PERCENT}% Referral Fee</div>
                   <div className="text-slate-400">Paid at closing only</div>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <span className="text-blue-400">📅</span>
+                <span className="text-blue-400">d</span>
                 <div>
-                  <div className="text-white font-medium">180-Day Term</div>
-                  <div className="text-slate-400">Extends through closing</div>
+                  <div className="text-white font-medium">{PLATFORM_REFERRAL_DEFAULTS.AGREEMENT_TERM_DAYS}-Day Term</div>
+                  <div className="text-slate-400">Per agreement period</div>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <span className="text-purple-400">🏠</span>
+                <span className="text-purple-400">B</span>
                 <div>
                   <div className="text-white font-medium">Buyer-Side Only</div>
                   <div className="text-slate-400">Buyer representation</div>
@@ -127,45 +109,16 @@ export default function SampleAgreementPage() {
             </div>
           </div>
 
-          {/* Ownerfi Addendum Notice */}
-          <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-6 mb-8">
-            <h2 className="text-lg font-semibold text-red-400 mb-3">Ownerfi Addendum (Sections 8-12)</h2>
-            <p className="text-slate-300 text-sm mb-4">
-              This agreement includes additional liability and compliance provisions. When signing, you&apos;ll acknowledge:
-            </p>
-            <div className="grid md:grid-cols-2 gap-3 text-sm">
-              <div className="flex items-start gap-2">
-                <span className="text-red-400 mt-0.5">✓</span>
-                <span className="text-slate-300"><strong className="text-white">Indemnification</strong> - Hold Ownerfi harmless from claims</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <span className="text-red-400 mt-0.5">✓</span>
-                <span className="text-slate-300"><strong className="text-white">TCPA Compliance</strong> - Follow telemarketing laws</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <span className="text-red-400 mt-0.5">✓</span>
-                <span className="text-slate-300"><strong className="text-white">RESPA Compliance</strong> - No kickbacks or unearned fees</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <span className="text-red-400 mt-0.5">✓</span>
-                <span className="text-slate-300"><strong className="text-white">Creative Finance</strong> - Assume risk, verify independently</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <span className="text-red-400 mt-0.5">✓</span>
-                <span className="text-slate-300"><strong className="text-white">Data As-Is</strong> - Accept unverified lead data</span>
-              </div>
-            </div>
-          </div>
-
           {/* Sample Banner */}
           <div className="bg-yellow-500/20 border border-yellow-500/50 rounded-lg p-4 mb-6 text-center">
             <span className="text-yellow-400 font-medium">
-              📋 SAMPLE DOCUMENT - This is for preview purposes only. Actual agreements are signed digitally when accepting leads.
+              SAMPLE DOCUMENT — Preview only. Actual agreements are signed digitally when accepting leads.
             </span>
           </div>
 
-          {/* Agreement Document */}
-          <div className="bg-white rounded-xl shadow-2xl overflow-hidden">
+          {/* Agreement Document — overflow-x-auto so the 780px-wide form
+              scrolls on narrow viewports instead of being clipped. */}
+          <div className="bg-white rounded-xl shadow-2xl overflow-x-auto">
             <div
               className="p-4 md:p-8"
               dangerouslySetInnerHTML={{ __html: agreementHTML }}
@@ -176,15 +129,15 @@ export default function SampleAgreementPage() {
           <div className="flex justify-center gap-4 mt-8">
             <button
               onClick={() => window.print()}
-              className="bg-slate-700 hover:bg-slate-600 text-white px-6 py-3 rounded-xl font-medium transition-all flex items-center gap-2"
+              className="bg-slate-700 hover:bg-slate-600 text-white px-6 py-3 rounded-xl font-medium transition-all"
             >
-              🖨️ Print Agreement
+              Print Agreement
             </button>
             <Link
               href="/auth?role=realtor"
               className="bg-[#00BC7D]/50 hover:bg-[#00BC7D] text-white px-6 py-3 rounded-xl font-medium transition-all"
             >
-              Join Ownerfi Free →
+              Join Free
             </Link>
           </div>
 
@@ -193,27 +146,25 @@ export default function SampleAgreementPage() {
             <h2 className="text-lg font-semibold text-white mb-4">About This Agreement</h2>
             <div className="space-y-4 text-slate-300 text-sm">
               <p>
-                <strong className="text-white">Form RF-701</strong> is the standard referral agreement form created by the Tennessee Association of REALTORS®.
-                It&apos;s widely recognized and accepted across the real estate industry.
+                <strong className="text-white">eXp Realty Tennessee Referral Agreement</strong> is the standard SkySlope&reg; Forms 2-page broker-to-broker referral document used by eXp Realty&apos;s Tennessee office.
               </p>
               <p>
-                <strong className="text-white">Ownerfi Addendum:</strong> Sections 8-12 include additional liability protections including indemnification,
-                TCPA compliance, RESPA compliance, creative finance acknowledgment, and data disclaimer provisions.
+                <strong className="text-white">Originating vs Receiving Brokerage:</strong> The platform routes leads under eXp Realty as the Originating Brokerage. The Receiving Brokerage is your firm. Both managing brokers sign on page 2.
               </p>
               <p>
-                <strong className="text-white">Digital Signing:</strong> When you accept a lead through Ownerfi, you&apos;ll sign this agreement digitally
-                by typing your legal name and checking confirmation boxes for the agreement terms, TCPA compliance, creative finance acknowledgment, and data acceptance.
+                <strong className="text-white">Digital Signing:</strong> When you accept a lead, you&apos;ll sign this agreement by typing your legal name and confirming the terms.
               </p>
               <p>
-                <strong className="text-white">Contact Info Release:</strong> The buyer&apos;s full contact information (phone, email, address) is released to you immediately after you sign the agreement.
+                <strong className="text-white">Contact Info Release:</strong> The buyer&apos;s full contact information is released to you immediately after signing.
               </p>
               <p>
-                <strong className="text-white">No Risk:</strong> If the lead doesn&apos;t close on a home purchase, you owe nothing. The 30% referral fee is only due at closing when you get paid.
+                <strong className="text-white">No Risk:</strong> If the lead doesn&apos;t close, you owe nothing. The {PLATFORM_REFERRAL_DEFAULTS.REFERRAL_FEE_PERCENT}% referral fee is only due at closing when you get paid.
               </p>
               <p>
-                <strong className="text-white">Related Documents:</strong> By signing, you acknowledge review of our{' '}
-                <a href="/tcpa-compliance" className="text-[#00BC7D] hover:underline">TCPA Compliance Agreement</a> and{' '}
-                <a href="/creative-finance-disclaimer" className="text-[#00BC7D] hover:underline">Creative Finance Disclaimer</a>.
+                <strong className="text-white">Platform Terms:</strong> Separately from this brokerage agreement, all users agree to the platform&apos;s{' '}
+                <Link href="/tcpa-compliance" className="text-[#00BC7D] hover:underline">TCPA Compliance Agreement</Link>,{' '}
+                <Link href="/creative-finance-disclaimer" className="text-[#00BC7D] hover:underline">Creative Finance Disclaimer</Link>, and{' '}
+                <Link href="/terms" className="text-[#00BC7D] hover:underline">Terms of Service</Link>.
               </p>
             </div>
           </div>

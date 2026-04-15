@@ -236,7 +236,7 @@ export function AgreementModal({ modal, onUpdateField, onSign, onRetry, onClose 
 
                 <div className="flex gap-2 mt-6">
                   <a
-                    href={`sms:${modal.buyerDetails.phone}?body=${encodeURIComponent("Hi, I see you're interested in owner finance properties through Ownerfi. I'd love to help you with your home search and represent you!")}`}
+                    href={`sms:${modal.buyerDetails.phone}?body=${encodeURIComponent("Hi, I see you're interested in owner-financed properties. I'd love to help you with your home search and represent you!")}`}
                     className="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg font-medium transition-colors text-center"
                   >
                     Text Now

@@ -23,6 +23,8 @@ export type RevocationChannel =
   | 'email'           // REVOKE CONSENT email processed
   | 'admin'           // admin-initiated scrub
   | 'agent-relayed'   // agent reported the buyer asked them to stop
+  | 'ghl-webhook'     // GHL buyer-optout webhook (funnel opt-out, not SMS STOP)
+  | 'ccpa'            // /api/do-not-sell CCPA opt-out — CA law strongly implies consent withdrawal
   | 'unknown';
 
 export interface RevocationResult {

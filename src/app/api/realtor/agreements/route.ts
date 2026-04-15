@@ -133,9 +133,33 @@ export async function GET(request: NextRequest) {
       // user "signed". Falls back to re-rendering for legacy docs that were
       // signed before the snapshot field existed.
       const storedSnapshot = (agreement as unknown as { signedAgreementHTML?: string }).signedAgreementHTML;
-      const agreementHTML = storedSnapshot && agreement.status === 'signed'
+      const buyerRevoked = Boolean((agreement as unknown as { buyerRevokedAt?: unknown }).buyerRevokedAt);
+      let agreementHTML = storedSnapshot && agreement.status === 'signed'
         ? storedSnapshot
         : generateAgreementHTML(templateData);
+
+      // If the buyer has revoked consent, redact phone + email from the
+      // rendered snapshot so an agent opening "View Agreement" can't use it
+      // to recover contact info that's otherwise hidden in the UI. Keep the
+      // rest of the document (name, city, terms) intact — the contract is
+      // still a real legal artifact. Escaped regex-safe replacement.
+      if (buyerRevoked && agreementHTML) {
+        const buyerPhone = (agreement as unknown as { buyerPhone?: string }).buyerPhone;
+        const buyerEmail = (agreement as unknown as { buyerEmail?: string }).buyerEmail;
+        const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        if (buyerPhone) {
+          agreementHTML = agreementHTML.replace(
+            new RegExp(escapeRe(buyerPhone), 'g'),
+            '[REDACTED — buyer revoked]',
+          );
+        }
+        if (buyerEmail) {
+          agreementHTML = agreementHTML.replace(
+            new RegExp(escapeRe(buyerEmail), 'g'),
+            '[REDACTED — buyer revoked]',
+          );
+        }
+      }
 
       return NextResponse.json({
         success: true,

@@ -85,7 +85,17 @@ export function AgreementsTab({
           <h3 className="text-yellow-400 font-semibold mb-3">Pending Signature</h3>
           <div className="grid gap-4 md:grid-cols-2">
             {pendingAgreements.map((agreement) => (
-              <div key={agreement.id} className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
+              <div key={agreement.id} className={`rounded-lg p-4 ${agreement.buyerRevokedAt ? 'bg-red-500/10 border border-red-500/50' : 'bg-yellow-500/10 border border-yellow-500/30'}`}>
+                {agreement.buyerRevokedAt && (
+                  <div className="mb-3 bg-red-500/15 border border-red-500/40 rounded p-3 text-xs">
+                    <div className="font-bold text-red-400 mb-1">BUYER REVOKED CONSENT — DO NOT SIGN</div>
+                    <div className="text-red-300">
+                      This buyer opted out of communications on {new Date(agreement.buyerRevokedAt).toLocaleDateString()}
+                      {agreement.buyerRevocationChannel ? ` (via ${agreement.buyerRevocationChannel})` : ''}.
+                      Cancel this agreement instead of signing — they do not want to be contacted.
+                    </div>
+                  </div>
+                )}
                 <div className="flex items-start justify-between mb-2">
                   <div>
                     <h4 className="text-white font-bold">
@@ -93,17 +103,19 @@ export function AgreementsTab({
                     </h4>
                     <p className="text-slate-400 text-sm">{agreement.buyerCity}, {agreement.buyerState}</p>
                   </div>
-                  <span className="bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded text-xs font-medium">
-                    Pending
+                  <span className={`px-2 py-1 rounded text-xs font-medium ${agreement.buyerRevokedAt ? 'bg-red-500/20 text-red-400' : 'bg-yellow-500/20 text-yellow-400'}`}>
+                    {agreement.buyerRevokedAt ? 'Revoked' : 'Pending'}
                   </span>
                 </div>
                 <p className="text-slate-500 text-xs mb-3">#{agreement.agreementNumber}</p>
-                <button
-                  onClick={() => onCompletePendingSignature(agreement)}
-                  className="w-full bg-yellow-500 hover:bg-yellow-600 text-black py-2 px-4 rounded-lg font-medium transition-colors"
-                >
-                  Complete Signature
-                </button>
+                {!agreement.buyerRevokedAt && (
+                  <button
+                    onClick={() => onCompletePendingSignature(agreement)}
+                    className="w-full bg-yellow-500 hover:bg-yellow-600 text-black py-2 px-4 rounded-lg font-medium transition-colors"
+                  >
+                    Complete Signature
+                  </button>
+                )}
                 <button
                   onClick={async () => {
                     if (!window.confirm('Cancel this pending agreement? The lead will be released for other realtors.')) return;
@@ -169,7 +181,10 @@ export function AgreementsTab({
                     <ExpiryBadge days={daysUntilExpiry(agreement.expirationDate)} />
                   </div>
                 </div>
-                {(agreement.buyerPhone || agreement.buyerEmail) && (
+                {/* Text/Email CTAs — suppressed entirely when the buyer has
+                    revoked consent so the href can't be used to bypass the
+                    "DO NOT CONTACT" banner above. */}
+                {!agreement.buyerRevokedAt && (agreement.buyerPhone || agreement.buyerEmail) && (
                   <div className="flex gap-2 mt-3">
                     {agreement.buyerPhone && (
                       <a

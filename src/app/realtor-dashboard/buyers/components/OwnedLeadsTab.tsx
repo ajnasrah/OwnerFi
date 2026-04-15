@@ -39,40 +39,64 @@ export function OwnedLeadsTab({ ownedBuyers, agreements, onOpenDispute }: OwnedL
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
-      {ownedBuyers.map((buyer) => (
-        <div key={buyer.id} className="bg-slate-800/50 border border-slate-700/50 rounded-lg p-4">
+      {ownedBuyers.map((buyer) => {
+        // Resolve revocation from the linked agreement. `agreements` is passed
+        // in and carries buyerRevokedAt on every revoked row (stamped by
+        // revokeBuyerTCPAConsent). Without this join the Owned Leads tab
+        // would show phone/email + SMS CTA for opted-out buyers — the same
+        // TCPA leak the AgreementsTab banner was built to close.
+        const linkedAgreement = agreements.find(a => a.buyerId === buyer.id);
+        const isRevoked = !!linkedAgreement?.buyerRevokedAt;
+        return (
+        <div key={buyer.id} className={`bg-slate-800/50 border rounded-lg p-4 ${isRevoked ? 'border-red-500/60' : 'border-slate-700/50'}`}>
+          {isRevoked && (
+            <div className="mb-3 bg-red-500/15 border border-red-500/40 rounded p-3 text-xs">
+              <div className="font-bold text-red-400 mb-1">BUYER REVOKED CONSENT — DO NOT CONTACT</div>
+              <div className="text-red-300">
+                This buyer opted out of communications on {new Date(linkedAgreement!.buyerRevokedAt!).toLocaleDateString()}
+                {linkedAgreement!.buyerRevocationChannel ? ` (via ${linkedAgreement!.buyerRevocationChannel})` : ''}.
+                Do not call, text, or email them. Continuing contact is a TCPA violation.
+              </div>
+            </div>
+          )}
           <div className="flex items-start justify-between mb-3">
             <div>
               <h4 className="text-white font-bold text-lg">
                 {buyer.firstName} {buyer.lastName}
               </h4>
               <p className="text-slate-400 text-sm">{buyer.city}, {buyer.state}</p>
-              <p className="text-[#00BC7D] text-sm font-medium">{buyer.phone}</p>
-              <p className="text-[#00BC7D] text-sm font-medium">{buyer.email}</p>
+              {!isRevoked && (
+                <>
+                  <p className="text-[#00BC7D] text-sm font-medium">{buyer.phone}</p>
+                  <p className="text-[#00BC7D] text-sm font-medium">{buyer.email}</p>
+                </>
+              )}
             </div>
-            <span className="bg-blue-500/20 text-blue-400 px-2 py-1 rounded text-xs font-medium">
-              Owned
+            <span className={`px-2 py-1 rounded text-xs font-medium ${isRevoked ? 'bg-red-500/20 text-red-400' : 'bg-blue-500/20 text-blue-400'}`}>
+              {isRevoked ? 'Revoked' : 'Owned'}
             </span>
           </div>
 
           <div className="space-y-2">
-            <div className="flex gap-2">
-              <button
-                onClick={() => {
-                  const searchQuery = `${buyer.firstName} ${buyer.lastName} ${buyer.city} ${buyer.state} real estate owner financing`;
-                  window.open(`https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`, '_blank');
-                }}
-                className="flex-1 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 py-2 px-3 rounded-lg text-sm font-medium transition-colors"
-              >
-                View More Details
-              </button>
-              <a
-                href={`sms:${buyer.phone}?body=${encodeURIComponent("Hi, I see you're interested in owner-financed properties. How is everything going so far?")}`}
-                className="flex-1 bg-green-500/20 hover:bg-green-500/30 text-green-400 py-2 px-3 rounded-lg text-sm font-medium transition-colors text-center"
-              >
-                Text
-              </a>
-            </div>
+            {!isRevoked && (
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    const searchQuery = `${buyer.firstName} ${buyer.lastName} ${buyer.city} ${buyer.state} real estate owner financing`;
+                    window.open(`https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`, '_blank');
+                  }}
+                  className="flex-1 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 py-2 px-3 rounded-lg text-sm font-medium transition-colors"
+                >
+                  View More Details
+                </button>
+                <a
+                  href={`sms:${buyer.phone}?body=${encodeURIComponent("Hi, I see you're interested in owner-financed properties. How is everything going so far?")}`}
+                  className="flex-1 bg-green-500/20 hover:bg-green-500/30 text-green-400 py-2 px-3 rounded-lg text-sm font-medium transition-colors text-center"
+                >
+                  Text
+                </a>
+              </div>
+            )}
             {(() => {
               const agreement = agreements.find(a => a.buyerId === buyer.id && a.status === 'signed');
               if (!agreement) return null;
@@ -113,7 +137,8 @@ export function OwnedLeadsTab({ ownedBuyers, agreements, onOpenDispute }: OwnedL
             </button>
           </div>
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

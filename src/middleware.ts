@@ -39,6 +39,14 @@ const BYPASS_PATHS = [
   '/robots.txt',
   '/sitemap.xml',
   '/sitemap',
+  // Public legal/compliance pages — must be reachable by carrier verification
+  // crawlers (Twilio A2P 10DLC, etc.) which don't send standard browser headers.
+  '/privacy',
+  '/terms',
+  '/tcpa-compliance',
+  '/creative-finance-disclaimer',
+  '/contact',
+  '/about',
 ];
 
 // EU/EEA + UK + Switzerland — countries with comprehensive personal-data laws

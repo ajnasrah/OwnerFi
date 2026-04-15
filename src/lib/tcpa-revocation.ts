@@ -211,8 +211,11 @@ export async function revokeBuyerTCPAConsent(
       });
     }
     if (agents.length > 0) await notifyBatch.commit();
-  } catch {
-    // Do not let notification-queue failure undo the revocation itself.
+  } catch (err) {
+    // Do not let notification-queue failure undo the revocation itself, but
+    // log so the failure is visible in observability and we can dig in
+    // (e.g., missing Firestore composite index, quota).
+    console.error('[tcpa] agent notification queue failed:', err);
   }
 
   return {

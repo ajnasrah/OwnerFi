@@ -35,6 +35,21 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return {
       title: 'Property Not Found | Ownerfi',
       description: 'This property listing is no longer available.',
+      robots: { index: false, follow: true },
+    };
+  }
+
+  // Sold properties get noindex so Google de-indexes them — we keep the
+  // Firestore doc to serve a friendly "sold" page for bookmarks, but the
+  // page itself should not compete for search traffic.
+  const propertyStatus = (property as unknown as { status?: string }).status;
+  const homeStatus = ((property as unknown as { homeStatus?: string }).homeStatus || '').toUpperCase();
+  const isSold = propertyStatus === 'sold' || homeStatus === 'SOLD' || homeStatus === 'RECENTLY_SOLD';
+  if (isSold) {
+    return {
+      title: `${property.address}, ${property.city} ${property.state} — Sold | Ownerfi`,
+      description: `${property.address} in ${property.city}, ${property.state} is no longer available. Browse other owner-financed properties on Ownerfi.`,
+      robots: { index: false, follow: true },
     };
   }
 

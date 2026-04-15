@@ -193,7 +193,7 @@ export default async function OwnerfinancingNewYork() {
                 </Link>
               </div>
               <p className="text-sm text-slate-400 mt-6">
-                Join 500+ buyers who found their dream home without traditional financing
+                Find owner-financed homes and connect with licensed agents who specialize in creative financing
               </p>
             </div>
           </section>

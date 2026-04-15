@@ -75,7 +75,7 @@ function generateFAQSchema(locationName: string, isState: boolean) {
     },
     {
       question: `Are the buyer leads in ${locationName} exclusive?`,
-      answer: `Yes, once you accept a lead and sign the RF-701 referral agreement, that buyer is assigned exclusively to you for 180 days. The agreement automatically extends through any closing date.`
+      answer: `Yes, once you accept a lead and sign the eXp Realty TN referral agreement, that buyer is assigned exclusively to you for 180 days. The agreement automatically extends through any closing date.`
     },
     {
       question: isState
@@ -308,7 +308,7 @@ export default async function BuyerLeadsLocationPage({ params }: { params: Promi
                   </div>
                   <h3 className="text-xl font-semibold text-white mb-3">Accept Leads</h3>
                   <p className="text-slate-300">
-                    Browse available buyer leads in {locationName}. Sign the RF-701 agreement to accept.
+                    Browse available buyer leads in {locationName}. Sign the eXp Realty TN referral agreement to accept.
                   </p>
                 </div>
                 <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700/50">
@@ -349,7 +349,7 @@ export default async function BuyerLeadsLocationPage({ params }: { params: Promi
                 <div className="bg-[#111625]/50 rounded-xl p-6 border border-slate-700/50">
                   <div className="text-yellow-400 text-2xl mb-3">📝</div>
                   <h3 className="text-lg font-semibold text-white mb-2">Legal Protection</h3>
-                  <p className="text-slate-400 text-sm">Standard RF-701 referral agreement protects both parties.</p>
+                  <p className="text-slate-400 text-sm">Standard eXp Realty TN referral agreement protects both parties.</p>
                 </div>
                 <div className="bg-[#111625]/50 rounded-xl p-6 border border-slate-700/50">
                   <div className="text-orange-400 text-2xl mb-3">🔄</div>

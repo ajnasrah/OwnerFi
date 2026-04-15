@@ -58,7 +58,7 @@ const faqSchema = {
       "name": "What areas does Ownerfi cover?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Ownerfi operates in all 50 states with buyer leads in major cities and suburbs. When you sign up, you set your service area within a 30-mile radius of your primary city."
+        "text": "OwnerFi currently focuses on Texas, Florida, and Georgia, with coverage expanding over time. When you sign up, you set your service area within a 30-mile radius of your primary city."
       }
     },
     {
@@ -71,10 +71,10 @@ const faqSchema = {
     },
     {
       "@type": "Question",
-      "name": "What is the RF-701 Referral Agreement?",
+      "name": "What Referral Agreement do I sign?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "The RF-701 is a Tennessee Association of REALTORS standard referral agreement. It's a legally binding contract that outlines the 30% referral fee, 180-day term, and protects both parties. You sign it digitally when accepting a lead."
+        "text": "The standard eXp Realty Tennessee Referral Agreement (SkySlope Forms, revised 5/6/2025) — a legally binding broker-to-broker contract that outlines the 30% referral fee, 180-day term, and protects both parties. You sign it digitally when accepting a lead."
       }
     }
   ]
@@ -177,8 +177,8 @@ export default function ForRealtorsPage() {
                   <div className="text-slate-300 mt-2">At Closing Only</div>
                 </div>
                 <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 text-center border border-slate-700/50">
-                  <div className="text-3xl font-bold text-yellow-400">50 States</div>
-                  <div className="text-slate-300 mt-2">Coverage</div>
+                  <div className="text-2xl font-bold text-yellow-400">TX · FL · GA</div>
+                  <div className="text-slate-300 mt-2">Growing Coverage</div>
                 </div>
               </div>
 
@@ -215,9 +215,9 @@ export default function ForRealtorsPage() {
                 </div>
                 <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700/50">
                   <div className="text-purple-400 text-2xl mb-3">📝</div>
-                  <h3 className="text-lg font-semibold text-white mb-2">RF-701 Clarification</h3>
+                  <h3 className="text-lg font-semibold text-white mb-2">Brokerage-to-Brokerage Form</h3>
                   <p className="text-slate-300 text-sm">
-                    The RF-701 is executed between licensed real estate agents/brokerages. <strong>Ownerfi is not a party</strong> to the referral agreement and does not provide brokerage services.
+                    The referral agreement is the standard eXp Realty Tennessee Referral Agreement (SkySlope Forms), executed between licensed real estate brokerages. <strong>OwnerFi is not a party</strong> to the referral agreement and does not provide brokerage services.
                   </p>
                 </div>
               </div>
@@ -254,7 +254,7 @@ export default function ForRealtorsPage() {
                     </div>
                     <h3 className="text-xl font-semibold text-white mb-3">Accept Leads</h3>
                     <p className="text-slate-300">
-                      Browse pre-screened buyers interested in owner-financed homes. Sign the RF-701 referral agreement to accept a lead.
+                      Browse pre-screened buyers interested in owner-financed homes. Sign the eXp Realty TN referral agreement to accept a lead.
                     </p>
                   </div>
                 </div>
@@ -302,7 +302,7 @@ export default function ForRealtorsPage() {
                   <div className="text-blue-400 text-3xl mb-4">📝</div>
                   <h3 className="text-xl font-semibold text-white mb-3">Agreements</h3>
                   <p className="text-slate-300 mb-4">
-                    Track all your RF-701 referral agreements. See pending signatures and active agreements at a glance.
+                    Track all your referral agreements. See pending signatures and active agreements at a glance.
                   </p>
                   <ul className="text-sm text-slate-400 space-y-2">
                     <li>• Digital signature process</li>
@@ -364,7 +364,7 @@ export default function ForRealtorsPage() {
                     <span className="text-[#00BC7D]">✓</span> 30-mile service area
                   </li>
                   <li className="flex items-center gap-3 text-slate-300">
-                    <span className="text-[#00BC7D]">✓</span> RF-701 digital signing
+                    <span className="text-[#00BC7D]">✓</span> Digital e-signing
                   </li>
                   <li className="flex items-center gap-3 text-slate-300">
                     <span className="text-[#00BC7D]">✓</span> Double referral access
@@ -387,10 +387,10 @@ export default function ForRealtorsPage() {
           <section className="py-20 px-6 bg-slate-800/30">
             <div className="max-w-6xl mx-auto">
               <h2 className="text-3xl md:text-4xl font-bold text-white text-center mb-4">
-                RF-701 Referral Agreement
+                eXp Realty Referral Agreement
               </h2>
               <p className="text-slate-400 text-center mb-12 max-w-2xl mx-auto">
-                We use the Tennessee Association of REALTORS® standard referral agreement. Here&apos;s what you&apos;ll sign when accepting a lead.
+                We use the standard eXp Realty Tennessee Referral Agreement (SkySlope® Forms, revised 5/6/2025). Here&apos;s what you&apos;ll sign when accepting a lead.
               </p>
 
               <div className="grid md:grid-cols-2 gap-8 items-start">

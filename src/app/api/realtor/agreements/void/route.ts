@@ -66,18 +66,49 @@ export async function POST(request: NextRequest) {
       updatedAt: now,
     });
 
+    // Reconcile linked leadPurchases so admin dashboards stop counting this
+    // as an active purchase. There should typically be at most one purchase
+    // record per (realtor, buyer) from /sign creation.
+    try {
+      const purchases = await FirebaseDB.queryDocuments(
+        'leadPurchases',
+        [
+          { field: 'realtorUserId', operator: '==', value: session.user.id },
+          { field: 'buyerId', operator: '==', value: agreement.buyerId },
+        ],
+      );
+      for (const p of purchases) {
+        const purchase = p as { id: string; status?: string };
+        if (purchase.status === 'purchased') {
+          await FirebaseDB.updateDocument('leadPurchases', purchase.id, {
+            status: 'voided',
+            voidedAt: now,
+            voidReason: cleanReason,
+          });
+        }
+      }
+    } catch (err) {
+      // Non-fatal — the agreement is still voided even if reconcile fails.
+      console.error('[void-agreement] leadPurchases reconcile failed:', err);
+    }
+
     // Release the buyer back to the available pool so another realtor can
-    // claim them. Do NOT clear revocation flags — if the buyer opted out,
-    // the TCPA revocation stays in effect independently.
-    await FirebaseDB.updateDocument('buyerProfiles', agreement.buyerId, {
-      isAvailableForPurchase: true,
-      purchasedBy: null,
-      purchasedAt: null,
-      reservedBy: null,
-      reservedAt: null,
-      reservedAgreementId: null,
-      updatedAt: now,
-    });
+    // claim them. Guard against resurrecting a soft-deleted buyer. Do NOT
+    // clear revocation flags — if the buyer opted out, the TCPA revocation
+    // stays in effect independently.
+    const buyerDoc = await FirebaseDB.getDocument('buyerProfiles', agreement.buyerId);
+    const buyer = buyerDoc as { deleted?: boolean; tcpaRevokedAt?: unknown } | null;
+    if (buyer && buyer.deleted !== true && !buyer.tcpaRevokedAt) {
+      await FirebaseDB.updateDocument('buyerProfiles', agreement.buyerId, {
+        isAvailableForPurchase: true,
+        purchasedBy: null,
+        purchasedAt: null,
+        reservedBy: null,
+        reservedAt: null,
+        reservedAgreementId: null,
+        updatedAt: now,
+      });
+    }
 
     await logInfo('Referral agreement voided', {
       action: 'agreement_voided',

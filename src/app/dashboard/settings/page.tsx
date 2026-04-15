@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { ExtendedSession } from '@/types/session';
@@ -321,7 +322,7 @@ export default function BuyerSettings() {
               </div>
             </label>
             <p className="text-[11px] text-slate-500 mt-2 px-1">
-              To fully revoke consent and stop all messaging, reply <strong>STOP</strong> to any text or use <a href="/do-not-sell" className="text-[#00BC7D] hover:underline">the Do Not Sell/Share form</a>.
+              To fully revoke consent and stop all messaging, reply <strong>STOP</strong> to any text or use <Link href="/do-not-sell" className="text-[#00BC7D] hover:underline">the Do Not Sell/Share form</Link>.
             </p>
           </div>
 

@@ -104,6 +104,24 @@ export function AgreementsTab({
                 >
                   Complete Signature
                 </button>
+                <button
+                  onClick={async () => {
+                    if (!window.confirm('Cancel this pending agreement? The lead will be released for other realtors.')) return;
+                    const res = await fetch('/api/realtor/agreements/void', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ agreementId: agreement.id, reason: 'canceled by realtor before signing' }),
+                    });
+                    if (res.ok) window.location.reload();
+                    else {
+                      const data = await res.json().catch(() => ({ error: 'Failed' }));
+                      window.alert(data.error || 'Failed to cancel');
+                    }
+                  }}
+                  className="w-full mt-2 text-xs text-red-400 hover:text-red-300 py-1 transition-colors"
+                >
+                  Cancel &amp; release lead
+                </button>
               </div>
             ))}
           </div>
@@ -116,17 +134,27 @@ export function AgreementsTab({
           <h3 className="text-[#00BC7D] font-semibold mb-3">Active Agreements</h3>
           <div className="grid gap-4 md:grid-cols-2">
             {signedAgreements.map((agreement) => (
-              <div key={agreement.id} className="bg-slate-800/50 border border-[#00BC7D]/30 rounded-lg p-4">
+              <div key={agreement.id} className={`bg-slate-800/50 border rounded-lg p-4 ${agreement.buyerRevokedAt ? 'border-red-500/60' : 'border-[#00BC7D]/30'}`}>
+                {agreement.buyerRevokedAt && (
+                  <div className="mb-3 bg-red-500/15 border border-red-500/40 rounded p-3 text-xs">
+                    <div className="font-bold text-red-400 mb-1">BUYER REVOKED CONSENT — DO NOT CONTACT</div>
+                    <div className="text-red-300">
+                      This buyer opted out of communications on {new Date(agreement.buyerRevokedAt).toLocaleDateString()}
+                      {agreement.buyerRevocationChannel ? ` (via ${agreement.buyerRevocationChannel})` : ''}.
+                      Do not call, text, or email them. Continuing contact is a TCPA violation.
+                    </div>
+                  </div>
+                )}
                 <div className="flex items-start justify-between mb-2">
                   <div>
                     <h4 className="text-white font-bold">
                       {agreement.buyerFirstName} {agreement.buyerLastName}
                     </h4>
                     <p className="text-slate-400 text-sm">{agreement.buyerCity}, {agreement.buyerState}</p>
-                    {agreement.buyerPhone && (
+                    {agreement.buyerPhone && !agreement.buyerRevokedAt && (
                       <p className="text-[#00BC7D] text-sm font-medium">{agreement.buyerPhone}</p>
                     )}
-                    {agreement.buyerEmail && (
+                    {agreement.buyerEmail && !agreement.buyerRevokedAt && (
                       <p className="text-[#00BC7D] text-sm">{agreement.buyerEmail}</p>
                     )}
                   </div>
@@ -200,8 +228,8 @@ export function AgreementsTab({
                 )}
                 <button
                   onClick={async () => {
-                    const reason = window.prompt('Optional: why are you voiding this agreement?') || '';
-                    if (reason === null) return; // user cancelled prompt
+                    const reason = window.prompt('Optional: why are you voiding this agreement?');
+                    if (reason === null) return; // user cancelled prompt (fix: previous code used `|| ''` which broke this guard)
                     if (!window.confirm('Void this agreement? The buyer will be released back to the available pool. This cannot be undone.')) return;
                     const res = await fetch('/api/realtor/agreements/void', {
                       method: 'POST',

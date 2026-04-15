@@ -33,10 +33,9 @@ export const PropertySwiper2 = memo(function PropertySwiper2({
   const [isDragging, setIsDragging] = useState(false);
   const [swipeLocked, setSwipeLocked] = useState<'horizontal' | 'vertical' | null>(null);
   const [animating, setAnimating] = useState(false);
-  // showAction drives the like/pass indicator overlay during drag; it's set
-  // but read via setShowAction-only in the current layout (the indicator uses
-  // dragOffset.x polarity to render). Kept for future overlay wiring.
-  const [, setShowAction] = useState<'like' | 'pass' | null>(null);
+  // showAction drives a LIKE/PASS indicator overlay during drag. Rendered
+  // in the JSX below once dragOffset.x crosses ±80px.
+  const [showAction, setShowAction] = useState<'like' | 'pass' | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const hasTrackedFirstSwipe = useRef(false);
 
@@ -67,9 +66,12 @@ export const PropertySwiper2 = memo(function PropertySwiper2({
     }
   }, [visibleProperties.length, currentIndex]);
 
-  // Handle touch/mouse start
+  // Handle touch/mouse start. Right/middle mouse buttons never count as a
+  // drag — only the primary (left) button. Otherwise right-click-drag
+  // would accidentally fire a like/pass on desktop.
   const handleStart = (e: React.TouchEvent | React.MouseEvent) => {
     if (animating) return;
+    if ('button' in e && (e as React.MouseEvent).button !== 0) return;
 
     const point = 'touches' in e ? e.touches[0] : e;
     setDragStart({ x: point.clientX, y: point.clientY, time: Date.now() });
@@ -326,6 +328,20 @@ export const PropertySwiper2 = memo(function PropertySwiper2({
             style={getCardStyle(true)}
             isPriority={true}
           />
+          {/* Swipe action indicator — tells the user which way commits to
+              like vs pass before they release the swipe. */}
+          {showAction && (
+            <div
+              className={`absolute top-6 pointer-events-none select-none font-black text-3xl sm:text-4xl tracking-widest px-4 py-2 border-4 rounded-xl rotate-[-12deg] ${
+                showAction === 'like'
+                  ? 'right-6 text-[#00BC7D] border-[#00BC7D]'
+                  : 'left-6 text-red-500 border-red-500 rotate-[12deg]'
+              }`}
+              style={{ zIndex: 20 }}
+            >
+              {showAction === 'like' ? 'LIKE' : 'PASS'}
+            </div>
+          )}
         </div>
 
       </div>

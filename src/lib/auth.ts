@@ -149,13 +149,25 @@ export const authOptions = {
         token.role = user.role;
         token.phone = user.phone;
       }
+      // Block deleted users from retaining a valid token. `role: 'deleted'`
+      // is set by /api/account/delete and by the test-data cleanup script.
+      // Returning an empty token effectively signs the user out on next
+      // session check.
+      if ((token as unknown as { role?: string }).role === 'deleted') {
+        return {} as JWT;
+      }
       return token;
     },
     async session({ session, token }: {
       session: Session;
       token: JWT & { role?: string; phone?: string | null };
     }) {
-      if (token && session.user) {
+      if (!token || (token as unknown as { role?: string }).role === 'deleted') {
+        // Return a minimal unauthenticated-looking session so callers that
+        // read session.user.id treat the user as signed out.
+        return { ...session, user: undefined } as unknown as Session;
+      }
+      if (session.user) {
         session.user.id = (token as JWT & { sub: string }).sub;
         session.user.role = token.role;
         session.user.phone = token.phone;

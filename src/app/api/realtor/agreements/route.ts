@@ -199,7 +199,11 @@ export async function GET(request: NextRequest) {
             agreement.referralInviteExpiresAt &&
             (agreement.referralInviteExpiresAt as unknown as { toDate: () => Date }).toDate() > new Date()
           ),
-          referralInviteFeePercent: (agreement as unknown as { referralInviteFeePercent?: number }).referralInviteFeePercent
+          referralInviteFeePercent: (agreement as unknown as { referralInviteFeePercent?: number }).referralInviteFeePercent,
+          // Surface buyer revocation so the dashboard shows a "buyer opted out"
+          // warning on affected agreements (TCPA vicarious-liability guard).
+          buyerRevokedAt: ((agreement as unknown as { buyerRevokedAt?: { toDate: () => Date } }).buyerRevokedAt)?.toDate?.().toISOString() || null,
+          buyerRevocationChannel: (agreement as unknown as { buyerRevocationChannel?: string }).buyerRevocationChannel || null,
         };
       })
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());

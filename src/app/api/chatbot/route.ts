@@ -133,7 +133,7 @@ Ownerfi runs a referral network for real estate agents. Here's what we offer:
 - **1 free lead per month** — included automatically, additional leads available via credits
 - **30% referral fee — only at closing** — if a lead doesn't close, the agent owes nothing. Fee is 30% of the agent's commission, paid within 7 days of closing
 - **Service area** — agents set their primary city and receive leads within a 30-mile radius
-- **RF-701 digital agreements** — standard Tennessee Association of REALTORS® referral form, signed digitally
+- **Digital referral agreements** — standard eXp Realty Tennessee Referral Agreement (SkySlope® Forms), signed digitally
 - **Double referral** — if an agent can't service a lead, they can re-refer it to another agent and set their own re-referral fee
 - **Realtor Dashboard** at /realtor-dashboard — manage available leads, signed agreements, owned leads, and transactions
 - To learn more, visit /for-realtors or sign up at /auth?role=realtor

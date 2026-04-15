@@ -5,7 +5,6 @@ import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth'
 import HomePageClient from './HomePageClient'
 import { LegalFooter } from '@/components/ui/LegalFooter'
-import Image from 'next/image'
 import HeroVideo from '@/components/ui/HeroVideo'
 import { SmartCTAButton } from '@/components/ui/SmartCTAButton'
 
@@ -68,7 +67,7 @@ function generateOrganizationSchema() {
     "name": "Ownerfi",
     "url": "https://ownerfi.ai",
     "logo": "https://ownerfi.ai/logo.png",
-    "description": "Leading platform for owner financed properties in Texas, Florida, and Georgia",
+    "description": "Owner-financed property search and lead-generation platform serving Texas, Florida, and Georgia.",
     "foundingDate": "2024",
     "founder": {
       "@type": "Person",
@@ -266,15 +265,15 @@ export default async function HomePage() {
 
                 {/* Right: App Preview / Phone Mockup */}
                 <div className="relative">
-                  {/* Floating Stats */}
+                  {/* Floating labels — non-numeric until we have audit-ready counts. */}
                   <div className="absolute -top-8 -left-8 bg-slate-800/90 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-4 shadow-2xl z-10 animate-float">
-                    <div className="text-3xl font-black text-[#00BC7D]">500+</div>
-                    <div className="text-slate-300 text-sm">Properties</div>
+                    <div className="text-xl font-black text-[#00BC7D]">Owner-Financed</div>
+                    <div className="text-slate-300 text-xs">No bank required</div>
                   </div>
 
                   <div className="absolute -bottom-8 -right-8 bg-slate-800/90 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-4 shadow-2xl z-10 animate-float-delayed">
-                    <div className="text-3xl font-black text-blue-400">50</div>
-                    <div className="text-slate-300 text-sm">States</div>
+                    <div className="text-xl font-black text-blue-400">TX · FL · GA</div>
+                    <div className="text-slate-300 text-xs">Growing coverage</div>
                   </div>
 
                   {/* Phone Mockup */}
@@ -348,7 +347,7 @@ export default async function HomePage() {
                     </svg>
                   </div>
                   <h3 className="text-base font-bold text-white mb-2" data-translate="whyChoose.benefit3Title">Real Properties</h3>
-                  <p className="text-sm text-slate-300" data-translate="whyChoose.benefit3Text">500+ verified owner-financed homes</p>
+                  <p className="text-sm text-slate-300" data-translate="whyChoose.benefit3Text">Live owner-financed listings refreshed daily</p>
                 </div>
               </div>
 
@@ -645,21 +644,21 @@ export default async function HomePage() {
                   <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-8 text-center hover:border-[#00BC7D]/50 transition-all duration-300 hover:scale-[1.02]">
                     <h3 className="text-2xl font-bold text-[#00BC7D] mb-2 group-hover:text-[#00d68f]">Texas</h3>
                     <p className="text-slate-300 mb-4" data-translate="locations.texasSubtitle">Houston, Dallas, Austin, San Antonio</p>
-                    <p className="text-sm text-slate-400" data-translate="locations.texasProperties">200+ Properties Available</p>
+                    <p className="text-sm text-slate-400" data-translate="locations.texasProperties">Active listings statewide</p>
                   </div>
                 </Link>
                 <Link href="/owner-financing-florida" className="group">
                   <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-8 text-center hover:border-blue-400/50 transition-all duration-300 hover:scale-[1.02]">
                     <h3 className="text-2xl font-bold text-blue-400 mb-2 group-hover:text-blue-300">Florida</h3>
                     <p className="text-slate-300 mb-4" data-translate="locations.floridaSubtitle">Miami, Orlando, Tampa, Jacksonville</p>
-                    <p className="text-sm text-slate-400" data-translate="locations.floridaProperties">150+ Properties Available</p>
+                    <p className="text-sm text-slate-400" data-translate="locations.floridaProperties">Active listings statewide</p>
                   </div>
                 </Link>
                 <Link href="/owner-financing-georgia" className="group">
                   <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-8 text-center hover:border-purple-400/50 transition-all duration-300 hover:scale-[1.02]">
                     <h3 className="text-2xl font-bold text-purple-400 mb-2 group-hover:text-purple-300">Georgia</h3>
                     <p className="text-slate-300 mb-4" data-translate="locations.georgiaSubtitle">Atlanta, Augusta, Columbus, Savannah</p>
-                    <p className="text-sm text-slate-400" data-translate="locations.georgiaProperties">100+ Properties Available</p>
+                    <p className="text-sm text-slate-400" data-translate="locations.georgiaProperties">Active listings statewide</p>
                   </div>
                 </Link>
               </div>

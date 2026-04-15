@@ -9,7 +9,7 @@ export const translations = {
 
     // Hero Section
     hero: {
-      trustBadge: "Trusted by 1,000+ Homebuyers",
+      trustBadge: "Owner-Financed Properties Across the US",
       title1: "Swipe Your Way",
       title2: "Into Your Dream Home",
       subtitle: "The modern way to find owner-financed homes.",
@@ -31,7 +31,7 @@ export const translations = {
       benefit2Title: "Find Homes Fast",
       benefit2Text: "Swipe through properties that match your budget",
       benefit3Title: "Real Properties",
-      benefit3Text: "500+ verified owner-financed homes",
+      benefit3Text: "Live owner-financed listings refreshed daily",
       socialFollow: "Follow",
       socialText: "for daily property updates",
     },
@@ -40,8 +40,8 @@ export const translations = {
     howItWorks: {
       title: "How It Works",
       subtitle: "Three simple steps to find your perfect home",
-      step1Title: "Set Your Budget",
-      step1Text: "Tell us your max monthly payment and down payment. We'll only show homes you can afford.",
+      step1Title: "Tell Us Where",
+      step1Text: "Share your preferred city and state. We'll match you with owner-financed properties nearby.",
       step2Title: "Swipe Through Homes",
       step2Text: "Swipe right on homes you love, left on ones you don't. Just like your favorite dating app!",
       step3Title: "Get Referred & Buy",
@@ -113,11 +113,11 @@ export const translations = {
     locations: {
       title: "Owner Financed Properties by State",
       texasSubtitle: "Houston, Dallas, Austin, San Antonio",
-      texasProperties: "200+ Properties Available",
+      texasProperties: "Active listings statewide",
       floridaSubtitle: "Miami, Orlando, Tampa, Jacksonville",
-      floridaProperties: "150+ Properties Available",
+      floridaProperties: "Active listings statewide",
       georgiaSubtitle: "Atlanta, Augusta, Columbus, Savannah",
-      georgiaProperties: "100+ Properties Available",
+      georgiaProperties: "Active listings statewide",
       nationwideTitle: "Available Nationwide",
       nationwideSubtitle: "Properties available in all 50 states",
       viewAllCta: "View All Properties →",
@@ -166,7 +166,7 @@ export const translations = {
 
     // Sección Hero
     hero: {
-      trustBadge: "Confiado por más de 1,000 compradores",
+      trustBadge: "Propiedades con financiamiento del propietario en EE. UU.",
       title1: "Desliza hacia",
       title2: "La Casa de Tus Sueños",
       subtitle: "La forma moderna de encontrar casas con financiamiento del propietario.",
@@ -188,7 +188,7 @@ export const translations = {
       benefit2Title: "Encuentra Casas Rápido",
       benefit2Text: "Desliza por propiedades que se ajusten a tu presupuesto",
       benefit3Title: "Propiedades Reales",
-      benefit3Text: "Más de 500 casas verificadas con financiamiento del propietario",
+      benefit3Text: "Listados en vivo con financiamiento del propietario, actualizados a diario",
       socialFollow: "Síguenos en",
       socialText: "para actualizaciones diarias de propiedades",
     },
@@ -197,8 +197,8 @@ export const translations = {
     howItWorks: {
       title: "Cómo Funciona",
       subtitle: "Tres simples pasos para encontrar tu hogar perfecto",
-      step1Title: "Establece Tu Presupuesto",
-      step1Text: "Dinos tu pago mensual máximo y enganche. Solo te mostraremos casas que puedas pagar.",
+      step1Title: "Dinos Dónde",
+      step1Text: "Comparte tu ciudad y estado preferidos. Te mostraremos propiedades cercanas con financiamiento del propietario.",
       step2Title: "Desliza por Casas",
       step2Text: "Desliza a la derecha en las casas que amas, a la izquierda en las que no. ¡Como tu app favorita de citas!",
       step3Title: "Conecta y Compra",
@@ -270,11 +270,11 @@ export const translations = {
     locations: {
       title: "Propiedades con Financiamiento del Propietario por Estado",
       texasSubtitle: "Houston, Dallas, Austin, San Antonio",
-      texasProperties: "Más de 200 propiedades disponibles",
+      texasProperties: "Listados activos en todo el estado",
       floridaSubtitle: "Miami, Orlando, Tampa, Jacksonville",
-      floridaProperties: "Más de 150 propiedades disponibles",
+      floridaProperties: "Listados activos en todo el estado",
       georgiaSubtitle: "Atlanta, Augusta, Columbus, Savannah",
-      georgiaProperties: "Más de 100 propiedades disponibles",
+      georgiaProperties: "Listados activos en todo el estado",
       nationwideTitle: "Disponible en Todo el País",
       nationwideSubtitle: "Propiedades disponibles en los 50 estados",
       viewAllCta: "Ver Todas las Propiedades →",

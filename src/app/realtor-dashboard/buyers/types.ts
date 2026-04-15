@@ -51,6 +51,11 @@ export interface Agreement {
   canBeReReferred?: boolean;
   hasActiveInvite?: boolean;
   referralInviteFeePercent?: number;
+  // TCPA revocation — stamped by revokeBuyerTCPAConsent when the buyer
+  // opts out. Dashboard renders a warning banner so the agent stops
+  // calling/texting immediately.
+  buyerRevokedAt?: string | null;
+  buyerRevocationChannel?: string | null;
 }
 
 export interface DashboardData {

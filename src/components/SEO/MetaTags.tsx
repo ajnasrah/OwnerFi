@@ -85,7 +85,7 @@ export function MetaTags({
 export const SEO_CONFIGS = {
   home: {
     title: "Ownerfi - Owner Financed Properties | No Bank Financing Needed",
-    description: "Find owner financed homes in all 50 states. Skip the bank with flexible seller financing. Low down payments, no credit checks required.",
+    description: "Find owner financed homes in Texas, Florida, and Georgia. Skip the bank with flexible seller financing. Low down payments, no credit checks required.",
     keywords: "owner financing, owner financed homes, seller financing, no bank financing, buy house without bank, creative financing, rent to own homes"
   },
 

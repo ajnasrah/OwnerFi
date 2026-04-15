@@ -47,11 +47,10 @@ export function OrganizationSchema() {
       email: 'support@ownerfi.ai',
       availableLanguage: ['English', 'Spanish'],
     },
-    aggregateRating: {
-      '@type': 'AggregateRating',
-      ratingValue: '4.8',
-      reviewCount: '127',
-    },
+    // aggregateRating removed — was fabricated (4.8 / 127 reviews) and emitted
+    // sitewide in JSON-LD. Google disciplines sites for fake rich-result data
+    // and it's an FTC §5 deception risk. Restore only with real verified
+    // review data tied to a review platform.
   }
 
   return (

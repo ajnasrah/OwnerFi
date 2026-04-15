@@ -77,13 +77,19 @@ export async function POST(request: NextRequest) {
           { field: 'buyerId', operator: '==', value: agreement.buyerId },
         ],
       );
+      // Flip any status other than already-terminal ('voided'/'refunded') →
+      // 'voided'. Covers the full leadPurchases enum: 'purchased',
+      // 'contacted', 'converted'. Otherwise admin dashboards kept showing
+      // voided agreements as active purchases.
+      const TERMINAL_STATUSES = new Set(['voided', 'refunded']);
       for (const p of purchases) {
         const purchase = p as { id: string; status?: string };
-        if (purchase.status === 'purchased') {
+        if (!TERMINAL_STATUSES.has(purchase.status || '')) {
           await FirebaseDB.updateDocument('leadPurchases', purchase.id, {
             status: 'voided',
             voidedAt: now,
             voidReason: cleanReason,
+            priorStatus: purchase.status || null,
           });
         }
       }

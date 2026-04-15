@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     url: 'https://ownerfi.ai/rent-to-own-homes',
     siteName: 'Ownerfi',
     title: 'Rent to Own Homes - Owner Financed Properties Available',
-    description: 'Browse thousands of rent to own and owner financed homes. No bank needed, bad credit OK, flexible terms.',
+    description: 'Browse rent to own and owner financed homes. No bank needed, bad credit OK, flexible terms.',
     images: [{
       url: 'https://ownerfi.ai/og-rent-to-own.png',
       width: 1200,
@@ -95,9 +95,9 @@ function generateServiceSchema() {
 
 export default function RentToOwnHomes() {
   const states = [
-    { name: 'Texas', count: '200+', slug: 'texas' },
-    { name: 'Florida', count: '150+', slug: 'florida' },
-    { name: 'Georgia', count: '100+', slug: 'georgia' }
+    { name: 'Texas', count: 'Active listings', slug: 'texas' },
+    { name: 'Florida', count: 'Active listings', slug: 'florida' },
+    { name: 'Georgia', count: 'Active listings', slug: 'georgia' }
   ]
 
   return (
@@ -158,19 +158,21 @@ export default function RentToOwnHomes() {
                 </div>
               </div>
 
-              {/* Stats */}
+              {/* Stats — replaced "500+ Properties / 50+ Cities" fabricated
+                  counts with non-numeric descriptors. Min-down 5%* kept since
+                  that's a seller-term floor, not a platform claim. */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
                 <div className="bg-slate-800/50 backdrop-blur rounded-xl p-4 border border-slate-700/50">
-                  <div className="text-3xl font-bold text-[#00BC7D]">500+</div>
-                  <div className="text-slate-300 text-sm">Properties</div>
+                  <div className="text-xl font-bold text-[#00BC7D]">Free</div>
+                  <div className="text-slate-300 text-sm">To browse</div>
                 </div>
                 <div className="bg-slate-800/50 backdrop-blur rounded-xl p-4 border border-slate-700/50">
-                  <div className="text-3xl font-bold text-blue-400">3</div>
-                  <div className="text-slate-300 text-sm">States</div>
+                  <div className="text-xl font-bold text-blue-400">TX · FL · GA</div>
+                  <div className="text-slate-300 text-sm">Growing coverage</div>
                 </div>
                 <div className="bg-slate-800/50 backdrop-blur rounded-xl p-4 border border-slate-700/50">
-                  <div className="text-3xl font-bold text-purple-400">50+</div>
-                  <div className="text-slate-300 text-sm">Cities</div>
+                  <div className="text-xl font-bold text-purple-400">Daily</div>
+                  <div className="text-slate-300 text-sm">Refreshed</div>
                 </div>
                 <div className="bg-slate-800/50 backdrop-blur rounded-xl p-4 border border-slate-700/50">
                   <div className="text-3xl font-bold text-yellow-400">5%</div>
@@ -386,7 +388,7 @@ export default function RentToOwnHomes() {
                 Find Your Rent to Own Home Today
               </h2>
               <p className="text-xl text-slate-300 mb-8">
-                Browse thousands of owner financed and rent-to-own properties. No bank needed, bad credit OK.
+                Browse owner financed and rent-to-own properties. No bank needed, bad credit OK.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link href="/auth" className="bg-[#00BC7D]/50 hover:bg-[#00BC7D] text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all">

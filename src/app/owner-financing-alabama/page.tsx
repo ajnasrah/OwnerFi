@@ -149,15 +149,14 @@ export default function OwnerfinancingAlabama() {
               {/* Stats */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                 <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 text-center border border-slate-700/50">
-                  <div className="text-3xl font-bold text-red-400">150+</div>
-                  <div className="text-slate-300 mt-2">Alabama Properties</div>
+                  <div className="text-xl font-bold text-red-400">Active</div><div className="text-slate-300 mt-2">Alabama Properties</div>
                 </div>
                 <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 text-center border border-slate-700/50">
                   <div className="text-3xl font-bold text-[#00BC7D]">5%</div>
                   <div className="text-slate-300 mt-2">Min Down Payment</div>
                 </div>
                 <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 text-center border border-slate-700/50">
-                  <div className="text-3xl font-bold text-purple-400">15+</div>
+                  <div className="text-3xl font-bold text-purple-400">TX</div>
                   <div className="text-slate-300 mt-2">Cities Covered</div>
                 </div>
                 <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 text-center border border-slate-700/50">

@@ -161,7 +161,7 @@ export default function OwnerfinancingTexas() {
                   <span className="block text-3xl mt-4 text-slate-300">Find Seller Financed Homes with No Bank Needed</span>
                 </h1>
                 <p className="text-xl text-slate-300 max-w-3xl mx-auto">
-                  Browse hundreds of owner financed properties across Texas. From Houston to Dallas, Austin to San Antonio -
+                  Browse owner financed properties across Texas. From Houston to Dallas, Austin to San Antonio -
                   find homes with flexible seller financing, low down payments, and no traditional mortgage requirements.
                 </p>
               </div>
@@ -179,15 +179,15 @@ export default function OwnerfinancingTexas() {
               {/* Stats */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 text-center border border-slate-700/50">
-                  <div className="text-3xl font-bold text-[#00BC7D]">200+</div>
-                  <div className="text-slate-300 mt-2">Texas Properties</div>
+                  <div className="text-xl font-bold text-[#00BC7D]">Statewide</div>
+                  <div className="text-slate-300 mt-2">Active Listings</div>
                 </div>
                 <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 text-center border border-slate-700/50">
                   <div className="text-3xl font-bold text-blue-400">5%</div>
                   <div className="text-slate-300 mt-2">Min Down Payment</div>
                 </div>
                 <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 text-center border border-slate-700/50">
-                  <div className="text-3xl font-bold text-purple-400">15+ Cities</div>
+                  <div className="text-3xl font-bold text-purple-400">TX cities</div>
                   <div className="text-slate-300 mt-2">Coverage Area</div>
                 </div>
                 <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 text-center border border-slate-700/50">
@@ -213,7 +213,7 @@ export default function OwnerfinancingTexas() {
                 Ready to Find Your Texas Home?
               </h2>
               <p className="text-xl text-slate-300 mb-8">
-                Browse hundreds of owner financed and rent-to-own properties across Texas.
+                Browse owner financed and rent-to-own properties across Texas.
                 No banks needed, flexible terms available.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -251,7 +251,7 @@ export default function OwnerfinancingTexas() {
                       <li>• Katy</li>
                       <li>• Pearland</li>
                     </ul>
-                    <p className="text-[#00BC7D] text-sm mt-3">50+ Properties Available →</p>
+                    <p className="text-[#00BC7D] text-sm mt-3">Active listings →</p>
                   </div>
                 </Link>
 
@@ -265,7 +265,7 @@ export default function OwnerfinancingTexas() {
                       <li>• Plano</li>
                       <li>• Irving</li>
                     </ul>
-                    <p className="text-blue-400 text-sm mt-3">45+ Properties Available →</p>
+                    <p className="text-blue-400 text-sm mt-3">Active listings →</p>
                   </div>
                 </Link>
 
@@ -279,7 +279,7 @@ export default function OwnerfinancingTexas() {
                       <li>• Georgetown</li>
                       <li>• Pflugerville</li>
                     </ul>
-                    <p className="text-purple-400 text-sm mt-3">35+ Properties Available →</p>
+                    <p className="text-purple-400 text-sm mt-3">Active listings →</p>
                   </div>
                 </Link>
 
@@ -293,7 +293,7 @@ export default function OwnerfinancingTexas() {
                       <li>• Schertz</li>
                       <li>• Seguin</li>
                     </ul>
-                    <p className="text-yellow-400 text-sm mt-3">30+ Properties Available →</p>
+                    <p className="text-yellow-400 text-sm mt-3">Active listings →</p>
                   </div>
                 </Link>
 
@@ -307,7 +307,7 @@ export default function OwnerfinancingTexas() {
                       <li>• Horizon City</li>
                       <li>• Fort Bliss area</li>
                     </ul>
-                    <p className="text-orange-400 text-sm mt-3">20+ Properties Available →</p>
+                    <p className="text-orange-400 text-sm mt-3">Active listings →</p>
                   </div>
                 </Link>
 
@@ -321,7 +321,7 @@ export default function OwnerfinancingTexas() {
                       <li>• Aransas Pass</li>
                       <li>• Ingleside</li>
                     </ul>
-                    <p className="text-cyan-400 text-sm mt-3">15+ Properties Available →</p>
+                    <p className="text-cyan-400 text-sm mt-3">Active listings →</p>
                   </div>
                 </Link>
               </div>
@@ -410,7 +410,7 @@ export default function OwnerfinancingTexas() {
                 Ready to Find Your Texas Home with Owner Financing?
               </h2>
               <p className="text-xl text-slate-300 mb-8">
-                Browse hundreds of owner financed properties across Texas. No bank needed, flexible terms, and fast closing.
+                Browse owner financed properties across Texas. No bank needed, flexible terms, and fast closing.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link href="/auth" className="bg-[#00BC7D]/50 hover:bg-[#00BC7D] text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all">

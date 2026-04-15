@@ -6,6 +6,7 @@ import {
   where,
   getDocs,
   doc,
+  getDoc,
   updateDoc,
   serverTimestamp
 } from 'firebase/firestore';
@@ -148,11 +149,34 @@ export const authOptions = {
       if (user) {
         token.role = user.role;
         token.phone = user.phone;
+        (token as unknown as { deletedCheckedAt?: number }).deletedCheckedAt = Date.now();
+      } else {
+        // Existing-JWT refresh path (no `user` param). Periodically re-check
+        // Firestore for `deleted: true` / `role: 'deleted'` so a user whose
+        // account was deleted after issuing this JWT loses access without
+        // waiting for the 30-day token expiry. Checked at most every hour
+        // per token so we don't hit Firestore on every request.
+        const tok = token as unknown as { sub?: string; deletedCheckedAt?: number; role?: string };
+        const lastChecked = tok.deletedCheckedAt || 0;
+        const now = Date.now();
+        if (tok.sub && (now - lastChecked) > 60 * 60 * 1000) {
+          try {
+            const snap = await getDoc(doc(db, 'users', tok.sub));
+            const data = snap.exists() ? (snap.data() as { deleted?: boolean; role?: string }) : null;
+            if (data && (data.deleted === true || data.role === 'deleted')) {
+              return {} as JWT;
+            }
+            tok.deletedCheckedAt = now;
+          } catch {
+            // Fail-open on Firestore hiccup — better to keep the user signed
+            // in than to block every request on a DB outage. The next check
+            // in ≤1 hour will re-verify.
+            tok.deletedCheckedAt = now;
+          }
+        }
       }
       // Block deleted users from retaining a valid token. `role: 'deleted'`
       // is set by /api/account/delete and by the test-data cleanup script.
-      // Returning an empty token effectively signs the user out on next
-      // session check.
       if ((token as unknown as { role?: string }).role === 'deleted') {
         return {} as JWT;
       }

@@ -329,15 +329,22 @@ export const PropertySwiper2 = memo(function PropertySwiper2({
             isPriority={true}
           />
           {/* Swipe action indicator — tells the user which way commits to
-              like vs pass before they release the swipe. */}
+              like vs pass before they release the swipe. Rotation applied via
+              inline style to avoid Tailwind class-order race between
+              rotate-[-12deg] and rotate-[12deg]. */}
           {showAction && (
             <div
-              className={`absolute top-6 pointer-events-none select-none font-black text-3xl sm:text-4xl tracking-widest px-4 py-2 border-4 rounded-xl rotate-[-12deg] ${
+              className={`absolute top-6 pointer-events-none select-none font-black text-3xl sm:text-4xl tracking-widest px-4 py-2 border-4 rounded-xl ${
                 showAction === 'like'
                   ? 'right-6 text-[#00BC7D] border-[#00BC7D]'
-                  : 'left-6 text-red-500 border-red-500 rotate-[12deg]'
+                  : 'left-6 text-red-500 border-red-500'
               }`}
-              style={{ zIndex: 20 }}
+              style={{
+                zIndex: 20,
+                transform: showAction === 'like' ? 'rotate(-12deg)' : 'rotate(12deg)',
+              }}
+              aria-live="polite"
+              role="status"
             >
               {showAction === 'like' ? 'LIKE' : 'PASS'}
             </div>

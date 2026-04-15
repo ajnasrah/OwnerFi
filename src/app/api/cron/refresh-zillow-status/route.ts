@@ -439,7 +439,18 @@ export async function GET(request: NextRequest) {
       // search results land on a friendly "sold" page instead of 404. Drop
       // from Typesense so the property stops appearing in search results.
       if (SOLD_STATUSES.has(newStatus)) {
-        const existingSoldAt = (prop as unknown as { soldAt?: unknown }).soldAt;
+        // `prop` (PropertyDoc) does not carry `soldAt` — read from Firestore
+        // so we only stamp the FIRST time we observe SOLD. Otherwise
+        // `soldAt` would drift forward on every 14-day recheck, breaking
+        // any future retention cleanup built on that timestamp.
+        let existingSoldAt: unknown = null;
+        try {
+          const docSnap = await docRef.get();
+          existingSoldAt = docSnap.exists ? (docSnap.data() as Record<string, unknown>).soldAt : null;
+        } catch {
+          // If the read fails, fall through to stamping — better to
+          // overwrite once than to lose the sold-state transition entirely.
+        }
         const update: Record<string, unknown> = {
           isActive: false,
           homeStatus: newStatus,
@@ -447,9 +458,6 @@ export async function GET(request: NextRequest) {
           lastStatusCheck: new Date(),
           consecutiveNoResults: 0,
         };
-        // Only stamp soldAt the first time we observe SOLD — otherwise a
-        // property re-observed on every 14-day inactive rotation would have
-        // its soldAt drift forward, breaking any future retention cleanup.
         if (!existingSoldAt) update.soldAt = new Date();
         firestoreBatch.update(docRef, update);
         if (prop.collection === 'properties') typesenseDeletesAfterCommit.push(prop.id);

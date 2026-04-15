@@ -176,27 +176,9 @@ export default function AboutPage() {
           </div>
         </div>
 
-        {/* Impact */}
-        <div className="mb-16">
-          <h2 className="text-3xl font-bold text-white mb-8 text-center">Our Impact</h2>
-          
-          <div className="bg-gradient-to-r from-[#00BC7D]/10 to-blue-500/10 border border-slate-600/30 rounded-2xl p-8">
-            <div className="grid md:grid-cols-3 gap-8 text-center">
-              <div>
-                <div className="text-3xl font-bold text-[#00BC7D] mb-2">1,200+</div>
-                <p className="text-slate-300 text-sm">Families helped into homeownership</p>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-blue-400 mb-2">$180M</div>
-                <p className="text-slate-300 text-sm">in owner-financed property deals</p>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-purple-400 mb-2">95%</div>
-                <p className="text-slate-300 text-sm">customer satisfaction rate</p>
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* Impact stats removed — "1,200+ families / $180M / 95% satisfaction" were
+             unverified marketing numbers. Restore this block only with audited
+             figures backed by Firestore/analytics data. FTC §5 deception risk. */}
 
         {/* Call to Action */}
         <div className="text-center">

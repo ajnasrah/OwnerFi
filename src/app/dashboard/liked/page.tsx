@@ -103,6 +103,16 @@ export default function LikedProperties() {
     return `${lotSize.toLocaleString()} sq ft`;
   };
 
+  // Build a working Zillow URL. property.id is prefixed (e.g. "zpid_2067830274")
+  // so naively appending "_zpid" doubles the prefix and breaks the link.
+  const buildZillowUrl = (property: Property & { url?: string; zpid?: string | number }) => {
+    if (property.url) {
+      return property.url.startsWith('http') ? property.url : `https://www.zillow.com${property.url.startsWith('/') ? '' : '/'}${property.url}`;
+    }
+    const zpid = property.zpid ?? (typeof property.id === 'string' ? property.id.replace(/^zpid_/, '') : property.id);
+    return `https://www.zillow.com/homedetails/${zpid}_zpid/`;
+  };
+
   if (loading) {
     return (
       <div className="h-screen overflow-hidden bg-[#111625] flex items-center justify-center">
@@ -332,7 +342,7 @@ export default function LikedProperties() {
                       </button>
 
                       <a
-                        href={`https://www.zillow.com/homedetails/${property.id}_zpid/`}
+                        href={buildZillowUrl(property)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="bg-gradient-to-r from-[#00BC7D]/50 to-[#00BC7D] hover:from-[#00BC7D] hover:to-[#00BC7D]/50 text-white py-2 px-3 rounded-lg transition-all hover:scale-105 font-bold text-sm text-center"

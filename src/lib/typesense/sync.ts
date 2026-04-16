@@ -160,6 +160,7 @@ export function transformPropertyForTypesense(
     bathrooms: property.bathrooms ?? 0,
     squareFeet: property.squareFeet ?? undefined,
     yearBuilt: property.yearBuilt ?? undefined,
+    daysOnZillow: (property as { daysOnZillow?: number }).daysOnZillow ?? undefined,
     zestimate: zestimate || undefined, // 0 zestimate is meaningless, keep || here
     discountPercent: property.cashDeal?.discountPercent ?? undefined,
 

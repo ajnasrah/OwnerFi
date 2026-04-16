@@ -16,6 +16,24 @@ import { getCitiesWithinRadiusWithExpansion, getCitiesWithinRadiusComprehensive 
 // All raw Zillow homeType values that represent land
 const LAND_TYPES = new Set(['land', 'lot', 'lots', 'vacant_land', 'farm', 'ranch']);
 
+// Build an absolute zillow.com URL. Firestore stores relative `url` strings
+// like "/homedetails/2916-Brand-Iron-Dr.../2067830274_zpid/"; the doc id is a
+// prefixed "zpid_NNN" so naively doing `${id}_zpid` doubles the prefix.
+function toZillowUrl(
+  url: string | undefined,
+  hdpUrl: string | undefined,
+  zpid: string | number | undefined,
+  docId: string,
+): string {
+  const raw = url || hdpUrl;
+  if (raw) {
+    if (raw.startsWith('http')) return raw;
+    return `https://www.zillow.com${raw.startsWith('/') ? '' : '/'}${raw}`;
+  }
+  const z = zpid ?? (typeof docId === 'string' ? docId.replace(/^zpid_/, '') : docId);
+  return `https://www.zillow.com/homedetails/${z}_zpid/`;
+}
+
 interface CashDeal {
   id: string;
   address: string;
@@ -205,7 +223,7 @@ async function searchCashDealsTypesense(
       baths: (doc.bathrooms as number) || 0,
       sqft: (doc.squareFeet as number) || 0,
       imgSrc: (doc.primaryImage as string) || '',
-      url: `https://www.zillow.com/homedetails/${doc.id}_zpid/`,
+      url: toZillowUrl(doc.url as string | undefined, doc.hdpUrl as string | undefined, doc.zpid as string | number | undefined, doc.id as string),
       // Additional details
       description: (doc.description as string) || '',
       yearBuilt: (doc.yearBuilt as number) || 0,
@@ -306,7 +324,7 @@ async function searchCashDealsFirestore(
         baths: (data.bathrooms as number) || (data.baths as number) || 0,
         sqft: (data.squareFoot as number) || (data.squareFeet as number) || (data.sqft as number) || 0,
         imgSrc: (data.primaryImage as string) || (data.firstPropertyImage as string) || (data.imgSrc as string) || (data.imageUrl as string) || '',
-        url: (data.url as string) || (data.hdpUrl as string) || `https://www.zillow.com/homedetails/${doc.id}_zpid/`,
+        url: toZillowUrl(data.url as string | undefined, data.hdpUrl as string | undefined, data.zpid as string | number | undefined, doc.id),
         needsWork,
         needsWorkKeywords: (data.needsWorkKeywords as string[]) || [],
         isLand: data.isLand === true || LAND_TYPES.has(((data.homeType as string) || (data.propertyType as string) || '').toLowerCase()),

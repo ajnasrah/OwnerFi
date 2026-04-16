@@ -417,6 +417,16 @@ export async function POST(request: NextRequest) {
           flip.imgSrc = primaryImage;
           flip.imageUrls = [primaryImage];
         }
+        // Fill in yearBuilt / daysOnZillow from queue item if existing is missing.
+        // Existing Zillow scrapes usually have these, but agent-created docs don't.
+        const qYearBuilt = Number(property.yearBuilt ?? property.rawData?.yearBuilt ?? 0) || 0;
+        const qDaysOnZillow = property.daysOnZillow ?? property.rawData?.daysOnZillow;
+        if (qYearBuilt > 0 && (!existing.yearBuilt || Number(existing.yearBuilt) === 0)) {
+          flip.yearBuilt = qYearBuilt;
+        }
+        if (qDaysOnZillow != null && qDaysOnZillow !== undefined && (existing.daysOnZillow == null || existing.daysOnZillow === undefined)) {
+          flip.daysOnZillow = qDaysOnZillow;
+        }
         await db.collection('properties').doc(propertyDocId).set(flip, { merge: true });
       } else {
         // Property doesn't exist — create from queue data as a safety net.
@@ -446,6 +456,8 @@ export async function POST(request: NextRequest) {
           bedrooms: property.beds || 0,
           bathrooms: property.baths || 0,
           squareFoot: property.squareFeet || 0,
+          yearBuilt: Number(property.yearBuilt ?? property.rawData?.yearBuilt ?? 0) || 0,
+          daysOnZillow: property.daysOnZillow ?? property.rawData?.daysOnZillow ?? null,
           homeType: normalizeHomeType(property.propertyType),
           isLand: normalizeHomeType(property.propertyType) === 'land',
           homeStatus: 'FOR_SALE',

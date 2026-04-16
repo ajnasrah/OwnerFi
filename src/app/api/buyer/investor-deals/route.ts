@@ -293,12 +293,17 @@ export async function GET(request: NextRequest) {
     if (excludeAuctions) {
       allDeals = allDeals.filter(d => !d.isAuction && !d.isForeclosure && !d.isBankOwned);
     }
-    // ARV filter always applied client-side (percentOfArv is optional in Typesense,
-    // filtering at query level would exclude properties missing the field entirely)
+    // ARV filter applies to CASH DEALS only — cash deals are by definition a
+    // discount to ARV, so %ARV is load-bearing. Owner-finance properties are
+    // about financing terms, not discount; agent-confirmed OF listings can be
+    // priced at or above Zestimate and should still surface. Properties that
+    // qualify for BOTH keep OF dealType at this stage and are exempted too
+    // (they get re-filtered on the cash tab below if needed).
     if (maxArvPercent !== undefined) {
-      allDeals = allDeals.filter(d =>
-        d.percentOfArv !== null && d.percentOfArv !== undefined && d.percentOfArv <= maxArvPercent
-      );
+      allDeals = allDeals.filter(d => {
+        if (d.dealType === 'owner_finance') return true;
+        return d.percentOfArv !== null && d.percentOfArv !== undefined && d.percentOfArv <= maxArvPercent;
+      });
     }
     // Bed/bath/sqft minimums — always post-filter (fast, and handles hits that
     // came from zip-override path which doesn't push these to Typesense).

@@ -323,15 +323,20 @@ export async function POST(request: NextRequest) {
     console.log(`   Property: ${property.address}`);
     console.log(`   Deal Type: ${property.dealType}`);
 
-    // Idempotency: if the same response was already recorded, return 200
-    // without re-running side effects. Prevents double-sending / double-writes
-    // on GHL retry.
-    if (property.agentResponse === response && property.status && property.status.startsWith('agent_')) {
-      console.log('⏭️  [AGENT RESPONSE WEBHOOK] Duplicate — already processed');
+    // Narrow idempotency: only suppress if the same response was processed in
+    // the last 60s (guards GHL retry storms). Allow legitimate re-sends so the
+    // agent can re-flip a property and have it rerun the full flow.
+    const lastRespAt = property.agentResponseAt?.toDate?.()?.getTime?.() || 0;
+    if (
+      property.agentResponse === response &&
+      property.status && property.status.startsWith('agent_') &&
+      lastRespAt && (Date.now() - lastRespAt) < 60_000
+    ) {
+      console.log('⏭️  [AGENT RESPONSE WEBHOOK] Duplicate within 60s — skipping');
       return NextResponse.json({
         success: true,
         duplicate: true,
-        message: 'Response already processed (idempotent replay)',
+        message: 'Response already processed within last 60s (GHL retry guard)',
         firebaseId,
         response,
       });

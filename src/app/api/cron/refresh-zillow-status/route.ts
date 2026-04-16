@@ -9,27 +9,23 @@ import { detectListingSubType, normalizeHomeType } from '@/lib/scraper-v2/proper
 import { getTypesenseAdminClient, TYPESENSE_COLLECTIONS } from '@/lib/typesense/client';
 
 /**
- * Statuses that mean the property is gone for good — delete from Firestore
- * AND Typesense. FOR_RENT is a different market segment we don't serve.
- * SOLD is handled separately below (see SOLD_STATUSES): we keep the Firestore
- * doc so bookmarks show a friendly "sold" page instead of 404, but still
- * drop it from the Typesense search index.
+ * Statuses that mean the property is gone for good — hard-delete from
+ * Firestore AND Typesense. Sold/closed/off-market listings are removed
+ * completely per product decision (no "sold-page" SEO retention).
  */
-const PERMANENT_DELETE_STATUSES = new Set(['FOR_RENT']);
-
-/**
- * Statuses meaning the property closed. Keep the Firestore doc (for SEO
- * continuity on bookmarks / search-engine cached links), drop from Typesense,
- * stamp with soldAt. /property/[slug] will render a "sold" state + 410 Gone.
- */
-const SOLD_STATUSES = new Set(['SOLD', 'RECENTLY_SOLD']);
+const PERMANENT_DELETE_STATUSES = new Set([
+  'FOR_RENT',
+  'SOLD',
+  'RECENTLY_SOLD',
+  'OFF_MARKET',
+]);
 
 /**
  * Statuses that make a listing temporarily inactive but still worth
- * re-checking — PENDING deals can fall through, OFF_MARKET can relist.
+ * re-checking — PENDING/CONTINGENT/UNDER_CONTRACT deals can fall through.
  */
 const TRANSIENT_INACTIVE_STATUSES = new Set([
-  'PENDING', 'CONTINGENT', 'OFF_MARKET', 'OTHER', 'UNKNOWN',
+  'PENDING', 'CONTINGENT', 'UNDER_CONTRACT', 'OTHER', 'UNKNOWN',
 ]);
 
 /**
@@ -442,41 +438,9 @@ export async function GET(request: NextRequest) {
         continue;
       }
 
-      // ===== SOLD =====
-      // SOLD / RECENTLY_SOLD → keep the Firestore doc so bookmarks / indexed
-      // search results land on a friendly "sold" page instead of 404. Drop
-      // from Typesense so the property stops appearing in search results.
-      if (SOLD_STATUSES.has(newStatus)) {
-        // `prop` (PropertyDoc) does not carry `soldAt` — read from Firestore
-        // so we only stamp the FIRST time we observe SOLD. Otherwise
-        // `soldAt` would drift forward on every 14-day recheck, breaking
-        // any future retention cleanup built on that timestamp.
-        let existingSoldAt: unknown = null;
-        try {
-          const docSnap = await docRef.get();
-          existingSoldAt = docSnap.exists ? (docSnap.data() as Record<string, unknown>).soldAt : null;
-        } catch {
-          // If the read fails, fall through to stamping — better to
-          // overwrite once than to lose the sold-state transition entirely.
-        }
-        const update: Record<string, unknown> = {
-          isActive: false,
-          homeStatus: newStatus,
-          status: 'sold',
-          lastStatusCheck: new Date(),
-          consecutiveNoResults: 0,
-        };
-        if (!existingSoldAt) update.soldAt = new Date();
-        firestoreBatch.update(docRef, update);
-        if (prop.collection === 'properties') typesenseDeletesAfterCommit.push(prop.id);
-        deactivated++;
-        batchCount++;
-        continue;
-      }
-
       // ===== TRANSIENT INACTIVE =====
-      // PENDING / CONTINGENT / OFF_MARKET — deal might fall through, keep for
-      // recheck on the inactive rotation bucket.
+      // PENDING / CONTINGENT / UNDER_CONTRACT — deal might fall through, keep
+      // for recheck on the inactive rotation bucket.
       if (TRANSIENT_INACTIVE_STATUSES.has(newStatus) || hasNoPrice || isPriceZero) {
         const reason = TRANSIENT_INACTIVE_STATUSES.has(newStatus)
           ? `Status: ${newStatus}`

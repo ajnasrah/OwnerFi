@@ -405,6 +405,21 @@ export function transformProperty(
 const MIN_LISTING_PRICE = 10_000;
 
 /**
+ * Allowlist of US state codes (50 states + DC). Zillow occasionally surfaces
+ * Canadian province codes (ON, BC, SK, AB, NS, etc.) that pass a naive 2-letter
+ * state check — we reject those at validation time so they can't leak into
+ * SMS blasts, email alerts, or the public search index.
+ */
+const US_STATE_CODES = new Set([
+  'AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA',
+  'HI','ID','IL','IN','IA','KS','KY','LA','ME','MD',
+  'MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ',
+  'NM','NY','NC','ND','OH','OK','OR','PA','RI','SC',
+  'SD','TN','TX','UT','VT','VA','WA','WV','WI','WY',
+  'DC',
+]);
+
+/**
  * Validate that a property has minimum required data
  * Also filters out rentals, sold, and other non-FOR_SALE listings
  */
@@ -428,6 +443,13 @@ export function validateProperty(property: TransformedProperty): {
 
   if (!property.city || !property.state) {
     return { valid: false, reason: 'Missing city or state' };
+  }
+
+  // Reject non-US listings (Zillow surfaces Canadian provinces that pass a
+  // naive 2-letter state check). US states + DC only.
+  const stateCode = property.state.trim().toUpperCase();
+  if (!US_STATE_CODES.has(stateCode)) {
+    return { valid: false, reason: `Non-US state: ${stateCode}` };
   }
 
   // Reject non-FOR_SALE listings (rentals, sold, pending, etc.).

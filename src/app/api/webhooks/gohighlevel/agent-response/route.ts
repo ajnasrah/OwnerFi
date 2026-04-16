@@ -341,103 +341,147 @@ export async function POST(request: NextRequest) {
     if (response === 'yes') {
       console.log('✅ [AGENT RESPONSE WEBHOOK] Agent said YES');
 
-      // Detect financing type from description
-      const { detectFinancingType } = await import('@/lib/financing-type-detector');
-      const descriptionText = sanitizeDescription(property.rawData?.description || '');
-      const financingTypeResult = detectFinancingType(descriptionText);
-
-      // Agent said YES = owner financing confirmed. Always mark as OF.
-      // Property can also be a cash deal if price < 80% Zestimate.
       const isCashDeal = property.dealType === 'cash_deal';
-
-      const discountPercent = property.priceToZestimateRatio
-        ? Math.round((1 - property.priceToZestimateRatio) * 100)
-        : 0;
-
-      // Build dealTypes — always includes owner_finance since agent confirmed
       const dealTypes = ['owner_finance'];
       if (isCashDeal) dealTypes.push('cash_deal');
 
-      // Add to unified properties collection
-      console.log(`   → Routing to properties (owner_finance${isCashDeal ? ' + cash_deal' : ''})`);
+      // Resolve the property doc. Try zpid first, then fall back to
+      // city+state+normalized-address — GHL occasionally links opportunities
+      // to listings whose zpid in the queue is stale (Zillow reassigns zpids
+      // on re-list).
+      const hasHttp = (v: unknown): v is string => typeof v === 'string' && /^https?:\/\//i.test(v.trim());
+      const normAddr = (s: string) => String(s || '').toLowerCase().trim().replace(/[#,\.]/g, '').replace(/\s+/g, ' ');
 
-      await db.collection('properties').doc(`zpid_${property.zpid}`).set({
-        // Core identifiers
-        zpid: property.zpid,
-        url: property.url,
+      let propertyDocId = `zpid_${property.zpid}`;
+      let resolvedVia: 'zpid' | 'address' | 'created' = 'zpid';
+      let existingSnap = await db.collection('properties').doc(propertyDocId).get();
 
-        // Address
-        address: property.address || '',
-        streetAddress: property.address || '',
-        fullAddress: `${property.address}, ${property.city}, ${property.state} ${property.zipCode}`,
-        city: property.city || '',
-        state: property.state || '',
-        zipCode: property.zipCode || '',
+      if (!existingSnap.exists && property.address && property.city && property.state) {
+        const target = normAddr(property.address);
+        const addrSnap = await db.collection('properties')
+          .where('city', '==', property.city)
+          .where('state', '==', property.state)
+          .get();
+        for (const d of addrSnap.docs) {
+          const dAddr = normAddr(d.data().address || d.data().streetAddress || '');
+          if (dAddr && dAddr === target) {
+            propertyDocId = d.id;
+            existingSnap = d;
+            resolvedVia = 'address';
+            console.log(`   ℹ️  zpid lookup missed; matched by address → ${propertyDocId}`);
+            break;
+          }
+        }
+      }
 
-        // Pricing
-        price: property.price || 0,
-        listPrice: property.price || 0,
-        zestimate: property.zestimate || null,
-        priceToZestimateRatio: property.priceToZestimateRatio || 0,
-        discountPercent: isCashDeal ? discountPercent : null,
+      // Lift the image URL from the queue item / rawData so the property doc
+      // carries a photo (UI/search hide properties without one).
+      const primaryImage =
+        (hasHttp(property.firstPropertyImage) && property.firstPropertyImage) ||
+        (hasHttp(property.imgSrc) && property.imgSrc) ||
+        (hasHttp(property.rawData?.hiResImageLink) && property.rawData.hiResImageLink) ||
+        (hasHttp(property.rawData?.desktopWebHdpImageLink) && property.rawData.desktopWebHdpImageLink) ||
+        (hasHttp(property.rawData?.mediumImageLink) && property.rawData.mediumImageLink) ||
+        null;
 
-        // Property details
-        bedrooms: property.beds || 0,
-        bathrooms: property.baths || 0,
-        squareFoot: property.squareFeet || 0,
-        homeType: normalizeHomeType(property.propertyType),
-        isLand: normalizeHomeType(property.propertyType) === 'land',
-        homeStatus: 'FOR_SALE',
+      if (existingSnap.exists) {
+        // Flag-flip only. Keep all existing Zillow fields (address, price, images, etc.).
+        console.log(`   → Flag-flip existing ${propertyDocId} (${resolvedVia})`);
+        const flip: Record<string, unknown> = {
+          isActive: true,
+          isOwnerfinance: true,
+          isCashDeal,
+          dealTypes,
+          ownerFinanceVerified: true,
+          agentConfirmedOwnerfinance: true,
+          agentConfirmedAt: new Date(),
+          financingType: 'Owner Finance',
+          financingTypeLabel: 'Owner Finance',
+          allFinancingTypes: ['Owner Finance'],
+          source: 'agent_outreach',
+          originalQueueId: firebaseId,
+          agentNote: agentNote || null,
+          lastStatusCheck: new Date(),
+        };
+        // Only overwrite image fields if the existing doc is missing them.
+        const existing = existingSnap.data()!;
+        if (primaryImage && !hasHttp(existing.primaryImage) && !hasHttp(existing.firstPropertyImage)) {
+          flip.primaryImage = primaryImage;
+          flip.firstPropertyImage = primaryImage;
+          flip.imgSrc = primaryImage;
+          flip.imageUrls = [primaryImage];
+        }
+        await db.collection('properties').doc(propertyDocId).set(flip, { merge: true });
+      } else {
+        // Property doesn't exist — create from queue data as a safety net.
+        resolvedVia = 'created';
+        console.log(`   → Creating ${propertyDocId} from queue (no existing match)`);
+        const { detectFinancingType } = await import('@/lib/financing-type-detector');
+        const descriptionText = sanitizeDescription(property.rawData?.description || '');
+        const financingTypeResult = detectFinancingType(descriptionText);
+        const discountPercent = property.priceToZestimateRatio
+          ? Math.round((1 - property.priceToZestimateRatio) * 100)
+          : 0;
 
-        // Agent info
-        agentName: property.agentName,
-        agentPhoneNumber: property.agentPhone,
-        agentEmail: property.agentEmail || null,
+        await db.collection('properties').doc(propertyDocId).set({
+          zpid: property.zpid,
+          url: property.url,
+          address: property.address || '',
+          streetAddress: property.address || '',
+          fullAddress: `${property.address}, ${property.city}, ${property.state} ${property.zipCode}`,
+          city: property.city || '',
+          state: property.state || '',
+          zipCode: property.zipCode || '',
+          price: property.price || 0,
+          listPrice: property.price || 0,
+          zestimate: property.zestimate || null,
+          priceToZestimateRatio: property.priceToZestimateRatio || 0,
+          discountPercent: isCashDeal ? discountPercent : null,
+          bedrooms: property.beds || 0,
+          bathrooms: property.baths || 0,
+          squareFoot: property.squareFeet || 0,
+          homeType: normalizeHomeType(property.propertyType),
+          isLand: normalizeHomeType(property.propertyType) === 'land',
+          homeStatus: 'FOR_SALE',
+          agentName: property.agentName,
+          agentPhoneNumber: property.agentPhone,
+          agentEmail: property.agentEmail || null,
+          description: descriptionText,
+          financingType: financingTypeResult.financingType || 'Owner Finance',
+          allFinancingTypes: financingTypeResult.allTypes.length > 0 ? financingTypeResult.allTypes : ['Owner Finance'],
+          financingTypeLabel: financingTypeResult.displayLabel || 'Owner Finance',
+          ownerFinanceVerified: true,
+          agentConfirmedOwnerfinance: true,
+          ...(isCashDeal && { agentConfirmedMotivated: true }),
+          ...(primaryImage && {
+            primaryImage,
+            firstPropertyImage: primaryImage,
+            imgSrc: primaryImage,
+            imageUrls: [primaryImage],
+          }),
+          isOwnerfinance: true,
+          isCashDeal,
+          dealTypes,
+          isActive: true,
+          source: 'agent_outreach',
+          agentConfirmedAt: new Date(),
+          agentNote: agentNote || null,
+          originalQueueId: firebaseId,
+          importedAt: new Date(),
+          createdAt: new Date(),
+          lastStatusCheck: new Date(),
+          lastScrapedAt: new Date(),
+          rawData: property.rawData || null,
+        });
+      }
 
-        // Description
-        description: descriptionText,
-
-        // Agent confirmed OF — always set financing fields
-        financingType: financingTypeResult.financingType || 'Owner Finance',
-        allFinancingTypes: financingTypeResult.allTypes.length > 0 ? financingTypeResult.allTypes : ['Owner Finance'],
-        financingTypeLabel: financingTypeResult.displayLabel || 'Owner Finance',
-        ownerFinanceVerified: true,
-        agentConfirmedOwnerfinance: true,
-
-        // Cash deal fields
-        ...(isCashDeal && {
-          agentConfirmedMotivated: true,
-        }),
-
-        // Unified collection flags — agent YES always means owner finance
-        isOwnerfinance: true,
-        isCashDeal,
-        dealTypes,
-        isActive: true,
-
-        // Source tracking
-        source: 'agent_outreach',
-        agentConfirmedAt: new Date(),
-        agentNote: agentNote || null,
-        originalQueueId: firebaseId,
-
-        // Metadata
-        importedAt: new Date(),
-        createdAt: new Date(),
-        lastStatusCheck: new Date(),
-        lastScrapedAt: new Date(),
-
-        // Full raw data for reference
-        rawData: property.rawData || null,
-      });
-
-      console.log('   ✅ Added to properties');
+      console.log(`   ✅ ${resolvedVia === 'created' ? 'Created' : 'Flipped'} ${propertyDocId}`);
 
       // Sync to Typesense for search
       try {
-        const propertyDoc = await db.collection('properties').doc(`zpid_${property.zpid}`).get();
+        const propertyDoc = await db.collection('properties').doc(propertyDocId).get();
         if (propertyDoc.exists) {
-          await indexRawFirestoreProperty(`zpid_${property.zpid}`, propertyDoc.data()!, 'properties');
+          await indexRawFirestoreProperty(propertyDocId, propertyDoc.data()!, 'properties');
           console.log('   ✅ Synced to Typesense');
         }
       } catch (typesenseErr: unknown) {
@@ -453,6 +497,8 @@ export async function POST(request: NextRequest) {
         agentResponseAt: new Date(),
         agentNote: agentNote || null,
         routedTo: 'properties',
+        routedToDocId: propertyDocId,
+        resolvedVia,
         ...(ghlOpportunityId && !property.ghlOpportunityId ? { ghlOpportunityId } : {}),
         ...(ghlContactId && !property.ghlContactId ? { ghlContactId } : {}),
         updatedAt: new Date(),

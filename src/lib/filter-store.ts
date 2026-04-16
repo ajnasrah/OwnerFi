@@ -2,7 +2,8 @@
  * Firestore read/write for userFilters collection.
  *
  * Doc shape (keyed by userId):
- *   { userId, locations, zips, updatedAt, updatedBy }
+ *   { userId, locations, zips, dealType, price, beds, baths, sqft,
+ *     excludeLand, excludeAuctions, maxArvPercent, updatedAt, updatedBy }
  *
  * Falls back to legacy buyerProfile fields when a user has no filters doc yet.
  */
@@ -30,7 +31,18 @@ export async function getUserFilter(userId: string): Promise<FilterConfig> {
   const snap = await db.collection(COLLECTION).doc(userId).get();
   if (snap.exists) {
     const data = snap.data() as Record<string, unknown>;
-    return normalizeFilterConfig({ locations: data.locations, zips: data.zips });
+    return normalizeFilterConfig({
+      locations: data.locations,
+      zips: data.zips,
+      dealType: data.dealType,
+      price: data.price,
+      beds: data.beds,
+      baths: data.baths,
+      sqft: data.sqft,
+      excludeLand: data.excludeLand,
+      excludeAuctions: data.excludeAuctions,
+      maxArvPercent: data.maxArvPercent,
+    });
   }
 
   // Legacy fallback — look up buyer profile by userId
@@ -70,6 +82,14 @@ export async function setUserFilter(
       userId,
       locations: normalized.locations,
       zips: normalized.zips,
+      dealType: normalized.dealType ?? null,
+      price: normalized.price ?? null,
+      beds: normalized.beds ?? null,
+      baths: normalized.baths ?? null,
+      sqft: normalized.sqft ?? null,
+      excludeLand: normalized.excludeLand ?? false,
+      excludeAuctions: normalized.excludeAuctions ?? false,
+      maxArvPercent: normalized.maxArvPercent ?? null,
       updatedAt: new Date(),
       updatedBy,
     },

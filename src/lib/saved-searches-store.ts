@@ -45,14 +45,16 @@ export async function listSavedSearches(userId: string): Promise<SavedSearch[]> 
   const db = await getAdminDb();
   if (!db) return [];
 
+  // Sort in memory rather than via .orderBy() so we don't depend on a
+  // (userId, updatedAt) composite index being deployed. Per-user rows are
+  // capped at FILTER_LIMITS.MAX_SAVED_SEARCHES, so in-memory sort is cheap.
   const snap = await db
     .collection(COLLECTION)
     .where('userId', '==', userId)
-    .orderBy('updatedAt', 'desc')
-    .limit(FILTER_LIMITS.MAX_SAVED_SEARCHES * 2) // slight buffer in case of dupes
+    .limit(FILTER_LIMITS.MAX_SAVED_SEARCHES * 2)
     .get();
 
-  return snap.docs.map(d => {
+  const rows = snap.docs.map(d => {
     const data = d.data() as Record<string, unknown>;
     return {
       id: d.id,
@@ -65,6 +67,9 @@ export async function listSavedSearches(userId: string): Promise<SavedSearch[]> 
       updatedAt: timestampToIso(data.updatedAt),
     };
   });
+
+  rows.sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : a.updatedAt > b.updatedAt ? -1 : 0));
+  return rows;
 }
 
 export async function getSavedSearch(userId: string, id: string): Promise<SavedSearch | null> {

@@ -211,8 +211,9 @@ export function FilterEditor({
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setSavedSearches(data.searches || []);
-    } catch {
-      // non-fatal — strip just shows empty
+    } catch (e) {
+      console.error('[FilterEditor] fetchSavedSearches failed', e);
+      setSavedError(e instanceof Error ? e.message : 'Failed to load saved searches');
     } finally {
       setSavedLoading(false);
     }
@@ -235,6 +236,7 @@ export function FilterEditor({
     setSqftMin(cfg.sqft?.min?.toString() ?? '');
     setSqftMax(cfg.sqft?.max?.toString() ?? '');
     setExcludeLand(cfg.excludeLand ?? false);
+    setExcludeAuctions(cfg.excludeAuctions ?? false);
     setMaxArvPercent(cfg.maxArvPercent !== undefined ? String(cfg.maxArvPercent) : '');
   };
 

@@ -392,6 +392,7 @@ export async function POST(request: NextRequest) {
       if (existingSnap.exists) {
         // Flag-flip only. Keep all existing Zillow fields (address, price, images, etc.).
         console.log(`   → Flag-flip existing ${propertyDocId} (${resolvedVia})`);
+        const existing = existingSnap.data()!;
         const flip: Record<string, unknown> = {
           isActive: true,
           isOwnerfinance: true,
@@ -399,7 +400,8 @@ export async function POST(request: NextRequest) {
           dealTypes,
           ownerFinanceVerified: true,
           agentConfirmedOwnerfinance: true,
-          agentConfirmedAt: new Date(),
+          // Preserve the FIRST confirmation timestamp; re-sends shouldn't bump it.
+          ...(!existing.agentConfirmedAt && { agentConfirmedAt: new Date() }),
           financingType: 'Owner Finance',
           financingTypeLabel: 'Owner Finance',
           allFinancingTypes: ['Owner Finance'],
@@ -409,7 +411,6 @@ export async function POST(request: NextRequest) {
           lastStatusCheck: new Date(),
         };
         // Only overwrite image fields if the existing doc is missing them.
-        const existing = existingSnap.data()!;
         if (primaryImage && !hasHttp(existing.primaryImage) && !hasHttp(existing.firstPropertyImage)) {
           flip.primaryImage = primaryImage;
           flip.firstPropertyImage = primaryImage;

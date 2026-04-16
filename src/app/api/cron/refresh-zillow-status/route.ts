@@ -63,6 +63,14 @@ interface ZillowApifyItem {
   zpid?: string | number;
   id?: string | number;
   homeStatus?: string;
+  keystoneHomeStatus?: string;
+  hdpTypeDimension?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  listingSubType?: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  listing_sub_type?: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  foreclosureTypes?: any;
   price?: number;
   listPrice?: number;
   daysOnZillow?: number;
@@ -541,8 +549,33 @@ export async function GET(request: NextRequest) {
       // Re-detect auction / foreclosure / bank-owned status on each refresh.
       // A listing can transition between FOR_SALE and FOR_AUCTION over its life,
       // so we must keep these flags in sync with the current Zillow state.
-      const subTypeFlags = detectListingSubType(result);
+      //
+      // BUT: Apify responses are inconsistent — `listingSubType` is sometimes
+      // present, sometimes missing entirely. Blindly trusting a missing field
+      // would silently downgrade a true auction back to FOR_SALE. So we only
+      // DOWNGRADE flags when we have positive evidence (the listingSubType
+      // object is present in the response). UPGRADES (false→true) always apply.
+      const detected = detectListingSubType(result);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const r = result as any;
+      const hasListingSubTypeData = Boolean(r.listing_sub_type || r.listingSubType || r.foreclosureTypes || r.keystoneHomeStatus);
+      const existing = await docRef.get();
+      const existingData = existing.data() || {};
+      const subTypeFlags = {
+        isAuction: detected.isAuction || (!hasListingSubTypeData && existingData.isAuction === true),
+        isForeclosure: detected.isForeclosure || (!hasListingSubTypeData && existingData.isForeclosure === true),
+        isBankOwned: detected.isBankOwned || (!hasListingSubTypeData && existingData.isBankOwned === true),
+        listingSubType: detected.listingSubType
+          || (!hasListingSubTypeData && existingData.listingSubType ? String(existingData.listingSubType) : ''),
+      };
       const isDistressedNow = subTypeFlags.isAuction || subTypeFlags.isForeclosure || subTypeFlags.isBankOwned;
+
+      // Estimates: Zillow can drop a Zestimate it previously reported (suppressed
+      // for unique homes, recent sales, etc.). When it's gone, clear our stored
+      // value — otherwise a stale Zestimate sticks around forever and gets used
+      // for cash-deal classification and shown to buyers.
+      const newEstimate = result.zestimate || result.estimate || null;
+      const newRentEstimate = result.rentZestimate || result.rentEstimate || null;
 
       // Build update data
       const updateData: Record<string, unknown> = {
@@ -556,11 +589,13 @@ export async function GET(request: NextRequest) {
         consecutiveNoResults: 0,
         ...(ofMissIncrement !== null ? { ofMissCount: ofMissIncrement } : {}),
 
-        // Distressed-listing flags
+        // Distressed-listing flags (merged: detector OR preserved when partial)
         isAuction: subTypeFlags.isAuction,
         isForeclosure: subTypeFlags.isForeclosure,
         isBankOwned: subTypeFlags.isBankOwned,
         listingSubType: subTypeFlags.listingSubType,
+        // Persist keystoneHomeStatus for audit — Zillow's canonical status
+        keystoneHomeStatus: r.keystoneHomeStatus || admin.firestore.FieldValue.delete(),
 
         // Distressed listings are never owner-finance — strip any stale OF
         // tagging on this refresh pass. Scraper-v2 ingest already handles new
@@ -589,9 +624,47 @@ export async function GET(request: NextRequest) {
         latitude: result.latitude ?? null,
         longitude: result.longitude ?? null,
 
-        // Estimates
-        estimate: result.zestimate || result.estimate || null,
-        rentEstimate: result.rentZestimate || result.rentEstimate || null,
+        // Estimates — write delete sentinel when Zillow no longer reports a value
+        // so the cleanedData null-strip below doesn't preserve stale numbers.
+        estimate: newEstimate ?? admin.firestore.FieldValue.delete(),
+        rentEstimate: newRentEstimate ?? admin.firestore.FieldValue.delete(),
+
+        // Recompute discount fields from the fresh estimate. If estimate is now
+        // missing, drop the cash_deal classification entirely — we have no
+        // basis to claim it's a discount. Also apply Fixer cushion when gap > $150k.
+        ...(() => {
+          const freshPrice = result.listPrice || result.price || 0;
+          if (!newEstimate || newEstimate <= 0 || !freshPrice) {
+            return {
+              eightyPercentOfZestimate: admin.firestore.FieldValue.delete(),
+              discountPercentage: admin.firestore.FieldValue.delete(),
+              isCashDeal: false,
+              isFixer: false,
+              cashDealReason: admin.firestore.FieldValue.delete(),
+              dealTypes: admin.firestore.FieldValue.arrayRemove('cash_deal'),
+            };
+          }
+          const disc = ((newEstimate - freshPrice) / newEstimate) * 100;
+          const eighty = newEstimate * 0.8;
+          const gap = newEstimate - freshPrice;
+          const FIXER_GAP = 150_000;
+          const isFixer = freshPrice < eighty && gap > FIXER_GAP;
+          const stillCashDeal = freshPrice < eighty;
+          return {
+            eightyPercentOfZestimate: eighty,
+            discountPercentage: disc,
+            isFixer,
+            ...(!stillCashDeal ? {
+              isCashDeal: false,
+              cashDealReason: admin.firestore.FieldValue.delete(),
+              dealTypes: admin.firestore.FieldValue.arrayRemove('cash_deal'),
+            } : isFixer ? {
+              cashDealReason: 'fixer',
+            } : {
+              ...(existingData.cashDealReason === 'fixer' ? { cashDealReason: admin.firestore.FieldValue.delete() } : {}),
+            }),
+          };
+        })(),
 
         // Costs
         hoa: result.monthlyHoaFee || result.hoaFee || result.hoa || 0,
@@ -666,6 +739,9 @@ export async function GET(request: NextRequest) {
       let tsPage = 1;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const driftIds: string[] = [];
+      // Field drift: Typesense has stale flag values that disagree with
+      // Firestore. We re-upsert these so the search index reflects the truth.
+      const fieldDriftIds: string[] = [];
 
       while (reconcileScanned < RECONCILE_MAX_SCAN && Date.now() - startTime < MAX_RUNTIME_MS) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -676,7 +752,7 @@ export async function GET(request: NextRequest) {
             filter_by: 'isActive:=true',
             per_page: PAGE_SIZE,
             page: tsPage,
-            include_fields: 'id,homeStatus',
+            include_fields: 'id,homeStatus,isAuction,isForeclosure,isBankOwned,listPrice,zestimate',
           });
         } catch (err) {
           console.error('[reconcile] Typesense search failed:', err);
@@ -695,12 +771,35 @@ export async function GET(request: NextRequest) {
           const snaps = await Promise.all(chunk.map(id => db.collection('properties').doc(id).get()));
           snaps.forEach((snap, idx) => {
             const id = chunk[idx];
+            const tsDoc = hits.find(h => String(h.document.id) === id)?.document || {};
             if (!snap.exists) { driftIds.push(id); return; }
             const data = snap.data();
             if (!data) return;
             if (data.isActive === false) { driftIds.push(id); return; }
             const status = String(data.homeStatus || '').toUpperCase();
-            if (PERMANENT_DELETE_STATUSES.has(status)) { driftIds.push(id); }
+            if (PERMANENT_DELETE_STATUSES.has(status)) { driftIds.push(id); return; }
+
+            // FIELD DRIFT: distressed flags or price disagreement between
+            // Firestore (truth) and Typesense (search index). Re-upsert via
+            // a noop Firestore touch so the Cloud Function re-syncs.
+            const fsAuction = data.isAuction === true;
+            const fsForeclosure = data.isForeclosure === true;
+            const fsBankOwned = data.isBankOwned === true;
+            const tsAuction = tsDoc.isAuction === true;
+            const tsForeclosure = tsDoc.isForeclosure === true;
+            const tsBankOwned = tsDoc.isBankOwned === true;
+            const fsPrice = Number(data.listPrice || data.price || 0);
+            const tsPrice = Number(tsDoc.listPrice || 0);
+            const priceDriftPct = fsPrice > 0 ? Math.abs(fsPrice - tsPrice) / fsPrice : 0;
+
+            if (
+              fsAuction !== tsAuction ||
+              fsForeclosure !== tsForeclosure ||
+              fsBankOwned !== tsBankOwned ||
+              priceDriftPct > 0.01
+            ) {
+              fieldDriftIds.push(id);
+            }
           });
         }
 
@@ -714,13 +813,37 @@ export async function GET(request: NextRequest) {
         reconcileDeleted = driftIds.length;
       }
 
+      // Field-drift fix: touch each drifted Firestore doc so the Cloud Function
+      // re-syncs the full record to Typesense. This is cheap (one timestamp
+      // write per drifted doc) and self-healing.
+      let fieldDriftFixed = 0;
+      if (fieldDriftIds.length > 0) {
+        console.log(`🧹 Reconcile: ${fieldDriftIds.length} field-drift docs — touching to re-sync`);
+        let touchBatch = db.batch();
+        let touchCount = 0;
+        for (const id of fieldDriftIds) {
+          touchBatch.update(db.collection('properties').doc(id), {
+            typesenseReconciledAt: new Date(),
+          });
+          touchCount++;
+          if (touchCount >= 400) {
+            await touchBatch.commit();
+            touchBatch = db.batch();
+            touchCount = 0;
+          }
+        }
+        if (touchCount > 0) await touchBatch.commit();
+        fieldDriftFixed = fieldDriftIds.length;
+      }
+
       await reconcileMetaRef.set({
         lastRun: new Date(),
         scanned: reconcileScanned,
         drift: reconcileDeleted,
+        fieldDrift: fieldDriftFixed,
       }, { merge: true });
 
-      console.log(`🧹 Reconcile done: scanned ${reconcileScanned}, drift ${reconcileDeleted}`);
+      console.log(`🧹 Reconcile done: scanned ${reconcileScanned}, deleted ${reconcileDeleted}, field-drift ${fieldDriftFixed}`);
     } else if (tsCollection) {
       const hoursSince = ((Date.now() - lastReconcile) / 3600000).toFixed(1);
       console.log(`🧹 Reconcile skipped (last run ${hoursSince}h ago, interval 24h)`);

@@ -76,7 +76,7 @@ export default function DealAlerts() {
     if (notificationPermission !== 'granted') return;
 
     const title = `${deals.length} New Deal${deals.length > 1 ? 's' : ''} Found!`;
-    const body = deals.map(d => `${d.address} - ${d.percentOfArv}% ARV ($${d.price.toLocaleString()})`).join('\n');
+    const body = deals.map(d => `${d.address} - ${(d as any).isFixer ? 'Fixer' : `${d.percentOfArv}% ARV`} ($${d.price.toLocaleString()})`).join('\n');
 
     const notification = new Notification(title, {
       body,
@@ -173,7 +173,7 @@ export default function DealAlerts() {
                   <div className="text-sm text-[#66E0B8]">{deal.city}, {deal.state}</div>
                 </div>
                 <div className="text-right flex-shrink-0">
-                  <div className="text-lg font-bold text-yellow-300">{deal.percentOfArv}%</div>
+                  <div className="text-lg font-bold text-yellow-300">{(deal as any).isFixer ? 'Fixer' : `${deal.percentOfArv}%`}</div>
                   <div className="text-xs text-[#66E0B8]">${deal.price.toLocaleString()}</div>
                 </div>
               </div>

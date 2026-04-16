@@ -82,22 +82,34 @@ export function detectListingSubType(raw: any): {
   const sub = raw?.listing_sub_type || raw?.listingSubType || {};
   const hdp = String(raw?.hdpTypeDimension || '').toLowerCase();
   const status = String(raw?.homeStatus || '').toUpperCase();
+  // keystoneHomeStatus is Zillow's internal canonical status ("ForSaleAuction",
+  // "ForSaleForeclosure", "Foreclosed"). Often present when listingSubType
+  // booleans are missing from a partial Apify response.
+  const keystone = String(raw?.keystoneHomeStatus || '').toLowerCase();
+  const foreclosureTypes = raw?.foreclosureTypes || {};
 
   const isAuction =
     Boolean(sub.is_forAuction) ||
     Boolean(sub.isForAuction) ||
     hdp.includes('auction') ||
+    keystone.includes('auction') ||
     status === 'FOR_AUCTION';
 
   const isBankOwned =
     Boolean(sub.is_bankOwned) ||
     Boolean(sub.isBankOwned) ||
-    /bank\s*owned|\breo\b/.test(hdp);
+    Boolean(foreclosureTypes.isBankOwned) ||
+    /bank\s*owned|\breo\b/.test(hdp) ||
+    /bank\s*owned|\breo\b/.test(keystone);
 
   const isForeclosure =
     Boolean(sub.is_foreclosure) ||
     Boolean(sub.isForeclosure) ||
+    Boolean(foreclosureTypes.isPreforeclosure) ||
+    Boolean(foreclosureTypes.isAnyForeclosure) ||
+    Boolean(foreclosureTypes.wasForeclosed) ||
     hdp.includes('foreclosure') ||
+    keystone.includes('foreclos') ||
     status === 'FORECLOSED' ||
     status === 'FORECLOSURE' ||
     status === 'PRE_FORECLOSURE';
@@ -540,6 +552,11 @@ export function createUnifiedPropertyDoc(
     cashDealReason: filterResult.cashDealReason || null,
     discountPercentage: filterResult.discountPercentage || 0,
     eightyPercentOfZestimate: filterResult.eightyPercentOfZestimate || 0,
+
+    // ===== FIXER FLAG =====
+    // When zestimate – price > $150k the Zestimate is unreliable.
+    // UI must hide estimate + discount entirely when this is true.
+    isFixer: filterResult.isFixer || false,
 
     // ===== LAND DETECTION =====
     isLand: filterResult.isLand || false,

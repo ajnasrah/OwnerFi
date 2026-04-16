@@ -18,6 +18,14 @@ import { hasNegativeKeywords } from '../negative-keywords';
 import { detectNeedsWorkWithKeywords } from '../property-needs-work-detector';
 import { detectFinancingType, FinancingTypeResult } from '../financing-type-detector';
 
+/**
+ * Gap above which we hide the Zestimate and label the deal a "Fixer".
+ * When zestimate - price > this threshold the raw Zestimate is unreliable.
+ * The property stays in cash deals but the estimate/discount are suppressed
+ * from the UI — buyers see "Fixer" badge only, no bogus numbers.
+ */
+const FIXER_GAP_THRESHOLD = 150_000;
+
 export interface FilterResult {
   // Owner Finance Filter
   passesOwnerfinance: boolean;
@@ -27,11 +35,15 @@ export interface FilterResult {
 
   // Cash Deal Filter
   passesCashDeal: boolean;
-  cashDealReason?: 'discount' | 'needs_work' | 'both';
+  cashDealReason?: 'discount' | 'needs_work' | 'both' | 'fixer';
   discountPercentage?: number;
   eightyPercentOfZestimate?: number;
   needsWork: boolean;
   needsWorkKeywords: string[];
+
+  // Fixer: when zestimate – price > $150k, the Zestimate is unreliable.
+  // UI should hide estimate/discount and show "Fixer" badge instead.
+  isFixer: boolean;
 
   // Land detection
   isLand: boolean;
@@ -115,11 +127,23 @@ export function runUnifiedFilter(
   // (auctions, tax sales, data errors). These still save but get flagged for review.
   const suspiciousDiscount = !!(price && price > 0 && zestimate && zestimate > 0 && price < zestimate * 0.5);
 
+  // ===== FIXER DETECTION =====
+  // When the Zestimate gap exceeds $150k, the Zestimate is unreliable.
+  // The deal stays in cash deals but UI hides estimate/discount and shows
+  // "Fixer" badge — let buyers do their own due diligence.
+  const gap = (price && zestimate) ? (zestimate - price) : 0;
+  const isFixer = passesCashDeal && gap > FIXER_GAP_THRESHOLD;
+
   // Determine cash deal reason
-  let cashDealReason: 'discount' | 'needs_work' | 'both' | undefined;
+  let cashDealReason: 'discount' | 'needs_work' | 'both' | 'fixer' | undefined;
   if (passesCashDeal) {
-    // Only set reason if it actually passes (has discount)
-    cashDealReason = needsWork ? 'both' : 'discount';
+    if (isFixer) {
+      cashDealReason = 'fixer';
+    } else if (needsWork) {
+      cashDealReason = 'both';
+    } else {
+      cashDealReason = 'discount';
+    }
   }
 
   // ===== DETERMINE DEAL TYPES (UNIFIED) =====
@@ -155,6 +179,9 @@ export function runUnifiedFilter(
     eightyPercentOfZestimate,
     needsWork,
     needsWorkKeywords,
+
+    // Fixer flag — UI must hide estimate + discount when true
+    isFixer,
 
     // Land detection
     isLand,

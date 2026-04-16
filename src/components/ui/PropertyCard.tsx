@@ -113,7 +113,7 @@ export const PropertyCard = React.memo(function PropertyCard({ property, isFavor
                 return (
                   <div className={`${CASH_DEAL_BADGE.bg} backdrop-blur-sm ${CASH_DEAL_BADGE.textColor} px-3 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-1.5`}>
                     <span className="text-sm">{CASH_DEAL_BADGE.icon}</span>
-                    <span>{CASH_DEAL_BADGE.text} {propertyRecord.percentOfArv ? `• ${propertyRecord.percentOfArv}% of Zest` : ''}</span>
+                    <span>{propertyRecord.isFixer ? 'Fixer' : `${CASH_DEAL_BADGE.text}${propertyRecord.percentOfArv ? ` • ${propertyRecord.percentOfArv}% of Zest` : ''}`}</span>
                   </div>
                 );
               }
@@ -329,7 +329,8 @@ export const PropertyCard = React.memo(function PropertyCard({ property, isFavor
                   {/* Third-Party Value Estimates */}
                   {(() => {
                     const propertyRecord = property as Record<string, unknown>;
-                    const zest = (propertyRecord.zestimate as number | undefined) || property.estimatedValue;
+                    const isFixer = propertyRecord.isFixer === true;
+                    const zest = isFixer ? null : ((propertyRecord.zestimate as number | undefined) || property.estimatedValue);
                     const rent = (propertyRecord.rentEstimate as number | undefined) || property.rentZestimate;
                     if (!zest && !rent) return null;
                     return (

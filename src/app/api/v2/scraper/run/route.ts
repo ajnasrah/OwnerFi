@@ -484,7 +484,8 @@ async function runUnifiedScraper(): Promise<{
           // Skip auction/foreclosure/REO - "askingPrice" in GHL template would misrepresent
           // an opening bid or estimated value as a seller's asking price.
           const isDistressedListing = property.isAuction || property.isForeclosure || property.isBankOwned;
-          if (isRegionalProperty && property.price && property.estimate && !filterResult.isLand && !filterResult.suspiciousDiscount && !isDistressedListing) {
+          // Skip fixer properties from SMS — Zestimate spread > $150k is unreliable
+          if (isRegionalProperty && property.price && property.estimate && !filterResult.isLand && !filterResult.suspiciousDiscount && !isDistressedListing && !filterResult.isFixer) {
             abdullahCashDeals.push({
               streetAddress: property.streetAddress || property.fullAddress || '',
               askingPrice: property.price,
@@ -494,10 +495,8 @@ async function runUnifiedScraper(): Promise<{
           }
 
           // Collect for investor subscriber alerts (nationwide)
-          // Skip land properties - Zestimate is unreliable for land (based on SFR comps)
-          // Skip suspicious discounts (< 50% Zestimate) - likely bad data
-          // Skip auction/foreclosure/REO - see note above.
-          if (property.price && property.estimate && !filterResult.isLand && !filterResult.suspiciousDiscount && !isDistressedListing) {
+          // Skip land, suspicious, distressed, and fixer properties from SMS
+          if (property.price && property.estimate && !filterResult.isLand && !filterResult.suspiciousDiscount && !isDistressedListing && !filterResult.isFixer) {
             investorAlertDeals.push({
               streetAddress: property.streetAddress || property.fullAddress || '',
               askingPrice: property.price,

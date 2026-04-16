@@ -45,11 +45,19 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   // page itself should not compete for search traffic.
   const propertyStatus = (property as unknown as { status?: string }).status;
   const homeStatus = ((property as unknown as { homeStatus?: string }).homeStatus || '').toUpperCase();
+  const isActive = (property as unknown as { isActive?: boolean }).isActive;
   const isSold = propertyStatus === 'sold' || homeStatus === 'SOLD' || homeStatus === 'RECENTLY_SOLD';
   if (isSold) {
     return {
       title: `${property.address}, ${property.city} ${property.state} — Sold | Ownerfi`,
       description: `${property.address} in ${property.city}, ${property.state} is no longer available. Browse other owner-financed properties on Ownerfi.`,
+      robots: { index: false, follow: true },
+    };
+  }
+  if (isActive === false) {
+    return {
+      title: `${property.address}, ${property.city} ${property.state} — Unavailable | Ownerfi`,
+      description: `${property.address} in ${property.city}, ${property.state} is no longer listed. Browse other properties on Ownerfi.`,
       robots: { index: false, follow: true },
     };
   }
@@ -213,6 +221,44 @@ export default async function PropertyPage({ params }: PageProps) {
     );
   }
 
+  // Inactive properties (PENDING, OFF_MARKET, etc.) should not be publicly
+  // visible. Show a friendly notice similar to the sold page. The property
+  // detail page fetches directly from Firestore (bypassing Typesense), so
+  // inactive docs slip through without this gate.
+  const isActive = (property as unknown as { isActive?: boolean }).isActive;
+  if (isActive === false && !isSold) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-6">
+        <div className="max-w-lg w-full bg-slate-800/60 border border-slate-700 rounded-2xl p-8 text-center">
+          <div className="inline-block px-3 py-1 rounded-full bg-slate-700 text-slate-300 text-xs font-semibold tracking-wider mb-4">
+            NO LONGER AVAILABLE
+          </div>
+          <h1 className="text-2xl md:text-3xl font-bold text-white mb-3">
+            This property is no longer listed
+          </h1>
+          <p className="text-slate-300 mb-6">
+            {property.address}, {property.city}, {property.state} has been taken off the market.
+            Browse other properties and we&apos;ll help you find a similar one.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-[#00BC7D] hover:bg-[#00d68f] text-white font-semibold transition-colors"
+            >
+              Browse Available Homes
+            </Link>
+            <Link
+              href="/"
+              className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-semibold transition-colors"
+            >
+              Home
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const imageUrl = property.imageUrls?.[0] || property.firstPropertyImage || '/placeholder-house.jpg';
   const price = property.listPrice || property.price || 0;
 
@@ -222,7 +268,9 @@ export default async function PropertyPage({ params }: PageProps) {
   const isCashOnly = isCash && !isOF;
 
   // Calculate investment metrics for cash deals
-  const zestimate = (property as any).zestimate || (property as any).estimatedValue;
+  // When isFixer is true (Zestimate spread > $150k), hide all estimate numbers
+  const propertyIsFixer = (property as any).isFixer === true;
+  const zestimate = propertyIsFixer ? null : ((property as any).zestimate || (property as any).estimatedValue);
   const arvPercent = price && zestimate && zestimate > 0 ? Math.round((price / zestimate) * 100) : null;
 
   return (
@@ -436,6 +484,13 @@ export default async function PropertyPage({ params }: PageProps) {
                     <div className="space-y-4 mb-6">
                       <h3 className="font-bold text-emerald-400 text-lg">Investment Metrics</h3>
 
+                      {propertyIsFixer && (
+                        <div className="flex justify-between items-center py-2 border-b border-slate-700">
+                          <span className="text-slate-400">Deal Type</span>
+                          <span className="text-amber-400 font-bold">Fixer</span>
+                        </div>
+                      )}
+
                       {zestimate && zestimate > 0 && (
                         <div className="flex justify-between items-center py-2 border-b border-slate-700">
                           <span className="text-slate-400">Estimated Value (ARV)</span>
@@ -456,7 +511,7 @@ export default async function PropertyPage({ params }: PageProps) {
                         </div>
                       )}
 
-                      {property.discountPercent && (
+                      {!propertyIsFixer && property.discountPercent && (
                         <div className="flex justify-between items-center py-2 border-b border-slate-700">
                           <span className="text-slate-400">Discount</span>
                           <span className="text-emerald-400 font-bold">{property.discountPercent}% below market</span>

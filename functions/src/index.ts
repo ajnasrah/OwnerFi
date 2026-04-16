@@ -112,6 +112,9 @@ function transformToTypesense(docId: string, data: FirebaseFirestore.DocumentDat
     percentOfArv,
     discountPercent: data.discountPercentage || data.discount || undefined,
     needsWork: data.needsWork || false,
+    // Fixer: Zestimate spread > $150k — UI must hide estimate + discount
+    isFixer: data.isFixer || false,
+    cashDealReason: data.cashDealReason || undefined,
     isLand: data.isLand || LAND_TYPES.has((data.homeType || data.propertyType || '').toLowerCase()) || false,
     // Distressed-listing flags — `listPrice` is an opening bid or estimated
     // value, not a seller's asking price. UI renders "Est." + badge.

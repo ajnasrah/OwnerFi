@@ -66,6 +66,8 @@ export const propertiesSchema: CollectionSchema = {
     { name: 'isActive', type: 'bool', facet: true },
     { name: 'ownerFinanceVerified', type: 'bool', optional: true },
     { name: 'needsWork', type: 'bool', optional: true },
+    { name: 'isFixer', type: 'bool', facet: true, optional: true },
+    { name: 'cashDealReason', type: 'string', facet: true, optional: true },
     { name: 'isLand', type: 'bool', optional: true },
     { name: 'manuallyVerified', type: 'bool', optional: true },
 

@@ -240,16 +240,16 @@ export function InvestorPropertyCard({ deal, isLiked, onToggleLike, onHide, isPr
               {OWNER_FINANCE_BADGE.text}
             </span>
           ) : (
-            <span className={`px-2.5 py-1 text-xs font-bold ${CASH_DEAL_BADGE.bg}/90 ${CASH_DEAL_BADGE.textColor} rounded-lg backdrop-blur-sm`}>
-              {CASH_DEAL_BADGE.text}
-              {deal.percentOfArv != null && ` · ${deal.percentOfArv}%`}
+            <span className={`px-2.5 py-1 text-xs font-bold ${deal.isFixer ? 'bg-amber-600/90 text-white' : `${CASH_DEAL_BADGE.bg}/90 ${CASH_DEAL_BADGE.textColor}`} rounded-lg backdrop-blur-sm`}>
+              {deal.isFixer ? 'Fixer' : CASH_DEAL_BADGE.text}
+              {!deal.isFixer && deal.percentOfArv != null && ` · ${deal.percentOfArv}%`}
             </span>
           )}
           {/* Show secondary badge when property qualifies for both deal types */}
           {deal.qualifiesForBoth && (
             deal.dealType === 'owner_finance' ? (
               <span className={`px-2 py-1 text-[10px] font-bold ${CASH_DEAL_BADGE.bg}/70 ${CASH_DEAL_BADGE.textColor} rounded-lg backdrop-blur-sm`}>
-                + Cash {deal.percentOfArv != null && `${deal.percentOfArv}%`}
+                + {deal.isFixer ? 'Fixer' : `Cash${!deal.isFixer && deal.percentOfArv != null ? ` ${deal.percentOfArv}%` : ''}`}
               </span>
             ) : (
               <span className={`px-2 py-1 text-[10px] font-bold ${OWNER_FINANCE_BADGE.bg}/70 ${OWNER_FINANCE_BADGE.textColor} rounded-lg backdrop-blur-sm`}>
@@ -335,7 +335,7 @@ export function InvestorPropertyCard({ deal, isLiked, onToggleLike, onHide, isPr
               ${deal.monthlyPayment.toLocaleString()}/mo
             </div>
           )}
-          {deal.dealType === 'cash_deal' && deal.percentOfArv != null && (
+          {deal.dealType === 'cash_deal' && !deal.isFixer && deal.percentOfArv != null && (
             <div className={`text-sm font-bold drop-shadow-lg ${deal.percentOfArv <= 70 ? 'text-green-400' : deal.percentOfArv <= 85 ? 'text-amber-400' : 'text-orange-400'}`}>
               {deal.percentOfArv}% of Zestimate
             </div>
@@ -433,7 +433,7 @@ export function InvestorPropertyCard({ deal, isLiked, onToggleLike, onHide, isPr
               {deal.balloonYears != null && (
                 <span className="text-amber-400 text-[10px] font-semibold">Balloon {deal.balloonYears}yr</span>
               )}
-              {deal.percentOfArv != null && (
+              {!deal.isFixer && deal.percentOfArv != null && (
                 <span
                   className={`font-bold ${deal.percentOfArv <= 60 ? 'text-green-400' : deal.percentOfArv <= 70 ? 'text-[#00BC7D]' : deal.percentOfArv <= 85 ? 'text-amber-400' : deal.percentOfArv <= 100 ? 'text-orange-400' : 'text-red-400'}`}
                   title="Zestimate is Zillow's automated home-value estimate (median error ~7% on-market, higher on distressed properties). Not an appraisal. Verify independently."
@@ -441,7 +441,7 @@ export function InvestorPropertyCard({ deal, isLiked, onToggleLike, onHide, isPr
                   {deal.percentOfArv}% of Zest
                 </span>
               )}
-              {deal.zestimate && deal.zestimate > 0 && (
+              {!deal.isFixer && deal.zestimate && deal.zestimate > 0 && (
                 <span className="text-slate-400">Zest ${(deal.zestimate / 1000).toFixed(0)}K</span>
               )}
               {deal.rentEstimate && deal.rentEstimate > 0 && (
@@ -450,7 +450,7 @@ export function InvestorPropertyCard({ deal, isLiked, onToggleLike, onHide, isPr
             </div>
           ) : (
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-              {deal.percentOfArv != null && (
+              {!deal.isFixer && deal.percentOfArv != null && (
                 <span
                   className={`font-bold ${deal.percentOfArv <= 60 ? 'text-green-400' : deal.percentOfArv <= 70 ? 'text-[#00BC7D]' : deal.percentOfArv <= 85 ? 'text-amber-400' : deal.percentOfArv <= 100 ? 'text-orange-400' : 'text-red-400'}`}
                   title="Zestimate is Zillow's automated home-value estimate (median error ~7% on-market, higher on distressed properties). Not an appraisal. Verify independently."
@@ -458,10 +458,10 @@ export function InvestorPropertyCard({ deal, isLiked, onToggleLike, onHide, isPr
                   {deal.percentOfArv}% of Zest
                 </span>
               )}
-              {deal.discount && deal.discount > 0 && (
+              {!deal.isFixer && deal.discount && deal.discount > 0 && (
                 <span className="text-[#00d68f]">${(deal.discount / 1000).toFixed(0)}K below Zest</span>
               )}
-              {deal.arv && (
+              {!deal.isFixer && deal.arv && (
                 <span className="text-slate-400">Zest ${(deal.arv / 1000).toFixed(0)}K</span>
               )}
               {deal.rentEstimate && deal.rentEstimate > 0 && (

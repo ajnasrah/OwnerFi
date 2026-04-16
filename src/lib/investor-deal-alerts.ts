@@ -281,6 +281,9 @@ export async function sendInvestorDealAlerts(
 
   for (const deal of deals) {
     if (!deal.zestimate || deal.zestimate <= 0) continue;
+    // Skip fixer properties (Zestimate spread > $150k) — the Zestimate is
+    // unreliable so the percentOfArv would be misleading in the SMS.
+    if ((deal as any).isFixer) continue;
     const percentOfArv = Math.round((deal.askingPrice / deal.zestimate) * 100);
     const addrFallback = deal.streetAddress ? `${deal.streetAddress}_${deal.city || ''}_${deal.state || ''}`.replace(/\s+/g, '_') : null;
     const dealId = deal.zpid ? String(deal.zpid) : addrFallback;

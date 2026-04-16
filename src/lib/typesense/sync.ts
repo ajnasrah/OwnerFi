@@ -25,6 +25,7 @@ export interface TypesensePropertyDocument {
   title?: string;
   location?: [number, number]; // [lat, lng]
   dealType: string;
+  dealTypes?: string[]; // array — single source of truth matching Firestore
   listPrice: number;
   monthlyPayment?: number;
   downPaymentAmount?: number;
@@ -133,14 +134,24 @@ export function transformPropertyForTypesense(
       ? [property.latitude, property.longitude]
       : undefined,
 
-    // Derive dealType from isOwnerfinance/isCashDeal flags
-    dealType: (property as any).isOwnerfinance && (property as any).isCashDeal
-      ? 'both'
-      : (property as any).isOwnerfinance
-        ? 'owner_finance'
-        : (property as any).isCashDeal
-          ? 'cash_deal'
-          : property.dealType || 'unknown',
+    // Derive dealType scalar + dealTypes array. Prefer Firestore array as source of truth.
+    dealType: (() => {
+      const arr: string[] = Array.isArray((property as any).dealTypes) ? (property as any).dealTypes : [];
+      const hasOF = arr.includes('owner_finance') || (property as any).isOwnerfinance;
+      const hasCD = arr.includes('cash_deal') || (property as any).isCashDeal;
+      if (hasOF && hasCD) return 'both';
+      if (hasOF) return 'owner_finance';
+      if (hasCD) return 'cash_deal';
+      return property.dealType || 'unknown';
+    })(),
+    dealTypes: (() => {
+      const arr: string[] = Array.isArray((property as any).dealTypes) ? (property as any).dealTypes : [];
+      if (arr.length > 0) return Array.from(new Set(arr.filter(t => t === 'owner_finance' || t === 'cash_deal')));
+      const out: string[] = [];
+      if ((property as any).isOwnerfinance) out.push('owner_finance');
+      if ((property as any).isCashDeal) out.push('cash_deal');
+      return out;
+    })(),
     listPrice,
     // Use ?? to preserve 0 as a valid value (BUG 5 fix)
     monthlyPayment: property.ownerFinance?.monthlyPayment ?? undefined,
@@ -394,21 +405,25 @@ export async function indexRawFirestoreProperty(
   }
 
   try {
-    // Determine deal type from unified collection flags (isOwnerfinance, isCashDeal)
-    // Also check the existing dealType string field (GHL-imported properties use this)
-    const isOwnerfinance = data.isOwnerfinance === true;
-    const isCashDeal = data.isCashDeal === true || data.discountPercentage > 15;
-    // Fall back to existing dealType string if boolean flags aren't set
-    const existingDealType = data.dealType as string | undefined;
-    let dealType = existingDealType || 'unknown';
+    // Derive deal types from Firestore dealTypes array (source of truth).
+    // Fall back to boolean flags only when the array is missing/empty.
+    // The legacy scalar `dealType` is kept populated for backwards-compat UI queries.
+    const storedArray: string[] = Array.isArray(data.dealTypes) ? data.dealTypes : [];
+    const fromBooleans: string[] = [];
+    if (data.isOwnerfinance === true) fromBooleans.push('owner_finance');
+    if (data.isCashDeal === true) fromBooleans.push('cash_deal');
+    const dealTypes: string[] = storedArray.length > 0
+      ? Array.from(new Set(storedArray.filter(t => t === 'owner_finance' || t === 'cash_deal')))
+      : fromBooleans;
 
-    if (isOwnerfinance && isCashDeal) {
-      dealType = 'both';
-    } else if (isCashDeal) {
-      dealType = 'cash_deal';
-    } else if (isOwnerfinance) {
-      dealType = 'owner_finance';
-    }
+    const isOwnerfinance = dealTypes.includes('owner_finance');
+    const isCashDeal = dealTypes.includes('cash_deal');
+
+    // Legacy scalar — retain 'both' collapse for UI filters that still query it.
+    let dealType: string = (data.dealType as string | undefined) || 'unknown';
+    if (isOwnerfinance && isCashDeal) dealType = 'both';
+    else if (isCashDeal) dealType = 'cash_deal';
+    else if (isOwnerfinance) dealType = 'owner_finance';
 
     // Build location tuple if coordinates exist
     const lat = data.latitude || data.lat;
@@ -430,6 +445,7 @@ export async function indexRawFirestoreProperty(
       title: data.title || undefined,
       location,
       dealType,
+      dealTypes,
       listPrice: price,
       // Use ?? to preserve 0 as a valid value
       monthlyPayment: data.monthlyPayment ?? undefined,

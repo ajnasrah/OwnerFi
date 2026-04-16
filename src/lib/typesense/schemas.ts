@@ -37,8 +37,11 @@ export const propertiesSchema: CollectionSchema = {
     // Geo field for radius search
     { name: 'location', type: 'geopoint', optional: true },
 
-    // Deal type - key discriminator
+    // Deal type - key discriminator (legacy scalar kept for backwards compat)
     { name: 'dealType', type: 'string', facet: true },
+    // Deal types - array matching Firestore source of truth. Enables a single doc to be
+    // both owner_finance and cash_deal without the scalar 'both' collapse.
+    { name: 'dealTypes', type: 'string[]', facet: true, optional: true },
 
     // Numeric filters
     { name: 'listPrice', type: 'int32', facet: true },

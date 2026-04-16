@@ -121,7 +121,8 @@ export function runUnifiedFilter(
   // Cash deal passes if: price < 80% Zestimate (actual discount required)
   // needsWork is now metadata only, not a standalone qualifier
   // This prevents false positives from keyword matching alone
-  const passesCashDeal = meetsDiscountCriteria;
+  // Land is excluded: Zestimate for vacant land is derived from SFR comps and unreliable.
+  const passesCashDeal = meetsDiscountCriteria && !isLand;
 
   // Flag suspicious discounts: price < 50% of Zestimate is almost always bad data
   // (auctions, tax sales, data errors). These still save but get flagged for review.

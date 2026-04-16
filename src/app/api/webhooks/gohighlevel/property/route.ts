@@ -12,6 +12,7 @@ import { autoCleanPropertyData } from '@/lib/property-auto-cleanup';
 import { sanitizeDescription } from '@/lib/description-sanitizer';
 import { validatePropertyFinancials, type PropertyFinancialData } from '@/lib/property-validation';
 import { formatPropertyMatchSMS } from '@/lib/sms-templates';
+import { normalizeHomeType } from '@/lib/scraper-v2/property-transformer';
 import crypto from 'crypto';
 
 // SECURITY: Webhook secret is REQUIRED - no bypass allowed
@@ -643,12 +644,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Determine property type
-    const homeType = (payload.homeType || 'single-family').toLowerCase();
-    let propertyType = 'single-family';
-    if (homeType.includes('condo')) propertyType = 'condo';
-    else if (homeType.includes('townhouse') || homeType.includes('town')) propertyType = 'townhouse';
-    else if (homeType.includes('multi')) propertyType = 'multi-family';
+    // Determine property type (normalized: single-family|condo|townhouse|multi-family|land|mobile-home|other)
+    const propertyType = normalizeHomeType(payload.homeType);
 
     // Normalize location data
     const normalizedCity = normalizeCity(payload.propertyCity);

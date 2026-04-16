@@ -3,6 +3,7 @@ import { ApifyClient } from 'apify-client';
 import { getFirebaseAdmin } from '@/lib/scraper-v2/firebase-admin';
 import { sanitizeDescription } from '@/lib/description-sanitizer';
 import { hasStrictOwnerfinancing } from '@/lib/owner-financing-filter-strict';
+import { normalizeHomeType } from '@/lib/scraper-v2/property-transformer';
 
 /**
  * Admin endpoint to check ALL properties against Zillow.
@@ -236,7 +237,8 @@ export async function POST(request: NextRequest) {
         squareFoot: result.livingArea || result.livingAreaValue || result.squareFoot || null,
         lotSquareFoot: result.lotAreaValue || result.lotSize || result.lotSquareFoot || null,
         yearBuilt: result.yearBuilt ?? null,
-        homeType: result.homeType || result.propertyType || null,
+        homeType: normalizeHomeType(result.homeType || result.propertyType),
+        isLand: normalizeHomeType(result.homeType || result.propertyType) === 'land',
         latitude: result.latitude ?? null,
         longitude: result.longitude ?? null,
         estimate: result.zestimate || result.estimate || null,

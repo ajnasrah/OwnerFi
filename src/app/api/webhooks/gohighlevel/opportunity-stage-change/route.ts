@@ -3,6 +3,7 @@ import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { sanitizeDescription } from '@/lib/description-sanitizer';
 import { indexRawFirestoreProperty, deletePropertyFromIndex } from '@/lib/typesense/sync';
+import { normalizeHomeType } from '@/lib/scraper-v2/property-transformer';
 
 if (!getApps().length) {
   initializeApp({
@@ -301,7 +302,8 @@ export async function POST(request: NextRequest) {
             bedrooms: property.beds || 0,
             bathrooms: property.baths || 0,
             squareFoot: property.squareFeet || 0,
-            homeType: property.propertyType || 'SINGLE_FAMILY',
+            homeType: normalizeHomeType(property.propertyType),
+            isLand: normalizeHomeType(property.propertyType) === 'land',
             homeStatus: 'FOR_SALE',
             agentName: property.agentName,
             agentPhoneNumber: property.agentPhone,

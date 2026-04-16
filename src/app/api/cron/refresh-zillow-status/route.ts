@@ -5,7 +5,7 @@ import { getFirebaseAdmin } from '@/lib/scraper-v2/firebase-admin';
 import { withCronLock } from '@/lib/scraper-v2/cron-lock';
 import { sanitizeDescription } from '@/lib/description-sanitizer';
 import { hasStrictOwnerfinancing } from '@/lib/owner-financing-filter-strict';
-import { detectListingSubType } from '@/lib/scraper-v2/property-transformer';
+import { detectListingSubType, normalizeHomeType } from '@/lib/scraper-v2/property-transformer';
 import { getTypesenseAdminClient, TYPESENSE_COLLECTIONS } from '@/lib/typesense/client';
 
 /**
@@ -618,7 +618,8 @@ export async function GET(request: NextRequest) {
         squareFoot: result.livingArea || result.livingAreaValue || result.squareFoot || null,
         lotSquareFoot: result.lotAreaValue || result.lotSize || result.lotSquareFoot || null,
         yearBuilt: result.yearBuilt ?? null,
-        homeType: result.homeType || result.propertyType || null,
+        homeType: normalizeHomeType(result.homeType || result.propertyType),
+        isLand: normalizeHomeType(result.homeType || result.propertyType) === 'land',
 
         // Location
         latitude: result.latitude ?? null,
@@ -629,15 +630,18 @@ export async function GET(request: NextRequest) {
         estimate: newEstimate ?? admin.firestore.FieldValue.delete(),
         rentEstimate: newRentEstimate ?? admin.firestore.FieldValue.delete(),
 
-        // Recompute discount fields from the fresh estimate. If estimate is now
-        // missing, drop the cash_deal classification entirely — we have no
-        // basis to claim it's a discount. Also apply Fixer cushion when gap > $150k.
+        // Recompute discount fields from the fresh estimate. Land is excluded —
+        // Zestimate for vacant land is SFR-comp-based and unreliable. If
+        // estimate is now missing, drop the cash_deal classification entirely.
+        // Also apply Fixer cushion when gap > $150k.
         ...(() => {
           const freshPrice = result.listPrice || result.price || 0;
-          if (!newEstimate || newEstimate <= 0 || !freshPrice) {
+          const freshIsLand = normalizeHomeType(result.homeType || result.propertyType) === 'land';
+          if (!newEstimate || newEstimate <= 0 || !freshPrice || freshIsLand) {
             return {
               eightyPercentOfZestimate: admin.firestore.FieldValue.delete(),
               discountPercentage: admin.firestore.FieldValue.delete(),
+              priceToZestimateRatio: admin.firestore.FieldValue.delete(),
               isCashDeal: false,
               isFixer: false,
               cashDealReason: admin.firestore.FieldValue.delete(),
@@ -653,6 +657,7 @@ export async function GET(request: NextRequest) {
           return {
             eightyPercentOfZestimate: eighty,
             discountPercentage: disc,
+            priceToZestimateRatio: freshPrice / newEstimate,
             isFixer,
             ...(!stillCashDeal ? {
               isCashDeal: false,

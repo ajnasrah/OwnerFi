@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getFirebaseAdmin, FieldValue } from '@/lib/scraper-v2/firebase-admin';
 import { indexRawFirestoreProperty } from '@/lib/typesense/sync';
 import { withCronLock } from '@/lib/scraper-v2/cron-lock';
+import { normalizeHomeType } from '@/lib/scraper-v2/property-transformer';
 
 export const maxDuration = 300;
 
@@ -238,7 +239,8 @@ export async function GET(request: NextRequest) {
               bedrooms: property.beds,
               bathrooms: property.baths,
               squareFoot: property.squareFeet,
-              homeType: property.propertyType,
+              homeType: normalizeHomeType(property.propertyType),
+              isLand: normalizeHomeType(property.propertyType) === 'land',
               imgSrc,
               firstPropertyImage: imgSrc,
               agentName: property.agentName,

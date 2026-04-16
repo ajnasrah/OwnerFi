@@ -10,6 +10,7 @@ import { getFirebaseAdmin } from '@/lib/scraper-v2/firebase-admin';
 import { indexRawFirestoreProperty } from '@/lib/typesense/sync';
 import { sanitizeDescription } from '@/lib/description-sanitizer';
 import { detectFinancingType } from '@/lib/financing-type-detector';
+import { normalizeHomeType } from '@/lib/scraper-v2/property-transformer';
 
 /**
  * Handle agent confirming owner financing (YES response).
@@ -82,7 +83,8 @@ export async function handleAgentYes(
     bedrooms: property.beds || 0,
     bathrooms: property.baths || 0,
     squareFoot: property.squareFeet || 0,
-    homeType: property.propertyType || 'SINGLE_FAMILY',
+    homeType: normalizeHomeType(property.propertyType),
+    isLand: normalizeHomeType(property.propertyType) === 'land',
     homeStatus: 'FOR_SALE',
 
     // Agent info

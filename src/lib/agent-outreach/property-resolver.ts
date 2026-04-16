@@ -48,6 +48,15 @@ export async function handleAgentYes(
   const dealTypes = ['owner_finance'];
   if (isCashDeal) dealTypes.push('cash_deal');
 
+  const hasHttp = (v: unknown): v is string => typeof v === 'string' && /^https?:\/\//i.test(v.trim());
+  const primaryImage =
+    (hasHttp(property.firstPropertyImage) && property.firstPropertyImage) ||
+    (hasHttp(property.imgSrc) && property.imgSrc) ||
+    (hasHttp(property.rawData?.hiResImageLink) && property.rawData.hiResImageLink) ||
+    (hasHttp(property.rawData?.desktopWebHdpImageLink) && property.rawData.desktopWebHdpImageLink) ||
+    (hasHttp(property.rawData?.mediumImageLink) && property.rawData.mediumImageLink) ||
+    null;
+
   // Add to unified properties collection
   const propertyData: Record<string, unknown> = {
     // Core identifiers
@@ -83,6 +92,14 @@ export async function handleAgentYes(
 
     // Description
     description: descriptionText,
+
+    // Images — lifted from queue item / rawData so property docs aren't blank
+    ...(primaryImage && {
+      primaryImage,
+      firstPropertyImage: primaryImage,
+      imgSrc: primaryImage,
+      imageUrls: [primaryImage],
+    }),
 
     // Agent confirmed OF — always set financing fields
     financingType: financingTypeResult.financingType || 'Owner Finance',

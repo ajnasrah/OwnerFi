@@ -1,0 +1,272 @@
+[
+  {
+    "id": "zpid_1027215",
+    "zpid": "1027215",
+    "address": "107 Wheeler Dr",
+    "city": "Bessemer",
+    "state": "AL",
+    "zip": "35023",
+    "homeStatus": "FOR_SALE",
+    "source": "agent_outreach",
+    "dealTypes": [
+      "owner_finance"
+    ],
+    "url": "https://www.zillow.com/homedetails/107-Wheeler-Dr-Bessemer-AL-35023/1027215_zpid/",
+    "createdAt": "2026-04-15T17:28:17.095Z"
+  },
+  {
+    "id": "zpid_1032344",
+    "zpid": "1032344",
+    "address": "1015 Palmer Ave",
+    "city": "Bessemer",
+    "state": "AL",
+    "zip": "35020",
+    "homeStatus": "FOR_SALE",
+    "source": "agent_outreach",
+    "dealTypes": [
+      "owner_finance"
+    ],
+    "url": "https://www.zillow.com/homedetails/1015-Palmer-Ave-Bessemer-AL-35020/1032344_zpid/",
+    "createdAt": "2026-04-15T17:28:17.095Z"
+  },
+  {
+    "id": "zpid_1037160",
+    "zpid": "1037160",
+    "address": "3815 Banks St",
+    "city": "Bessemer",
+    "state": "AL",
+    "zip": "35020",
+    "homeStatus": "FOR_SALE",
+    "source": "agent_outreach",
+    "dealTypes": [
+      "owner_finance"
+    ],
+    "url": "https://www.zillow.com/homedetails/3815-Banks-St-Bessemer-AL-35020/1037160_zpid/",
+    "createdAt": "2026-04-15T17:28:17.095Z"
+  },
+  {
+    "id": "zpid_1037461",
+    "zpid": "1037461",
+    "address": "101 Livingston Ct",
+    "city": "Bessemer",
+    "state": "AL",
+    "zip": "35020",
+    "homeStatus": "FOR_SALE",
+    "source": "agent_outreach",
+    "dealTypes": [
+      "owner_finance"
+    ],
+    "url": "https://www.zillow.com/homedetails/101-Livingston-Ct-Bessemer-AL-35020/1037461_zpid/",
+    "createdAt": "2026-04-15T17:28:17.095Z"
+  },
+  {
+    "id": "zpid_1043217",
+    "zpid": "1043217",
+    "address": "2928 6th Ave N",
+    "city": "Bessemer",
+    "state": "AL",
+    "zip": "35020",
+    "homeStatus": "FOR_SALE",
+    "source": "agent_outreach",
+    "dealTypes": [
+      "owner_finance"
+    ],
+    "url": "https://www.zillow.com/homedetails/2928-6th-Ave-N-Bessemer-AL-35020/1043217_zpid/",
+    "createdAt": "2026-04-15T17:28:17.095Z"
+  },
+  {
+    "id": "zpid_1046615",
+    "zpid": "1046615",
+    "address": "1015 11th St N",
+    "city": "Bessemer",
+    "state": "AL",
+    "zip": "35020",
+    "homeStatus": "FOR_SALE",
+    "source": "agent_outreach",
+    "dealTypes": [
+      "owner_finance"
+    ],
+    "url": "https://www.zillow.com/homedetails/1015-11th-St-N-Bessemer-AL-35020/1046615_zpid/",
+    "createdAt": "2026-04-15T17:28:17.095Z"
+  },
+  {
+    "id": "zpid_1047114",
+    "zpid": "1047114",
+    "address": "2224 Exeter Ave",
+    "city": "Bessemer",
+    "state": "AL",
+    "zip": "35020",
+    "homeStatus": "FOR_SALE",
+    "source": "agent_outreach",
+    "dealTypes": [
+      "owner_finance"
+    ],
+    "url": "https://www.zillow.com/homedetails/2224-Exeter-Ave-Bessemer-AL-35020/1047114_zpid/",
+    "createdAt": "2026-04-15T17:28:17.095Z"
+  },
+  {
+    "id": "zpid_1076539",
+    "zpid": "1076539",
+    "address": "643 Warren Ave",
+    "city": "Indianapolis",
+    "state": "IN",
+    "zip": "46221",
+    "homeStatus": "FOR_SALE",
+    "source": "agent_outreach",
+    "dealTypes": [
+      "owner_finance"
+    ],
+    "url": "https://www.zillow.com/homedetails/643-Warren-Ave-Indianapolis-IN-46221/1076539_zpid/",
+    "createdAt": "2026-04-15T17:28:17.095Z"
+  },
+  {
+    "id": "zpid_1087247",
+    "zpid": "1087247",
+    "address": "1221 S Belmont Ave",
+    "city": "Indianapolis",
+    "state": "IN",
+    "zip": "46221",
+    "homeStatus": "FOR_SALE",
+    "source": "agent_outreach",
+    "dealTypes": [
+      "owner_finance"
+    ],
+    "url": "https://www.zillow.com/homedetails/1221-S-Belmont-Ave-Indianapolis-IN-46221/1087247_zpid/",
+    "createdAt": "2026-04-15T17:16:17.976Z"
+  },
+  {
+    "id": "zpid_1104217",
+    "zpid": "1104217",
+    "address": "318 N Colorado Ave",
+    "city": "Indianapolis",
+    "state": "IN",
+    "zip": "46201",
+    "homeStatus": "FOR_SALE",
+    "source": "agent_outreach",
+    "dealTypes": [
+      "owner_finance"
+    ],
+    "url": "https://www.zillow.com/homedetails/318-N-Colorado-Ave-Indianapolis-IN-46201/1104217_zpid/",
+    "createdAt": "2026-04-15T17:28:17.095Z"
+  },
+  {
+    "id": "zpid_116212335",
+    "zpid": "116212335",
+    "address": "2108 Ingleside Dr",
+    "city": "Sherwood",
+    "state": "AR",
+    "zip": "72120",
+    "homeStatus": "FOR_SALE",
+    "source": "agent_outreach",
+    "dealTypes": [
+      "owner_finance"
+    ],
+    "url": "https://www.zillow.com/homedetails/2108-Ingleside-Dr-Sherwood-AR-72120/116212335_zpid/",
+    "createdAt": "2026-04-15T17:28:17.095Z"
+  },
+  {
+    "id": "zpid_1293924",
+    "zpid": "1293924",
+    "address": "3464 W 10th St",
+    "city": "Indianapolis",
+    "state": "IN",
+    "zip": "46222",
+    "homeStatus": "FOR_SALE",
+    "source": "agent_outreach",
+    "dealTypes": [
+      "owner_finance"
+    ],
+    "url": "https://www.zillow.com/homedetails/3464-W-10th-St-Indianapolis-IN-46222/1293924_zpid/",
+    "createdAt": "2026-04-15T17:28:17.095Z"
+  },
+  {
+    "id": "zpid_1298378",
+    "zpid": "1298378",
+    "address": "3528 Lambert St",
+    "city": "Indianapolis",
+    "state": "IN",
+    "zip": "46241",
+    "homeStatus": "FOR_SALE",
+    "source": "agent_outreach",
+    "dealTypes": [
+      "owner_finance"
+    ],
+    "url": "https://www.zillow.com/homedetails/3528-Lambert-St-Indianapolis-IN-46241/1298378_zpid/",
+    "createdAt": "2026-04-15T17:55:41.368Z"
+  },
+  {
+    "id": "zpid_303789163",
+    "zpid": "303789163",
+    "address": "3037 S Rybolt Ave",
+    "city": "Indianapolis",
+    "state": "IN",
+    "zip": "46241",
+    "homeStatus": "FOR_SALE",
+    "source": "agent_outreach",
+    "dealTypes": [
+      "owner_finance"
+    ],
+    "url": "https://www.zillow.com/homedetails/3037-S-Rybolt-Ave-Indianapolis-IN-46241/303789163_zpid/",
+    "createdAt": "2026-04-15T17:28:17.095Z"
+  },
+  {
+    "id": "zpid_42140337",
+    "zpid": "42140337",
+    "address": "765 Grand St",
+    "city": "Denver",
+    "state": "TN",
+    "zip": "38114",
+    "homeStatus": "FOR_SALE",
+    "source": "agent_outreach",
+    "dealTypes": [
+      "owner_finance"
+    ],
+    "url": "https://www.zillow.com/homedetails/765-Grand-St-Denver-TN-38114/42140337_zpid/",
+    "createdAt": "2026-04-15T17:28:17.095Z"
+  },
+  {
+    "id": "zpid_42165506",
+    "zpid": "42165506",
+    "address": "3890 Lytle Cir",
+    "city": "Memphis",
+    "state": "TN",
+    "zip": "38122",
+    "homeStatus": "FOR_SALE",
+    "source": "agent_outreach",
+    "dealTypes": [
+      "owner_finance"
+    ],
+    "url": "https://www.zillow.com/homedetails/3890-Lytle-Cir-Memphis-TN-38122/42165506_zpid/",
+    "createdAt": "2026-04-15T17:28:17.095Z"
+  },
+  {
+    "id": "zpid_42220345",
+    "zpid": "42220345",
+    "address": "1274 Frayser Blvd",
+    "city": "Memphis",
+    "state": "TN",
+    "zip": "38127",
+    "homeStatus": "FOR_SALE",
+    "source": "agent_outreach",
+    "dealTypes": [
+      "owner_finance"
+    ],
+    "url": "https://www.zillow.com/homedetails/1274-Frayser-Blvd-Memphis-TN-38127/42220345_zpid/",
+    "createdAt": "2026-04-15T17:28:17.095Z"
+  },
+  {
+    "id": "zpid_42230977",
+    "zpid": "42230977",
+    "address": "2938 Conti Cv",
+    "city": "Memphis",
+    "state": "TN",
+    "zip": "38127",
+    "homeStatus": "FOR_SALE",
+    "source": "agent_outreach",
+    "dealTypes": [
+      "owner_finance"
+    ],
+    "url": "https://www.zillow.com/homedetails/2938-Conti-Cv-Memphis-TN-38127/42230977_zpid/",
+    "createdAt": "2026-04-14T20:00:06.764Z"
+  }
+]

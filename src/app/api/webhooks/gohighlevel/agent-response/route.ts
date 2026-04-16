@@ -511,8 +511,55 @@ export async function POST(request: NextRequest) {
       });
 
     } else {
-      // Agent said NO
+      // Agent said NO — seller/agent reversed. The property must stop
+      // displaying as owner-finance anywhere.
       console.log('❌ [AGENT RESPONSE WEBHOOK] Agent said NO');
+
+      // Resolve the property doc (same zpid-then-address fallback as YES path).
+      const normAddr = (s: string) => String(s || '').toLowerCase().trim().replace(/[#,\.]/g, '').replace(/\s+/g, ' ');
+      let propertyDocId = `zpid_${property.zpid}`;
+      let propSnap = await db.collection('properties').doc(propertyDocId).get();
+      if (!propSnap.exists && property.address && property.city && property.state) {
+        const target = normAddr(property.address);
+        const addrSnap = await db.collection('properties')
+          .where('city', '==', property.city)
+          .where('state', '==', property.state)
+          .get();
+        for (const d of addrSnap.docs) {
+          const dAddr = normAddr(d.data().address || d.data().streetAddress || '');
+          if (dAddr && dAddr === target) {
+            propertyDocId = d.id;
+            propSnap = d;
+            break;
+          }
+        }
+      }
+
+      // Agent NO means: strip OF signal, hide from site, but KEEP the
+      // Firestore doc. The status-checker cron owns hard-delete when it
+      // eventually sees SOLD/CLOSED/OFF_MARKET on Zillow.
+      let action: 'none' | 'strip_and_hide' = 'none';
+      if (propSnap.exists) {
+        const existing = propSnap.data()!;
+        const dealTypes: string[] = Array.isArray(existing.dealTypes) ? existing.dealTypes : [];
+        const nextDealTypes = dealTypes.filter((t: string) => t !== 'owner_finance');
+        await db.collection('properties').doc(propertyDocId).set({
+          isOwnerfinance: false,
+          agentConfirmedOwnerfinance: false,
+          ownerFinanceVerified: false,
+          dealTypes: nextDealTypes,
+          isActive: false,
+          agentReversedAt: new Date(),
+          lastStatusCheck: new Date(),
+        }, { merge: true });
+        // Drop from Typesense so search/site stop surfacing it.
+        try {
+          const { deletePropertyFromIndex } = await import('@/lib/typesense/sync');
+          await deletePropertyFromIndex(propertyDocId);
+        } catch (e) { console.error(`   ⚠️ Typesense delete failed:`, e); }
+        action = 'strip_and_hide';
+        console.log(`   🧹 Stripped OF + hid ${propertyDocId} (source=${existing.source})`);
+      }
 
       await docRef.update({
         status: 'agent_no',
@@ -520,12 +567,14 @@ export async function POST(request: NextRequest) {
         agentResponseAt: new Date(),
         agentNote: agentNote || null,
         routedTo: 'rejected',
+        propertyAction: action,
+        routedToDocId: propSnap.exists ? propertyDocId : null,
         ...(ghlOpportunityId && !property.ghlOpportunityId ? { ghlOpportunityId } : {}),
         ...(ghlContactId && !property.ghlContactId ? { ghlContactId } : {}),
         updatedAt: new Date(),
       });
 
-      console.log('   ✅ Marked as rejected');
+      console.log(`   ✅ Marked as rejected (action: ${action})`);
     }
 
     console.log('✅ [AGENT RESPONSE WEBHOOK] Successfully processed response');

@@ -1,0 +1,312 @@
+{
+  "generatedAt": "2026-04-16T19:10:47.754Z",
+  "totals": {
+    "properties": 10580,
+    "queue": 2649,
+    "propsBySource": {
+      "apify-rebuild": 4257,
+      "scraper-v2": 5196,
+      "backfill-blast": 923,
+      "agent_outreach": 102,
+      "agent_outreach_system": 100,
+      "manual-add-v2": 2
+    }
+  },
+  "categories": {
+    "cat1_queueYesNoProperty": {
+      "description": "Queue status='agent_yes' but no property matches (by originalQueueId or zpid)",
+      "count": 16,
+      "first30": [
+        "19dNzZdxqvxFLpvmiXhq",
+        "Bl8RtgSLP7Wb7IqZkSUz",
+        "Hl17M2CKwpUunu08E5Ay",
+        "Kkrj43Adc045utlkwz4q",
+        "MDVXfXMrKB3Rhjig4jDz",
+        "S5GAnAj4RnKHIlJ0jxCN",
+        "UJltgBrt7f61FXROGmbS",
+        "aPVGh1r6Ncfj6jZPtTMa",
+        "ddBnOIh5QMw2FJxULHPb",
+        "eONeCDfCaDOp3qb8SoJN",
+        "hBaLk7Cx2gYIoFnaDWzP",
+        "konFP0GFCnaQCx4JWhSF",
+        "moJwP2Dzh8rmNoAfFIM0",
+        "sEohmDbgViu7nH2Cu6hQ",
+        "ut4P9bJbP2ULq4KTOCjg",
+        "yNnspXAiTvTA17T3Q1Ob"
+      ]
+    },
+    "cat2_propertyAgentOutreachNoQueue": {
+      "description": "Property source='agent_outreach' but originalQueueId missing or points to non-existent queue",
+      "count": 5,
+      "first20": [
+        "zpid_42174317",
+        "zpid_42227520",
+        "zpid_42253899",
+        "zpid_42346296",
+        "zpid_89322899"
+      ]
+    },
+    "cat3_stuckSends": {
+      "description": "status='sent_to_ghl' AND sentToGHLAt > 30d ago AND no agentResponse",
+      "count": 390,
+      "first20": [
+        "0BvmeQfVivqmog6Gp735",
+        "0ErapfcMWhQC4lQMslXS",
+        "0OZa4x5KS6GA7evMj4AD",
+        "0g5YJECGfLDtHkKhD98h",
+        "0gqUNsQniIKFQaQ7b8ei",
+        "0o4oK8febLOWuRu7VUr7",
+        "1E530PtCb3Y9yL8vkeEp",
+        "1EVs4XB6BaXUOcyU6hVg",
+        "1YcBTGOMPHN1AJyko53X",
+        "1vSHN4PkLYJS5ePRe9SY",
+        "1z14sQscmet8lcb6eAPw",
+        "21vOOvtlSrZzhTPIDg9X",
+        "29qDKsbQZgzEkaNl1kKF",
+        "2IDFOto5114lzScRKezW",
+        "2XwFVQnN10jktgVzn7mx",
+        "2rvolL75dzfBT3VVIgkt",
+        "2vDBfP9H9DU4uu7WwvnO",
+        "38X3mkAfihLlkdKTcPMr",
+        "3GOiXzll4hR1sX1vNE76",
+        "3IQIl9LuPZmLDduzbo6x"
+      ]
+    },
+    "cat4_phoneAddressDupes": {
+      "description": "Same phoneNormalized+addressNormalized in >1 queue row",
+      "dupeGroups": 118,
+      "totalDupeDocs": 238,
+      "topGroupsFirst20": [
+        {
+          "key": "+19018598562||3573 hanna dr",
+          "count": 3,
+          "ids": [
+            "2JVMhg2xH2k26S1Mh92Q",
+            "Q1SdyVJkFJKL3ppnNmDB",
+            "ljXkjWDEKmsJyqXRCYeC"
+          ]
+        },
+        {
+          "key": "+19018598562||3447 scenic hwy",
+          "count": 3,
+          "ids": [
+            "4oeLj8ySz6XAVgWI383u",
+            "BBNsnBqOla0mDLHs65eU",
+            "mD9g5jWrX4aCG8v4eiJN"
+          ]
+        },
+        {
+          "key": "+16468986901||1707 wainwright ct",
+          "count": 2,
+          "ids": [
+            "0F5bDkDQq1oH0BSPzCtQ",
+            "WjoihYqHlh8TMO67tfn0"
+          ]
+        },
+        {
+          "key": "5019511755||18 westglen cv",
+          "count": 2,
+          "ids": [
+            "0L5IhkpDELelvSP2XuDV",
+            "FeeP4O4GgsjXxOPoVW3E"
+          ]
+        },
+        {
+          "key": "5016581508||(undisclosed address)",
+          "count": 2,
+          "ids": [
+            "0XBNM4hS32C6j3Pc4r63",
+            "fq4qQhk1OaEhKs8e3Loa"
+          ]
+        },
+        {
+          "key": "+19014063224||9342 salem rd",
+          "count": 2,
+          "ids": [
+            "0ZrqTHWrngdGnaW76oyc",
+            "Hi6E7FCZ0xuS9Zadt16G"
+          ]
+        },
+        {
+          "key": "5017435444||13324 alexander rd",
+          "count": 2,
+          "ids": [
+            "19dNzZdxqvxFLpvmiXhq",
+            "D3FxIwhl2jP490mAP5MG"
+          ]
+        },
+        {
+          "key": "+19014128208||974 tatum rd",
+          "count": 2,
+          "ids": [
+            "1cNBZS9XwvRyriVDxfLr",
+            "H89rfZhIAnPWkSTIoog9"
+          ]
+        },
+        {
+          "key": "+19015504359||740 shotwell st lot 6",
+          "count": 2,
+          "ids": [
+            "1sge2OCK2SqEaTgFNHO6",
+            "POwpEmLmnyv1MfkoJLcd"
+          ]
+        },
+        {
+          "key": "+19013348895||318 simpson ave",
+          "count": 2,
+          "ids": [
+            "1wsvDcl0EHZE7GN779v3",
+            "qdYOk8lEleMCTO3k4noH"
+          ]
+        },
+        {
+          "key": "+15014145494||18720 johns ln",
+          "count": 2,
+          "ids": [
+            "24XHRslDxuPuKsTEVaH4",
+            "Z3MMvSf7ISEBe6mBZP9B"
+          ]
+        },
+        {
+          "key": "+19014123141||8021 brooxie cv",
+          "count": 2,
+          "ids": [
+            "2Df2iNF6gltp7Neu6bhr",
+            "qdezq3x2ciOJCBhnCgOC"
+          ]
+        },
+        {
+          "key": "9016120431||440 saint andrews dr",
+          "count": 2,
+          "ids": [
+            "2IDFOto5114lzScRKezW",
+            "JRAxn3o7EdRp82BRBGlx"
+          ]
+        },
+        {
+          "key": "+19016747005||6496 wimble rd",
+          "count": 2,
+          "ids": [
+            "2IHAydMzkiP2SLT7qU1w",
+            "zryYsPobPRZekwkDhZ43"
+          ]
+        },
+        {
+          "key": "+19012899962||1932 carr ave",
+          "count": 2,
+          "ids": [
+            "2KjDmLAVNawteUpq2EbJ",
+            "f3Xj3JQ3iXgEraEgwmn3"
+          ]
+        },
+        {
+          "key": "+19012784380||2618 supreme ave",
+          "count": 2,
+          "ids": [
+            "2hPAxyvkU5vpACIOPIUC",
+            "lkVw6X9Mx9WjIBIgaUkl"
+          ]
+        },
+        {
+          "key": "+15014636336||3500 whitfield st",
+          "count": 2,
+          "ids": [
+            "2nS2WVZ9ijxey4lCa8TD",
+            "E0y6pMxHHYQ6q9bptmPV"
+          ]
+        },
+        {
+          "key": "+19012829020||10471 ashboro dr",
+          "count": 2,
+          "ids": [
+            "3PKK0iW4PnXKNDEW9lDE",
+            "vk0BZkAT8guNJPKNTSuU"
+          ]
+        },
+        {
+          "key": "+16292605285||3741 ridgemont rd",
+          "count": 2,
+          "ids": [
+            "3qONGZEbRJ9Y5WPEFr4L",
+            "FHmPEYLKvm7Qnpbn4RH6"
+          ]
+        },
+        {
+          "key": "+17313006773||15 riley cv",
+          "count": 2,
+          "ids": [
+            "3uCsF2UurCS2vFKPMg1X",
+            "VVMpeLVQFL3LfwYCXeM7"
+          ]
+        }
+      ]
+    },
+    "cat5_confirmedButNoOwnerFinance": {
+      "description": "agentConfirmedOwnerfinance===true but dealTypes does not include 'owner_finance'",
+      "count": 2,
+      "first20": [
+        "zpid_42144324",
+        "zpid_42253899"
+      ]
+    },
+    "cat6_propertyGhlNoQueue": {
+      "description": "Property has ghlContactId/ghlOpportunityId but no queue doc references either",
+      "count": 0,
+      "first20": []
+    },
+    "cat7_yesResponseWrongStatus": {
+      "description": "agentResponse='yes' but status does not start with 'agent_'",
+      "count": 0,
+      "first20": []
+    },
+    "cat8_statusDistribution": {
+      "description": "Full frequency of queue.status values",
+      "distribution": {
+        "agent_yes": 116,
+        "sent_to_ghl": 1340,
+        "property_off_market": 303,
+        "agent_no": 408,
+        "sent": 464,
+        "no_response": 3,
+        "agent_pending": 14,
+        "sold": 1
+      }
+    },
+    "cat9_staleResponseReScraped": {
+      "description": "Queue agentResponseAt > 30d ago AND linked property's lastScrapedAt is after the response date",
+      "count": 131,
+      "first20": [
+        "0hEknVPfVLmMi9OAWBTm",
+        "0kEGdc1RFsWM80iZlExZ",
+        "1a4xtlLXwQRe23BfG3xB",
+        "1dM8Kj893lWKKpfAvvcN",
+        "1vFmmzz0mfmfATtn93yS",
+        "2IbhtbUMubyh5gaWc6OR",
+        "2ZXz1Z5TiBSrb3Yxry8u",
+        "3UIZ5RRzis06mFmEk333",
+        "3luQequ7NQTYZfdCsqfN",
+        "6d2EEHZ7Qs1PDov6hZgV",
+        "6tjHMgD0XzmRW3Bsll3g",
+        "7iUOEAnxYJO7V7xC90hy",
+        "8D8M2fW65WErT1KkiFKB",
+        "8JhHnPQn8TDlfOuGwGWr",
+        "8gncKhKDo8vT3KF8Hmn9",
+        "8mi6iP3fSE0xg4CPglhd",
+        "8pyFmTPTEiHGdacFU7bZ",
+        "99lolQRVaaQ2p1bihzp9",
+        "AQ38PULQV4GowmFdSkKy",
+        "AcFaxQ5njdQs1Dr8kGpO"
+      ]
+    },
+    "cat10_manualAdminVerified": {
+      "description": "Properties with verifiedBy='manual_admin' (awareness)",
+      "verifiedByFreq": {
+        "manual_admin": 1
+      },
+      "count": 1,
+      "first20": [
+        "zpid_460701363"
+      ]
+    }
+  }
+}

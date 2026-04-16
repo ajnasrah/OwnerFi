@@ -1,0 +1,119 @@
+[
+  {
+    "addr": "4244 Water Briar Rd",
+    "firebaseId": "YKyiClrB5wS5ahp0Rgj7",
+    "reason": "queue doc does not exist"
+  },
+  {
+    "addr": "(Undisclosed Address)",
+    "firebaseId": "MDVXfXMrKB3Rhjig4jDz",
+    "zpid": "297805",
+    "reason": "queue=agent_yes but NO property doc",
+    "routedTo": "properties"
+  },
+  {
+    "addr": "4100 Monticello Dr",
+    "firebaseId": "S5GAnAj4RnKHIlJ0jxCN",
+    "zpid": "296684",
+    "reason": "queue=agent_yes but NO property doc",
+    "routedTo": "properties"
+  },
+  {
+    "addr": "4916 Atkins St",
+    "firebaseId": "konFP0GFCnaQCx4JWhSF",
+    "zpid": "275784",
+    "reason": "queue=agent_yes but NO property doc",
+    "routedTo": "properties"
+  },
+  {
+    "addr": "857 Pope St",
+    "firebaseId": "UJltgBrt7f61FXROGmbS",
+    "zpid": "42178965",
+    "reason": "queue=agent_yes but NO property doc",
+    "routedTo": "properties"
+  },
+  {
+    "addr": "8004 Kim Dr",
+    "firebaseId": "Hl17M2CKwpUunu08E5Ay",
+    "zpid": "446666157",
+    "reason": "queue=agent_yes but NO property doc",
+    "routedTo": "properties"
+  },
+  {
+    "addr": "3130 Harris Ave",
+    "firebaseId": "yNnspXAiTvTA17T3Q1Ob",
+    "zpid": "42196001",
+    "reason": "queue=agent_yes but NO property doc",
+    "routedTo": "properties"
+  },
+  {
+    "addr": "1011 Lexington Loop",
+    "firebaseId": "ut4P9bJbP2ULq4KTOCjg",
+    "zpid": "455212883",
+    "reason": "queue=agent_yes but NO property doc",
+    "routedTo": "properties"
+  },
+  {
+    "addr": "13324 Alexander Rd",
+    "firebaseId": "19dNzZdxqvxFLpvmiXhq",
+    "zpid": "362271",
+    "reason": "queue=agent_yes but NO property doc",
+    "routedTo": "properties"
+  },
+  {
+    "addr": "35 N Meadowcliff Dr",
+    "firebaseId": "aPVGh1r6Ncfj6jZPtTMa",
+    "zpid": "355248",
+    "reason": "queue=agent_yes but NO property doc",
+    "routedTo": "properties"
+  },
+  {
+    "addr": "4254 Rosebury Ln",
+    "firebaseId": "moJwP2Dzh8rmNoAfFIM0",
+    "zpid": "89278865",
+    "reason": "queue=agent_yes but NO property doc",
+    "routedTo": "properties"
+  },
+  {
+    "addr": "3 Dunfrettin Pl",
+    "firebaseId": "Kkrj43Adc045utlkwz4q",
+    "zpid": "273802",
+    "reason": "queue=agent_yes but NO property doc",
+    "routedTo": "properties"
+  },
+  {
+    "addr": "5908 Glenhaven Pl",
+    "firebaseId": "hBaLk7Cx2gYIoFnaDWzP",
+    "zpid": "279654",
+    "reason": "queue=agent_yes but NO property doc",
+    "routedTo": "properties"
+  },
+  {
+    "addr": "2217 Scott St",
+    "firebaseId": "eONeCDfCaDOp3qb8SoJN",
+    "zpid": "316168",
+    "reason": "queue=agent_yes but NO property doc",
+    "routedTo": "properties"
+  },
+  {
+    "addr": "207 Ross Ave",
+    "firebaseId": "sEohmDbgViu7nH2Cu6hQ",
+    "zpid": "76144132",
+    "reason": "queue=agent_yes but NO property doc",
+    "routedTo": "properties"
+  },
+  {
+    "addr": "4843 Verne Rd",
+    "firebaseId": "ddBnOIh5QMw2FJxULHPb",
+    "zpid": "42212183",
+    "reason": "queue=agent_yes but NO property doc",
+    "routedTo": "properties"
+  },
+  {
+    "addr": "14 Quail Creek Ct",
+    "firebaseId": "Bl8RtgSLP7Wb7IqZkSUz",
+    "zpid": "324577",
+    "reason": "queue=agent_yes but NO property doc",
+    "routedTo": "properties"
+  }
+]

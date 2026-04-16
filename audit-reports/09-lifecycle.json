@@ -1,0 +1,87 @@
+{
+  "generatedAt": "2026-04-16T19:09:45.544Z",
+  "currentDate": "2026-04-16",
+  "totalDocs": 10580,
+  "isActiveDistribution": {
+    "true": 5346,
+    "false": 5234,
+    "neither": 0,
+    "breakdown": {
+      "true": 5346,
+      "false": 5234
+    }
+  },
+  "homeStatusFrequency": {
+    "FOR_SALE": 6180,
+    "PENDING": 2109,
+    "OTHER": 2009,
+    "RECENTLY_SOLD": 163,
+    "PRE_FORECLOSURE": 79,
+    "FORECLOSED": 33,
+    "SOLD": 7
+  },
+  "activeTrueByHomeStatus": {
+    "FOR_SALE": 5236,
+    "PRE_FORECLOSURE": 78,
+    "FORECLOSED": 32
+  },
+  "categories": {
+    "1_activeButSold": {
+      "count": 0,
+      "first20": []
+    },
+    "2_activeButDeleted": {
+      "count": 0,
+      "first20": []
+    },
+    "3_staleOver30": {
+      "count": 0,
+      "first20": []
+    },
+    "4_staleOver90": {
+      "count": 0,
+      "first20": []
+    },
+    "5_missingLastScrapedAt": {
+      "count": 0,
+      "first20": []
+    },
+    "7_createdAtAnomaly": {
+      "count": 0,
+      "first20": []
+    },
+    "8_soldAtButActive": {
+      "count": 0,
+      "first20": []
+    },
+    "9_pendingOver60": {
+      "count": 773,
+      "first20": [
+        "zpid_102561405",
+        "zpid_102567621",
+        "zpid_102587556",
+        "zpid_102687497",
+        "zpid_103037424",
+        "zpid_103118438",
+        "zpid_103125609",
+        "zpid_103145385",
+        "zpid_103387134",
+        "zpid_105388995",
+        "zpid_105575445",
+        "zpid_106821635",
+        "zpid_107112497",
+        "zpid_1071202",
+        "zpid_107204324",
+        "zpid_108087599",
+        "zpid_108848986",
+        "zpid_109180810",
+        "zpid_109287417",
+        "zpid_1093009"
+      ]
+    },
+    "10_isActiveUnusualValue": {
+      "count": 0,
+      "first20": []
+    }
+  }
+}

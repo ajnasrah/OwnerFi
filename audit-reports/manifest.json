@@ -1,0 +1,13 @@
+{
+  "dumpedAt": "2026-04-16T19:07:08.442Z",
+  "counts": {
+    "properties": 10580,
+    "agent_outreach_queue": 2649,
+    "typesense": 3162
+  },
+  "files": {
+    "properties": "dump-properties.json",
+    "agent_outreach_queue": "dump-agent-outreach-queue.json",
+    "typesense": "dump-typesense.json"
+  }
+}

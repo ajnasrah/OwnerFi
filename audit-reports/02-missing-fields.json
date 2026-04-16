@@ -1,0 +1,270 @@
+{
+  "generatedAt": "2026-04-16T19:08:34.957Z",
+  "totalDocs": 10580,
+  "activeDocs": 5346,
+  "inactiveDocs": 5234,
+  "fieldCountsGlobal": {
+    "address_or_streetAddress": 0,
+    "city": 0,
+    "state": 0,
+    "zipCode": 6,
+    "price": 0,
+    "latlng": 42,
+    "url_or_hdpUrl": 0,
+    "homeType": 0,
+    "zpid": 0,
+    "dealTypes": 0
+  },
+  "priorityRanking": [
+    {
+      "field": "latlng",
+      "count": 42
+    },
+    {
+      "field": "zipCode",
+      "count": 6
+    },
+    {
+      "field": "address_or_streetAddress",
+      "count": 0
+    },
+    {
+      "field": "city",
+      "count": 0
+    },
+    {
+      "field": "state",
+      "count": 0
+    },
+    {
+      "field": "price",
+      "count": 0
+    },
+    {
+      "field": "url_or_hdpUrl",
+      "count": 0
+    },
+    {
+      "field": "homeType",
+      "count": 0
+    },
+    {
+      "field": "zpid",
+      "count": 0
+    },
+    {
+      "field": "dealTypes",
+      "count": 0
+    }
+  ],
+  "sources": [
+    {
+      "source": "scraper-v2",
+      "total": 3098,
+      "missingAnyCount": 6,
+      "missingAnyPct": 0.19,
+      "perField": {
+        "address_or_streetAddress": 0,
+        "city": 0,
+        "state": 0,
+        "zipCode": 4,
+        "price": 0,
+        "latlng": 2,
+        "url_or_hdpUrl": 0,
+        "homeType": 0,
+        "zpid": 0,
+        "dealTypes": 0
+      },
+      "sampleIds": {
+        "address_or_streetAddress": [],
+        "city": [],
+        "state": [],
+        "zipCode": [
+          "zpid_460591298",
+          "zpid_461240906",
+          "zpid_461307778",
+          "zpid_461377641"
+        ],
+        "price": [],
+        "latlng": [
+          "zpid_2063411605",
+          "zpid_274056"
+        ],
+        "url_or_hdpUrl": [],
+        "homeType": [],
+        "zpid": [],
+        "dealTypes": []
+      }
+    },
+    {
+      "source": "apify-rebuild",
+      "total": 1194,
+      "missingAnyCount": 8,
+      "missingAnyPct": 0.67,
+      "perField": {
+        "address_or_streetAddress": 0,
+        "city": 0,
+        "state": 0,
+        "zipCode": 2,
+        "price": 0,
+        "latlng": 6,
+        "url_or_hdpUrl": 0,
+        "homeType": 0,
+        "zpid": 0,
+        "dealTypes": 0
+      },
+      "sampleIds": {
+        "address_or_streetAddress": [],
+        "city": [],
+        "state": [],
+        "zipCode": [
+          "zpid_2063956244",
+          "zpid_2081276739"
+        ],
+        "price": [],
+        "latlng": [
+          "zpid_294367",
+          "zpid_42765446",
+          "zpid_451558135",
+          "zpid_457521746",
+          "zpid_458963275"
+        ],
+        "url_or_hdpUrl": [],
+        "homeType": [],
+        "zpid": [],
+        "dealTypes": []
+      }
+    },
+    {
+      "source": "backfill-blast",
+      "total": 921,
+      "missingAnyCount": 0,
+      "missingAnyPct": 0,
+      "perField": {
+        "address_or_streetAddress": 0,
+        "city": 0,
+        "state": 0,
+        "zipCode": 0,
+        "price": 0,
+        "latlng": 0,
+        "url_or_hdpUrl": 0,
+        "homeType": 0,
+        "zpid": 0,
+        "dealTypes": 0
+      },
+      "sampleIds": {
+        "address_or_streetAddress": [],
+        "city": [],
+        "state": [],
+        "zipCode": [],
+        "price": [],
+        "latlng": [],
+        "url_or_hdpUrl": [],
+        "homeType": [],
+        "zpid": [],
+        "dealTypes": []
+      }
+    },
+    {
+      "source": "agent_outreach",
+      "total": 81,
+      "missingAnyCount": 34,
+      "missingAnyPct": 41.98,
+      "perField": {
+        "address_or_streetAddress": 0,
+        "city": 0,
+        "state": 0,
+        "zipCode": 0,
+        "price": 0,
+        "latlng": 34,
+        "url_or_hdpUrl": 0,
+        "homeType": 0,
+        "zpid": 0,
+        "dealTypes": 0
+      },
+      "sampleIds": {
+        "address_or_streetAddress": [],
+        "city": [],
+        "state": [],
+        "zipCode": [],
+        "price": [],
+        "latlng": [
+          "zpid_1027215",
+          "zpid_1032344",
+          "zpid_1037160",
+          "zpid_1037461",
+          "zpid_1043217"
+        ],
+        "url_or_hdpUrl": [],
+        "homeType": [],
+        "zpid": [],
+        "dealTypes": []
+      }
+    },
+    {
+      "source": "agent_outreach_system",
+      "total": 51,
+      "missingAnyCount": 0,
+      "missingAnyPct": 0,
+      "perField": {
+        "address_or_streetAddress": 0,
+        "city": 0,
+        "state": 0,
+        "zipCode": 0,
+        "price": 0,
+        "latlng": 0,
+        "url_or_hdpUrl": 0,
+        "homeType": 0,
+        "zpid": 0,
+        "dealTypes": 0
+      },
+      "sampleIds": {
+        "address_or_streetAddress": [],
+        "city": [],
+        "state": [],
+        "zipCode": [],
+        "price": [],
+        "latlng": [],
+        "url_or_hdpUrl": [],
+        "homeType": [],
+        "zpid": [],
+        "dealTypes": []
+      }
+    },
+    {
+      "source": "manual-add-v2",
+      "total": 1,
+      "missingAnyCount": 0,
+      "missingAnyPct": 0,
+      "perField": {
+        "address_or_streetAddress": 0,
+        "city": 0,
+        "state": 0,
+        "zipCode": 0,
+        "price": 0,
+        "latlng": 0,
+        "url_or_hdpUrl": 0,
+        "homeType": 0,
+        "zpid": 0,
+        "dealTypes": 0
+      },
+      "sampleIds": {
+        "address_or_streetAddress": [],
+        "city": [],
+        "state": [],
+        "zipCode": [],
+        "price": [],
+        "latlng": [],
+        "url_or_hdpUrl": [],
+        "homeType": [],
+        "zpid": [],
+        "dealTypes": []
+      }
+    }
+  ],
+  "shouldBeInactive": {
+    "total": 0,
+    "bySource": {},
+    "sample": []
+  }
+}

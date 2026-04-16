@@ -1,0 +1,715 @@
+{
+  "totalDocs": 10580,
+  "generatedAt": "2026-04-16T19:09:12.231Z",
+  "categories": {
+    "stateMalformed": {
+      "description": "state present but not exactly 2 uppercase letters",
+      "count": 0,
+      "first20Ids": [],
+      "samples": []
+    },
+    "zipMalformed": {
+      "description": "zipCode not exactly 5 digits (or valid ZIP+4)",
+      "count": 22,
+      "first20Ids": [
+        "zpid_2055279946",
+        "zpid_2055774624",
+        "zpid_2056143297",
+        "zpid_2061671125",
+        "zpid_2063956244",
+        "zpid_2064320810",
+        "zpid_2067446191",
+        "zpid_2081276739",
+        "zpid_443637899",
+        "zpid_452938128",
+        "zpid_454085050",
+        "zpid_454343928",
+        "zpid_455592306",
+        "zpid_455839920",
+        "zpid_457312488",
+        "zpid_457711784",
+        "zpid_458626279",
+        "zpid_459524574",
+        "zpid_460591298",
+        "zpid_461240906"
+      ],
+      "samples": [
+        {
+          "id": "zpid_2055279946",
+          "zipCode": "L1C4J2"
+        },
+        {
+          "id": "zpid_2055774624",
+          "zipCode": "N5A2T9"
+        },
+        {
+          "id": "zpid_2056143297",
+          "zipCode": "V9T6M3"
+        },
+        {
+          "id": "zpid_2061671125",
+          "zipCode": "L3M0E9"
+        },
+        {
+          "id": "zpid_2063956244",
+          "zipCode": "L8P1S2"
+        },
+        {
+          "id": "zpid_2064320810",
+          "zipCode": "L3K4A5"
+        },
+        {
+          "id": "zpid_2067446191",
+          "zipCode": "L8M2H7"
+        },
+        {
+          "id": "zpid_2081276739",
+          "zipCode": "S6H4B9"
+        },
+        {
+          "id": "zpid_443637899",
+          "zipCode": "P2N2G4"
+        },
+        {
+          "id": "zpid_452938128",
+          "zipCode": "N1A1K5"
+        },
+        {
+          "id": "zpid_454085050",
+          "zipCode": "N5Y4X7"
+        },
+        {
+          "id": "zpid_454343928",
+          "zipCode": "P2A2W8"
+        },
+        {
+          "id": "zpid_455592306",
+          "zipCode": "L4T4M8"
+        },
+        {
+          "id": "zpid_455839920",
+          "zipCode": "T8N4Z9"
+        },
+        {
+          "id": "zpid_457312488",
+          "zipCode": "T6X0E8"
+        },
+        {
+          "id": "zpid_457711784",
+          "zipCode": "T4K1C3"
+        },
+        {
+          "id": "zpid_458626279",
+          "zipCode": "M6N2Y5"
+        },
+        {
+          "id": "zpid_459524574",
+          "zipCode": "M1K4C2"
+        },
+        {
+          "id": "zpid_460591298",
+          "zipCode": "T2M1J7"
+        },
+        {
+          "id": "zpid_461240906",
+          "zipCode": "V3J0K3"
+        }
+      ]
+    },
+    "zipStateMismatch": {
+      "description": "zipCode first digits clearly not in state range",
+      "count": 1,
+      "first20Ids": [
+        "zpid_2077367670"
+      ],
+      "samples": [
+        {
+          "id": "zpid_2077367670",
+          "state": "TX",
+          "zipCode": "99999"
+        }
+      ]
+    },
+    "coordsOutOfBounds": {
+      "description": "lat/lng both present but (0,0) or outside US bounds",
+      "count": 16,
+      "first20Ids": [
+        "zpid_2063411605",
+        "zpid_2081276739",
+        "zpid_271792",
+        "zpid_274056",
+        "zpid_331251",
+        "zpid_344883015",
+        "zpid_43134805",
+        "zpid_449958381",
+        "zpid_455839920",
+        "zpid_457312488",
+        "zpid_457711784",
+        "zpid_458041995",
+        "zpid_459518738",
+        "zpid_459641770",
+        "zpid_460591298",
+        "zpid_461307778"
+      ],
+      "samples": [
+        {
+          "id": "zpid_2063411605",
+          "lat": 0,
+          "lng": 0,
+          "reason": "zero"
+        },
+        {
+          "id": "zpid_2081276739",
+          "lat": 50.40552,
+          "lng": -105.550865,
+          "state": "SK"
+        },
+        {
+          "id": "zpid_271792",
+          "lat": 0,
+          "lng": 0,
+          "reason": "zero"
+        },
+        {
+          "id": "zpid_274056",
+          "lat": 0,
+          "lng": 0,
+          "reason": "zero"
+        },
+        {
+          "id": "zpid_331251",
+          "lat": 0,
+          "lng": 0,
+          "reason": "zero"
+        },
+        {
+          "id": "zpid_344883015",
+          "lat": 17.699547,
+          "lng": -64.86888,
+          "state": "VI"
+        },
+        {
+          "id": "zpid_43134805",
+          "lat": 0,
+          "lng": 0,
+          "reason": "zero"
+        },
+        {
+          "id": "zpid_449958381",
+          "lat": 18.340765,
+          "lng": -64.964874,
+          "state": "VI"
+        },
+        {
+          "id": "zpid_455839920",
+          "lat": 53.64846,
+          "lng": -113.653564,
+          "state": "AB"
+        },
+        {
+          "id": "zpid_457312488",
+          "lat": 53.428062,
+          "lng": -113.43471,
+          "state": "AB"
+        },
+        {
+          "id": "zpid_457711784",
+          "lat": 52.325302,
+          "lng": -112.7228,
+          "state": "AB"
+        },
+        {
+          "id": "zpid_458041995",
+          "lat": 18.345278,
+          "lng": -64.93,
+          "state": "VI"
+        },
+        {
+          "id": "zpid_459518738",
+          "lat": 0,
+          "lng": 0,
+          "reason": "zero"
+        },
+        {
+          "id": "zpid_459641770",
+          "lat": 0,
+          "lng": 0,
+          "reason": "zero"
+        },
+        {
+          "id": "zpid_460591298",
+          "lat": 51.071693,
+          "lng": -114.07282,
+          "state": "AB"
+        },
+        {
+          "id": "zpid_461307778",
+          "lat": 44.70801,
+          "lng": -64.66476,
+          "state": "NS"
+        }
+      ]
+    },
+    "coordsOneMissing": {
+      "description": "one of lat/lng present, the other missing",
+      "count": 0,
+      "first20Ids": [],
+      "samples": []
+    },
+    "fullAddressMissingState": {
+      "description": "fullAddress does not contain state code",
+      "count": 100,
+      "first20Ids": [
+        "zpid_103791253",
+        "zpid_2065706508",
+        "zpid_2081471152",
+        "zpid_2098337157",
+        "zpid_2103578098",
+        "zpid_228987455",
+        "zpid_262230",
+        "zpid_269258",
+        "zpid_272611",
+        "zpid_275183",
+        "zpid_275661",
+        "zpid_279930",
+        "zpid_285500",
+        "zpid_285930",
+        "zpid_285931",
+        "zpid_298538",
+        "zpid_303223",
+        "zpid_310043",
+        "zpid_310480",
+        "zpid_312342"
+      ],
+      "samples": [
+        {
+          "id": "zpid_103791253",
+          "fullAddress": "1015 Clay Pond Dr",
+          "state": "TN"
+        },
+        {
+          "id": "zpid_2065706508",
+          "fullAddress": "5265 Chatfield Dr #5265",
+          "state": "TN"
+        },
+        {
+          "id": "zpid_2081471152",
+          "fullAddress": "4724 Morning Glory Ct #81",
+          "state": "TN"
+        },
+        {
+          "id": "zpid_2098337157",
+          "fullAddress": "1577 N Pkwy",
+          "state": "TN"
+        },
+        {
+          "id": "zpid_2103578098",
+          "fullAddress": "1207 Middle Ct APT 102",
+          "state": "TN"
+        },
+        {
+          "id": "zpid_228987455",
+          "fullAddress": "657 Quinn Rd",
+          "state": "MS"
+        },
+        {
+          "id": "zpid_262230",
+          "fullAddress": "908 Quince Hill Rd",
+          "state": "AR"
+        },
+        {
+          "id": "zpid_269258",
+          "fullAddress": "5616 Jacksonville Conway Rd",
+          "state": "AR"
+        },
+        {
+          "id": "zpid_272611",
+          "fullAddress": "11 Fra Mar Dr",
+          "state": "AR"
+        },
+        {
+          "id": "zpid_275183",
+          "fullAddress": "2101 Muldrow Dr",
+          "state": "AR"
+        },
+        {
+          "id": "zpid_275661",
+          "fullAddress": "4600 Atkins St",
+          "state": "AR"
+        },
+        {
+          "id": "zpid_279930",
+          "fullAddress": "8205 N Claremont Ave",
+          "state": "AR"
+        },
+        {
+          "id": "zpid_285500",
+          "fullAddress": "12 Arbor Oaks Dr",
+          "state": "AR"
+        },
+        {
+          "id": "zpid_285930",
+          "fullAddress": "10 Parkridge Dr",
+          "state": "AR"
+        },
+        {
+          "id": "zpid_285931",
+          "fullAddress": "12 Parkridge Dr",
+          "state": "AR"
+        },
+        {
+          "id": "zpid_298538",
+          "fullAddress": "1321 W 57th St",
+          "state": "AR"
+        },
+        {
+          "id": "zpid_303223",
+          "fullAddress": "1819 Moss St",
+          "state": "AR"
+        },
+        {
+          "id": "zpid_310043",
+          "fullAddress": "1400 Brown St",
+          "state": "AR"
+        },
+        {
+          "id": "zpid_310480",
+          "fullAddress": "5300 A St",
+          "state": "AR"
+        },
+        {
+          "id": "zpid_312342",
+          "fullAddress": "2116 Boulevard Ave",
+          "state": "AR"
+        }
+      ]
+    },
+    "streetAddressMismatch": {
+      "description": "streetAddress and address both present but differ",
+      "count": 0,
+      "first20Ids": [],
+      "samples": []
+    },
+    "cityCasing": {
+      "description": "city is all lowercase or ALL CAPS",
+      "count": 8,
+      "first20Ids": [
+        "zpid_120772892",
+        "zpid_124035419",
+        "zpid_2085782200",
+        "zpid_42156932",
+        "zpid_43107385",
+        "zpid_66878142",
+        "zpid_69922612",
+        "zpid_75272566"
+      ],
+      "samples": [
+        {
+          "id": "zpid_120772892",
+          "city": "VIDOR"
+        },
+        {
+          "id": "zpid_124035419",
+          "city": "JASPER"
+        },
+        {
+          "id": "zpid_2085782200",
+          "city": "WESLEY CHAPEL"
+        },
+        {
+          "id": "zpid_42156932",
+          "city": "MEMPHIS"
+        },
+        {
+          "id": "zpid_43107385",
+          "city": "LAUDERDALE BY THE SEA"
+        },
+        {
+          "id": "zpid_66878142",
+          "city": "RENO"
+        },
+        {
+          "id": "zpid_69922612",
+          "city": "TEMPLE"
+        },
+        {
+          "id": "zpid_75272566",
+          "city": "LOG CABIN"
+        }
+      ]
+    },
+    "addressHasComma": {
+      "description": "address contains a comma (likely full string jammed in)",
+      "count": 0,
+      "first20Ids": [],
+      "samples": []
+    },
+    "duplicateCoords": {
+      "description": "same lat/lng (4dp) appears in >5 docs",
+      "count": 83,
+      "first20Ids": [
+        "zpid_109235026",
+        "zpid_109237642",
+        "zpid_109312801",
+        "zpid_109374451",
+        "zpid_109414715",
+        "zpid_109458594",
+        "zpid_109505925",
+        "zpid_2060494029",
+        "zpid_2060494030",
+        "zpid_2065500355",
+        "zpid_2098203082",
+        "zpid_2098987141",
+        "zpid_2098987142",
+        "zpid_2098987146",
+        "zpid_2098987149",
+        "zpid_2098996482",
+        "zpid_2098997284",
+        "zpid_2098997362",
+        "zpid_2098998311",
+        "zpid_2101500490"
+      ],
+      "samples": [
+        {
+          "id": "zpid_109235026",
+          "coord": "34.6409,-86.4920",
+          "groupSize": 7
+        },
+        {
+          "id": "zpid_109237642",
+          "coord": "34.6409,-86.4920",
+          "groupSize": 7
+        },
+        {
+          "id": "zpid_109312801",
+          "coord": "34.6409,-86.4920",
+          "groupSize": 7
+        },
+        {
+          "id": "zpid_109374451",
+          "coord": "34.6409,-86.4920",
+          "groupSize": 7
+        },
+        {
+          "id": "zpid_109414715",
+          "coord": "34.6409,-86.4920",
+          "groupSize": 7
+        },
+        {
+          "id": "zpid_109458594",
+          "coord": "34.6409,-86.4920",
+          "groupSize": 7
+        },
+        {
+          "id": "zpid_109505925",
+          "coord": "34.6409,-86.4920",
+          "groupSize": 7
+        },
+        {
+          "id": "zpid_2060494029",
+          "coord": "26.2248,-98.1945",
+          "groupSize": 16
+        },
+        {
+          "id": "zpid_2060494030",
+          "coord": "26.2248,-98.1945",
+          "groupSize": 16
+        },
+        {
+          "id": "zpid_2065500355",
+          "coord": "26.2248,-98.1945",
+          "groupSize": 16
+        },
+        {
+          "id": "zpid_2098203082",
+          "coord": "26.2248,-98.1945",
+          "groupSize": 16
+        },
+        {
+          "id": "zpid_2098987141",
+          "coord": "26.2248,-98.1945",
+          "groupSize": 16
+        },
+        {
+          "id": "zpid_2098987142",
+          "coord": "26.2248,-98.1945",
+          "groupSize": 16
+        },
+        {
+          "id": "zpid_2098987146",
+          "coord": "26.2248,-98.1945",
+          "groupSize": 16
+        },
+        {
+          "id": "zpid_2098987149",
+          "coord": "26.2248,-98.1945",
+          "groupSize": 16
+        },
+        {
+          "id": "zpid_2098996482",
+          "coord": "26.2248,-98.1945",
+          "groupSize": 16
+        },
+        {
+          "id": "zpid_2098997284",
+          "coord": "26.2248,-98.1945",
+          "groupSize": 16
+        },
+        {
+          "id": "zpid_2098997362",
+          "coord": "26.2248,-98.1945",
+          "groupSize": 16
+        },
+        {
+          "id": "zpid_2098998311",
+          "coord": "26.2248,-98.1945",
+          "groupSize": 16
+        },
+        {
+          "id": "zpid_2101500490",
+          "coord": "26.2248,-98.1945",
+          "groupSize": 16
+        }
+      ]
+    }
+  },
+  "duplicateCoordGroups": [
+    {
+      "coord": "26.2248,-98.1945",
+      "count": 16,
+      "ids": [
+        "zpid_2060494029",
+        "zpid_2060494030",
+        "zpid_2065500355",
+        "zpid_2098203082",
+        "zpid_2098987141",
+        "zpid_2098987142",
+        "zpid_2098987146",
+        "zpid_2098987149",
+        "zpid_2098996482",
+        "zpid_2098997284",
+        "zpid_2098997362",
+        "zpid_2098998311",
+        "zpid_2101500490",
+        "zpid_2101500492",
+        "zpid_2101500493",
+        "zpid_2101500494"
+      ]
+    },
+    {
+      "coord": "28.6137,-100.4427",
+      "count": 15,
+      "ids": [
+        "zpid_450293865",
+        "zpid_458051956",
+        "zpid_458051957",
+        "zpid_458051958",
+        "zpid_458051959",
+        "zpid_458051961",
+        "zpid_458051993",
+        "zpid_458051997",
+        "zpid_458051998",
+        "zpid_458051999",
+        "zpid_458052000",
+        "zpid_458052002",
+        "zpid_458052004",
+        "zpid_458052012",
+        "zpid_459904244"
+      ]
+    },
+    {
+      "coord": "26.1664,-98.1175",
+      "count": 9,
+      "ids": [
+        "zpid_461610238",
+        "zpid_461610239",
+        "zpid_461610307",
+        "zpid_461610481",
+        "zpid_461610549",
+        "zpid_461610577",
+        "zpid_461610584",
+        "zpid_461610591",
+        "zpid_461610602"
+      ]
+    },
+    {
+      "coord": "26.1631,-98.1195",
+      "count": 9,
+      "ids": [
+        "zpid_461610737",
+        "zpid_461610738",
+        "zpid_461610739",
+        "zpid_461610740",
+        "zpid_461610748",
+        "zpid_461610757",
+        "zpid_461610758",
+        "zpid_461610769",
+        "zpid_461617229"
+      ]
+    },
+    {
+      "coord": "35.4700,-88.5204",
+      "count": 8,
+      "ids": [
+        "zpid_461139591",
+        "zpid_461140501",
+        "zpid_461140853",
+        "zpid_461141429",
+        "zpid_461141696",
+        "zpid_461141910",
+        "zpid_461142120",
+        "zpid_461143071"
+      ]
+    },
+    {
+      "coord": "34.6409,-86.4920",
+      "count": 7,
+      "ids": [
+        "zpid_109235026",
+        "zpid_109237642",
+        "zpid_109312801",
+        "zpid_109374451",
+        "zpid_109414715",
+        "zpid_109458594",
+        "zpid_109505925"
+      ]
+    },
+    {
+      "coord": "46.8776,-96.7873",
+      "count": 7,
+      "ids": [
+        "zpid_2072160506",
+        "zpid_2078187382",
+        "zpid_2079525849",
+        "zpid_2081802974",
+        "zpid_2081802978",
+        "zpid_2081802980",
+        "zpid_2081802981"
+      ]
+    },
+    {
+      "coord": "34.6234,-86.5022",
+      "count": 6,
+      "ids": [
+        "zpid_2065657011",
+        "zpid_2065663022",
+        "zpid_2065663023",
+        "zpid_2065663024",
+        "zpid_352337481",
+        "zpid_455556140"
+      ]
+    },
+    {
+      "coord": "33.5600,-95.3511",
+      "count": 6,
+      "ids": [
+        "zpid_461463285",
+        "zpid_461464128",
+        "zpid_461464435",
+        "zpid_461464861",
+        "zpid_461521706",
+        "zpid_461522519"
+      ]
+    }
+  ]
+}

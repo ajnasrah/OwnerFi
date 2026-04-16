@@ -1,0 +1,96 @@
+{
+  "totalDocs": 10580,
+  "activeDocs": 5346,
+  "categories": {
+    "c1_noPrimaryImage": {
+      "count": 1213,
+      "ids": [
+        "zpid_101317013",
+        "zpid_101344699",
+        "zpid_101699765",
+        "zpid_102457484",
+        "zpid_10262091",
+        "zpid_10300456",
+        "zpid_103044669",
+        "zpid_103122018",
+        "zpid_103145980",
+        "zpid_103170082",
+        "zpid_103172919",
+        "zpid_103227897",
+        "zpid_103286166",
+        "zpid_103403156",
+        "zpid_103411497",
+        "zpid_103800897",
+        "zpid_10406337",
+        "zpid_104088721",
+        "zpid_104259529",
+        "zpid_104655421"
+      ]
+    },
+    "c2_imagesNotArray": {
+      "count": 0,
+      "samples": []
+    },
+    "c3_imageCountMismatch": {
+      "count": 0,
+      "samples": []
+    },
+    "c4_crossDocDupeImages": {
+      "count": 0,
+      "samples": []
+    },
+    "c5_malformedUrls": {
+      "count": 0,
+      "samples": []
+    },
+    "c6_placeholderUrls": {
+      "count": 0,
+      "samples": []
+    },
+    "c7_suspiciousHost": {
+      "count": 0,
+      "samples": []
+    },
+    "c8_cdnInconsistency": {
+      "staticZillowCount": 0,
+      "photosZillowCount": 3979,
+      "staticZillowIds": [],
+      "photosZillowIds": [
+        "zpid_102146876",
+        "zpid_102166400",
+        "zpid_102351903",
+        "zpid_102440373",
+        "zpid_1024575",
+        "zpid_102511019",
+        "zpid_102511484",
+        "zpid_102574956",
+        "zpid_102617232",
+        "zpid_102669529",
+        "zpid_1027124",
+        "zpid_1027215",
+        "zpid_1027292",
+        "zpid_1027415",
+        "zpid_1027523",
+        "zpid_1028406",
+        "zpid_1028450",
+        "zpid_1028462",
+        "zpid_102983133",
+        "zpid_103182431"
+      ]
+    },
+    "c9_hostFrequency": [
+      [
+        "photos.zillowstatic.com",
+        3979
+      ],
+      [
+        "maps.googleapis.com",
+        154
+      ]
+    ],
+    "c10_r2ButZillowPrimary": {
+      "count": 0,
+      "ids": []
+    }
+  }
+}

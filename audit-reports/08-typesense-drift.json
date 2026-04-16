@@ -1,0 +1,356 @@
+{
+  "generatedAt": "2026-04-16T19:10:52.478Z",
+  "headline": {
+    "totalFirestoreDocs": 10580,
+    "totalTypesenseDocs": 3162,
+    "expectedInTypesense": 3408,
+    "actualOverlap": 3069,
+    "missingFromTypesense": 339,
+    "orphanedInTypesense": 0,
+    "inactiveButIndexed": 2
+  },
+  "missingFromTypesense": {
+    "count": 339,
+    "first30": [
+      "zpid_1024575",
+      "zpid_103378254",
+      "zpid_103800897",
+      "zpid_103911745",
+      "zpid_105420201",
+      "zpid_108431854",
+      "zpid_108820035",
+      "zpid_108870469",
+      "zpid_109546798",
+      "zpid_109559003",
+      "zpid_112911832",
+      "zpid_113023354",
+      "zpid_113488398",
+      "zpid_113973125",
+      "zpid_114518796",
+      "zpid_117600947",
+      "zpid_118892124",
+      "zpid_122765651",
+      "zpid_122917271",
+      "zpid_13454947",
+      "zpid_141562877",
+      "zpid_14982771",
+      "zpid_15004012",
+      "zpid_16301248",
+      "zpid_172165993",
+      "zpid_18051083",
+      "zpid_18060452",
+      "zpid_18578297",
+      "zpid_19067713",
+      "zpid_19098555"
+    ],
+    "bySource": {
+      "scraper-v2": 306,
+      "apify-rebuild": 19,
+      "agent_outreach": 14
+    }
+  },
+  "orphanedInTypesense": {
+    "count": 0,
+    "first30": []
+  },
+  "inactiveButIndexed": {
+    "count": 2,
+    "first30": [
+      "zpid_385117753",
+      "zpid_40311478"
+    ]
+  },
+  "fieldDrift": {
+    "counters": {
+      "price": 0,
+      "dealTypes": 260,
+      "isOwnerFinance": 208,
+      "isCashDeal": 137,
+      "city": 0,
+      "state": 0,
+      "zipCode": 0,
+      "homeType": 0
+    },
+    "examples": {
+      "price": [],
+      "dealTypes": [
+        {
+          "id": "zpid_102511019",
+          "firestore": [
+            "cash_deal",
+            "owner_finance"
+          ],
+          "typesense": [
+            "cash_deal"
+          ]
+        },
+        {
+          "id": "zpid_102511484",
+          "firestore": [
+            "cash_deal",
+            "owner_finance"
+          ],
+          "typesense": [
+            "cash_deal"
+          ]
+        },
+        {
+          "id": "zpid_103929384",
+          "firestore": [
+            "owner_finance"
+          ],
+          "typesense": [
+            "both"
+          ]
+        },
+        {
+          "id": "zpid_105311603",
+          "firestore": [
+            "cash_deal",
+            "owner_finance"
+          ],
+          "typesense": [
+            "both"
+          ]
+        },
+        {
+          "id": "zpid_105447340",
+          "firestore": [
+            "cash_deal",
+            "owner_finance"
+          ],
+          "typesense": [
+            "cash_deal"
+          ]
+        },
+        {
+          "id": "zpid_105448213",
+          "firestore": [
+            "owner_finance"
+          ],
+          "typesense": [
+            "both"
+          ]
+        },
+        {
+          "id": "zpid_106076904",
+          "firestore": [
+            "owner_finance"
+          ],
+          "typesense": [
+            "both"
+          ]
+        },
+        {
+          "id": "zpid_106189671",
+          "firestore": [
+            "owner_finance"
+          ],
+          "typesense": [
+            "both"
+          ]
+        },
+        {
+          "id": "zpid_106855421",
+          "firestore": [
+            "owner_finance"
+          ],
+          "typesense": [
+            "both"
+          ]
+        },
+        {
+          "id": "zpid_107061780",
+          "firestore": [
+            "cash_deal",
+            "owner_finance"
+          ],
+          "typesense": [
+            "cash_deal"
+          ]
+        }
+      ],
+      "isOwnerFinance": [
+        {
+          "id": "zpid_102511019",
+          "firestore": true,
+          "typesense": false
+        },
+        {
+          "id": "zpid_102511484",
+          "firestore": true,
+          "typesense": false
+        },
+        {
+          "id": "zpid_103929384",
+          "firestore": true,
+          "typesense": false
+        },
+        {
+          "id": "zpid_105311603",
+          "firestore": true,
+          "typesense": false
+        },
+        {
+          "id": "zpid_105447340",
+          "firestore": true,
+          "typesense": false
+        },
+        {
+          "id": "zpid_105448213",
+          "firestore": true,
+          "typesense": false
+        },
+        {
+          "id": "zpid_106076904",
+          "firestore": true,
+          "typesense": false
+        },
+        {
+          "id": "zpid_106189671",
+          "firestore": true,
+          "typesense": false
+        },
+        {
+          "id": "zpid_106855421",
+          "firestore": true,
+          "typesense": false
+        },
+        {
+          "id": "zpid_107061780",
+          "firestore": true,
+          "typesense": false
+        }
+      ],
+      "isCashDeal": [
+        {
+          "id": "zpid_103929384",
+          "firestore": true,
+          "typesense": false
+        },
+        {
+          "id": "zpid_105311603",
+          "firestore": true,
+          "typesense": false
+        },
+        {
+          "id": "zpid_105448213",
+          "firestore": true,
+          "typesense": false
+        },
+        {
+          "id": "zpid_106076904",
+          "firestore": true,
+          "typesense": false
+        },
+        {
+          "id": "zpid_106189671",
+          "firestore": true,
+          "typesense": false
+        },
+        {
+          "id": "zpid_106855421",
+          "firestore": true,
+          "typesense": false
+        },
+        {
+          "id": "zpid_107868407",
+          "firestore": true,
+          "typesense": false
+        },
+        {
+          "id": "zpid_116060306",
+          "firestore": true,
+          "typesense": false
+        },
+        {
+          "id": "zpid_126676930",
+          "firestore": true,
+          "typesense": false
+        },
+        {
+          "id": "zpid_1290641",
+          "firestore": true,
+          "typesense": false
+        }
+      ],
+      "city": [],
+      "state": [],
+      "zipCode": [],
+      "homeType": []
+    }
+  },
+  "ownerFinanceDrift": {
+    "firestoreActiveOwnerFinanceCount": 3188,
+    "missingFromTypesense": {
+      "count": 339,
+      "first30": [
+        "zpid_1024575",
+        "zpid_103378254",
+        "zpid_103800897",
+        "zpid_103911745",
+        "zpid_105420201",
+        "zpid_108431854",
+        "zpid_108820035",
+        "zpid_108870469",
+        "zpid_109546798",
+        "zpid_109559003",
+        "zpid_112911832",
+        "zpid_113023354",
+        "zpid_113488398",
+        "zpid_113973125",
+        "zpid_114518796",
+        "zpid_117600947",
+        "zpid_118892124",
+        "zpid_122765651",
+        "zpid_122917271",
+        "zpid_13454947",
+        "zpid_141562877",
+        "zpid_14982771",
+        "zpid_15004012",
+        "zpid_16301248",
+        "zpid_172165993",
+        "zpid_18051083",
+        "zpid_18060452",
+        "zpid_18578297",
+        "zpid_19067713",
+        "zpid_19098555"
+      ]
+    },
+    "inTypesenseButMissingOwnerFinanceFlag": {
+      "count": 168,
+      "first30": [
+        "zpid_102511019",
+        "zpid_102511484",
+        "zpid_103929384",
+        "zpid_105311603",
+        "zpid_105447340",
+        "zpid_105448213",
+        "zpid_106076904",
+        "zpid_106189671",
+        "zpid_106855421",
+        "zpid_107061780",
+        "zpid_113082767",
+        "zpid_116060306",
+        "zpid_12363597",
+        "zpid_125885550",
+        "zpid_126676930",
+        "zpid_12728303",
+        "zpid_1290641",
+        "zpid_138056898",
+        "zpid_14895889",
+        "zpid_168826595",
+        "zpid_17276105",
+        "zpid_193027849",
+        "zpid_194155814",
+        "zpid_19463111",
+        "zpid_2062002013",
+        "zpid_2062656698",
+        "zpid_2062798627",
+        "zpid_22093329",
+        "zpid_22317816",
+        "zpid_230606262"
+      ]
+    }
+  }
+}

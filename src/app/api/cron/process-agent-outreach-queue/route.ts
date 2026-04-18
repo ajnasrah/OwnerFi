@@ -15,7 +15,7 @@ export const maxDuration = 300;
  * Schedule: Every 2 hours
  */
 
-const BATCH_SIZE = 50;
+const BATCH_SIZE = 100;
 const MAX_RETRIES = 3;
 const MAX_RUNTIME_MS = 270_000; // 4.5 minutes — leave buffer for 5min Vercel limit
 

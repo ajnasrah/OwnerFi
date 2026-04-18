@@ -46,7 +46,7 @@
       "maxDuration": 300
     },
     "src/app/api/cron/run-agent-outreach-scraper/route.ts": {
-      "maxDuration": 300
+      "maxDuration": 600
     },
     "src/app/api/cron/process-agent-outreach-queue/route.ts": {
       "maxDuration": 300

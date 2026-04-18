@@ -5,26 +5,35 @@ import { withCronLock } from '@/lib/scraper-v2/cron-lock';
 import { hasStrictOwnerfinancing } from '@/lib/owner-financing-filter-strict';
 import { hasNegativeKeywords } from '@/lib/negative-keywords';
 import { normalizePhone, isValidPhone } from '@/lib/phone-utils';
+import { TARGETED_CASH_ZIPS, buildAgentOutreachZipUrl } from '@/lib/scraper-v2/search-config';
 
-export const maxDuration = 300;
+export const maxDuration = 600;
 
 /**
  * AGENT OUTREACH SCRAPER
  *
  * Finds properties WITHOUT owner financing keywords to ask agents about.
  *
- * Uses the specific Memphis/TN area search URL provided.
- * Filters: $50k-$500k, last 1 day, no multi-family/land/foreclosures/auctions
+ * Fans out across the 59 TARGETED_CASH_ZIPS (Memphis/Birmingham/Huntsville/
+ * Indianapolis/Louisville/Dayton/Montgomery/Akron) — one Zillow URL per
+ * zip, all issued to Apify in a single run. doz=1 → only listings posted
+ * in the last 24h. Filters: $50k–$500k, multi-family INCLUDED, no land/
+ * NC/auction/foreclosure/apartment/manufactured/55+.
  */
 
 const SEARCH_CONFIG = {
-  searchUrl: 'https://www.zillow.com/homes/for_sale/?category=SEMANTIC&searchQueryState=%7B%22pagination%22%3A%7B%7D%2C%22isMapVisible%22%3Atrue%2C%22mapBounds%22%3A%7B%22west%22%3A-94.61048517767817%2C%22east%22%3A-86.51356134955317%2C%22south%22%3A30.185278877142437%2C%22north%22%3A40.05475766218434%7D%2C%22mapZoom%22%3A7%2C%22usersSearchTerm%22%3A%22%22%2C%22customRegionId%22%3A%225f8096924aX1-CR1i1r231i2qe0e_1276cg%22%2C%22filterState%22%3A%7B%22sort%22%3A%7B%22value%22%3A%22globalrelevanceex%22%7D%2C%22nc%22%3A%7B%22value%22%3Afalse%7D%2C%22auc%22%3A%7B%22value%22%3Afalse%7D%2C%22fore%22%3A%7B%22value%22%3Afalse%7D%2C%22price%22%3A%7B%22min%22%3A50000%2C%22max%22%3A500000%7D%2C%22mf%22%3A%7B%22value%22%3Afalse%7D%2C%22land%22%3A%7B%22value%22%3Afalse%7D%2C%22apa%22%3A%7B%22value%22%3Afalse%7D%2C%22manu%22%3A%7B%22value%22%3Afalse%7D%2C%2255plus%22%3A%7B%22value%22%3A%22e%22%7D%2C%22doz%22%3A%7B%22value%22%3A%221%22%7D%7D%2C%22isListVisible%22%3Atrue%7D',
+  // Apify `maxResults` applies per searchUrl for maxcopell/zillow-scraper —
+  // keep per-zip low since doz=1 + narrow zip rarely exceeds a handful.
+  maxResultsPerZip: 50,
   mode: 'pagination' as const,
-  maxResults: 1000,
-  detailBatchSize: 100,
+  detailBatchSize: 200,
 };
 
-const MAX_RUNTIME_MS = 270_000; // 4.5 minutes — leave buffer for 5min Vercel limit
+const SEARCH_URLS = TARGETED_CASH_ZIPS.map(zip =>
+  buildAgentOutreachZipUrl(zip, { dozDays: 1 })
+);
+
+const MAX_RUNTIME_MS = 570_000; // 9.5 minutes — buffer for 10min Vercel limit
 
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
@@ -54,11 +63,11 @@ export async function GET(request: NextRequest) {
 
     const client = new ApifyClient({ token: apiKey });
 
-    // STEP 1: Run SEARCH scraper to find URLs quickly
-    console.log(`🔍 Step 1: Search scraper (mode: ${SEARCH_CONFIG.mode}, max ${SEARCH_CONFIG.maxResults})...`);
+    // STEP 1: Run SEARCH scraper across all 59 targeted zips
+    console.log(`🔍 Step 1: Search scraper across ${SEARCH_URLS.length} zips (mode: ${SEARCH_CONFIG.mode}, max ${SEARCH_CONFIG.maxResultsPerZip}/zip)...`);
     const searchRun = await client.actor('maxcopell/zillow-scraper').call({
-      searchUrls: [{ url: SEARCH_CONFIG.searchUrl }],
-      maxResults: SEARCH_CONFIG.maxResults,
+      searchUrls: SEARCH_URLS.map(url => ({ url })),
+      maxResults: SEARCH_CONFIG.maxResultsPerZip * SEARCH_URLS.length,
       mode: SEARCH_CONFIG.mode,
     });
     const { items: searchItems } = await client.dataset(searchRun.defaultDatasetId).listItems();
@@ -69,16 +78,22 @@ export async function GET(request: NextRequest) {
       throw new Error('Timeout after search scraper — aborting before detail scrape');
     }
 
-    // Get URLs and ZPIDs from search results
+    // Get URLs and ZPIDs from search results. Zillow mapBounds bleed into
+    // neighbor zips — drop anything whose addressZipcode isn't one of ours
+    // BEFORE paying for the detail scrape (search has zipcode + homeType).
+    const targetZipSet = new Set(TARGETED_CASH_ZIPS);
     const propertyData: { url: string; zpid: string }[] = [];
+    let bboxBleedDropped = 0;
 
     for (const item of searchItems as any[]) {
       const url = item.detailUrl;
       const zpid = String(item.zpid || '');
-      if (url && zpid && url.includes('zillow.com')) {
-        propertyData.push({ url, zpid });
-      }
+      const zipcode = String(item.addressZipcode || item.zipcode || item.hdpData?.homeInfo?.zipcode || '');
+      if (!url || !zpid || !url.includes('zillow.com')) continue;
+      if (!targetZipSet.has(zipcode)) { bboxBleedDropped++; continue; }
+      propertyData.push({ url, zpid });
     }
+    console.log(`   After zip prefilter: ${propertyData.length} kept, ${bboxBleedDropped} dropped (bbox bleed)`);
 
     // Check existing ZPIDs using document ID lookups (efficient, no full collection scan)
     console.log(`📊 Checking for existing ZPIDs...`);
@@ -157,6 +172,7 @@ export async function GET(request: NextRequest) {
       noAgent: 0,
       hasOwnerfinance: 0,
       negativeKeywords: 0,
+      outsideTargetZips: 0,
     };
 
     let batch = db.batch();
@@ -220,6 +236,12 @@ export async function GET(request: NextRequest) {
       const zipCode = property.zipcode || property.address?.zipcode || '';
       const price = property.price || 0;
       const zestimate = property.zestimate || 0;
+
+      // Zillow bboxes can bleed into neighbor zips — enforce strict zip membership
+      if (!zipCode || !TARGETED_CASH_ZIPS.includes(zipCode)) {
+        stats.outsideTargetZips++;
+        continue;
+      }
 
       // Classify deal type
       let dealType: 'cash_deal' | 'potential_owner_finance' = 'potential_owner_finance';
@@ -305,6 +327,7 @@ export async function GET(request: NextRequest) {
     console.log(`   - No agent: ${stats.noAgent}`);
     console.log(`   - Has OF keywords: ${stats.hasOwnerfinance}`);
     console.log(`   - Negative keywords: ${stats.negativeKeywords}`);
+    console.log(`   - Outside target zips: ${stats.outsideTargetZips}`);
 
     await db.collection('cron_logs').add({
       cron: 'run-agent-outreach-scraper',
@@ -314,7 +337,7 @@ export async function GET(request: NextRequest) {
       propertiesDetailed: stats.total,
       addedToQueue: stats.added,
       stats: { cashDeals: stats.cashDeals, potentialOwnerfinance: stats.potentialOwnerfinance },
-      skipped: { noAgent: stats.noAgent, hasOwnerfinance: stats.hasOwnerfinance, negativeKeywords: stats.negativeKeywords },
+      skipped: { noAgent: stats.noAgent, hasOwnerfinance: stats.hasOwnerfinance, negativeKeywords: stats.negativeKeywords, outsideTargetZips: stats.outsideTargetZips },
       timestamp: new Date(),
     });
 
@@ -324,7 +347,7 @@ export async function GET(request: NextRequest) {
       propertiesFound: stats.total,
       addedToQueue: stats.added,
       stats: { cashDeals: stats.cashDeals, potentialOwnerfinance: stats.potentialOwnerfinance },
-      skipped: { noAgent: stats.noAgent, hasOwnerfinance: stats.hasOwnerfinance, negativeKeywords: stats.negativeKeywords },
+      skipped: { noAgent: stats.noAgent, hasOwnerfinance: stats.hasOwnerfinance, negativeKeywords: stats.negativeKeywords, outsideTargetZips: stats.outsideTargetZips },
       message: `Added ${stats.added} properties to agent outreach queue`,
     };
   });

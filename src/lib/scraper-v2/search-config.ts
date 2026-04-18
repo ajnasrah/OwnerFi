@@ -204,6 +204,62 @@ export function buildZipSearchUrl(
 const TARGETED_ZIP_URLS = TARGETED_CASH_ZIPS.map(zip => buildZipSearchUrl(zip));
 
 /**
+ * Build a Zillow search URL for the agent-outreach pipeline in a single
+ * targeted zip. Mirrors the filters the agent-outreach cron has always
+ * used ($50k–$500k, no land/NC/auction/foreclosure/apartment/manufactured/
+ * 55+), and INCLUDES multi-family (Zillow `mf` key omitted, so Zillow's
+ * default — which includes MF — applies).
+ *
+ * `dozDays` — when set, Zillow's days-on-market filter restricts to
+ * listings posted in that window. Omit for "any time".
+ */
+export function buildAgentOutreachZipUrl(
+  zip: string,
+  opts: { dozDays?: 1 | 7 | 14 | 30 | 90 } = {}
+): string {
+  const centroid = ZIP_CENTROIDS[zip];
+  if (!centroid) throw new Error(`No centroid defined for zip ${zip}`);
+
+  // Tight pad (~3.5mi) to minimize bbox bleed into neighbor zips. Zillow
+  // still returns some bleed (its map search is fuzzy), so callers MUST
+  // post-filter search results by addressZipcode ∈ TARGETED_CASH_ZIPS.
+  const pad = 0.05;
+  const mapBounds = {
+    north: centroid.lat + pad,
+    south: centroid.lat - pad,
+    east: centroid.lng + pad,
+    west: centroid.lng - pad,
+  };
+
+  const filterState: Record<string, unknown> = {
+    sort: { value: 'globalrelevanceex' },
+    nc: { value: false },
+    auc: { value: false },
+    fore: { value: false },
+    price: { min: 50000, max: 500000 },
+    land: { value: false },
+    apa: { value: false },
+    manu: { value: false },
+    '55plus': { value: 'e' },
+  };
+  if (opts.dozDays !== undefined) {
+    filterState.doz = { value: String(opts.dozDays) };
+  }
+
+  const searchQueryState = {
+    pagination: {},
+    isMapVisible: true,
+    mapBounds,
+    mapZoom: 12,
+    usersSearchTerm: zip,
+    filterState,
+    isListVisible: true,
+  };
+  const encoded = encodeURIComponent(JSON.stringify(searchQueryState));
+  return `https://www.zillow.com/homes/for_sale/${zip}_rb/?searchQueryState=${encoded}`;
+}
+
+/**
  * GHL Webhook for Cash Deals Regional properties
  */
 export const GHL_WEBHOOK_URL = 'https://services.leadconnectorhq.com/hooks/U2B5lSlWrVBgVxHNq5AH/webhook-trigger/f13ea8d2-a22c-4365-9156-759d18147d4a';

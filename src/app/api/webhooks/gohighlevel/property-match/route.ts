@@ -27,12 +27,10 @@ const WEBHOOK_SECRET = process.env.PROPERTY_MATCH_WEBHOOK_SECRET;
  * Verify webhook signature using HMAC-SHA256
  */
 function verifyWebhookSignature(payload: string, signature: string | null): boolean {
+  // Fail closed — no NODE_ENV escape hatch. If the secret isn't set in the
+  // environment the webhook must not trust unsigned traffic even in dev.
   if (!WEBHOOK_SECRET) {
-    // In development, allow requests without signature if secret not configured
-    if (process.env.NODE_ENV === 'development') {
-      console.warn('[SECURITY] PROPERTY_MATCH_WEBHOOK_SECRET not set - skipping signature validation in dev');
-      return true;
-    }
+    console.error('[SECURITY] PROPERTY_MATCH_WEBHOOK_SECRET not set — rejecting webhook');
     return false;
   }
 

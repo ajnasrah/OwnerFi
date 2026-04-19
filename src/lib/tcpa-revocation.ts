@@ -68,6 +68,43 @@ async function findBuyerProfilesByPhone(
  * (the caller is responsible for that step, since it requires per-case
  * judgement about active transactions).
  */
+/**
+ * Check whether a phone number has any TCPA revocation on file.
+ * Used by outbound pipelines (agent-outreach queue, GHL webhook triggers) to
+ * fail closed before making the SMS-trigger request. The `tcpa_revocations`
+ * collection is the authoritative audit record — if any revocation exists
+ * for any of the phone's normalized formats, the phone is considered blocked.
+ *
+ * Returns null if clean, or the most recent revocation metadata if blocked.
+ */
+export async function isPhoneTcpaRevoked(phone: string): Promise<null | {
+  caseId: string;
+  revokedAt: Date;
+  channel: RevocationChannel;
+}> {
+  if (!phone) return null;
+  const { db } = getFirebaseAdmin();
+  if (!db) return null;
+
+  const formats = getAllPhoneFormats(phone);
+  if (formats.length === 0) return null;
+
+  // Firestore 'in' queries cap at 10 — our format list is always well under.
+  const snap = await db
+    .collection('tcpa_revocations')
+    .where('phone', 'in', formats.slice(0, 10))
+    .limit(1)
+    .get();
+
+  if (snap.empty) return null;
+  const d = snap.docs[0].data() as any;
+  return {
+    caseId: d.caseId || snap.docs[0].id,
+    revokedAt: d.revokedAt?.toDate?.() || d.revokedAt || new Date(0),
+    channel: (d.channel as RevocationChannel) || 'unknown',
+  };
+}
+
 export async function revokeBuyerTCPAConsent(
   phone: string,
   channel: RevocationChannel,

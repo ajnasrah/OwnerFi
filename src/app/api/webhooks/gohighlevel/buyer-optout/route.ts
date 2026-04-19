@@ -32,40 +32,42 @@ import crypto from 'crypto';
 const WEBHOOK_SECRET = process.env.GHL_BUYER_OPTOUT_WEBHOOK_SECRET || process.env.GHL_WEBHOOK_SECRET;
 
 /**
- * Verify webhook signature using HMAC-SHA256
- * Note: GHL doesn't send signatures by default, so we allow requests without signatures
+ * Authorize an incoming GHL buyer-optout webhook. Accepts either:
+ *   - a shared secret in X-Webhook-Secret / X-GHL-Secret / Authorization: Bearer
+ *     (GHL custom webhook actions CAN set custom headers, so this is the
+ *     path GHL actually uses in prod)
+ *   - an HMAC signature in X-Webhook-Signature (for internal callers or
+ *     future GHL versions that support HMAC)
+ *
+ * Fails closed: if no secret is configured on the server or no valid proof
+ * is on the request, we reject. Mass opt-out via unauthenticated POST is
+ * the prior bug — this closes it.
  */
-function verifyWebhookSignature(payload: string, signature: string | null): boolean {
-  // If no secret configured, allow all requests (GHL doesn't sign webhooks by default)
+function authorizeWebhook(
+  payload: string,
+  signature: string | null,
+  providedSecret: string | null
+): boolean {
   if (!WEBHOOK_SECRET) {
-    console.log('ℹ️ [GHL Buyer Opt-Out] No webhook secret configured - skipping signature validation');
-    return true;
-  }
-
-  // If secret is configured but no signature sent, still allow (GHL compatibility)
-  if (!signature) {
-    console.log('ℹ️ [GHL Buyer Opt-Out] No signature header - allowing request (GHL compatibility)');
-    return true;
-  }
-
-  // If both secret and signature present, validate
-  const signatureValue = signature.startsWith('sha256=')
-    ? signature.slice(7)
-    : signature;
-
-  const expectedSignature = crypto
-    .createHmac('sha256', WEBHOOK_SECRET)
-    .update(payload)
-    .digest('hex');
-
-  try {
-    return crypto.timingSafeEqual(
-      Buffer.from(signatureValue, 'hex'),
-      Buffer.from(expectedSignature, 'hex')
-    );
-  } catch {
+    console.error('[GHL Buyer Opt-Out] GHL_BUYER_OPTOUT_WEBHOOK_SECRET / GHL_WEBHOOK_SECRET not configured — rejecting');
     return false;
   }
+
+  if (providedSecret && providedSecret === WEBHOOK_SECRET) {
+    return true;
+  }
+
+  if (signature) {
+    const signatureValue = signature.startsWith('sha256=') ? signature.slice(7) : signature;
+    const expected = crypto.createHmac('sha256', WEBHOOK_SECRET).update(payload).digest('hex');
+    try {
+      return crypto.timingSafeEqual(Buffer.from(signatureValue, 'hex'), Buffer.from(expected, 'hex'));
+    } catch {
+      return false;
+    }
+  }
+
+  return false;
 }
 
 
@@ -89,12 +91,15 @@ export async function POST(request: NextRequest) {
     const signature = request.headers.get('x-webhook-signature') ||
                       request.headers.get('x-hub-signature-256') ||
                       request.headers.get('x-signature');
+    const providedSecret = request.headers.get('x-webhook-secret') ||
+                           request.headers.get('x-ghl-secret') ||
+                           request.headers.get('authorization')?.replace(/^Bearer\s+/i, '') ||
+                           null;
 
-    // Verify webhook signature
-    if (!verifyWebhookSignature(rawBody, signature)) {
-      console.error('🚫 [SECURITY] Invalid webhook signature for buyer opt-out');
+    if (!authorizeWebhook(rawBody, signature, providedSecret)) {
+      console.error('🚫 [SECURITY] Unauthorized buyer-optout webhook');
       return NextResponse.json(
-        { error: 'Invalid webhook signature' },
+        { error: 'Unauthorized' },
         { status: 401 }
       );
     }

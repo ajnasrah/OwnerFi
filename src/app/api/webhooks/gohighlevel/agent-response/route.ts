@@ -112,27 +112,31 @@ export async function POST(request: NextRequest) {
     }
     if (!body || typeof body !== 'object') body = {};
 
-    // GHL custom webhooks don't support HMAC signatures natively.
-    // When GHL_BYPASS_SIGNATURE is "true" (set in Vercel production), skip auth entirely.
-    const bypassAuth = process.env.GHL_BYPASS_SIGNATURE === 'true';
+    // Auth: accept either (a) a shared secret in a custom header — GHL
+    // custom webhook actions can set custom headers, so this is the
+    // path GHL actually uses in prod — or (b) HMAC signature if present.
+    // Always fail closed; no NODE_ENV or env-flag bypass.
+    const sharedSecret = process.env.GHL_WEBHOOK_SECRET;
+    const providedSecret = request.headers.get('x-webhook-secret')
+      || request.headers.get('x-ghl-secret')
+      || request.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
+    const signature = request.headers.get('x-webhook-signature')
+      || request.headers.get('x-ghl-signature');
 
-    if (!bypassAuth) {
-      // Check for signature in headers only (body signatures are a security risk)
-      const signature = request.headers.get('x-webhook-signature') ||
-                       request.headers.get('x-ghl-signature');
-
-      // Verify webhook signature
+    let authed = false;
+    if (sharedSecret && providedSecret && providedSecret === sharedSecret) {
+      authed = true;
+    } else if (signature) {
       const verification = verifyWebhookSignature(rawBody, signature);
-      if (!verification.valid) {
-        console.error('❌ [AGENT RESPONSE WEBHOOK] Invalid signature:', verification.reason);
-        console.error('   Body keys:', Object.keys(body));
-        return NextResponse.json(
-          { error: 'Unauthorized', reason: verification.reason },
-          { status: 401 }
-        );
-      }
-    } else {
-      console.log('✅ [AGENT RESPONSE WEBHOOK] Auth bypassed (GHL_BYPASS_SIGNATURE=true)');
+      authed = verification.valid;
+    }
+
+    if (!authed) {
+      console.error('❌ [AGENT RESPONSE WEBHOOK] Unauthorized — no valid shared secret or signature');
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
     }
     // GHL can nest custom values inside `customData`, `custom_data`,
     // `data`, or `contact.customFields` depending on how the workflow

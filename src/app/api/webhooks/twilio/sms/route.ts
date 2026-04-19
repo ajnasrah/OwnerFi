@@ -107,12 +107,18 @@ export async function POST(request: NextRequest) {
     return twimlResponse();
   }
 
-  // Validate Twilio signature (skip in development)
-  if (twilioAuthToken && process.env.NODE_ENV === 'production') {
-    // Use the configured webhook URL (Twilio signs against the URL it was configured with)
+  // Validate Twilio signature — always required. A spoofed STOP burns TCPA
+  // consent, so this must fail closed regardless of NODE_ENV. For local dev,
+  // set TWILIO_SKIP_SIG_VALIDATION=true + TWILIO_AUTH_TOKEN on the dev box
+  // explicitly; it's opt-in per-dev rather than env-inferred.
+  const skipSig = process.env.TWILIO_SKIP_SIG_VALIDATION === 'true';
+  if (!skipSig) {
+    if (!twilioAuthToken) {
+      console.error('❌ [TWILIO SMS] TWILIO_AUTH_TOKEN not configured — rejecting request');
+      return twimlResponse();
+    }
     const webhookUrl = process.env.TWILIO_SMS_WEBHOOK_URL
       || `${process.env.NEXT_PUBLIC_APP_URL || `https://${process.env.VERCEL_URL}`}/api/webhooks/twilio/sms`;
-
     if (!validateTwilioSignature(webhookUrl, formParams, twilioSignature, twilioAuthToken)) {
       console.error('❌ [TWILIO SMS] Invalid signature — possible spoofed request');
       return twimlResponse();

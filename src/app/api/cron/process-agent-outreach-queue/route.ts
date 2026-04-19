@@ -3,6 +3,7 @@ import { getFirebaseAdmin, FieldValue } from '@/lib/scraper-v2/firebase-admin';
 import { indexRawFirestoreProperty } from '@/lib/typesense/sync';
 import { withCronLock } from '@/lib/scraper-v2/cron-lock';
 import { normalizeHomeType } from '@/lib/scraper-v2/property-transformer';
+import { isPhoneTcpaRevoked } from '@/lib/tcpa-revocation';
 
 export const maxDuration = 300;
 
@@ -136,6 +137,35 @@ export async function GET(request: NextRequest) {
       const isRetry = doc.data().status === 'failed' || (doc.data().retryCount || 0) > 0;
       try {
         const property = doc.data();
+
+        // TCPA gate — fail closed on any prior revocation for this phone.
+        // tcpa_revocations is the authoritative compliance record; if the
+        // agent (or any prior buyer using the same number) is revoked, we
+        // do not trigger outbound SMS via GHL.
+        if (property.agentPhone) {
+          try {
+            const revoked = await isPhoneTcpaRevoked(property.agentPhone);
+            if (revoked) {
+              console.log(`   🚫 [TCPA] Skipping ${property.address} — phone ${property.agentPhone} revoked (${revoked.channel}, case ${revoked.caseId})`);
+              await doc.ref.update({
+                status: 'tcpa_blocked',
+                tcpaBlockedAt: new Date(),
+                tcpaBlockCaseId: revoked.caseId,
+                tcpaBlockChannel: revoked.channel,
+                updatedAt: new Date(),
+              });
+              errors++;
+              errorDetails.push({ address: property.address, error: `TCPA revoked (${revoked.caseId})` });
+              continue;
+            }
+          } catch (tcpaErr: unknown) {
+            const msg = tcpaErr instanceof Error ? tcpaErr.message : String(tcpaErr);
+            console.error(`   ⚠️ [TCPA] revocation lookup failed for ${property.agentPhone}: ${msg} — skipping send to be safe`);
+            // Fail closed: do NOT send if we can't verify. Leave doc in processing
+            // so the stuck-items reset path will retry it next run.
+            continue;
+          }
+        }
 
         const discountPercent = property.dealType === 'cash_deal' && property.priceToZestimateRatio
           ? Math.round((1 - property.priceToZestimateRatio) * 100)

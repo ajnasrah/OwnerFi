@@ -91,9 +91,13 @@ export async function POST(request: NextRequest) {
     const signature = request.headers.get('x-webhook-signature') ||
                       request.headers.get('x-hub-signature-256') ||
                       request.headers.get('x-signature');
+    // GHL workflows send the raw secret in x-webhook-signature (not a
+    // computed HMAC), so include it in the candidate-secret list. The
+    // authorizeWebhook() helper tries equality first, then HMAC.
     const providedSecret = request.headers.get('x-webhook-secret') ||
                            request.headers.get('x-ghl-secret') ||
                            request.headers.get('authorization')?.replace(/^Bearer\s+/i, '') ||
+                           signature ||
                            null;
 
     if (!authorizeWebhook(rawBody, signature, providedSecret)) {

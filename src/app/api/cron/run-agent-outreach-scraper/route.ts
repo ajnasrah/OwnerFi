@@ -261,31 +261,131 @@ export async function GET(request: NextRequest) {
       const addressNormalized = streetAddr.toLowerCase().trim()
         .replace(/[#,\.]/g, '').replace(/\s+/g, ' ');
 
+      // Capture a rich snapshot so the downstream webhook + property-resolver
+      // can land a fully-populated Firestore doc on agent YES without waiting
+      // for the 3-day refresh cron to backfill year built / rent / images / etc.
+      const rentZestimate = property.rentZestimate || property.rentEstimate || 0;
+      const taxFromHistory = Array.isArray(property.taxHistory)
+        ? (property.taxHistory.find((t: { taxPaid?: number }) => t?.taxPaid)?.taxPaid || 0)
+        : 0;
+      const hoa = property.monthlyHoaFee || property.hoaFee || property.hoa || 0;
+      const annualTaxAmount = property.annualTaxAmount || taxFromHistory || 0;
+      const lotSize = property.lotAreaValue || property.lotSize || property.lotSquareFoot || 0;
+
+      // Gallery normalization — mirror the logic the main transformer uses so
+      // the queue has a ready-to-index image array on day one.
+      type PhotoEntry = { url?: string; href?: string; mixedSources?: { jpeg?: Array<{ url?: string }> } };
+      const galleryFromResponsive: string[] = Array.isArray(property.responsivePhotos)
+        ? (property.responsivePhotos as PhotoEntry[]).map((p) => {
+            const jpeg = p?.mixedSources?.jpeg;
+            if (Array.isArray(jpeg) && jpeg.length > 0) return String(jpeg[jpeg.length - 1]?.url || '');
+            return String(p?.url || '');
+          }).filter(Boolean)
+        : [];
+      const galleryFromPhotos: string[] = Array.isArray(property.photos)
+        ? (property.photos as (string | PhotoEntry)[]).map((p) => typeof p === 'string' ? p : String(p?.url || p?.href || '')).filter(Boolean)
+        : [];
+      const gallery: string[] = galleryFromResponsive.length > 0
+        ? galleryFromResponsive
+        : galleryFromPhotos.length > 0
+          ? galleryFromPhotos
+          : Array.isArray(property.propertyImages) ? property.propertyImages
+          : Array.isArray(property.images) ? property.images
+          : [];
+      const primaryImage: string = property.hiResImageLink
+        || property.desktopWebHdpImageLink
+        || property.mediumImageLink
+        || property.imgSrc
+        || gallery[0]
+        || '';
+
       const docRef = db.collection('agent_outreach_queue').doc();
       batch.set(docRef, {
         zpid,
         url,
+        hdpUrl: property.hdpUrl || null,
+        virtualTourUrl: property.virtualTourUrl || property.thirdPartyVirtualTour?.externalUrl || null,
+
+        // Address
         address: streetAddr,
         city,
         state,
         zipCode,
+        county: property.county || null,
+        parcelId: property.parcelId || property.resoFacts?.parcelNumber || null,
+        mlsId: property.attributionInfo?.mlsId || property.mlsid || null,
+
+        // Pricing + estimates
         price,
         zestimate,
+        rentZestimate: rentZestimate || null,
         priceToZestimateRatio: zestimate > 0 ? price / zestimate : null,
+
+        // Structural details
         beds: property.bedrooms || 0,
         baths: property.bathrooms || 0,
-        squareFeet: property.livingArea || 0,
-        propertyType: property.homeType || 'SINGLE_FAMILY',
+        squareFeet: property.livingArea || property.livingAreaValue || property.squareFoot || 0,
+        lotSize: lotSize || null,
+        yearBuilt: property.yearBuilt || null,
+        propertyType: property.homeType || property.propertyType || 'SINGLE_FAMILY',
+        daysOnZillow: property.daysOnZillow ?? null,
+        homeStatus: property.homeStatus || null,
+        keystoneHomeStatus: property.keystoneHomeStatus || null,
+
+        // Location
+        latitude: property.latitude ?? null,
+        longitude: property.longitude ?? null,
+
+        // Costs
+        hoa: hoa || 0,
+        annualTaxAmount: annualTaxAmount || null,
+        propertyTaxRate: property.propertyTaxRate ?? null,
+        annualHomeownersInsurance: property.annualHomeownersInsurance ?? null,
+
+        // Description (raw — sanitized at property-create time)
+        description: description || '',
+
+        // Agent / broker
         agentName,
         agentPhone,
-        agentEmail: property.attributionInfo?.agentEmail || null,
-        imgSrc: property.imgSrc || null,
+        agentEmail: property.attributionInfo?.agentEmail || property.agentEmail || null,
+        brokerName: property.attributionInfo?.brokerName || property.brokerName || null,
+        brokerPhone: property.attributionInfo?.brokerPhoneNumber || property.brokerPhoneNumber || property.brokerPhone || null,
+
+        // Images — surface every alias downstream paths read.
+        imgSrc: primaryImage || null,
+        firstPropertyImage: primaryImage || null,
+        primaryImage: primaryImage || null,
+        hiResImageLink: property.hiResImageLink || null,
+        mediumImageLink: property.mediumImageLink || null,
+        desktopWebHdpImageLink: property.desktopWebHdpImageLink || null,
+        propertyImages: gallery.length > 0 ? gallery : null,
+        imageUrls: gallery.length > 0 ? gallery : null,
+        photoCount: property.photoCount || gallery.length || null,
+
+        // Dedupe + routing
         phoneNormalized,
         addressNormalized,
         dealType,
         status: 'pending',
         source: 'agent_outreach_scraper',
         addedAt: new Date(),
+
+        // Full raw Apify passthrough. Bounded to avoid runaway doc size:
+        // Firestore caps docs at 1MB; a photos array with 50+ entries can
+        // push us past that, so we strip the heavy nested arrays we've
+        // already denormalized above.
+        rawData: (() => {
+          const stripped: Record<string, unknown> = { ...property };
+          delete stripped.responsivePhotos;
+          delete stripped.photos;
+          delete stripped.images;
+          delete stripped.propertyImages;
+          delete stripped.priceHistory;
+          delete stripped.schools;
+          delete stripped.nearbyHomes;
+          return stripped;
+        })(),
       });
 
       batchCount++;

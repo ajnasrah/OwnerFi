@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
-import { sanitizeDescription } from '@/lib/description-sanitizer';
 import { indexRawFirestoreProperty } from '@/lib/typesense/sync';
-import { normalizeHomeType } from '@/lib/scraper-v2/property-transformer';
+import { buildPropertyDocFromQueue } from '@/lib/agent-outreach/queue-to-property';
 import crypto from 'crypto';
 
 // Initialize Firebase Admin
@@ -597,129 +596,22 @@ export async function POST(request: NextRequest) {
         }
         await db.collection('properties').doc(propertyDocId).set(flip, { merge: true });
       } else {
-        // Property doesn't exist — create from queue data as a safety net.
+        // Property doesn't exist — create from queue data via shared builder.
         resolvedVia = 'created';
         console.log(`   → Creating ${propertyDocId} from queue (no existing match)`);
-        const { detectFinancingType } = await import('@/lib/financing-type-detector');
-        const descriptionText = sanitizeDescription(property.rawData?.description || '');
-        const financingTypeResult = detectFinancingType(descriptionText);
-        const discountPercent = property.priceToZestimateRatio
-          ? Math.round((1 - property.priceToZestimateRatio) * 100)
-          : 0;
-
-        // ── Pull every field we have in the queue rawData, so day-1 OF docs
-        // land with full structural + financial detail (no gaps waiting on
-        // the 3-day refresh cron). ───────────────────────────────────────
-        const r = (property.rawData || {}) as Record<string, any>;
-        const createRent = property.rentZestimate || property.rentEstimate || r.rentZestimate || r.rentEstimate || null;
-        const createYearBuilt = Number(property.yearBuilt ?? r.yearBuilt ?? 0) || 0;
-        const createLotSize = property.lotSize || r.lotAreaValue || r.lotSize || null;
-        const createHoa = property.hoa || r.monthlyHoaFee || r.hoaFee || 0;
-        const createTax = property.annualTaxAmount
-          || (Array.isArray(r.taxHistory) ? r.taxHistory.find((t: any) => t?.taxPaid)?.taxPaid : 0)
-          || null;
-        const createTaxRate = property.propertyTaxRate ?? r.propertyTaxRate ?? null;
-        const createInsurance = property.annualHomeownersInsurance ?? r.annualHomeownersInsurance ?? null;
-        const createCounty = property.county || r.county || null;
-        const createParcel = property.parcelId || r.parcelId || r.resoFacts?.parcelNumber || null;
-        const createMls = property.mlsId || r.attributionInfo?.mlsId || r.mlsid || null;
-        const createVirtual = property.virtualTourUrl || r.virtualTourUrl || r.thirdPartyVirtualTour?.externalUrl || null;
-        const createBrokerName = property.brokerName || r.attributionInfo?.brokerName || r.brokerName || null;
-        const createBrokerPhone = property.brokerPhone || r.attributionInfo?.brokerPhoneNumber || r.brokerPhoneNumber || null;
-
-        await db.collection('properties').doc(propertyDocId).set({
-          zpid: property.zpid,
-          url: property.url,
-          hdpUrl: property.hdpUrl || r.hdpUrl || null,
-          virtualTourUrl: createVirtual,
-          mlsId: createMls,
-          parcelId: createParcel,
-          county: createCounty,
-
-          address: property.address || '',
-          streetAddress: property.address || '',
-          fullAddress: `${property.address}, ${property.city}, ${property.state} ${property.zipCode}`,
-          city: property.city || '',
-          state: property.state || '',
-          zipCode: property.zipCode || '',
-          zipcode: property.zipCode || '',
-
-          price: property.price || 0,
-          listPrice: property.price || 0,
-          zestimate: property.zestimate || null,
-          estimate: property.zestimate || null,
-          rentEstimate: createRent,
-          rentZestimate: createRent,
-          priceToZestimateRatio: property.priceToZestimateRatio || 0,
-          discountPercent: isCashDeal ? discountPercent : null,
-
-          bedrooms: property.beds || 0,
-          bathrooms: property.baths || 0,
-          squareFoot: property.squareFeet || 0,
-          squareFeet: property.squareFeet || 0,
-          lotSize: createLotSize,
-          lotSquareFoot: createLotSize,
-          yearBuilt: createYearBuilt,
-          daysOnZillow: property.daysOnZillow ?? r.daysOnZillow ?? null,
-          homeType: normalizeHomeType(property.propertyType),
-          propertyType: property.propertyType || 'SINGLE_FAMILY',
-          isLand: normalizeHomeType(property.propertyType) === 'land',
-          homeStatus: property.homeStatus || 'FOR_SALE',
-          keystoneHomeStatus: property.keystoneHomeStatus || r.keystoneHomeStatus || null,
-
-          hoa: createHoa,
-          monthlyHoaFee: createHoa || null,
-          annualTaxAmount: createTax,
-          propertyTaxRate: createTaxRate,
-          annualHomeownersInsurance: createInsurance,
-
-          agentName: property.agentName,
-          agentPhoneNumber: property.agentPhone,
-          agentEmail: property.agentEmail || r.attributionInfo?.agentEmail || null,
-          brokerName: createBrokerName,
-          brokerPhoneNumber: createBrokerPhone,
-
-          description: descriptionText,
-          financingType: financingTypeResult.financingType || 'Owner Finance',
-          allFinancingTypes: isDistressed ? [] : (financingTypeResult.allTypes.length > 0 ? financingTypeResult.allTypes : ['Owner Finance']),
-          financingTypeLabel: isDistressed ? null : (financingTypeResult.displayLabel || 'Owner Finance'),
-          ownerFinanceVerified: !isDistressed,
-          agentConfirmedOwnerfinance: !isDistressed,
-          ...(isDistressed && { agentConfirmedDistressedCashOnly: true }),
-          ...(isCashDeal && { agentConfirmedMotivated: true }),
-
-          // Images — populate every alias (primary) + gallery (propertyImages/imageUrls)
-          ...(primaryImage && {
-            primaryImage,
-            firstPropertyImage: primaryImage,
-            imgSrc: primaryImage,
-            hiResImageLink: property.hiResImageLink || primaryImage,
-            mediumImageLink: property.mediumImageLink || primaryImage,
-            desktopWebHdpImageLink: property.desktopWebHdpImageLink || primaryImage,
-          }),
-          ...(gallery && gallery.length > 0 && {
-            propertyImages: gallery,
-            imageUrls: gallery,
-            photoCount: property.photoCount || gallery.length,
-          }),
-
-          // Distressed: OF flag must stay false regardless of agent's "YES".
-          isOwnerfinance: !isDistressed,
+        const propertyData = buildPropertyDocFromQueue({
+          queueItem: property,
+          isOwnerfinance: true, // distressed flag inside the builder flips this back off
           isCashDeal,
-          dealTypes,
-          isActive: true,
-          ...(latitude != null && longitude != null && { latitude, longitude }),
+          isDistressed,
           source: 'agent_outreach',
-          agentConfirmedAt: new Date(),
-          agentNote: agentNote || null,
+          agentNote,
+          ghlOpportunityId,
           originalQueueId: firebaseId,
-          importedAt: new Date(),
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          lastStatusCheck: new Date(),
-          lastScrapedAt: new Date(),
-          rawData: property.rawData || null,
+          latitude,
+          longitude,
         });
+        await db.collection('properties').doc(propertyDocId).set(propertyData);
       }
 
       console.log(`   ✅ ${resolvedVia === 'created' ? 'Created' : 'Flipped'} ${propertyDocId}`);

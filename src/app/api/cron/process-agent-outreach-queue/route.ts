@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getFirebaseAdmin, FieldValue } from '@/lib/scraper-v2/firebase-admin';
 import { indexRawFirestoreProperty } from '@/lib/typesense/sync';
 import { withCronLock } from '@/lib/scraper-v2/cron-lock';
-import { normalizeHomeType } from '@/lib/scraper-v2/property-transformer';
+import { buildPropertyDocFromQueue } from '@/lib/agent-outreach/queue-to-property';
 import { isPhoneTcpaRevoked } from '@/lib/tcpa-revocation';
 import { maskPhone } from '@/lib/log-redact';
 
@@ -252,48 +252,24 @@ export async function GET(request: NextRequest) {
             .get();
 
           if (existingProperty.empty) {
-            const imgSrc = property.imgSrc || null;
-
-            const propertyData = {
-              zpid: property.zpid,
-              url: property.url,
-              fullAddress: property.address,
-              streetAddress: property.address,
-              address: property.address,
-              city: property.city,
-              state: property.state,
-              zipCode: property.zipCode,
-              price: property.price,
-              estimate: property.zestimate,
-              priceToZestimateRatio: property.priceToZestimateRatio,
-              discountPercentage: discountPercent,
-              bedrooms: property.beds,
-              bathrooms: property.baths,
-              squareFoot: property.squareFeet,
-              homeType: normalizeHomeType(property.propertyType),
-              isLand: normalizeHomeType(property.propertyType) === 'land',
-              imgSrc,
-              firstPropertyImage: imgSrc,
-              agentName: property.agentName,
-              agentPhoneNumber: property.agentPhone,
-              agentEmail: property.agentEmail || null,
-              source: 'agent_outreach_system',
-              isCashDeal: true,
+            // Cash deal auto-save via shared builder so rentEstimate, year
+            // built, lot size, tax, HOA, broker info, etc. all populate from
+            // the queue's rawData on day one (not just the thin field set
+            // this path used to write).
+            const propertyData = buildPropertyDocFromQueue({
+              queueItem: property,
               isOwnerfinance: false,
-              dealTypes: ['cash_deal'],
-              isActive: true,
-              importedAt: new Date(),
-              createdAt: new Date(),
+              isCashDeal: true,
+              source: 'agent_outreach_system',
               ghlOpportunityId: ghlResponse.opportunityId || null,
-              homeStatus: 'FOR_SALE',
-            };
+            });
 
             await db.collection('properties').doc(`zpid_${property.zpid}`).set(propertyData);
             console.log(`   💰 Saved to properties: ${property.address} (${discountPercent}% discount)`);
 
             try {
               await indexRawFirestoreProperty(`zpid_${property.zpid}`, propertyData, 'properties');
-              console.log(`   🔍 Synced to Typesense: ${propertyData.address}`);
+              console.log(`   🔍 Synced to Typesense: ${property.address}`);
             } catch (typesenseErr: unknown) {
               const msg = typesenseErr instanceof Error ? typesenseErr.message : String(typesenseErr);
               console.error(`   ⚠️ Typesense sync failed: ${msg}`);

@@ -8,9 +8,7 @@
 
 import { getFirebaseAdmin } from '@/lib/scraper-v2/firebase-admin';
 import { indexRawFirestoreProperty } from '@/lib/typesense/sync';
-import { sanitizeDescription } from '@/lib/description-sanitizer';
-import { detectFinancingType } from '@/lib/financing-type-detector';
-import { normalizeHomeType } from '@/lib/scraper-v2/property-transformer';
+import { buildPropertyDocFromQueue } from './queue-to-property';
 
 /**
  * Handle agent confirming owner financing (YES response).
@@ -33,109 +31,17 @@ export async function handleAgentYes(
 
   console.log(`✅ [PROPERTY RESOLVER] Agent YES for ${property.address}`);
 
-  // Detect financing type from description
-  const descriptionText = sanitizeDescription(property.rawData?.description || '');
-  const financingTypeResult = detectFinancingType(descriptionText);
-
-  // Agent said YES = owner financing confirmed. Always mark as OF.
-  // Property can also be a cash deal if price < 80% Zestimate.
+  // Agent said YES = owner financing confirmed. Can also be a cash deal if
+  // price < 80% Zestimate. All mapping lives in buildPropertyDocFromQueue.
   const isCashDeal = property.dealType === 'cash_deal';
-
-  const discountPercent = property.priceToZestimateRatio
-    ? Math.round((1 - property.priceToZestimateRatio) * 100)
-    : 0;
-
-  // Build dealTypes array — always includes owner_finance since agent confirmed
-  const dealTypes = ['owner_finance'];
-  if (isCashDeal) dealTypes.push('cash_deal');
-
-  const hasHttp = (v: unknown): v is string => typeof v === 'string' && /^https?:\/\//i.test(v.trim());
-  const primaryImage =
-    (hasHttp(property.firstPropertyImage) && property.firstPropertyImage) ||
-    (hasHttp(property.imgSrc) && property.imgSrc) ||
-    (hasHttp(property.rawData?.hiResImageLink) && property.rawData.hiResImageLink) ||
-    (hasHttp(property.rawData?.desktopWebHdpImageLink) && property.rawData.desktopWebHdpImageLink) ||
-    (hasHttp(property.rawData?.mediumImageLink) && property.rawData.mediumImageLink) ||
-    null;
-
-  // Add to unified properties collection
-  const propertyData: Record<string, unknown> = {
-    // Core identifiers
-    zpid: property.zpid,
-    url: property.url,
-
-    // Address
-    address: property.address || '',
-    streetAddress: property.address || '',
-    fullAddress: `${property.address}, ${property.city}, ${property.state} ${property.zipCode}`,
-    city: property.city || '',
-    state: property.state || '',
-    zipCode: property.zipCode || '',
-
-    // Pricing
-    price: property.price || 0,
-    listPrice: property.price || 0,
-    zestimate: property.zestimate || null,
-    priceToZestimateRatio: property.priceToZestimateRatio || 0,
-    discountPercent: isCashDeal ? discountPercent : null,
-
-    // Property details
-    bedrooms: property.beds || 0,
-    bathrooms: property.baths || 0,
-    squareFoot: property.squareFeet || 0,
-    homeType: normalizeHomeType(property.propertyType),
-    isLand: normalizeHomeType(property.propertyType) === 'land',
-    homeStatus: 'FOR_SALE',
-
-    // Agent info
-    agentName: property.agentName,
-    agentPhoneNumber: property.agentPhone,
-    agentEmail: property.agentEmail || null,
-
-    // Description
-    description: descriptionText,
-
-    // Images — lifted from queue item / rawData so property docs aren't blank
-    ...(primaryImage && {
-      primaryImage,
-      firstPropertyImage: primaryImage,
-      imgSrc: primaryImage,
-      imageUrls: [primaryImage],
-    }),
-
-    // Agent confirmed OF — always set financing fields
-    financingType: financingTypeResult.financingType || 'Owner Finance',
-    allFinancingTypes: financingTypeResult.allTypes.length > 0 ? financingTypeResult.allTypes : ['Owner Finance'],
-    financingTypeLabel: financingTypeResult.displayLabel || 'Owner Finance',
-    ownerFinanceVerified: true,
-    agentConfirmedOwnerfinance: true,
-
-    // Cash deal fields
-    ...(isCashDeal && {
-      agentConfirmedMotivated: true,
-    }),
-
-    // Unified collection flags — agent YES always means owner finance
+  const propertyData = buildPropertyDocFromQueue({
+    queueItem: property,
     isOwnerfinance: true,
     isCashDeal,
-    dealTypes,
-    isActive: true,
-
-    // Source tracking
     source: 'agent_outreach',
-    agentConfirmedAt: new Date(),
-    agentNote: agentNote || null,
+    agentNote,
     originalQueueId: queueItemId,
-
-    // Metadata
-    importedAt: new Date(),
-    createdAt: new Date(),
-    lastStatusCheck: new Date(),
-    lastScrapedAt: new Date(),
-
-    // Full raw data for reference
-    rawData: property.rawData || null,
-  };
+  });
 
   const propertyDocId = `zpid_${property.zpid}`;
   await db.collection('properties').doc(propertyDocId).set(propertyData, { merge: true });

@@ -5,7 +5,9 @@ import { getFirebaseAdmin } from '@/lib/scraper-v2/firebase-admin';
 import { withCronLock } from '@/lib/scraper-v2/cron-lock';
 import { sanitizeDescription } from '@/lib/description-sanitizer';
 import { hasStrictOwnerfinancing } from '@/lib/owner-financing-filter-strict';
+import { detectFinancingType } from '@/lib/financing-type-detector';
 import { detectListingSubType, normalizeHomeType } from '@/lib/scraper-v2/property-transformer';
+import { calculateCashFlow } from '@/lib/cash-flow';
 import { getTypesenseAdminClient, TYPESENSE_COLLECTIONS } from '@/lib/typesense/client';
 
 /**
@@ -96,19 +98,48 @@ interface ZillowApifyItem {
   propertyTaxRate?: number;
   annualHomeownersInsurance?: number;
   hiResImageLink?: string;
-  responsivePhotos?: Array<{ mixedSources?: { jpeg?: Array<{ url: string }> } }>;
+  mediumImageLink?: string;
+  desktopWebHdpImageLink?: string;
+  imgSrc?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  responsivePhotos?: Array<any>;
   propertyImages?: string[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  photos?: Array<any>;
+  images?: string[];
+  photoCount?: number;
   attributionInfo?: {
     agentName?: string;
     agentPhoneNumber?: string;
     agentEmail?: string;
     brokerName?: string;
     brokerPhoneNumber?: string;
+    mlsId?: string;
   };
   agentName?: string;
   agentPhoneNumber?: string;
+  agentEmail?: string;
   brokerName?: string;
-  address?: { streetAddress?: string };
+  brokerPhoneNumber?: string;
+  brokerPhone?: string;
+  mlsid?: string;
+  county?: string;
+  parcelId?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  resoFacts?: { parcelNumber?: string; [k: string]: any };
+  hdpUrl?: string;
+  virtualTourUrl?: string;
+  thirdPartyVirtualTour?: { externalUrl?: string };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  taxHistory?: Array<{ taxPaid?: number; [k: string]: any }>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  address?: { streetAddress?: string; city?: string; state?: string; zipcode?: string; [k: string]: any };
+  city?: string;
+  state?: string;
+  zipcode?: string;
+  zip?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  contactRecipients?: Array<any>;
 }
 
 interface PropertyDoc {
@@ -541,74 +572,182 @@ export async function GET(request: NextRequest) {
       const newEstimate = result.zestimate || result.estimate || null;
       const newRentEstimate = result.rentZestimate || result.rentEstimate || null;
 
-      // Build update data
-      const updateData: Record<string, unknown> = {
-        homeStatus: newStatus,
-        price: result.listPrice || result.price || 0,
-        listPrice: result.listPrice || result.price || 0,
+      // ── Address normalization ────────────────────────────────────────────
+      // Zillow occasionally updates the address object (typo fix, unit
+      // parsing). Pull every part so the Firestore doc tracks current truth.
+      const addrObj = (result.address || {}) as { streetAddress?: string; city?: string; state?: string; zipcode?: string };
+      const freshStreetAddress = addrObj.streetAddress || existingData.streetAddress || existingData.address || '';
+      const freshCity = addrObj.city || result.city || existingData.city || '';
+      const freshState = addrObj.state || result.state || existingData.state || '';
+      const freshZip = addrObj.zipcode || result.zipcode || result.zip || existingData.zipCode || existingData.zipcode || '';
+      const freshFullAddress = freshStreetAddress && freshCity && freshState
+        ? `${freshStreetAddress}, ${freshCity}, ${freshState} ${freshZip}`.trim()
+        : (existingData.fullAddress || '');
 
-        // Reactivation: property is FOR_SALE again.
+      // ── Image resolution ─────────────────────────────────────────────────
+      // Prefer gallery from responsivePhotos → photos → propertyImages → images.
+      // We store the full gallery in propertyImages / imageUrls and surface
+      // a single primary under every alias the rest of the codebase reads.
+      const galleryFromResponsive: string[] = Array.isArray(result.responsivePhotos)
+        ? result.responsivePhotos.map((p): string => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const jpeg = (p as any)?.mixedSources?.jpeg;
+            if (Array.isArray(jpeg) && jpeg.length > 0) return String(jpeg[jpeg.length - 1]?.url || '');
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            return String((p as any)?.url || '');
+          }).filter(Boolean)
+        : [];
+      const galleryFromPhotos: string[] = Array.isArray(result.photos)
+        ? result.photos.map((p): string => typeof p === 'string' ? p : String(p?.url || p?.href || '')).filter(Boolean)
+        : [];
+      const gallery: string[] = galleryFromResponsive.length > 0
+        ? galleryFromResponsive
+        : galleryFromPhotos.length > 0
+          ? galleryFromPhotos
+          : Array.isArray(result.propertyImages) ? result.propertyImages
+          : Array.isArray(result.images) ? result.images
+          : [];
+      const primaryImage: string = result.hiResImageLink
+        || result.desktopWebHdpImageLink
+        || result.mediumImageLink
+        || result.imgSrc
+        || gallery[0]
+        || '';
+
+      // ── Description + derived flags ──────────────────────────────────────
+      // Re-run financing + OF keyword detection on the fresh description so
+      // financingType / matchedKeywords / needsWork stay current when Zillow
+      // edits the listing mid-cycle.
+      const freshDescription = sanitizeDescription(result.description);
+      const ofCheck = hasStrictOwnerfinancing(freshDescription);
+      const financingResult = detectFinancingType(freshDescription);
+
+      // ── Contact info (attributionInfo wins over top-level) ───────────────
+      const freshAgentName = result.attributionInfo?.agentName || result.agentName || existingData.agentName || null;
+      const freshAgentPhone = result.attributionInfo?.agentPhoneNumber || result.agentPhoneNumber || existingData.agentPhoneNumber || null;
+      const freshAgentEmail = result.attributionInfo?.agentEmail || result.agentEmail || existingData.agentEmail || null;
+      const freshBrokerName = result.attributionInfo?.brokerName || result.brokerName || existingData.brokerName || null;
+      const freshBrokerPhone = result.attributionInfo?.brokerPhoneNumber || result.brokerPhoneNumber || result.brokerPhone || existingData.brokerPhoneNumber || null;
+      const freshMlsId = result.attributionInfo?.mlsId || result.mlsid || existingData.mlsId || null;
+
+      // ── Parcel / county (from resoFacts when available) ──────────────────
+      const freshParcelId = result.parcelId || result.resoFacts?.parcelNumber || existingData.parcelId || null;
+      const freshCounty = result.county || existingData.county || null;
+
+      // ── Virtual tour ─────────────────────────────────────────────────────
+      const freshVirtualTour = result.virtualTourUrl || result.thirdPartyVirtualTour?.externalUrl || existingData.virtualTourUrl || null;
+
+      // ── Tax: prefer explicit annualTaxAmount, fall back to latest taxHistory ─
+      const taxFromHistory = Array.isArray(result.taxHistory)
+        ? (result.taxHistory.find(t => t?.taxPaid)?.taxPaid || 0)
+        : 0;
+      const freshAnnualTax = result.annualTaxAmount || taxFromHistory || null;
+
+      // ── Price & sqft normalized ──────────────────────────────────────────
+      const freshPrice = result.listPrice || result.price || 0;
+      const freshSqft = result.livingArea || result.livingAreaValue || result.squareFoot || null;
+      const freshLotSqft = result.lotAreaValue || result.lotSize || result.lotSquareFoot || null;
+      const freshHoa = result.monthlyHoaFee || result.hoaFee || result.hoa || 0;
+
+      // ── Cash flow recompute (null when missing rent/price) ───────────────
+      const cashFlow = freshPrice && newRentEstimate
+        ? calculateCashFlow(freshPrice, newRentEstimate, Number(freshAnnualTax) || 0, Number(freshHoa) || 0)
+        : null;
+
+      // ── Canonical URL (hdpUrl has highest fidelity) ──────────────────────
+      const freshHdpUrl = result.hdpUrl || existingData.hdpUrl || '';
+      const freshUrl = freshHdpUrl
+        ? (freshHdpUrl.startsWith('http') ? freshHdpUrl : `https://www.zillow.com${freshHdpUrl}`)
+        : (prop.url || existingData.url);
+
+      // Build update data — every property detail refreshed, with delete
+      // sentinels on optional fields so a cleared-by-Zillow value doesn't
+      // silently stick around from a prior scrape.
+      const del = admin.firestore.FieldValue.delete;
+      const updateData: Record<string, unknown> = {
+        // Identifiers + URLs
+        url: freshUrl,
+        hdpUrl: freshHdpUrl || del(),
+        virtualTourUrl: freshVirtualTour ?? del(),
+        mlsId: freshMlsId ?? del(),
+        parcelId: freshParcelId ?? del(),
+        county: freshCounty ?? del(),
+
+        // Address (current Zillow truth — only write when we have a fresh
+        // non-empty value; never clobber a populated address with empty).
+        ...(freshStreetAddress ? { streetAddress: freshStreetAddress, address: freshStreetAddress } : {}),
+        ...(freshFullAddress ? { fullAddress: freshFullAddress } : {}),
+        ...(freshCity ? { city: freshCity } : {}),
+        ...(freshState ? { state: freshState } : {}),
+        ...(freshZip ? { zipCode: freshZip, zipcode: freshZip } : {}),
+
+        // Status + activity
+        homeStatus: newStatus,
+        keystoneHomeStatus: r.keystoneHomeStatus || del(),
+        price: freshPrice,
+        listPrice: freshPrice,
+        daysOnZillow: result.daysOnZillow || 0,
+        description: freshDescription,
+
+        // Reactivation
         isActive: true,
-        offMarketReason: admin.firestore.FieldValue.delete(),
+        offMarketReason: del(),
         consecutiveNoResults: 0,
         ...(ofMissIncrement !== null ? { ofMissCount: ofMissIncrement } : {}),
 
-        // Distressed-listing flags (merged: detector OR preserved when partial)
+        // Distressed-listing flags
         isAuction: subTypeFlags.isAuction,
         isForeclosure: subTypeFlags.isForeclosure,
         isBankOwned: subTypeFlags.isBankOwned,
         listingSubType: subTypeFlags.listingSubType,
-        // Persist keystoneHomeStatus for audit — Zillow's canonical status
-        keystoneHomeStatus: r.keystoneHomeStatus || admin.firestore.FieldValue.delete(),
 
-        // Distressed listings are never owner-finance — strip any stale OF
-        // tagging on this refresh pass. Scraper-v2 ingest already handles new
-        // properties; this catches docs that transitioned to distressed state
-        // after being tagged OF.
+        // Distressed listings are never owner-finance — strip stale OF tagging.
         ...(isDistressedNow
           ? {
               isOwnerfinance: false,
               dealTypes: admin.firestore.FieldValue.arrayRemove('owner_finance'),
             }
           : {}),
-        daysOnZillow: result.daysOnZillow || 0,
-        description: sanitizeDescription(result.description),
+
+        // Timestamps
         lastStatusCheck: new Date(),
         lastScrapedAt: new Date(),
+        updatedAt: new Date(),
 
-        // Property details
-        bedrooms: result.bedrooms ?? null,
-        bathrooms: result.bathrooms ?? null,
-        squareFoot: result.livingArea || result.livingAreaValue || result.squareFoot || null,
-        lotSquareFoot: result.lotAreaValue || result.lotSize || result.lotSquareFoot || null,
-        yearBuilt: result.yearBuilt ?? null,
-        homeType: normalizeHomeType(result.homeType || result.propertyType),
-        isLand: normalizeHomeType(result.homeType || result.propertyType) === 'land',
+        // Property details — structural facts don't change, so only overwrite
+        // when Zillow returns a non-null value; never delete on a scrape miss.
+        ...(result.bedrooms != null ? { bedrooms: result.bedrooms } : {}),
+        ...(result.bathrooms != null ? { bathrooms: result.bathrooms } : {}),
+        ...(freshSqft != null && freshSqft > 0 ? { squareFoot: freshSqft, squareFeet: freshSqft } : {}),
+        ...(freshLotSqft != null && freshLotSqft > 0 ? { lotSquareFoot: freshLotSqft, lotSize: freshLotSqft } : {}),
+        ...(result.yearBuilt != null && result.yearBuilt > 0 ? { yearBuilt: result.yearBuilt } : {}),
+        ...(result.homeType || result.propertyType ? {
+          homeType: normalizeHomeType(result.homeType || result.propertyType),
+          propertyType: result.homeType || result.propertyType,
+          isLand: normalizeHomeType(result.homeType || result.propertyType) === 'land',
+        } : {}),
 
-        // Location
-        latitude: result.latitude ?? null,
-        longitude: result.longitude ?? null,
+        // Location — coords only move when Zillow re-geocodes; don't delete on miss.
+        ...(result.latitude != null ? { latitude: result.latitude } : {}),
+        ...(result.longitude != null ? { longitude: result.longitude } : {}),
 
-        // Estimates — write delete sentinel when Zillow no longer reports a value
-        // so the cleanedData null-strip below doesn't preserve stale numbers.
-        estimate: newEstimate ?? admin.firestore.FieldValue.delete(),
-        rentEstimate: newRentEstimate ?? admin.firestore.FieldValue.delete(),
+        // Estimates (delete sentinel when Zillow no longer reports)
+        estimate: newEstimate ?? del(),
+        zestimate: newEstimate ?? del(),
+        rentEstimate: newRentEstimate ?? del(),
+        rentZestimate: newRentEstimate ?? del(),
 
-        // Recompute discount fields from the fresh estimate. Land is excluded —
-        // Zestimate for vacant land is SFR-comp-based and unreliable. If
-        // estimate is now missing, drop the cash_deal classification entirely.
-        // Also apply Fixer cushion when gap > $150k.
+        // Cash-deal / fixer classification (land + missing-estimate paths)
         ...(() => {
-          const freshPrice = result.listPrice || result.price || 0;
           const freshIsLand = normalizeHomeType(result.homeType || result.propertyType) === 'land';
           if (!newEstimate || newEstimate <= 0 || !freshPrice || freshIsLand) {
             return {
-              eightyPercentOfZestimate: admin.firestore.FieldValue.delete(),
-              discountPercentage: admin.firestore.FieldValue.delete(),
-              priceToZestimateRatio: admin.firestore.FieldValue.delete(),
+              eightyPercentOfZestimate: del(),
+              discountPercentage: del(),
+              priceToZestimateRatio: del(),
               isCashDeal: false,
               isFixer: false,
-              cashDealReason: admin.firestore.FieldValue.delete(),
+              cashDealReason: del(),
               dealTypes: admin.firestore.FieldValue.arrayRemove('cash_deal'),
             };
           }
@@ -625,35 +764,71 @@ export async function GET(request: NextRequest) {
             isFixer,
             ...(!stillCashDeal ? {
               isCashDeal: false,
-              cashDealReason: admin.firestore.FieldValue.delete(),
+              cashDealReason: del(),
               dealTypes: admin.firestore.FieldValue.arrayRemove('cash_deal'),
             } : isFixer ? {
               cashDealReason: 'fixer',
             } : {
-              ...(existingData.cashDealReason === 'fixer' ? { cashDealReason: admin.firestore.FieldValue.delete() } : {}),
+              ...(existingData.cashDealReason === 'fixer' ? { cashDealReason: del() } : {}),
             }),
           };
         })(),
 
         // Costs
-        hoa: result.monthlyHoaFee || result.hoaFee || result.hoa || 0,
-        annualTaxAmount: result.annualTaxAmount || null,
+        hoa: freshHoa,
+        monthlyHoaFee: freshHoa || del(),
+        annualTaxAmount: freshAnnualTax ?? del(),
+        propertyTaxRate: result.propertyTaxRate ?? del(),
+        annualHomeownersInsurance: result.annualHomeownersInsurance ?? del(),
 
-        // Agent info
-        ...(result.attributionInfo?.agentName && { agentName: result.attributionInfo.agentName }),
-        ...(result.attributionInfo?.agentPhoneNumber && { agentPhoneNumber: result.attributionInfo.agentPhoneNumber }),
-        ...(result.agentName && { agentName: result.agentName }),
+        // Cash flow (recomputed from fresh price / rent / tax / hoa)
+        cashFlow: cashFlow || del(),
 
-        // Images
-        ...(result.hiResImageLink && { firstPropertyImage: result.hiResImageLink }),
-        ...(result.propertyImages?.length && {
-          propertyImages: result.propertyImages,
-          photoCount: result.propertyImages.length,
-          firstPropertyImage: result.propertyImages[0],
+        // Financing classification (re-detected from fresh description). Only
+        // overwrite for non-trusted sources — agent-confirmed / manual docs
+        // have curated financing fields we don't want to clobber when Zillow
+        // drops keywords from the description.
+        ...((() => {
+          const manualSources = ['manual-add-v2', 'manual-add', 'admin-upload', 'manual', 'bookmarklet'];
+          const isTrusted = manualSources.includes(prop.source || '')
+            || prop.agentConfirmedOwnerfinance === true
+            || prop.source === 'agent_outreach';
+          if (isTrusted) return {};
+          return {
+            financingType: financingResult.financingType ?? del(),
+            allFinancingTypes: financingResult.allTypes.length > 0 ? financingResult.allTypes : del(),
+            financingTypeLabel: financingResult.displayLabel || del(),
+            matchedKeywords: ofCheck.matchedKeywords.length > 0 ? ofCheck.matchedKeywords : del(),
+            primaryKeyword: ofCheck.primaryKeyword || del(),
+          };
+        })()),
+
+        // Contact info — attribution fields win over stale top-level copies.
+        agentName: freshAgentName ?? del(),
+        agentPhoneNumber: freshAgentPhone ?? del(),
+        agentEmail: freshAgentEmail ?? del(),
+        brokerName: freshBrokerName ?? del(),
+        brokerPhoneNumber: freshBrokerPhone ?? del(),
+
+        // Images — surface same primary under every alias the rest of the
+        // codebase reads (sync.ts, investor-deals route, etc.).
+        ...(primaryImage && {
+          firstPropertyImage: primaryImage,
+          primaryImage: primaryImage,
+          imgSrc: primaryImage,
+          hiResImageLink: result.hiResImageLink || primaryImage,
+          mediumImageLink: result.mediumImageLink || primaryImage,
+          desktopWebHdpImageLink: result.desktopWebHdpImageLink || primaryImage,
+        }),
+        ...(gallery.length > 0 && {
+          propertyImages: gallery,
+          imageUrls: gallery,
+          photoCount: result.photoCount || gallery.length,
         }),
       };
 
-      // Remove nulls
+      // Strip null + undefined. Clears are handled via FieldValue.delete()
+      // sentinels above (not raw null), so this filter is safe.
       const cleanedData = Object.fromEntries(
         Object.entries(updateData).filter(([_, v]) => v !== null && v !== undefined)
       );

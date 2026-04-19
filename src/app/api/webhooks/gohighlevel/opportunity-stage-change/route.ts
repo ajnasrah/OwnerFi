@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
-import { sanitizeDescription } from '@/lib/description-sanitizer';
 import { indexRawFirestoreProperty, deletePropertyFromIndex } from '@/lib/typesense/sync';
-import { normalizeHomeType } from '@/lib/scraper-v2/property-transformer';
+import { buildPropertyDocFromQueue } from '@/lib/agent-outreach/queue-to-property';
 
 if (!getApps().length) {
   initializeApp({
@@ -277,55 +276,16 @@ export async function POST(request: NextRequest) {
             updatedAt: new Date(),
           });
         } else {
-          // Create property from queue data
-          const descriptionText = sanitizeDescription(property.rawData?.description || '');
-
-          let financingTypeResult = { financingType: 'Owner Finance', allTypes: ['Owner Finance'], displayLabel: 'Owner Finance' };
-          try {
-            const { detectFinancingType } = await import('@/lib/financing-type-detector');
-            financingTypeResult = detectFinancingType(descriptionText);
-          } catch (_e) { /* use defaults */ }
-
-          await propRef.set({
-            zpid: property.zpid,
-            url: property.url,
-            address: property.address || '',
-            streetAddress: property.address || '',
-            fullAddress: `${property.address}, ${property.city}, ${property.state} ${property.zipCode}`,
-            city: property.city || '',
-            state: property.state || '',
-            zipCode: property.zipCode || '',
-            price: property.price || 0,
-            listPrice: property.price || 0,
-            zestimate: property.zestimate || null,
-            priceToZestimateRatio: property.priceToZestimateRatio || 0,
-            bedrooms: property.beds || 0,
-            bathrooms: property.baths || 0,
-            squareFoot: property.squareFeet || 0,
-            homeType: normalizeHomeType(property.propertyType),
-            isLand: normalizeHomeType(property.propertyType) === 'land',
-            homeStatus: 'FOR_SALE',
-            agentName: property.agentName,
-            agentPhoneNumber: property.agentPhone,
-            agentEmail: property.agentEmail || null,
-            description: descriptionText,
-            imgSrc: property.rawData?.hiResImageLink || property.rawData?.imgSrc || null,
-            financingType: financingTypeResult.financingType || 'Owner Finance',
-            allFinancingTypes: financingTypeResult.allTypes.length > 0 ? financingTypeResult.allTypes : ['Owner Finance'],
-            financingTypeLabel: financingTypeResult.displayLabel || 'Owner Finance',
-            ownerFinanceVerified: true,
-            agentConfirmedOwnerfinance: true,
+          // Create property from queue data via shared builder so every
+          // structural + financial field populates on day one.
+          const propertyData = buildPropertyDocFromQueue({
+            queueItem: property,
             isOwnerfinance: true,
             isCashDeal: false,
-            dealTypes: ['owner_finance'],
-            isActive: true,
             source: 'agent_outreach',
-            agentConfirmedAt: new Date(),
             originalQueueId: firebaseId,
-            importedAt: new Date(),
-            createdAt: new Date(),
-            rawData: property.rawData || null,
           });
+          await propRef.set(propertyData);
           console.log(`[STAGE CHANGE] Created property ${propertyDocId}`);
         }
 

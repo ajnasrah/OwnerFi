@@ -37,8 +37,13 @@ export async function GET(_request: NextRequest) {
 
     console.log('📊 [ADMIN] Fetching agent outreach queue stats');
 
-    // Get all queue items
-    const queueSnapshot = await db.collection('agent_outreach_queue').get();
+    // Get all queue items — `.select()` to fetch only the fields the
+    // aggregator actually reads, cutting read-size ~10x on a queue that's
+    // now ~5k docs. Every byte counts at Firestore's per-read billing.
+    const queueSnapshot = await db
+      .collection('agent_outreach_queue')
+      .select('status', 'dealType', 'routedTo', 'errorMessage', 'address', 'lastFailedAt', 'sentToGHLAt', 'addedAt')
+      .get();
 
     // Calculate statistics
     const stats = {

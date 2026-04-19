@@ -1,37 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { normalizePhone, isValidPhone } from '@/lib/phone-utils';
+import { checkRateLimit as checkRateLimitFirestore } from '@/lib/rate-limit-firestore';
 
-// Rate limiting with periodic cleanup
-const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
-const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
-const RATE_LIMIT_MAX = 3; // 3 OTP requests per minute per phone
-let lastCleanup = Date.now();
-
-function checkRateLimit(phone: string): boolean {
-  const now = Date.now();
-
-  // Cleanup old entries periodically
-  if (now - lastCleanup > RATE_LIMIT_WINDOW * 2) {
-    for (const [key, value] of rateLimitMap.entries()) {
-      if (now > value.resetTime) rateLimitMap.delete(key);
-    }
-    lastCleanup = now;
-  }
-
-  const entry = rateLimitMap.get(phone);
-
-  if (!entry || now > entry.resetTime) {
-    rateLimitMap.set(phone, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
-    return true;
-  }
-
-  if (entry.count >= RATE_LIMIT_MAX) {
-    return false;
-  }
-
-  entry.count++;
-  return true;
-}
+// Tighter limits than the old in-memory version — serverless cold starts
+// can't reset our counter anymore. 3/min per phone + a looser 30/15min
+// window to catch slow-drip enumeration.
+const SHORT_WINDOW_MS = 60 * 1000;
+const SHORT_MAX = 3;
+const LONG_WINDOW_MS = 15 * 60 * 1000;
+const LONG_MAX = 10;
 
 // Test phone numbers that bypass Twilio in development (use code: 123456)
 const TEST_PHONES = new Set(
@@ -51,11 +28,26 @@ export async function POST(request: NextRequest) {
 
     const normalizedPhone = normalizePhone(phone);
 
-    // Rate limiting
-    if (!checkRateLimit(normalizedPhone)) {
+    // Rate limiting — two windows enforced together
+    const [shortLim, longLim] = await Promise.all([
+      checkRateLimitFirestore({
+        namespace: 'otp-send:short',
+        key: normalizedPhone,
+        maxRequests: SHORT_MAX,
+        windowMs: SHORT_WINDOW_MS,
+      }),
+      checkRateLimitFirestore({
+        namespace: 'otp-send:long',
+        key: normalizedPhone,
+        maxRequests: LONG_MAX,
+        windowMs: LONG_WINDOW_MS,
+      }),
+    ]);
+    if (!shortLim.allowed || !longLim.allowed) {
+      const worst = !shortLim.allowed ? shortLim : longLim;
       return NextResponse.json(
-        { error: 'Too many attempts. Please wait a minute and try again.' },
-        { status: 429 }
+        { error: 'Too many attempts. Please wait and try again.', retryAfter: worst.retryAfterSecs },
+        { status: 429, headers: { 'Retry-After': String(worst.retryAfterSecs) } }
       );
     }
 

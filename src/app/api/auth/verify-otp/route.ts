@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { normalizePhone, isValidPhone } from '@/lib/phone-utils';
+import { checkRateLimit } from '@/lib/rate-limit-firestore';
 
 // Test phone numbers that bypass Twilio in development (use code: 123456)
 const TEST_PHONES = new Set(
   (process.env.TEST_PHONE_NUMBERS || '').split(',').map(p => p.trim()).filter(Boolean)
 );
+
+// OTP is 6 digits = 1M combinations. At 5 attempts/phone/15min with a 10-min
+// Twilio-Verify code TTL we're well under brute-force range.
+const VERIFY_WINDOW_MS = 15 * 60 * 1000;
+const VERIFY_MAX_ATTEMPTS = 5;
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,6 +31,20 @@ export async function POST(request: NextRequest) {
     }
 
     const normalizedPhone = normalizePhone(phone);
+
+    // Brute-force guard — cap verify attempts per phone per window.
+    const lim = await checkRateLimit({
+      namespace: 'otp-verify',
+      key: normalizedPhone,
+      maxRequests: VERIFY_MAX_ATTEMPTS,
+      windowMs: VERIFY_WINDOW_MS,
+    });
+    if (!lim.allowed) {
+      return NextResponse.json(
+        { error: 'Too many verification attempts. Please request a new code.', retryAfter: lim.retryAfterSecs },
+        { status: 429, headers: { 'Retry-After': String(lim.retryAfterSecs) } }
+      );
+    }
 
     // Bypass: accept 123456 for test phone numbers (works in dev and when TEST_PHONE_NUMBERS is set)
     if (TEST_PHONES.has(normalizedPhone)) {

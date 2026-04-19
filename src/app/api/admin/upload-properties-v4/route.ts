@@ -755,7 +755,12 @@ export async function POST(request: NextRequest) {
       duplicates: [] as { row: number; id: string; data: string[] }[]
     };
 
-    // Get existing property IDs to check for duplicates
+    // TODO(perf): this scans the entire `properties` collection on every
+    // upload (costs N reads where N = total properties). Should instead
+    // project candidate doc IDs from the CSV and `getAll(...refs)` only
+    // those — drops cost from O(collection) to O(upload rows). Not doing
+    // here because this file uses the web SDK + would require a larger
+    // refactor. Admin uploads are infrequent so the bill is survivable.
     const existingIds = new Set<string>();
     try {
       const propertiesSnapshot = await getDocs(collection(db, 'properties'));

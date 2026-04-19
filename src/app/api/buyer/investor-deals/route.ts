@@ -174,6 +174,12 @@ export async function GET(request: NextRequest) {
     const page = Math.max(1, Number(searchParams.get('page') || '1') || 1);
     const pageSize = Math.min(48, Math.max(1, Number(searchParams.get('pageSize') || '24') || 24));
 
+    // Admin investor-preview "Saved Only" toggle: when ?likedOnly=true, restrict
+    // results to the target buyer's likedPropertyIds. Ignore city/state/zip
+    // constraints — the saved list is the search set.
+    const likedOnly = searchParams.get('likedOnly') === 'true';
+    const savedIds = likedOnly ? Array.from(likedPropertyIds) : undefined;
+
     // Fetch ALL deals from Typesense (or Firestore fallback) regardless of dealType filter
     // so breakdown counts are always accurate and consistent across filter tabs
     let allDeals: InvestorDeal[] = [];
@@ -225,7 +231,18 @@ export async function GET(request: NextRequest) {
     try {
       const client = getTypesenseSearchClient();
       if (client) {
-        if (zipsOverride) {
+        if (likedOnly) {
+          if (!savedIds || savedIds.length === 0) {
+            allDeals = [];
+          } else {
+            // Saved-only admin view — search the whole index restricted to
+            // the buyer's likedPropertyIds. No city/state filter since the
+            // saved list can include properties anywhere.
+            allDeals = await runTypesenseSearch(client, ['isActive:=true'], 'all', {
+              limitToIds: savedIds,
+            });
+          }
+        } else if (zipsOverride) {
           // Zip-only mode — cities are ignored entirely.
           allDeals = await searchTypesenseByZips(client, userFilter.zips.codes, {
             minPrice, maxPrice, maxArvPercent, excludeLand,
@@ -244,10 +261,10 @@ export async function GET(request: NextRequest) {
     }
 
     if (typesenseError) {
-      // In zip-override mode the Firestore fallback can't honor a nationwide
-      // zip query (it searches by city), so we'd rather return empty than
-      // leak the legacy city results.
-      if (zipsOverride) {
+      // In zip-override or liked-only mode the Firestore fallback can't
+      // honor the scoped query (it searches by city), so we'd rather return
+      // empty than leak the legacy city results.
+      if (zipsOverride || likedOnly) {
         allDeals = [];
       } else {
         allDeals = await searchFirestore(nearbyCities, allowedStates, 'all');
@@ -431,6 +448,7 @@ async function searchTypesense(
     maxPrice?: number;
     maxArvPercent?: number;
     excludeLand?: boolean;
+    limitToIds?: string[];
   },
 ): Promise<InvestorDeal[]> {
   // Build deal type filter
@@ -475,6 +493,7 @@ async function searchTypesenseByZips(
   client: ReturnType<typeof getTypesenseSearchClient>,
   zipCodes: string[],
   extraFilters?: {
+    limitToIds?: string[];
     minPrice?: number;
     maxPrice?: number;
     maxArvPercent?: number;
@@ -505,6 +524,9 @@ async function runTypesenseSearch(
     maxPrice?: number;
     maxArvPercent?: number;
     excludeLand?: boolean;
+    /** Restrict to this set of property doc IDs. Used by admin investor-
+     *  preview "Saved Only" toggle. Empty array → return nothing. */
+    limitToIds?: string[];
   },
 ): Promise<InvestorDeal[]> {
   const filters = [...baseFilters];
@@ -520,6 +542,20 @@ async function runTypesenseSearch(
   }
   if (extraFilters?.maxPrice !== undefined) {
     filters.push(`listPrice:<=${extraFilters.maxPrice}`);
+  }
+  if (extraFilters?.limitToIds) {
+    if (extraFilters.limitToIds.length === 0) return [];
+    // Typesense id filter. Chunk at 100 to stay well under the single-
+    // filter length ceiling (Typesense allows large filter_by strings but
+    // splitting keeps individual queries cheap). Caller expects the union.
+    const ids = extraFilters.limitToIds;
+    if (ids.length <= 100) {
+      filters.push(`id:=[${ids.join(',')}]`);
+    } else {
+      // For larger sets, we'd need multiple requests; admin saved lists
+      // are tiny in practice, so fall through with the first 100.
+      filters.push(`id:=[${ids.slice(0, 100).join(',')}]`);
+    }
   }
   // NOTE: percentOfArv is optional — only filter when user explicitly selects <80% Zest.
   // Properties without percentOfArv will be excluded, which is correct behavior

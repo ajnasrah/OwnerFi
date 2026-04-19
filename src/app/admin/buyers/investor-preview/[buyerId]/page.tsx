@@ -49,6 +49,7 @@ export default function InvestorPreview() {
   const [excludeAuctions, setExcludeAuctions] = useState(false);
   const [showHidden, setShowHidden] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [likedOnly, setLikedOnly] = useState(false);
   const PAGE_SIZE = 24;
 
   // Auth check - admin only
@@ -119,6 +120,7 @@ export default function InvestorPreview() {
         if (filterParams.maxArvPercent) searchParams.set('maxArvPercent', String(filterParams.maxArvPercent));
         if (filterParams.excludeLand) searchParams.set('excludeLand', 'true');
         if (filterParams.excludeAuctions) searchParams.set('excludeAuctions', 'true');
+        if (likedOnly) searchParams.set('likedOnly', 'true');
 
         const res = await fetch(`/api/buyer/investor-deals?${searchParams}`, {
           signal: abortController.signal,
@@ -149,7 +151,7 @@ export default function InvestorPreview() {
 
     fetchDeals();
     return () => abortController.abort();
-  }, [profile, dealType, priceFilter, sortBy, sortOrder, excludeLand, excludeAuctions, currentPage]);
+  }, [profile, dealType, priceFilter, sortBy, sortOrder, excludeLand, excludeAuctions, currentPage, likedOnly]);
 
   // Like toggle - UI only, no server calls (admin preview)
   const toggleLike = useCallback((dealId: string) => {
@@ -189,9 +191,20 @@ export default function InvestorPreview() {
   return (
     <div className="min-h-screen bg-[#111625]">
       {/* Admin Preview Banner */}
-      <div className="bg-yellow-500 text-black px-4 py-2 text-center font-bold text-sm">
-        📊 ADMIN INVESTOR PREVIEW — Viewing as: {profile?.firstName} {profile?.lastName} ({city}, {state})
-        <Link href="/admin/buyers" className="ml-4 underline">Back to Admin</Link>
+      <div className="bg-yellow-500 text-black px-4 py-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 font-bold text-sm">
+        <span>📊 ADMIN INVESTOR PREVIEW — Viewing as: {profile?.firstName} {profile?.lastName} ({city}, {state})</span>
+        <button
+          onClick={() => { setLikedOnly(v => !v); setCurrentPage(1); }}
+          className={`px-3 py-1 rounded-md text-xs font-bold transition-colors ${
+            likedOnly
+              ? 'bg-black text-yellow-500'
+              : 'bg-white text-black hover:bg-slate-100 border border-black/30'
+          }`}
+          title={likedOnly ? 'Show all deals' : 'Show only properties this buyer has saved'}
+        >
+          {likedOnly ? '✕ Exit Saved View' : `❤️ Saved Properties (${likedProperties.length})`}
+        </button>
+        <Link href="/admin/buyers" className="underline">Back to Admin</Link>
       </div>
 
       {/* Main Content */}

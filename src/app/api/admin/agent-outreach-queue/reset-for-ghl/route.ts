@@ -1,7 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/auth';
+import { ExtendedSession } from '@/types/session';
 import { getFirebaseAdmin } from '@/lib/scraper-v2/firebase-admin';
 
 export const maxDuration = 300;
+
+async function isAuthorized(request: NextRequest): Promise<boolean> {
+  // Accept either a bearer admin/cron secret (scripts, curl, automation)…
+  const authHeader = request.headers.get('authorization');
+  const adminSecret = process.env.ADMIN_SECRET_KEY || process.env.CRON_SECRET;
+  if (adminSecret && authHeader === `Bearer ${adminSecret}`) return true;
+
+  // …or a real admin session (future admin-UI button). Both paths check
+  // explicitly so a non-admin authenticated user cannot invoke this even
+  // if a UI button is wired up later.
+  const session = (await getServerSession(authOptions as any)) as ExtendedSession | null;
+  if (session?.user && session.user.role === 'admin') return true;
+
+  return false;
+}
 
 /**
  * One-shot admin endpoint: reset queue items stuck in the parked
@@ -38,10 +56,7 @@ const RESETTABLE_STATUSES = [
 ];
 
 export async function POST(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  const adminSecret = process.env.ADMIN_SECRET_KEY || process.env.CRON_SECRET;
-
-  if (!adminSecret || authHeader !== `Bearer ${adminSecret}`) {
+  if (!(await isAuthorized(request))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

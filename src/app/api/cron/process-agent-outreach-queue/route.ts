@@ -4,6 +4,7 @@ import { indexRawFirestoreProperty } from '@/lib/typesense/sync';
 import { withCronLock } from '@/lib/scraper-v2/cron-lock';
 import { normalizeHomeType } from '@/lib/scraper-v2/property-transformer';
 import { isPhoneTcpaRevoked } from '@/lib/tcpa-revocation';
+import { maskPhone } from '@/lib/log-redact';
 
 export const maxDuration = 300;
 
@@ -146,7 +147,7 @@ export async function GET(request: NextRequest) {
           try {
             const revoked = await isPhoneTcpaRevoked(property.agentPhone);
             if (revoked) {
-              console.log(`   🚫 [TCPA] Skipping ${property.address} — phone ${property.agentPhone} revoked (${revoked.channel}, case ${revoked.caseId})`);
+              console.log(`   🚫 [TCPA] Skipping ${property.address} — phone ${maskPhone(property.agentPhone)} revoked (${revoked.channel}, case ${revoked.caseId})`);
               await doc.ref.update({
                 status: 'tcpa_blocked',
                 tcpaBlockedAt: new Date(),
@@ -160,7 +161,7 @@ export async function GET(request: NextRequest) {
             }
           } catch (tcpaErr: unknown) {
             const msg = tcpaErr instanceof Error ? tcpaErr.message : String(tcpaErr);
-            console.error(`   ⚠️ [TCPA] revocation lookup failed for ${property.agentPhone}: ${msg} — skipping send to be safe`);
+            console.error(`   ⚠️ [TCPA] revocation lookup failed for ${maskPhone(property.agentPhone)}: ${msg} — skipping send to be safe`);
             // Fail closed: do NOT send if we can't verify. Leave doc in processing
             // so the stuck-items reset path will retry it next run.
             continue;

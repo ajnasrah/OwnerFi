@@ -398,6 +398,49 @@ export async function POST(request: NextRequest) {
         (hasHttp(property.rawData?.mediumImageLink) && property.rawData.mediumImageLink) ||
         null;
 
+      // Resolve lat/lng. Prefer anything already on the existing doc or the
+      // queue rawData; otherwise geocode. Without a location, Cloud Function
+      // writes no `location` field to Typesense and the property becomes
+      // invisible to buyer geo-radius searches.
+      const existingForCoords = existingSnap.exists ? existingSnap.data()! : {};
+      const rawLat = Number(
+        existingForCoords.latitude ??
+        property.latitude ??
+        property.rawData?.latitude ??
+        property.rawData?.geoPoint?.latitude ??
+        NaN
+      );
+      const rawLng = Number(
+        existingForCoords.longitude ??
+        property.longitude ??
+        property.rawData?.longitude ??
+        property.rawData?.geoPoint?.longitude ??
+        NaN
+      );
+      let latitude: number | null = Number.isFinite(rawLat) && rawLat !== 0 ? rawLat : null;
+      let longitude: number | null = Number.isFinite(rawLng) && rawLng !== 0 ? rawLng : null;
+
+      if ((latitude == null || longitude == null) && property.address) {
+        try {
+          const { geocodeAddress } = await import('@/lib/geocode');
+          const coords = await geocodeAddress({
+            street: property.address,
+            city: property.city,
+            state: property.state,
+            zip: property.zipCode,
+          });
+          if (coords) {
+            latitude = coords.lat;
+            longitude = coords.lng;
+            console.log(`   📍 geocoded ${property.address} → (${latitude}, ${longitude})`);
+          } else {
+            console.warn(`   ⚠️ geocode failed for ${property.address} — property will have no location in Typesense`);
+          }
+        } catch (err) {
+          console.error('   ⚠️ geocode error', err);
+        }
+      }
+
       if (existingSnap.exists) {
         // Flag-flip only. Keep all existing Zillow fields (address, price, images, etc.).
         console.log(`   → Flag-flip existing ${propertyDocId} (${resolvedVia})`);
@@ -435,6 +478,11 @@ export async function POST(request: NextRequest) {
         }
         if (qDaysOnZillow != null && qDaysOnZillow !== undefined && (existing.daysOnZillow == null || existing.daysOnZillow === undefined)) {
           flip.daysOnZillow = qDaysOnZillow;
+        }
+        // Backfill lat/lng so Cloud Function syncs location to Typesense.
+        if (latitude != null && longitude != null && (!existing.latitude || !existing.longitude)) {
+          flip.latitude = latitude;
+          flip.longitude = longitude;
         }
         await db.collection('properties').doc(propertyDocId).set(flip, { merge: true });
       } else {
@@ -490,6 +538,7 @@ export async function POST(request: NextRequest) {
           isCashDeal,
           dealTypes,
           isActive: true,
+          ...(latitude != null && longitude != null && { latitude, longitude }),
           source: 'agent_outreach',
           agentConfirmedAt: new Date(),
           agentNote: agentNote || null,

@@ -201,48 +201,52 @@ export async function POST(request: NextRequest) {
 
           // Manual add on an existing doc — flip to owner_finance without
           // losing existing fields (e.g. scraper-v2's address, agent info,
-          // cash_deal tag, etc). Union dealTypes instead of replacing.
+          // cash_deal tag, etc). Run the read-modify-write inside a
+          // transaction so concurrent admin adds can't clobber each other's
+          // dealTypes / matchedKeywords array unions.
           console.log(`[ADD] Flipping existing property ${property.zpid} → owner_finance`);
           const docRef = db.collection('properties').doc(`zpid_${property.zpid}`);
-          const existingSnap = await docRef.get();
-          const existingData = existingSnap.data() || {};
-          const existingDealTypes = Array.isArray(existingData.dealTypes) ? existingData.dealTypes : [];
-          const newDealTypes = Array.from(new Set([...existingDealTypes, 'owner_finance']));
-          const existingFinancingTypes = Array.isArray(existingData.allFinancingTypes) ? existingData.allFinancingTypes : [];
-          const newFinancingTypes = Array.from(new Set([...existingFinancingTypes, 'Owner Finance']));
-          const existingMatched = Array.isArray(existingData.matchedKeywords) ? existingData.matchedKeywords : [];
-          const newMatched = Array.from(new Set([...existingMatched, 'manually_added']));
+          const existingDataAfter = await db.runTransaction(async tx => {
+            const snap = await tx.get(docRef);
+            const d = snap.data() || {};
+            const existingDealTypes = Array.isArray(d.dealTypes) ? d.dealTypes : [];
+            const newDealTypes = Array.from(new Set([...existingDealTypes, 'owner_finance']));
+            const existingFinancingTypes = Array.isArray(d.allFinancingTypes) ? d.allFinancingTypes : [];
+            const newFinancingTypes = Array.from(new Set([...existingFinancingTypes, 'Owner Finance']));
+            const existingMatched = Array.isArray(d.matchedKeywords) ? d.matchedKeywords : [];
+            const newMatched = Array.from(new Set([...existingMatched, 'manually_added']));
 
-          await docRef.update({
-            isOwnerfinance: true,
-            isActive: true,
-            dealTypes: newDealTypes,
-            ownerFinanceVerified: true,
-            // Overwrite financingType/label unconditionally — the realtor
-            // confirmed this is an owner-finance property, so even if the
-            // existing doc had "Unknown" or something else, authoritative
-            // value is Owner Finance now.
-            financingType: 'Owner Finance',
-            allFinancingTypes: newFinancingTypes,
-            financingTypeLabel: 'Owner Finance',
-            matchedKeywords: newMatched,
-            primaryKeyword: existingData.primaryKeyword || 'manually_added',
-            manuallyConfirmedOwnerFinance: true,
-            manuallyConfirmedAt: new Date(),
-            updatedAt: new Date(),
-            // Backfill address fields if missing (agent-outreach scraper
-            // sometimes leaves these null on imported docs).
-            ...(existingData.fullAddress ? {} : { fullAddress: property.fullAddress }),
-            ...(existingData.streetAddress ? {} : { streetAddress: property.streetAddress }),
-            ...(existingData.city ? {} : { city: property.city }),
-            ...(existingData.state ? {} : { state: property.state }),
-            ...(existingData.zipCode ? {} : { zipCode: property.zipCode }),
+            tx.update(docRef, {
+              isOwnerfinance: true,
+              isActive: true,
+              dealTypes: newDealTypes,
+              ownerFinanceVerified: true,
+              // Overwrite financingType/label unconditionally — the realtor
+              // confirmed this is owner-finance, so even if the existing doc
+              // had "Unknown", the authoritative value is Owner Finance now.
+              financingType: 'Owner Finance',
+              allFinancingTypes: newFinancingTypes,
+              financingTypeLabel: 'Owner Finance',
+              matchedKeywords: newMatched,
+              primaryKeyword: d.primaryKeyword || 'manually_added',
+              manuallyConfirmedOwnerFinance: true,
+              manuallyConfirmedAt: new Date(),
+              updatedAt: new Date(),
+              // Backfill address fields if missing (agent-outreach scraper
+              // sometimes leaves these null on imported docs).
+              ...(d.fullAddress ? {} : { fullAddress: property.fullAddress }),
+              ...(d.streetAddress ? {} : { streetAddress: property.streetAddress }),
+              ...(d.city ? {} : { city: property.city }),
+              ...(d.state ? {} : { state: property.state }),
+              ...(d.zipCode ? {} : { zipCode: property.zipCode }),
+            });
+            return d;
           });
 
           results.push({
             url: property.url,
             zpid: property.zpid,
-            address: property.fullAddress || existingData.fullAddress || existingData.address,
+            address: property.fullAddress || existingDataAfter.fullAddress || existingDataAfter.address,
             savedTo: ['owner_finance (updated existing)'],
             skipped: false,
           });

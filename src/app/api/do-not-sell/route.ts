@@ -13,55 +13,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAdminDb } from '@/lib/firebase-admin';
 import { getAllPhoneFormats } from '@/lib/phone-utils';
 import { revokeBuyerTCPAConsent } from '@/lib/tcpa-revocation';
+import { checkRateLimit } from '@/lib/rate-limit-firestore';
+import { maskPhone, maskEmail } from '@/lib/log-redact';
 
-// Rate limiting configuration
+// Rate limiting configuration — now persisted in Firestore so serverless
+// cold starts no longer reset the counter and allow probing/enumeration.
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
-const MAX_REQUESTS_PER_IP = 5; // Max requests per IP in window
-const MAX_REQUESTS_PER_IDENTIFIER = 3; // Max requests per phone/email in window
-
-// In-memory rate limit stores (cleared on server restart)
-const ipRateLimitStore = new Map<string, { count: number; resetAt: number }>();
-const identifierRateLimitStore = new Map<string, { count: number; resetAt: number }>();
-
-// Clean up expired entries periodically
-function cleanupRateLimitStore(store: Map<string, { count: number; resetAt: number }>) {
-  const now = Date.now();
-  for (const [key, value] of store.entries()) {
-    if (now > value.resetAt) {
-      store.delete(key);
-    }
-  }
-}
-
-// Check and update rate limit
-function checkRateLimit(
-  store: Map<string, { count: number; resetAt: number }>,
-  key: string,
-  maxRequests: number
-): { allowed: boolean; remaining: number; resetAt: number } {
-  const now = Date.now();
-  const existing = store.get(key);
-
-  // Clean up occasionally (1% chance per request)
-  if (Math.random() < 0.01) {
-    cleanupRateLimitStore(store);
-  }
-
-  if (!existing || now > existing.resetAt) {
-    // New window
-    const resetAt = now + RATE_LIMIT_WINDOW_MS;
-    store.set(key, { count: 1, resetAt });
-    return { allowed: true, remaining: maxRequests - 1, resetAt };
-  }
-
-  if (existing.count >= maxRequests) {
-    return { allowed: false, remaining: 0, resetAt: existing.resetAt };
-  }
-
-  // Increment count
-  existing.count++;
-  return { allowed: true, remaining: maxRequests - existing.count, resetAt: existing.resetAt };
-}
+const MAX_REQUESTS_PER_IP = 5;
+const MAX_REQUESTS_PER_IDENTIFIER = 3;
 
 interface OptOutRequest {
   phone?: string;
@@ -77,22 +36,27 @@ export async function POST(request: NextRequest) {
                      'unknown';
 
     // Check IP rate limit
-    const ipLimit = checkRateLimit(ipRateLimitStore, clientIp, MAX_REQUESTS_PER_IP);
+    const ipLimit = await checkRateLimit({
+      namespace: 'do-not-sell:ip',
+      key: clientIp,
+      maxRequests: MAX_REQUESTS_PER_IP,
+      windowMs: RATE_LIMIT_WINDOW_MS,
+    });
     if (!ipLimit.allowed) {
-      console.warn(`[Do Not Sell] Rate limit exceeded for IP: ${clientIp}`);
+      console.warn(`[Do Not Sell] Rate limit exceeded for IP`);
       return NextResponse.json(
         {
           success: false,
           error: 'Too many requests. Please try again later.',
-          retryAfter: Math.ceil((ipLimit.resetAt - Date.now()) / 1000)
+          retryAfter: ipLimit.retryAfterSecs,
         },
         {
           status: 429,
           headers: {
-            'Retry-After': Math.ceil((ipLimit.resetAt - Date.now()) / 1000).toString(),
+            'Retry-After': ipLimit.retryAfterSecs.toString(),
             'X-RateLimit-Remaining': '0',
-            'X-RateLimit-Reset': ipLimit.resetAt.toString()
-          }
+            'X-RateLimit-Reset': ipLimit.resetAt.toString(),
+          },
         }
       );
     }
@@ -113,21 +77,25 @@ export async function POST(request: NextRequest) {
     const normalizedIdentifier = phone
       ? phone.replace(/\D/g, '') // Phone: keep only digits
       : (email || '').toLowerCase().trim(); // Email: lowercase and trim
-    const identifierLimit = checkRateLimit(identifierRateLimitStore, normalizedIdentifier, MAX_REQUESTS_PER_IDENTIFIER);
+    const identifierLimit = await checkRateLimit({
+      namespace: 'do-not-sell:id',
+      key: normalizedIdentifier,
+      maxRequests: MAX_REQUESTS_PER_IDENTIFIER,
+      windowMs: RATE_LIMIT_WINDOW_MS,
+    });
     if (!identifierLimit.allowed) {
-      const maskedId = phone ? phone.substring(0, 4) : (email || '').substring(0, 4);
-      console.warn(`[Do Not Sell] Rate limit exceeded for identifier: ${maskedId}***`);
+      console.warn(`[Do Not Sell] Rate limit exceeded for identifier (masked)`);
       return NextResponse.json(
         {
           success: false,
           error: 'Too many requests for this phone/email. Please try again later.',
-          retryAfter: Math.ceil((identifierLimit.resetAt - Date.now()) / 1000)
+          retryAfter: identifierLimit.retryAfterSecs,
         },
         {
           status: 429,
           headers: {
-            'Retry-After': Math.ceil((identifierLimit.resetAt - Date.now()) / 1000).toString()
-          }
+            'Retry-After': identifierLimit.retryAfterSecs.toString(),
+          },
         }
       );
     }
@@ -179,7 +147,7 @@ export async function POST(request: NextRequest) {
 
     // Handle buyer not found
     if (!buyerDoc) {
-      console.log(`[Do Not Sell] No buyer found - phone: ${phone}, email: ${email}`);
+      console.log(`[Do Not Sell] No buyer found - phone: ${maskPhone(phone)}, email: ${maskEmail(email)}`);
       return NextResponse.json({
         success: false,
         error: 'We could not find your information in our system'

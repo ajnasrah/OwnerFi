@@ -5,6 +5,7 @@ import { unifiedDb } from '@/lib/unified-db';
 import { logInfo, logError } from '@/lib/logger';
 import { normalizePhone, isValidPhone } from '@/lib/phone-utils';
 import { generateBuyerFilter } from '@/lib/buyer-filter-service';
+import { maskPhone } from '@/lib/log-redact';
 
 // Simple in-memory rate limiter with cleanup
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
@@ -93,7 +94,7 @@ export async function POST(request: NextRequest) {
 
     // Validate phone format
     if (!isValidPhone(phone)) {
-      console.log(`❌ [SIGNUP-PHONE] Invalid phone format: ${phone}`);
+      console.log(`❌ [SIGNUP-PHONE] Invalid phone format: ${maskPhone(phone)}`);
       return NextResponse.json(
         { error: 'Invalid phone number format' },
         { status: 400 }
@@ -102,7 +103,7 @@ export async function POST(request: NextRequest) {
 
     // 🔧 Normalize phone to E.164 format (+1XXXXXXXXXX)
     const normalizedPhone = normalizePhone(phone);
-    console.log(`📱 [SIGNUP-PHONE] Phone normalized: ${phone} → ${normalizedPhone}`);
+    console.log(`📱 [SIGNUP-PHONE] Phone normalized: ${maskPhone(phone)} → ${maskPhone(normalizedPhone)}`);
 
     // 🔄 CHECK FOR EXISTING USER: Don't create duplicates!
     console.log('🔍 [SIGNUP-PHONE] Step 1: Checking for existing user...');

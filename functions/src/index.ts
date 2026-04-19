@@ -46,17 +46,29 @@ function transformToTypesense(docId: string, data: FirebaseFirestore.DocumentDat
   // not a seller's asking price.
   const isDistressed = data.isAuction === true || data.isForeclosure === true || data.isBankOwned === true;
 
-  // Determine dealType from boolean flags or existing dealType string
+  // Derive deal classification from every source of truth the doc might
+  // carry: the unified dealTypes array (preferred, set by scraper v2 +
+  // manual-add flip), the legacy boolean flags, and the legacy singular
+  // dealType string. Distressed listings are forced to cash_deal.
+  const existingDealTypes: string[] = Array.isArray(data.dealTypes) ? data.dealTypes : [];
+  const isOwnerfinance = isDistressed
+    ? false
+    : (data.isOwnerfinance === true || existingDealTypes.includes('owner_finance'));
+  const isCashDeal = data.isCashDeal === true
+    || existingDealTypes.includes('cash_deal')
+    || isDistressed;
+
   let dealType = data.dealType || 'unknown';
-  if (isDistressed) {
-    dealType = 'cash_deal';
-  } else if (data.isOwnerfinance && data.isCashDeal) {
-    dealType = 'both';
-  } else if (data.isCashDeal) {
-    dealType = 'cash_deal';
-  } else if (data.isOwnerfinance) {
-    dealType = 'owner_finance';
-  }
+  if (isOwnerfinance && isCashDeal) dealType = 'both';
+  else if (isCashDeal) dealType = 'cash_deal';
+  else if (isOwnerfinance) dealType = 'owner_finance';
+
+  // dealTypes array — Typesense schema defines it as string[] facet; code
+  // that queries Typesense (newer paths) filters on dealTypes, not the
+  // scalar. Keep both in sync.
+  const dealTypes: string[] = [];
+  if (isOwnerfinance) dealTypes.push('owner_finance');
+  if (isCashDeal) dealTypes.push('cash_deal');
 
   // Handle location
   const lat = data.latitude || data.lat;
@@ -82,6 +94,7 @@ function transformToTypesense(docId: string, data: FirebaseFirestore.DocumentDat
     description: data.description || '',
     location: lat && lng ? [lat, lng] : undefined,
     dealType,
+    dealTypes,
     listPrice: price,
     bedrooms: data.bedrooms || 0,
     bathrooms: data.bathrooms || 0,
@@ -164,10 +177,19 @@ export const onPropertyCreate = onDocumentCreated('properties/{propertyId}', asy
     return;
   }
 
-  // Skip if neither owner finance nor cash deal
-  // Also check dealType string field (GHL-imported properties use this instead of boolean flags)
-  const hasOwnerFinance = data.isOwnerfinance || data.dealType === 'owner_finance' || data.dealType === 'both';
-  const hasCashDeal = data.isCashDeal || data.dealType === 'cash_deal';
+  // Skip if neither owner finance nor cash deal. Check all three sources:
+  // dealTypes array (preferred), dealType scalar (legacy GHL imports), and
+  // boolean flags (legacy scraper). Docs written only with dealTypes array
+  // (e.g. manual-add flip in /v2/scraper/add) used to be dropped here.
+  const dealTypesArr: string[] = Array.isArray(data.dealTypes) ? data.dealTypes : [];
+  const hasOwnerFinance = data.isOwnerfinance === true
+    || data.dealType === 'owner_finance'
+    || data.dealType === 'both'
+    || dealTypesArr.includes('owner_finance');
+  const hasCashDeal = data.isCashDeal === true
+    || data.dealType === 'cash_deal'
+    || data.dealType === 'both'
+    || dealTypesArr.includes('cash_deal');
   if (!hasOwnerFinance && !hasCashDeal) {
     console.log(`Skipping property without deal type: ${docId}`);
     return;
@@ -205,10 +227,17 @@ export const onPropertyUpdate = onDocumentUpdated('properties/{propertyId}', asy
     return;
   }
 
-  // Skip if neither owner finance nor cash deal
-  // Also check dealType string field (GHL-imported properties use this instead of boolean flags)
-  const hasOwnerFinanceUpdate = data.isOwnerfinance || data.dealType === 'owner_finance' || data.dealType === 'both';
-  const hasCashDealUpdate = data.isCashDeal || data.dealType === 'cash_deal';
+  // Same triple-source check as onPropertyCreate — dealTypes array first,
+  // then scalar, then boolean flags.
+  const dealTypesArrUpd: string[] = Array.isArray(data.dealTypes) ? data.dealTypes : [];
+  const hasOwnerFinanceUpdate = data.isOwnerfinance === true
+    || data.dealType === 'owner_finance'
+    || data.dealType === 'both'
+    || dealTypesArrUpd.includes('owner_finance');
+  const hasCashDealUpdate = data.isCashDeal === true
+    || data.dealType === 'cash_deal'
+    || data.dealType === 'both'
+    || dealTypesArrUpd.includes('cash_deal');
   if (!hasOwnerFinanceUpdate && !hasCashDealUpdate) {
     // Remove from Typesense if it was there
     try {

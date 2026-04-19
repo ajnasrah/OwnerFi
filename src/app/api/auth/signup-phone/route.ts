@@ -260,7 +260,11 @@ export async function POST(request: NextRequest) {
 
       // Check for existing buyerProfile by phone or userId
       const { collection, query, where, getDocs, updateDoc } = await import('firebase/firestore');
-      let existingBuyerProfile: { id: string; ref: ReturnType<typeof doc> } | null = null;
+      let existingBuyerProfile: {
+        id: string;
+        ref: ReturnType<typeof doc>;
+        data: () => Record<string, unknown>;
+      } | null = null;
 
       // Try to find existing profile by phone
       const phoneQuery = query(
@@ -270,10 +274,8 @@ export async function POST(request: NextRequest) {
       const phoneSnapshot = await getDocs(phoneQuery);
 
       if (!phoneSnapshot.empty) {
-        existingBuyerProfile = {
-          id: phoneSnapshot.docs[0].id,
-          ref: phoneSnapshot.docs[0].ref
-        };
+        const d = phoneSnapshot.docs[0];
+        existingBuyerProfile = { id: d.id, ref: d.ref, data: () => d.data() };
         console.log(`🔍 [SIGNUP-PHONE] Found existing buyerProfile by phone: ${existingBuyerProfile.id}`);
       } else {
         // Try by userId
@@ -284,10 +286,8 @@ export async function POST(request: NextRequest) {
         const userSnapshot = await getDocs(userQuery);
 
         if (!userSnapshot.empty) {
-          existingBuyerProfile = {
-            id: userSnapshot.docs[0].id,
-            ref: userSnapshot.docs[0].ref
-          };
+          const d = userSnapshot.docs[0];
+          existingBuyerProfile = { id: d.id, ref: d.ref, data: () => d.data() };
           console.log(`🔍 [SIGNUP-PHONE] Found existing buyerProfile by userId: ${existingBuyerProfile.id}`);
         }
       }
@@ -298,6 +298,14 @@ export async function POST(request: NextRequest) {
         // UPDATE existing profile with new data (including isInvestor)
         buyerId = existingBuyerProfile.id;
         console.log(`🔄 [SIGNUP-PHONE] Updating existing buyerProfile: ${buyerId}, isInvestor: ${isInvestor}`);
+
+        // Only re-enable the lead-pool flag if the buyer hasn't opted out
+        // through any other channel. Without this gate, a returning buyer
+        // whose prior profile was opted-out would get silently re-added to
+        // the referral pool on phone-auth signup, bypassing TCPA revocation.
+        const existingBuyer = existingBuyerProfile.data() as any;
+        const optedOut = !!(existingBuyer?.tcpaRevokedAt || existingBuyer?.optedOutAt);
+        const canAvailable = !!(city && state) && !optedOut;
 
         await updateDoc(existingBuyerProfile.ref, {
           userId: newUser.id,
@@ -311,6 +319,11 @@ export async function POST(request: NextRequest) {
           state: state || '',
           isInvestor: isInvestor === true,
           profileComplete: !!(city && state),
+          // Flip isAvailableForPurchase + isActive to true when profile is
+          // complete and buyer isn't opted out. Fixes the silent-lockout
+          // bug where existing email-signup buyers stayed isAvail=false
+          // forever.
+          ...(canAvailable ? { isAvailableForPurchase: true, isActive: true } : {}),
           updatedAt: serverTimestamp()
         });
 

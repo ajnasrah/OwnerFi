@@ -171,10 +171,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Update buyer profile to mark as unavailable
+    // Update buyer profile to mark as unavailable.
+    // Apply the full opt-out flag set synchronously BEFORE the async TCPA
+    // revoke call so a revocation failure can't leave SMS enabled.
+    // Full set matches what revokeBuyerTCPAConsent() writes: isAvailable,
+    // isActive, smsNotifications, marketingOptOut, optedOutAt.
     await db.collection('buyerProfiles').doc(buyerDoc.id).update({
       isAvailableForPurchase: false,
       isActive: false,
+      smsNotifications: false,
+      marketingOptOut: true,
       optedOutAt: new Date(),
       optOutReason: 'ccpa_do_not_sell',
       optOutSource: 'website_form',

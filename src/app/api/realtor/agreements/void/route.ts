@@ -100,11 +100,20 @@ export async function POST(request: NextRequest) {
 
     // Release the buyer back to the available pool so another realtor can
     // claim them. Guard against resurrecting a soft-deleted buyer. Do NOT
-    // clear revocation flags — if the buyer opted out, the TCPA revocation
-    // stays in effect independently.
+    // clear opt-out / revocation flags — if the buyer opted out through
+    // ANY channel (Twilio STOP, GHL webhook, /api/do-not-sell, admin
+    // revoke), they must stay out of the pool independently of whether
+    // this particular agreement voids. Checks both tcpaRevokedAt and
+    // optedOutAt since not every opt-out path sets both.
     const buyerDoc = await FirebaseDB.getDocument('buyerProfiles', agreement.buyerId);
-    const buyer = buyerDoc as { deleted?: boolean; tcpaRevokedAt?: unknown } | null;
-    if (buyer && buyer.deleted !== true && !buyer.tcpaRevokedAt) {
+    const buyer = buyerDoc as {
+      deleted?: boolean;
+      tcpaRevokedAt?: unknown;
+      optedOutAt?: unknown;
+      isActive?: boolean;
+    } | null;
+    const optedOut = !!(buyer?.tcpaRevokedAt || buyer?.optedOutAt) || buyer?.isActive === false;
+    if (buyer && buyer.deleted !== true && !optedOut) {
       await FirebaseDB.updateDocument('buyerProfiles', agreement.buyerId, {
         isAvailableForPurchase: true,
         purchasedBy: null,
@@ -114,6 +123,8 @@ export async function POST(request: NextRequest) {
         reservedAgreementId: null,
         updatedAt: now,
       });
+    } else if (optedOut) {
+      console.log(`[void-agreement] not resurrecting ${agreement.buyerId} — buyer is opted out (tcpa=${!!buyer?.tcpaRevokedAt}, optedOutAt=${!!buyer?.optedOutAt}, isActive=${buyer?.isActive})`);
     }
 
     await logInfo('Referral agreement voided', {

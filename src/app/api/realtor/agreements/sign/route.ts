@@ -171,6 +171,10 @@ export async function POST(request: NextRequest) {
       state?: string;
       isAvailableForPurchase?: boolean;
       purchasedBy?: string;
+      profileComplete?: boolean;
+      isActive?: boolean;
+      tcpaRevokedAt?: unknown;
+      optedOutAt?: unknown;
     };
 
     if (!buyer) {
@@ -194,6 +198,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'This lead has already been claimed by another realtor. The agreement cannot be completed.' },
         { status: 409 }
+      );
+    }
+
+    // Reject sign if buyer profile is incomplete or opted out. Sign reveals
+    // buyer contact info, so these guards prevent leaking a half-formed or
+    // legally-unavailable lead to a realtor.
+    if (buyer.profileComplete !== true) {
+      return NextResponse.json(
+        { error: 'Buyer profile is incomplete. Agreement cannot be completed.' },
+        { status: 400 }
+      );
+    }
+    if (buyer.isActive === false) {
+      return NextResponse.json(
+        { error: 'Buyer is no longer active. Agreement cannot be completed.' },
+        { status: 400 }
+      );
+    }
+    if (buyer.tcpaRevokedAt || buyer.optedOutAt) {
+      return NextResponse.json(
+        { error: 'Buyer has opted out. Agreement cannot be completed.' },
+        { status: 400 }
       );
     }
 

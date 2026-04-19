@@ -84,8 +84,12 @@ export async function POST(request: NextRequest) {
       preferredState?: string;
       state?: string;
       isAvailableForPurchase?: boolean;
+      profileComplete?: boolean;
+      isActive?: boolean;
+      tcpaRevokedAt?: unknown;
+      optedOutAt?: unknown;
     };
-    
+
     if (!buyer) {
       return NextResponse.json(
         { error: 'Buyer lead not found' },
@@ -97,6 +101,28 @@ export async function POST(request: NextRequest) {
     if (buyer.isAvailableForPurchase === false) {
       return NextResponse.json(
         { error: 'This buyer lead is no longer available' },
+        { status: 400 }
+      );
+    }
+
+    // Defense-in-depth — block purchase on any partial/opted-out state even
+    // if isAvailableForPurchase somehow slipped through as true. Mirrors
+    // the referral-pool query gates in consolidated-lead-system.ts.
+    if (buyer.profileComplete !== true) {
+      return NextResponse.json(
+        { error: 'Buyer profile is incomplete (missing city/state or other required fields)' },
+        { status: 400 }
+      );
+    }
+    if (buyer.isActive === false) {
+      return NextResponse.json(
+        { error: 'Buyer is no longer active' },
+        { status: 400 }
+      );
+    }
+    if (buyer.tcpaRevokedAt || buyer.optedOutAt) {
+      return NextResponse.json(
+        { error: 'Buyer has opted out and is not purchasable' },
         { status: 400 }
       );
     }
@@ -181,6 +207,18 @@ export async function POST(request: NextRequest) {
       const freshBuyerData = buyerSnap.data();
       if (freshBuyerData.isAvailableForPurchase === false) {
         throw new Error('Lead no longer available');
+      }
+      // In-transaction duplicate of the outer guards — a concurrent
+      // opt-out between the outer check and the transaction must still
+      // block the purchase.
+      if (freshBuyerData.profileComplete !== true) {
+        throw new Error('Buyer profile incomplete');
+      }
+      if (freshBuyerData.isActive === false) {
+        throw new Error('Buyer is no longer active');
+      }
+      if (freshBuyerData.tcpaRevokedAt || freshBuyerData.optedOutAt) {
+        throw new Error('Buyer has opted out');
       }
 
       const newCredits = freshUserData.realtorData.credits - 1;

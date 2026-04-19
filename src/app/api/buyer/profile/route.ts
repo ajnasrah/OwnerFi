@@ -334,8 +334,16 @@ export async function POST(request: NextRequest) {
       // 🆕 Pre-computed filter (for 100K user scale)
       filter,
 
-      // Lead selling fields (preserve existing values on update)
-      isAvailableForPurchase: existingProfile?.isAvailableForPurchase ?? true,
+      // Lead selling fields. On new profile → available. On update →
+      // re-enable unless the buyer has a live opt-out (tcpaRevokedAt or
+      // optedOutAt). Closes the email-signup lockout bug where buyers
+      // were created isAvail=false in /api/auth/signup and then this
+      // endpoint was preserving the false on profile completion.
+      isAvailableForPurchase: (() => {
+        const optedOut = !!(existingProfile?.tcpaRevokedAt || existingProfile?.optedOutAt);
+        if (optedOut) return false;
+        return true;
+      })(),
       leadPrice: existingProfile?.leadPrice ?? 1,
 
       // Activity tracking

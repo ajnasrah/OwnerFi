@@ -225,10 +225,15 @@ export async function POST(request: NextRequest) {
     // Use status or reason field (status takes precedence from GHL)
     const optOutReason = payload.status || payload.reason || 'stop_contacting';
 
-    // Update buyer profile to mark as unavailable
+    // Update buyer profile to mark as unavailable.
+    // Apply the full opt-out flag set synchronously BEFORE the async TCPA
+    // revoke call so a revocation failure can't leave SMS enabled. Matches
+    // the set written by /api/do-not-sell and revokeBuyerTCPAConsent().
     const updateData: Record<string, unknown> = {
       isAvailableForPurchase: false,
       isActive: false,
+      smsNotifications: false,
+      marketingOptOut: true,
       optedOutAt: new Date(),
       optOutReason,
       optOutSource: 'ghl_webhook',

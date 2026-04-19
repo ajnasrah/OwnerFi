@@ -576,7 +576,7 @@ export default function TermsOfService() {
               <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8">
                 <h2 className="text-2xl font-semibold text-blue-800 mb-4">📋 What Agents Need to Know (Plain English)</h2>
                 <ul className="space-y-2 text-blue-700">
-                  <li>• <strong>Ownerfi provides buyer leads</strong> — pre-screened buyers interested in owner-financed properties (not lender-style pre-qualified)</li>
+                  <li>• <strong>Ownerfi refers buyer leads</strong> — inquiries from self-identified buyers interested in owner-financed properties (not lender-style pre-qualified)</li>
                   <li>• <strong>You pay a 30% referral fee</strong> of your commission at closing (only when you close)</li>
                   <li>• <strong>You must sign a referral agreement</strong> to receive buyer contact information</li>
                   <li>• <strong>Agreements are valid for 180 days</strong> and extend through closing</li>
@@ -593,7 +593,7 @@ export default function TermsOfService() {
                 <section>
                   <h2 className="text-2xl font-semibold text-primary-text mb-4">1. Platform Overview for Real Estate Agents</h2>
                   <p className="mb-4">
-                    Ownerfi operates a <strong>real estate lead generation and referral platform</strong> that connects licensed real estate agents with pre-screened buyer leads interested in owner-financed properties.
+                    Ownerfi operates a <strong>real estate lead generation and referral platform</strong>. Buyer inquiries for owner-financed properties are referred to licensed real estate agents, who independently choose whether to engage each lead and who handle all subsequent licensed real estate activity. Ownerfi does not match, negotiate for, or represent buyers or sellers.
                   </p>
                   <p className="mb-2">The platform provides:</p>
                   <ul className="list-disc ml-6 space-y-1 mb-4">

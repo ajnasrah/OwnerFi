@@ -332,20 +332,48 @@ export async function POST(request: NextRequest) {
     console.log(`   Property: ${property.address}`);
     console.log(`   Deal Type: ${property.dealType}`);
 
-    // Narrow idempotency: only suppress if the same response was processed in
-    // the last 60s (guards GHL retry storms). Allow legitimate re-sends so the
-    // agent can re-flip a property and have it rerun the full flow.
-    const lastRespAt = property.agentResponseAt?.toDate?.()?.getTime?.() || 0;
+    // Idempotency: prefer a GHL-sourced request ID (opportunityId change
+    // or explicit idempotency key) over a time window. Time-only windows
+    // either swallow legitimate re-flips (too wide) or wave duplicates
+    // through on slow networks (too narrow).
+    //
+    // Dedupe on (response, opportunityId) — if GHL re-fires the same
+    // workflow action with the same opportunity/response pair and we've
+    // already processed it, drop. A legitimate re-flip flips response,
+    // so it'll pass.
+    const priorRespondedOppId = property.lastProcessedOpportunityId;
     if (
       property.agentResponse === response &&
       property.status && property.status.startsWith('agent_') &&
-      lastRespAt && (Date.now() - lastRespAt) < 60_000
+      ghlOpportunityId &&
+      priorRespondedOppId === ghlOpportunityId
     ) {
-      console.log('⏭️  [AGENT RESPONSE WEBHOOK] Duplicate within 60s — skipping');
+      console.log('⏭️  [AGENT RESPONSE WEBHOOK] Duplicate (same response + same opportunityId) — skipping');
       return NextResponse.json({
         success: true,
         duplicate: true,
-        message: 'Response already processed within last 60s (GHL retry guard)',
+        message: 'Response already processed for this opportunity',
+        firebaseId,
+        response,
+      });
+    }
+    // Also keep a short 5-minute safety net for webhooks that arrive
+    // without a usable opportunityId — GHL sometimes retries the same
+    // event every ~5s. Wider than the old 60s so a transient network
+    // blip + retry doesn't get dropped, still narrow enough that a
+    // legitimate human re-flip (minutes+) rerun the flow.
+    const lastRespAt = property.agentResponseAt?.toDate?.()?.getTime?.() || 0;
+    if (
+      !ghlOpportunityId &&
+      property.agentResponse === response &&
+      property.status && property.status.startsWith('agent_') &&
+      lastRespAt && (Date.now() - lastRespAt) < 5 * 60_000
+    ) {
+      console.log('⏭️  [AGENT RESPONSE WEBHOOK] Duplicate within 5min (no opp id) — skipping');
+      return NextResponse.json({
+        success: true,
+        duplicate: true,
+        message: 'Response already processed within last 5min (GHL retry guard)',
         firebaseId,
         response,
       });
@@ -710,6 +738,7 @@ export async function POST(request: NextRequest) {
 
       // Update agent_outreach_queue — persist GHL IDs so next webhook for this
       // opportunity resolves directly via ghlOpportunityId without fallback.
+      // lastProcessedOpportunityId is the idempotency key for future retries.
       await docRef.update({
         status: 'agent_yes',
         agentResponse: 'yes',
@@ -718,6 +747,7 @@ export async function POST(request: NextRequest) {
         routedTo: 'properties',
         routedToDocId: propertyDocId,
         resolvedVia,
+        ...(ghlOpportunityId ? { lastProcessedOpportunityId: ghlOpportunityId } : {}),
         ...(ghlOpportunityId && !property.ghlOpportunityId ? { ghlOpportunityId } : {}),
         ...(ghlContactId && !property.ghlContactId ? { ghlContactId } : {}),
         updatedAt: new Date(),
@@ -782,6 +812,7 @@ export async function POST(request: NextRequest) {
         routedTo: 'rejected',
         propertyAction: action,
         routedToDocId: propSnap.exists ? propertyDocId : null,
+        ...(ghlOpportunityId ? { lastProcessedOpportunityId: ghlOpportunityId } : {}),
         ...(ghlOpportunityId && !property.ghlOpportunityId ? { ghlOpportunityId } : {}),
         ...(ghlContactId && !property.ghlContactId ? { ghlContactId } : {}),
         updatedAt: new Date(),

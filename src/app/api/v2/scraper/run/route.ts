@@ -323,6 +323,15 @@ async function runUnifiedScraper(): Promise<{
     });
     console.log(`New properties to process: ${newProperties.length}`);
 
+    // Re-scope regionalZpids to NET-NEW only. Prior: set was built from
+    // raw search output pre-dedup, so the "will send to GHL" log overcounted
+    // and any future code path that iterated it risked re-sending already-
+    // in-DB properties. Trimming here keeps it in sync with newProperties.
+    for (const z of Array.from(regionalZpids)) {
+      if (existingZpids.has(z)) regionalZpids.delete(z);
+    }
+    console.log(`[REGIONAL] ${regionalZpids.size} net-new regional properties (will send to GHL after save)`);
+
     if (newProperties.length === 0) {
       return {
         success: true,

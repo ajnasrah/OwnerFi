@@ -98,12 +98,13 @@ export async function POST(request: NextRequest) {
           updatedAt: serverTimestamp()
         };
 
-        await setDoc(doc(db, 'buyerProfiles', buyerId), buyerData);
-
-        // Persist TCPA consent evidence (email-signup channel uses the
-        // /auth/setup checkbox text). Best-effort — don't block signup.
-        try {
-          if (buyerData.phone) {
+        // TCPA consent must land BEFORE the buyer profile exists. If we
+        // create a buyerProfile without a matching consent record, any
+        // outbound SMS later is indefensible under audit. Record-then-
+        // create; on consent failure, abort signup with 500 rather than
+        // leave a "consented-but-no-proof" account in the DB.
+        if (buyerData.phone) {
+          try {
             const { recordTCPAConsent, PHONE_CONSENT_TEXT_SETUP } = await import('@/lib/tcpa-consent');
             await recordTCPAConsent({
               phone: buyerData.phone,
@@ -115,11 +116,19 @@ export async function POST(request: NextRequest) {
               headers: request.headers,
               checkboxChecked: true,
             });
+          } catch (consentError) {
+            console.error('❌ [SIGNUP] TCPA consent record failed — aborting signup:',
+              consentError instanceof Error ? consentError.message : consentError);
+            return NextResponse.json(
+              {
+                error: 'Could not save consent record. Please retry in a moment — your account has not been created.',
+              },
+              { status: 500 }
+            );
           }
-        } catch (consentError) {
-          console.error('⚠️ [SIGNUP] TCPA consent record failed (signup continuing):',
-            consentError instanceof Error ? consentError.message : consentError);
         }
+
+        await setDoc(doc(db, 'buyerProfiles', buyerId), buyerData);
 
         // Send new buyer to GHL webhook immediately
         syncBuyerToGHL({

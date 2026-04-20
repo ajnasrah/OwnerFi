@@ -239,7 +239,11 @@ export function buildPropertyDocFromQueue(opts: QueueToPropertyOptions): Record<
     source,
     agentConfirmedAt: isOwnerfinance ? new Date() : null,
     agentNote: agentNote || null,
-    originalQueueId,
+    // Coerce undefined → null. Firestore rejects `undefined` but accepts
+    // `null`. Callers that don't pass originalQueueId (e.g. the queue
+    // processor cash-deal save path) used to hit the 2 failed-property
+    // errors the verification sweep surfaced.
+    originalQueueId: originalQueueId ?? null,
     ghlOpportunityId: ghlOpportunityId || null,
 
     // Timestamps

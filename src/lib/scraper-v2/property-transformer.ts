@@ -530,7 +530,8 @@ export function createCashHousesDoc(
     // Cash Deal Fields
     needsWork: filterResult.needsWork,
     needsWorkKeywords: filterResult.needsWorkKeywords,
-    dealType: filterResult.cashDealReason || 'unknown',
+    dealType: 'cash', // This is a cash deal property
+    cashDealReason: filterResult.cashDealReason || 'unknown',
     discountPercentage: filterResult.discountPercentage || 0,
     eightyPercentOfZestimate: filterResult.eightyPercentOfZestimate || 0,
 

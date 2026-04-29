@@ -151,14 +151,14 @@ const nextConfig = {
 
   // ESLint configuration for build process
   eslint: {
-    // Don't block builds on lint issues - allow warnings and most errors through
-    ignoreDuringBuilds: true
+    // CRITICAL FIX: Enable ESLint during builds to catch errors
+    ignoreDuringBuilds: false
   },
 
   // TypeScript configuration for build process
   typescript: {
-    // Don't fail builds on type errors during deployment
-    ignoreBuildErrors: true
+    // CRITICAL FIX: Enable TypeScript checks during builds
+    ignoreBuildErrors: false
   },
 
   // Redirects for SEO and URL consistency

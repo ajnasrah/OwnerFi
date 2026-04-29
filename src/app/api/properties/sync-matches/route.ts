@@ -11,7 +11,10 @@ import {
   serverTimestamp 
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { isPropertyMatch } from '@/lib/matching';
+import { 
+  matchPropertyToBuyersEfficient,
+  matchBuyerToPropertiesEfficient 
+} from '@/lib/matching-efficient';
 import { BuyerProfile } from '@/lib/firebase-models';
 import { PropertyListing } from '@/lib/property-schema';
 
@@ -113,234 +116,50 @@ async function removePropertyFromAllBuyers(propertyId: string) {
 // Add new property to buyers whose criteria it matches
 async function addPropertyToMatchingBuyers(property: PropertyListing & { id: string }) {
   try {
-    // PERFORMANCE FIX: Use background job approach instead of synchronous processing
-    // Instead of loading ALL buyers, trigger background calculation via property-matching/calculate
-
-    // For immediate response, we queue the property and process buyers in background
-    // This prevents timeout on large buyer lists (1000+ buyers)
-
-    // OPTIMIZATION: Only check buyers in the same state
-    // NEW: Removed maxMonthlyPayment filter to allow OR logic (property might match on down payment only)
-    // FIXED: Query by preferredState (most common) since OR queries need composite indexes
-    // Then we'll check all state fields in the matching logic
-    const { limit: firestoreLimit } = await import('firebase/firestore');
-    const relevantBuyersQuery = query(
-      collection(db!, 'buyerProfiles'),
-      where('preferredState', '==', property.state),
-      firestoreLimit(500) // Increased limit since we can't pre-filter by monthly payment anymore
-    );
-    const buyerDocs = await getDocs(relevantBuyersQuery);
-
-    const updatePromises = [];
-    const matchedBuyers: BuyerProfile[] = [];
-
-    for (const buyerDoc of buyerDocs.docs) {
-      const buyerData = buyerDoc.data() as BuyerProfile;
-
-      // Check if this property matches the buyer's criteria
-      const matches = await checkPropertyMatchesBuyer(property, buyerData);
-
-      if (matches) {
-        const buyerRef = doc(db!, 'buyerProfiles', buyerDoc.id);
-        updatePromises.push(
-          updateDoc(buyerRef, {
-            matchedPropertyIds: arrayUnion(property.id),
-            lastMatchUpdate: serverTimestamp(),
-            updatedAt: serverTimestamp()
-          })
-        );
-
-        // Track matched buyers for GoHighLevel notifications
-        matchedBuyers.push({ ...buyerData, id: buyerDoc.id });
-      }
-    }
-
-    await Promise.all(updatePromises);
-
-    // Send GoHighLevel SMS notifications to matched buyers (non-blocking)
-    if (matchedBuyers.length > 0) {
-      console.log(`🔔 Triggering SMS notifications for ${matchedBuyers.length} matched buyers`);
-
-      // Import and trigger notifications in background
-      const { sendBatchPropertyMatchNotifications } = await import('@/lib/gohighlevel-notifications');
-
-      // Fire and forget - don't block the sync-matches response
-      sendBatchPropertyMatchNotifications(property, matchedBuyers, 'new_property_added')
-        .then(result => {
-          console.log(`✅ GoHighLevel notifications sent: ${result.sent} sent, ${result.failed} failed`);
-        })
-        .catch(err => {
-          console.error('❌ Failed to send GoHighLevel notifications:', err);
-        });
-    }
-
+    // MEMORY-EFFICIENT: Use cursor-based pagination to avoid loading all buyers at once
+    const result = await matchPropertyToBuyersEfficient(property.id);
+    
+    console.log(`✅ Matched property ${property.id} to ${result.matchedBuyers} buyers (out of ${result.totalBuyers} total)`);
+    
+    // Note: GoHighLevel notifications are now handled within the efficient matching function
+    // to avoid loading all matched buyers into memory at once
+    
   } catch (error) {
-    // Error occurred
+    console.error('Failed to match property to buyers:', error);
+    throw error;
   }
 }
 
-// Check if a property matches a buyer's criteria
-// NEW: Uses OR logic - property matches if it meets at least ONE budget criterion
-async function checkPropertyMatchesBuyer(property: PropertyListing & { id: string }, buyerData: BuyerProfile): Promise<boolean> {
-  try {
-    // Location match - use 30-mile radius (same as buyer search)
-    const criteria = buyerData.searchCriteria || {};
-    const buyerCity = criteria.city || buyerData.preferredCity;
-    const buyerState = criteria.state || buyerData.preferredState;
-
-    // Get cities within 30 miles of buyer's search city (with auto-expansion to 60/120mi if needed)
-    const { getCitiesWithinRadiusWithExpansion } = await import('@/lib/comprehensive-cities');
-    const { cities: nearbyCities } = getCitiesWithinRadiusWithExpansion(buyerCity, buyerState, 30, 5);
-    const nearbyCityNames = new Set(nearbyCities.map(c => c.name.toLowerCase()));
-
-    // Property matches if in ANY nearby city
-    const locationMatch =
-      nearbyCityNames.has(property.city.toLowerCase()) &&
-      property.state === buyerState;
-
-    if (!locationMatch) return false;
-
-    // Requirements match
-    const requirementsMatch =
-      (!buyerData.minBedrooms || property.bedrooms >= buyerData.minBedrooms) &&
-      (!buyerData.minBathrooms || property.bathrooms >= buyerData.minBathrooms) &&
-      (!buyerData.minPrice || property.listPrice >= buyerData.minPrice) &&
-      (!buyerData.maxPrice || property.listPrice <= buyerData.maxPrice);
-
-    return requirementsMatch;
-
-  } catch (error) {
-    return false;
-  }
-}
+// Note: Individual property-buyer matching is now handled by the efficient matching functions
+// which use cursor-based pagination to avoid memory issues
 
 // GET endpoint to refresh all matches (maintenance operation)
 export async function GET(request: NextRequest) {
   try {
-    // PERFORMANCE FIX: This endpoint was the WORST performer in the entire app
-    // It loaded ALL buyers × ALL properties = 1,000,000+ comparisons = guaranteed timeout
-
-    // NEW APPROACH: Paginated background job processing
-    // Query parameter: ?offset=0&limit=10 (default limit=10)
-
+    // MEMORY-EFFICIENT: Process one buyer at a time using cursor-based pagination
     const { searchParams } = new URL(request.url);
-    const offset = parseInt(searchParams.get('offset') || '0', 10);
-    const limit = Math.min(parseInt(searchParams.get('limit') || '10', 10), 50); // Max 50 per request
-
-    const { limit: firestoreLimit, orderBy, startAfter, getDocs: getDocsFunc } = await import('firebase/firestore');
-
-    // Get paginated buyers
-    let buyersQuery = query(
-      collection(db!, 'buyerProfiles'),
-      orderBy('createdAt', 'desc'),
-      firestoreLimit(limit)
-    );
-
-    // Skip to offset (if provided)
-    if (offset > 0) {
-      // Get the document at offset position to use as cursor
-      const offsetQuery = query(
-        collection(db!, 'buyerProfiles'),
-        orderBy('createdAt', 'desc'),
-        firestoreLimit(offset)
-      );
-      const offsetDocs = await getDocs(offsetQuery);
-      if (offsetDocs.docs.length > 0) {
-        const lastDoc = offsetDocs.docs[offsetDocs.docs.length - 1];
-        buyersQuery = query(
-          collection(db!, 'buyerProfiles'),
-          orderBy('createdAt', 'desc'),
-          startAfter(lastDoc),
-          firestoreLimit(limit)
-        );
-      }
-    }
-
-    const buyerDocs = await getDocs(buyersQuery);
-
-    if (buyerDocs.empty) {
+    const buyerId = searchParams.get('buyerId');
+    
+    if (buyerId) {
+      // Refresh matches for a specific buyer
+      const result = await matchBuyerToPropertiesEfficient(buyerId);
       return NextResponse.json({
         success: true,
-        message: 'No more buyers to process',
-        offset,
-        limit,
-        processedCount: 0,
-        hasMore: false
+        message: `Refreshed matches for buyer ${buyerId}`,
+        matchedProperties: result.matchedProperties,
+        totalProperties: result.totalProperties
       });
     }
-
-    let refreshedCount = 0;
-
-    for (const buyerDoc of buyerDocs.docs) {
-      const buyerData = buyerDoc.data();
-      const criteria = buyerData.searchCriteria || {};
-
-      // CRITICAL FIX: Query only properties in buyer's state
-      // NEW: Removed monthlyPayment filter to allow OR logic (property might match on down payment only)
-      const propertiesQuery = query(
-        collection(db!, 'properties'),
-        where('isActive', '==', true),
-        where('state', '==', criteria.state || buyerData.preferredState || ''),
-        orderBy('monthlyPayment', 'asc'),
-        firestoreLimit(1000) // Increased limit to capture more properties for OR logic
-      );
-
-      const propertiesSnapshot = await getDocs(propertiesQuery);
-
-      const matchingProperties = propertiesSnapshot.docs
-        .map(doc => ({ id: doc.id, ...doc.data() } as PropertyListing))
-        .filter(property => {
-          // Use the isPropertyMatch function with proper data structure
-          const propertyForMatching = {
-            id: property.id,
-            monthlyPayment: property.monthlyPayment || 0,
-            downPaymentAmount: property.downPaymentAmount || 0,
-            city: property.city || '',
-            state: property.state || '',
-            bedrooms: property.bedrooms || 0,
-            bathrooms: property.bathrooms || 0
-          };
-
-          const buyerForMatching = {
-            id: buyerData.id,
-            preferredCity: buyerData.preferredCity || '',
-            preferredState: buyerData.preferredState || '',
-            searchRadius: criteria.searchRadius || buyerData.searchRadius || 25,
-            minBedrooms: buyerData.minBedrooms,
-            minBathrooms: buyerData.minBathrooms,
-            // CRITICAL: Include filter with nearbyCities for radius-based matching
-            filter: buyerData.filter
-          };
-
-          return isPropertyMatch(propertyForMatching, buyerForMatching).matches;
-        });
-
-      const matchedIds = matchingProperties.map(p => p.id);
-
-      // Update the buyer's matched properties
-      const buyerRef = doc(db!, 'buyerProfiles', buyerDoc.id);
-      await updateDoc(buyerRef, {
-        matchedPropertyIds: matchedIds,
-        lastMatchUpdate: serverTimestamp(),
-        updatedAt: serverTimestamp()
-      });
-
-      refreshedCount++;
-    }
-
-    const hasMore = buyerDocs.docs.length === limit;
-
+    
+    // For bulk refresh, return instructions to use the new efficient approach
     return NextResponse.json({
-      success: true,
-      message: `Refreshed matches for ${refreshedCount} buyers`,
-      offset,
-      limit,
-      processedCount: refreshedCount,
-      hasMore,
-      nextOffset: hasMore ? offset + limit : null
-    });
+      success: false,
+      message: 'Bulk match refresh has been deprecated due to memory issues.',
+      instructions: 'Use POST /api/properties/sync-matches with action="recalculate" instead, or specify a buyerId parameter to refresh a single buyer.'
+    }, { status: 400 });
 
   } catch (error) {
+    console.error('Failed to refresh matches:', error);
     return NextResponse.json(
       { error: 'Failed to refresh matches' },
       { status: 500 }

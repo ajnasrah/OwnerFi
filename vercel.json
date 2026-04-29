@@ -44,6 +44,10 @@
     {
       "path": "/api/cron/refresh-agents",
       "schedule": "0 */6 * * *"
+    },
+    {
+      "path": "/api/cron/recalculate-matches",
+      "schedule": "0 3 * * *"
     }
   ],
   "functions": {
@@ -76,6 +80,9 @@
     },
     "src/app/api/cron/refresh-agents/route.ts": {
       "maxDuration": 240
+    },
+    "src/app/api/cron/recalculate-matches/route.ts": {
+      "maxDuration": 600
     }
   },
   "headers": [

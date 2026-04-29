@@ -207,7 +207,7 @@ export function buildPreciseZipSearchUrl(zip: string): string {
       hoa: { max: 200 },
       built: { min: 1970 },
       "55plus": { value: "e" },
-      doz: { value: "1" }
+      // doz: { value: "1" }  // REMOVED - getting ALL properties
     },
     isListVisible: true,
     usersSearchTerm: zip,

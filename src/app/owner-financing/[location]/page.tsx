@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import { stateData, cityData } from '@/lib/location-data';
 import Link from 'next/link';
-import Header from '@/components/ui/Header';
-import Footer from '@/components/ui/Footer';
+import { Header } from '@/components/ui/Header';
+import { Footer } from '@/components/ui/Footer';
 import { Shield, Home, Users, DollarSign, FileText, Calculator } from 'lucide-react';
 
 // Type definitions

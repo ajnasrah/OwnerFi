@@ -205,39 +205,50 @@ async function generateScript(cards: CardData[], lang: 'en' | 'es'): Promise<Vid
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
   const systemPrompt = lang === 'en'
-    ? `You write punchy short-form video scripts for Ownerfi — a platform that helps renters find homes where sellers would consider owner financing.
+    ? `You create VIRAL TikTok/Instagram real estate scripts that stop scrolling instantly.
     
-IMPORTANT: Today is ${dayOfWeek}, ${month} ${today.getDate()}. Make the content unique for today by varying the approach, angle, or specific language used.
+TODAY'S DATE: ${dayOfWeek}, ${month} ${today.getDate()} - use trending references from TODAY.
 
-TARGET AUDIENCE: 20-35 year olds currently renting who can't buy through traditional mortgages.
+VIRAL HOOK FORMULAS (rotate between these):
+1. "I found [shocking detail] in [location]" 
+2. "POV: You're paying $[rent] in rent when you could own this for $[payment]"
+3. "Nobody talks about this homebuying hack in [state]"
+4. "Wait till you see the [specific feature] in house #3"
+5. "The bank said no but the seller said..."
+6. "$[price]? In THIS economy? Let me show you..."
+7. "Why is nobody talking about these [state] houses?"
 
-VOICE: Real, raw, conversational. Like a friend who found a cheat code and is sharing it. No corporate speak. No exclamation marks. No "don't miss out" or "it's time for a change" — those are cringe.
+AUDIENCE: Frustrated renters, 20-35, doom-scrolling at night, dreaming of escape.
 
-COMPLIANCE — NEVER SAY:
-- "no credit check", "guaranteed approval", "no bank needed", "everyone qualifies"
-- "don't miss out", "act now", "limited time"
-Instead say: "only some sellers require a credit check", "outside traditional lending"
+VOICE: Like you're FaceTiming your best friend with breaking news. Urgent but not salesy.
 
-CONTEXT:
-- These are homes where sellers MAY consider owner financing
-- Owner financing = the seller IS the bank, you pay them directly instead of a mortgage company
-- This is real, legal, and increasingly common
+NEVER SAY: "check out", "don't miss", "act now", "limited time", "guaranteed"
 
 OUTPUT FORMAT (JSON):
 {
-  "hook": "A raw, punchy opening line (max 12 words). Hit a SPECIFIC pain point. Different every time.",
-  "intro": "2-3 short sentences. Introduce the homes naturally. Mention the lowest price. Under 35 words total.",
-  "cta": "One sentence. Tell them to follow Ownerfi. Mention link in bio. Under 15 words. Casual.",
-  "postCaption": "Suspenseful social media caption under 150 characters. Make people NEED to watch. Hint at what they'll see without giving it away. Mention the state. No hashtags here.",
-  "postTitle": "Short punchy title under 150 characters for YouTube/TikTok. Create curiosity about these specific homes. Mention the state."
+  "hook": "MUST stop the scroll in 2 seconds. Use shock, curiosity, or contradiction. Max 10 words.",
+  "intro": "Quick context. Mention CHEAPEST price immediately. Under 25 words.",
+  "cta": "Follow for tomorrow's deals. Link in bio. Under 10 words.",
+  "postCaption": "Create FOMO without saying 'don't miss'. Make them think 'what if I don't watch?' Under 100 chars.",
+  "postTitle": "Clickbait that delivers. Numbers + location + shock value. Under 100 chars.",
+  "trending": "Suggest a trending audio/sound that would work (optional)"
 }`
-    : `Escribes guiones cortos y directos para videos de Ownerfi — una plataforma que ayuda a personas que rentan a encontrar casas donde los vendedores podrían considerar financiamiento directo (owner financing).
+    : `Creas guiones VIRALES de TikTok/Instagram sobre bienes raíces que paran el scroll al instante.
     
-IMPORTANTE: Hoy es ${dayOfWeek}, ${month} ${today.getDate()}. Haz el contenido único para hoy variando el enfoque, ángulo, o lenguaje específico usado.
+FECHA DE HOY: ${dayOfWeek}, ${month} ${today.getDate()} - usa referencias de tendencias de HOY.
 
-AUDIENCIA: Latinos de 20-35 años rentando en EE.UU. que no califican para hipotecas tradicionales.
+FÓRMULAS DE GANCHO VIRAL (rotar entre estas):
+1. "Encontré [detalle impactante] en [ubicación]"
+2. "POV: Pagas $[renta] de renta cuando podrías ser dueño por $[pago]"
+3. "Nadie habla de este truco para comprar casa en [estado]"
+4. "Espera a ver el/la [característica] en la casa #3"
+5. "El banco dijo no pero el vendedor dijo..."
+6. "¿$[precio]? ¿En ESTA economía? Déjame mostrarte..."
+7. "¿Por qué nadie habla de estas casas en [estado]?"
 
-VOZ: Real, directa, como un amigo que encontró un truco y lo comparte. Sin lenguaje corporativo. Sin signos de exclamación.
+AUDIENCIA: Latinos frustrados rentando, 20-35, scrolleando de noche, soñando con escapar.
+
+VOZ: Como si estuvieras en FaceTime con tu mejor amigo con noticias urgentes.
 
 CUMPLIMIENTO — NUNCA DIGAS:
 - "sin verificación de crédito", "aprobación garantizada", "todos califican"
@@ -254,16 +265,34 @@ FORMATO DE SALIDA (JSON):
   "hook": "Línea inicial directa y fuerte (max 12 palabras). Un dolor específico. Diferente cada vez.",
   "intro": "2-3 oraciones cortas. Presenta las casas naturalmente. Menciona el precio más bajo. Menos de 35 palabras.",
   "cta": "Una oración. Que sigan a Ownerfi. Mencionar link en bio. Menos de 15 palabras.",
-  "postCaption": "Pie de publicación en español, menos de 150 caracteres. Que genere suspenso y curiosidad. Menciona el estado. Sin hashtags.",
-  "postTitle": "Título corto en español, menos de 150 caracteres. Genera curiosidad sobre estas casas específicas. Menciona el estado."
+  "postCaption": "Crea FOMO sin decir 'no te lo pierdas'. Haz que piensen '¿y si no lo veo?' Menos de 100 caracteres.",
+  "postTitle": "Clickbait que cumple. Números + ubicación + impacto. Menos de 100 caracteres.",
+  "trending": "Sugiere un audio/sonido trending que funcionaría (opcional)"
 }`;
 
+  // Add variety by rotating hook types
+  const hookTypes = [
+    'shocking_price', 'rent_comparison', 'hidden_gem', 
+    'specific_feature', 'bank_rejection', 'economy_angle', 'nobody_talking'
+  ];
+  const selectedHook = hookTypes[Math.floor(Math.random() * hookTypes.length)];
+
   const userPrompt = lang === 'en'
-    ? `Generate a script for today's product demo video. We have ${cards.length} ${stateName} homes ranging from $${Math.round(lowestPrice / 1000)}K to $${Math.round(highestPrice / 1000)}K in: ${cities}. Mention ${stateName} in the intro.`
-    : `Genera un guión para el video de hoy. Tenemos ${cards.length} casas en ${stateName} desde $${Math.round(lowestPrice / 1000)}K hasta $${Math.round(highestPrice / 1000)}K en: ${cities}. Menciona ${stateName} en la intro.`;
+    ? `Create a VIRAL script using the "${selectedHook}" hook type. 
+    ${cards.length} homes in ${stateName}. 
+    CHEAPEST: $${Math.round(lowestPrice / 1000)}K
+    Cities: ${cities}
+    Make it IMPOSSIBLE to scroll past. Think: "What would make ME stop scrolling at 11pm?"
+    Remember: 70% watch rate needed for viral. First 2 seconds = EVERYTHING.`
+    : `Crea un guión VIRAL usando el gancho tipo "${selectedHook}".
+    ${cards.length} casas en ${stateName}.
+    MÁS BARATA: $${Math.round(lowestPrice / 1000)}K
+    Ciudades: ${cities}
+    Hazlo IMPOSIBLE de ignorar. Piensa: "¿Qué me haría parar de scrollear a las 11pm?"
+    Recuerda: 70% de retención necesaria para viral. Primeros 2 segundos = TODO.`;
 
   const res = await openai.chat.completions.create({
-    model: 'gpt-4o-mini', temperature: 0.9, max_tokens: 500,
+    model: 'gpt-4o-mini', temperature: 0.95, max_tokens: 600,
     messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }],
     response_format: { type: 'json_object' },
   });
@@ -317,36 +346,131 @@ FORMATO DE SALIDA (JSON):
 // ============================================================================
 
 function buildScenes(cards: CardData[], script: VideoScript): any[] {
-  const introText = `${script.hook} ${script.intro}`;
   const scenes: any[] = [];
 
-  // Intro: Amir on first card bg (same position as house scenes)
+  // HOOK SCENE (2-3 seconds) - Just the hook, avatar closeup for urgency
   scenes.push({
-    character: { type: 'avatar', avatar_id: AVATAR_ID, avatar_style: 'normal', scale: 0.4, offset: { x: 0.25, y: 0.22 } },
-    voice: { type: 'text', input_text: introText, voice_id: VOICE_ID, volume: 0.8 },
-    caption_setting: { style: 'shout-block', font_family: 'Montserrat', font_size: 60, text_color: '#FFFFFFFF', highlight_text_color: '#00BC7DFF', offset: { x: 0.0, y: 0.28 }, hidden: false, override_visual_style: true },
+    character: { 
+      type: 'avatar', 
+      avatar_id: AVATAR_ID, 
+      avatar_style: 'closeUp', // More intimate, urgent feel
+      scale: 0.5, 
+      offset: { x: 0, y: 0.15 } 
+    },
+    voice: { 
+      type: 'text', 
+      input_text: script.hook, 
+      voice_id: VOICE_ID, 
+      volume: 0.9,
+      speed: 1.1 // Slightly faster for urgency
+    },
+    caption_setting: { 
+      style: 'shout-block', 
+      font_family: 'Montserrat', 
+      font_size: 70, // Bigger for mobile viewing
+      text_color: '#FFFFFFFF', 
+      highlight_text_color: '#FF0000FF', // Red for urgency
+      offset: { x: 0.0, y: 0.35 }, 
+      hidden: false, 
+      override_visual_style: true 
+    },
+    background: { type: 'image', url: cards[0].cardImageUrl, fit: 'cover' }, // Cover for full screen
+  });
+
+  // INTRO + FIRST 2 HOUSES (quick cuts, 3-4 seconds each)
+  const quickTransitions = ['cut', 'cut', 'cut']; // Fast cuts for TikTok style
+  const introWithFirstHouse = `${script.intro} ${script.houseNarrations[0]}`;
+  
+  scenes.push({
+    character: { 
+      type: 'avatar', 
+      avatar_id: AVATAR_ID, 
+      avatar_style: 'normal', 
+      scale: 0.35, 
+      offset: { x: 0.3, y: 0.2 } 
+    },
+    voice: { 
+      type: 'text', 
+      input_text: introWithFirstHouse, 
+      voice_id: VOICE_ID, 
+      volume: 0.85,
+      speed: 1.15 // Faster pacing
+    },
+    caption_setting: { 
+      style: 'shout-block', 
+      font_family: 'Montserrat', 
+      font_size: 60, 
+      text_color: '#FFFFFFFF', 
+      highlight_text_color: '#00FF00FF', // Green for money/opportunity
+      offset: { x: 0.0, y: 0.3 }, 
+      hidden: false, 
+      override_visual_style: true 
+    },
     background: { type: 'image', url: cards[0].cardImageUrl, fit: 'contain' },
+    transition_effect: { transition_in: 'cut' },
   });
 
-  // House scenes: Amir small on right, captions visible
-  const transitions = ['leftSwipe', 'rightSwipe', 'fade', 'topSwipe', 'bottomSwipe'];
-  cards.forEach((card, i) => {
+  // Show only 2-3 more houses (keep it under 20 seconds total)
+  const housesToShow = Math.min(2, cards.length - 1);
+  for (let i = 1; i <= housesToShow; i++) {
     scenes.push({
-      character: { type: 'avatar', avatar_id: AVATAR_ID, avatar_style: 'normal', scale: 0.4, offset: { x: 0.25, y: 0.22 } },
-      voice: { type: 'text', input_text: script.houseNarrations[i], voice_id: VOICE_ID, volume: 0.8 },
-      caption_setting: { style: 'shout-block', font_family: 'Montserrat', font_size: 60, text_color: '#FFFFFFFF', highlight_text_color: '#00BC7DFF', offset: { x: 0.0, y: 0.28 }, hidden: false, override_visual_style: true },
-      background: { type: 'image', url: card.cardImageUrl, fit: 'contain' },
-      transition_effect: { transition_in: transitions[i % transitions.length] },
+      character: { 
+        type: 'avatar', 
+        avatar_id: AVATAR_ID, 
+        avatar_style: 'normal', 
+        scale: 0.35, 
+        offset: { x: 0.3, y: 0.2 } 
+      },
+      voice: { 
+        type: 'text', 
+        input_text: script.houseNarrations[i], 
+        voice_id: VOICE_ID, 
+        volume: 0.85,
+        speed: 1.2 // Even faster for middle houses
+      },
+      caption_setting: { 
+        style: 'shout-block', 
+        font_family: 'Montserrat', 
+        font_size: 60, 
+        text_color: '#FFFFFFFF', 
+        highlight_text_color: '#00BC7DFF', 
+        offset: { x: 0.0, y: 0.3 }, 
+        hidden: false, 
+        override_visual_style: true 
+      },
+      background: { type: 'image', url: cards[i].cardImageUrl, fit: 'contain' },
+      transition_effect: { transition_in: 'cut' }, // Fast cuts only
     });
-  });
+  }
 
-  // CTA: Amir on last card bg (same position as house scenes)
+  // CTA - Quick and punchy (2-3 seconds)
   scenes.push({
-    character: { type: 'avatar', avatar_id: AVATAR_ID, avatar_style: 'normal', scale: 0.4, offset: { x: 0.25, y: 0.22 } },
-    voice: { type: 'text', input_text: script.cta, voice_id: VOICE_ID, volume: 0.8 },
-    caption_setting: { style: 'shout-block', font_family: 'Montserrat', font_size: 60, text_color: '#FFFFFFFF', highlight_text_color: '#00BC7DFF', offset: { x: 0.0, y: 0.28 }, hidden: false, override_visual_style: true },
-    background: { type: 'image', url: cards[cards.length - 1].cardImageUrl, fit: 'contain' },
-    transition_effect: { transition_in: 'fade' },
+    character: { 
+      type: 'avatar', 
+      avatar_id: AVATAR_ID, 
+      avatar_style: 'closeUp', // Back to closeup for CTA
+      scale: 0.5, 
+      offset: { x: 0, y: 0.15 } 
+    },
+    voice: { 
+      type: 'text', 
+      input_text: script.cta, 
+      voice_id: VOICE_ID, 
+      volume: 0.9,
+      speed: 1.1
+    },
+    caption_setting: { 
+      style: 'shout-block', 
+      font_family: 'Montserrat', 
+      font_size: 65, 
+      text_color: '#FFFFFFFF', 
+      highlight_text_color: '#FFFF00FF', // Yellow for CTA
+      offset: { x: 0.0, y: 0.35 }, 
+      hidden: false, 
+      override_visual_style: true 
+    },
+    background: { type: 'image', url: cards[cards.length - 1].cardImageUrl, fit: 'cover' },
+    transition_effect: { transition_in: 'cut' },
   });
 
   return scenes;
@@ -525,31 +649,43 @@ function buildPostMeta(cards: CardData[], script: VideoScript, lang: 'en' | 'es'
   const stateCode = cards[0].state;
   const stateFullName = STATE_NAMES[stateCode] || stateCode;
 
-  const uniqueCities = [...new Set(cards.map(c => c.city))];
+  // Limit city hashtags to avoid spam look
+  const uniqueCities = [...new Set(cards.map(c => c.city))].slice(0, 2);
   const cityHashtags = uniqueCities.map(c => `#${c.replace(/[^a-zA-Z0-9]/g, '')}`.toLowerCase());
 
-  const stateHashtags = [
-    `#${stateCode.toLowerCase()}`,
-    `#${stateFullName.toLowerCase()}`,
-    `#${stateCode.toLowerCase()}realestate`,
-    `#${stateFullName.toLowerCase()}homes`,
-  ];
+  const stateHashtags = [`#${stateCode.toLowerCase()}realestate`];
 
-  const coreHashtags = lang === 'en'
-    ? ['#ownerfinancing', '#ownerfi', '#realestate', '#homebuying', '#renterstoowners', '#nobank', '#homesforsale']
-    : ['#ownerfinancing', '#ownerfi', '#bienesraices', '#casasenventa', '#financiamientodirecto', '#compracasa', '#sinbanco'];
+  // Mix of viral and niche hashtags for algorithm optimization
+  const viralHashtags = lang === 'en' 
+    ? ['#housetok', '#housetour', '#realestatetok', '#firsttimehomebuyer', '#millennial', '#genz', '#rentersoftiktok', '#property', '#househunting']
+    : ['#casastiktok', '#casasbaratas', '#latinos', '#latinosenusa', '#bienesraices', '#propiedades'];
+    
+  const nicheHashtags = lang === 'en'
+    ? ['#ownerfinancing', '#ownerfi', '#renttoown', '#sellerfinancing', '#creativefi', '#nobankmortgage']
+    : ['#ownerfinancing', '#ownerfi', '#financiamientodirecto', '#sinbanco'];
 
-  const allHashtags = [...cityHashtags, ...stateHashtags, ...coreHashtags];
-  const uniqueHashtags = [...new Set(allHashtags)].join(' ');
-
-  // Add date to caption to ensure uniqueness
-  const today = new Date();
-  const dateStr = `${today.getMonth() + 1}/${today.getDate()}`;
+  // Randomly select hashtags to create variation
+  const shuffleArray = <T>(arr: T[]): T[] => arr.sort(() => 0.5 - Math.random());
   
+  const selectedViral = shuffleArray([...viralHashtags]).slice(0, 3);
+  const selectedNiche = shuffleArray([...nicheHashtags]).slice(0, 2);
+  
+  // Mix hashtags
+  const allHashtags = [...cityHashtags, ...stateHashtags, ...selectedViral, ...selectedNiche];
+  const finalHashtags = [...new Set(allHashtags)].slice(0, 10).join(' '); // TikTok recommends 3-5, IG allows up to 30
+
+  // Add subtle variation to caption to prevent duplicate rejection
+  const variationPhrases = lang === 'en' 
+    ? ['', 'Check this out:', 'New drop:', 'Just listed:', 'Fresh find:', 'Today only:', 'Breaking:']
+    : ['', 'Mira esto:', 'Nuevo:', 'Recién listado:', 'Encontré esto:', 'Solo hoy:', 'Última hora:'];
+  
+  const randomPhrase = variationPhrases[Math.floor(Math.random() * variationPhrases.length)];
+  const finalCaption = randomPhrase ? `${randomPhrase} ${script.postCaption}` : script.postCaption;
+
   return {
-    caption: `${script.postCaption} [${dateStr}]`,
+    caption: finalCaption,
     title: script.postTitle,
-    hashtags: uniqueHashtags,
+    hashtags: finalHashtags,
   };
 }
 

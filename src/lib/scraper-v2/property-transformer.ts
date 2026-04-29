@@ -212,13 +212,20 @@ function parseStreetAddress(fullAddr: string, city?: string): string {
 
 /**
  * Generate Street View URL as fallback image
+ * DISABLED: Cost protection - Street View Static API costs $7/1000 requests
+ * Using empty string fallback to prevent unexpected charges
  */
 function getStreetViewImage(address: string): string {
-  const apiKey = process.env.GOOGLE_MAPS_API_KEY;
-  if (!apiKey || !address) return '';
-
-  const encodedAddress = encodeURIComponent(address);
-  return `https://maps.googleapis.com/maps/api/streetview?size=800x500&location=${encodedAddress}&heading=0&fov=90&pitch=10&key=${apiKey}`;
+  // COST PROTECTION: Street View Static API disabled
+  // Original cost: $7 per 1000 requests without rate limiting
+  // Risk: Could trigger $35+ charges during property imports
+  return '';
+  
+  // Commented out expensive implementation:
+  // const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+  // if (!apiKey || !address) return '';
+  // const encodedAddress = encodeURIComponent(address);
+  // return `https://maps.googleapis.com/maps/api/streetview?size=800x500&location=${encodedAddress}&heading=0&fov=90&pitch=10&key=${apiKey}`;
 }
 
 /**

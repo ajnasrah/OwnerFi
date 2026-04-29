@@ -7,14 +7,16 @@ import {
   documentId 
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { StandardizedApiError, ValidationErrors, withErrorHandling, ErrorCode } from '@/lib/api-error-standards';
 
 export async function GET(request: NextRequest) {
-  try {
+  return withErrorHandling(async () => {
     if (!db) {
-      return NextResponse.json(
-        { error: 'Database not available' },
-        { status: 500 }
-      );
+      throw new StandardizedApiError({
+        code: ErrorCode.SERVICE_UNAVAILABLE,
+        message: 'Database not available',
+        context: { function: 'property-details' }
+      });
     }
 
     const { searchParams } = new URL(request.url);
@@ -78,10 +80,5 @@ export async function GET(request: NextRequest) {
       count: sortedProperties.length
     });
 
-  } catch (error) {
-    return NextResponse.json(
-      { error: 'Failed to fetch property details' },
-      { status: 500 }
-    );
-  }
+  }, { endpoint: 'GET /api/properties/details' });
 }

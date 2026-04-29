@@ -3,6 +3,7 @@ import { unifiedDb } from '@/lib/unified-db';
 import { normalizePhone, isValidPhone, getAllPhoneFormats } from '@/lib/phone-utils';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { StandardizedApiError, ValidationErrors, withErrorHandling, ErrorCode } from '@/lib/api-error-standards';
 
 // Simple in-memory rate limiter with cleanup
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
@@ -39,7 +40,7 @@ function checkRateLimit(ip: string): boolean {
 }
 
 export async function POST(request: NextRequest) {
-  try {
+  return withErrorHandling(async () => {
     // Rate limiting
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0] ||
                request.headers.get('x-real-ip') ||
@@ -47,28 +48,23 @@ export async function POST(request: NextRequest) {
 
     if (!checkRateLimit(ip)) {
       console.warn(`🚫 [CHECK-PHONE] Rate limit exceeded for IP: ${ip}`);
-      return NextResponse.json(
-        { error: 'Too many requests. Please try again later.' },
-        { status: 429 }
-      );
+      throw new StandardizedApiError({
+        code: ErrorCode.RATE_LIMIT_EXCEEDED,
+        message: 'Too many requests. Please try again later.',
+        context: { function: 'check-phone', ip }
+      });
     }
 
     const { phone } = await request.json();
 
     if (!phone) {
-      return NextResponse.json(
-        { error: 'Phone number is required' },
-        { status: 400 }
-      );
+      throw ValidationErrors.missingField('phone');
     }
 
     // Validate phone format
     if (!isValidPhone(phone)) {
       console.log('❌ [CHECK-PHONE] Invalid phone format:', phone);
-      return NextResponse.json(
-        { error: 'Invalid phone number format' },
-        { status: 400 }
-      );
+      throw ValidationErrors.invalidFormat('phone', 'valid US phone number');
     }
 
     // Normalize phone to E.164 format
@@ -132,11 +128,5 @@ export async function POST(request: NextRequest) {
       isInvestor, // For routing investors to /dashboard/investor
     });
 
-  } catch (error) {
-    console.error('❌ [CHECK-PHONE] Error:', error);
-    return NextResponse.json(
-      { error: 'Failed to check phone number' },
-      { status: 500 }
-    );
-  }
+  }, { endpoint: 'POST /api/auth/check-phone' });
 }

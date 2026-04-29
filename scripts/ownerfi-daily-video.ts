@@ -362,7 +362,7 @@ function buildScenes(cards: CardData[], script: VideoScript): any[] {
     character: { 
       type: 'avatar', 
       avatar_id: AVATAR_ID, 
-      avatar_style: 'closeUp', // More intimate, urgent feel
+      avatar_style: 'normal', // Use normal instead of closeUp
       scale: 0.5, 
       offset: { x: 0, y: 0.15 } 
     },
@@ -416,7 +416,7 @@ function buildScenes(cards: CardData[], script: VideoScript): any[] {
       override_visual_style: true 
     },
     background: { type: 'image', url: cards[0].cardImageUrl, fit: 'contain' },
-    transition_effect: { transition_in: 'cut' },
+    transition_effect: { transition_in: 'fade' },
   });
 
   // Show only 2-3 more houses (keep it under 20 seconds total)
@@ -448,7 +448,7 @@ function buildScenes(cards: CardData[], script: VideoScript): any[] {
         override_visual_style: true 
       },
       background: { type: 'image', url: cards[i].cardImageUrl, fit: 'contain' },
-      transition_effect: { transition_in: 'cut' }, // Fast cuts only
+      transition_effect: { transition_in: 'fade' }, // Use fade transitions
     });
   }
 
@@ -457,7 +457,7 @@ function buildScenes(cards: CardData[], script: VideoScript): any[] {
     character: { 
       type: 'avatar', 
       avatar_id: AVATAR_ID, 
-      avatar_style: 'closeUp', // Back to closeup for CTA
+      avatar_style: 'normal', // Use normal avatar style
       scale: 0.5, 
       offset: { x: 0, y: 0.15 } 
     },
@@ -479,7 +479,7 @@ function buildScenes(cards: CardData[], script: VideoScript): any[] {
       override_visual_style: true 
     },
     background: { type: 'image', url: cards[cards.length - 1].cardImageUrl, fit: 'cover' },
-    transition_effect: { transition_in: 'cut' },
+    transition_effect: { transition_in: 'fade' },
   });
 
   return scenes;
@@ -659,7 +659,7 @@ function buildPostMeta(cards: CardData[], script: VideoScript, lang: 'en' | 'es'
   const stateFullName = STATE_NAMES[stateCode] || stateCode;
 
   // Limit city hashtags to avoid spam look
-  const uniqueCities = [...new Set(cards.map(c => c.city))].slice(0, 2);
+  const uniqueCities = Array.from(new Set(cards.map(c => c.city))).slice(0, 2);
   const cityHashtags = uniqueCities.map(c => `#${c.replace(/[^a-zA-Z0-9]/g, '')}`.toLowerCase());
 
   const stateHashtags = [`#${stateCode.toLowerCase()}realestate`];
@@ -681,7 +681,7 @@ function buildPostMeta(cards: CardData[], script: VideoScript, lang: 'en' | 'es'
   
   // Mix hashtags
   const allHashtags = [...cityHashtags, ...stateHashtags, ...selectedViral, ...selectedNiche];
-  const finalHashtags = [...new Set(allHashtags)].slice(0, 10).join(' '); // TikTok recommends 3-5, IG allows up to 30
+  const finalHashtags = Array.from(new Set(allHashtags)).slice(0, 10).join(' '); // TikTok recommends 3-5, IG allows up to 30
 
   // Add subtle daily variation to prevent duplicate rejection
   const dayVariations = lang === 'en' 

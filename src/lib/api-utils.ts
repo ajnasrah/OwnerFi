@@ -1,6 +1,6 @@
 // API utility functions for timeouts, retries, and error handling
 
-import { TIMEOUTS, RETRY, RATE_LIMITS, ERROR_MESSAGES } from '@/config/constants';
+import { TIMEOUTS, RETRY, RATE_LIMITS, ERROR_MESSAGES } from '../config/constants';
 
 // Legacy TIMEOUTS export for backward compatibility
 export { TIMEOUTS };

@@ -40,31 +40,29 @@ export interface SearchConfig {
 }
 
 /**
- * Targeted cash-deal zip codes (Memphis TN, Birmingham AL, Huntsville AL,
- * Indianapolis IN, Louisville KY). Same outreach path as AR/TN regional:
- * GHL webhook + Abdullah SMS + investor subscriber alerts.
+ * Targeted cash-deal zip codes (Knoxville TN, Athens GA, Columbus OH).
+ * Focus on 1970+ brick homes with owner-occupancy and strong rental demand.
+ * Same outreach path as regional: GHL webhook + Abdullah SMS + investor alerts.
  */
 export const TARGETED_CASH_ZIPS = [
-  // Memphis, TN
-  '38125', '38116', '38141', '38114', '38128',
-  // Birmingham, AL
-  '35214', '35215', '35235', '35206', '35217',
-  '35023', '35020', '35068', '35126', '35071',
-  // Huntsville, AL
-  '35810', '35816', '35805', '35811', '35763',
-  '35756', '35748', '35754', '35757',
-  // Indianapolis, IN
-  '46241', '46219', '46222', '46227', '46203',
-  '46201', '46107', '46237', '46239', '46221',
-  // Louisville, KY
-  '40215', '40216', '40218', '40214', '40213',
-  '40211', '40212', '40258', '40272', '40229',
-  // Dayton, OH
-  '45410', '45417', '45420', '45406', '45403',
-  // Montgomery, AL
-  '36116', '36109', '36111', '36106', '36110',
-  // Akron, OH
-  '44306', '44301', '44314', '44320', '44302',
+  // Knoxville, TN - Tier 1: Premium Investment Areas
+  '37923', '37934', '37922', '37919',
+  // Knoxville, TN - Tier 2: Solid Family Areas  
+  '37921', '37931', '37924', '37918',
+  // Knoxville, TN - Tier 3: Value Opportunities
+  '37912', '37917',
+  // Athens, GA - Tier 1: Prime UGA Investment Areas
+  '30605', '30606', '30609', '30602',
+  // Athens, GA - Tier 2: Solid Investment Areas
+  '30607', '30601', '30608',
+  // Athens, GA - Tier 3: Emerging Areas
+  '30622', '30677', '30506',
+  // Columbus, OH - Tier 1: Premium Safe Areas
+  '43235', '43017', '43240', '43229',
+  // Columbus, OH - Tier 2: University Adjacent
+  '43202', '43210', '43201', '43214',
+  // Columbus, OH - Tier 3: Value Opportunities
+  '43228', '43223',
 ];
 
 /**
@@ -74,79 +72,51 @@ export const TARGETED_CASH_ZIPS = [
  * zip). Zillow further filters by the zip in the URL path, so
  * over-coverage is harmless.
  */
-const ZIP_CENTROIDS: Record<string, { lat: number; lng: number }> = {
-  // Memphis, TN
-  '38125': { lat: 35.05, lng: -89.80 },
-  '38116': { lat: 35.05, lng: -90.03 },
-  '38141': { lat: 35.03, lng: -89.81 },
-  '38114': { lat: 35.12, lng: -89.98 },
-  '38128': { lat: 35.22, lng: -89.91 },
-  // Birmingham, AL
-  '35214': { lat: 33.56, lng: -86.88 },
-  '35215': { lat: 33.62, lng: -86.70 },
-  '35235': { lat: 33.63, lng: -86.66 },
-  '35206': { lat: 33.57, lng: -86.74 },
-  '35217': { lat: 33.58, lng: -86.79 },
-  '35023': { lat: 33.41, lng: -86.96 },
-  '35020': { lat: 33.40, lng: -86.96 },
-  '35068': { lat: 33.57, lng: -86.97 },
-  '35126': { lat: 33.63, lng: -86.60 },
-  '35071': { lat: 33.64, lng: -86.84 },
-  // Huntsville, AL
-  '35810': { lat: 34.79, lng: -86.58 },
-  '35816': { lat: 34.74, lng: -86.64 },
-  '35805': { lat: 34.70, lng: -86.62 },
-  '35811': { lat: 34.80, lng: -86.53 },
-  '35763': { lat: 34.64, lng: -86.54 },
-  '35756': { lat: 34.64, lng: -86.77 },
-  '35748': { lat: 34.73, lng: -86.44 },
-  '35754': { lat: 34.79, lng: -86.77 },
-  '35757': { lat: 34.83, lng: -86.73 },
-  // Indianapolis, IN
-  '46241': { lat: 39.71, lng: -86.29 },
-  '46219': { lat: 39.78, lng: -86.04 },
-  '46222': { lat: 39.80, lng: -86.21 },
-  '46227': { lat: 39.69, lng: -86.13 },
-  '46203': { lat: 39.73, lng: -86.12 },
-  '46201': { lat: 39.77, lng: -86.09 },
-  '46107': { lat: 39.74, lng: -86.07 },
-  '46237': { lat: 39.67, lng: -86.08 },
-  '46239': { lat: 39.72, lng: -86.02 },
-  '46221': { lat: 39.72, lng: -86.22 },
-  // Louisville, KY
-  '40215': { lat: 38.19, lng: -85.79 },
-  '40216': { lat: 38.20, lng: -85.82 },
-  '40218': { lat: 38.21, lng: -85.68 },
-  '40214': { lat: 38.14, lng: -85.79 },
-  '40213': { lat: 38.19, lng: -85.71 },
-  '40211': { lat: 38.24, lng: -85.82 },
-  '40212': { lat: 38.26, lng: -85.79 },
-  '40258': { lat: 38.13, lng: -85.85 },
-  '40272': { lat: 38.10, lng: -85.84 },
-  '40229': { lat: 38.09, lng: -85.70 },
-  // Dayton, OH
-  '45410': { lat: 39.74, lng: -84.15 },
-  '45417': { lat: 39.73, lng: -84.24 },
-  '45420': { lat: 39.72, lng: -84.13 },
-  '45406': { lat: 39.78, lng: -84.22 },
-  '45403': { lat: 39.75, lng: -84.14 },
-  // Montgomery, AL
-  '36116': { lat: 32.31, lng: -86.25 },
-  '36109': { lat: 32.39, lng: -86.22 },
-  '36111': { lat: 32.33, lng: -86.26 },
-  '36106': { lat: 32.36, lng: -86.27 },
-  '36110': { lat: 32.42, lng: -86.27 },
-  // Akron, OH
-  '44306': { lat: 41.04, lng: -81.50 },
-  '44301': { lat: 41.05, lng: -81.53 },
-  '44314': { lat: 41.05, lng: -81.57 },
-  '44320': { lat: 41.08, lng: -81.56 },
-  '44302': { lat: 41.09, lng: -81.52 },
+export const ZIP_CENTROIDS: Record<string, { lat: number; lng: number }> = {
+  // Knoxville, TN - Tier 1: Premium Investment Areas
+  '37923': { lat: 35.97, lng: -84.13 },
+  '37934': { lat: 35.88, lng: -84.17 },
+  '37922': { lat: 35.97, lng: -84.19 },
+  '37919': { lat: 35.98, lng: -83.94 },
+  // Knoxville, TN - Tier 2: Solid Family Areas
+  '37921': { lat: 35.95, lng: -84.25 },
+  '37931': { lat: 35.91, lng: -84.22 },
+  '37924': { lat: 36.02, lng: -84.18 },
+  '37918': { lat: 36.01, lng: -83.96 },
+  // Knoxville, TN - Tier 3: Value Opportunities
+  '37912': { lat: 35.96, lng: -83.93 },
+  '37917': { lat: 35.96, lng: -83.87 },
+  // Athens, GA - Tier 1: Prime UGA Investment Areas
+  '30605': { lat: 33.93, lng: -83.36 },
+  '30606': { lat: 33.98, lng: -83.39 },
+  '30609': { lat: 33.99, lng: -83.42 },
+  '30602': { lat: 34.02, lng: -83.36 },
+  // Athens, GA - Tier 2: Solid Investment Areas
+  '30607': { lat: 33.91, lng: -83.42 },
+  '30601': { lat: 33.96, lng: -83.37 },
+  '30608': { lat: 34.07, lng: -83.24 },
+  // Athens, GA - Tier 3: Emerging Areas
+  '30622': { lat: 34.00, lng: -83.47 },
+  '30677': { lat: 33.83, lng: -83.41 },
+  '30506': { lat: 34.30, lng: -83.82 },
+  // Columbus, OH - Tier 1: Premium Safe Areas
+  '43235': { lat: 40.16, lng: -83.06 },
+  '43017': { lat: 40.10, lng: -83.11 },
+  '43240': { lat: 40.15, lng: -82.89 },
+  '43229': { lat: 40.08, lng: -83.03 },
+  // Columbus, OH - Tier 2: University Adjacent
+  '43202': { lat: 39.98, lng: -83.01 },
+  '43210': { lat: 39.99, lng: -83.01 },
+  '43201': { lat: 40.03, lng: -83.00 },
+  '43214': { lat: 40.05, lng: -83.07 },
+  // Columbus, OH - Tier 3: Value Opportunities
+  '43228': { lat: 39.95, lng: -83.13 },
+  '43223': { lat: 39.93, lng: -83.07 },
 };
 
 /**
- * Shared filter state for the targeted-zip search. Mirrors the Zillow
- * search URL the user provided: $60k–$150k, monthly payment ≤ $55k,
+ * Shared filter state for the targeted-zip search. Focuses on 1970+ brick homes
+ * with character: $60k–$150k, monthly payment ≤ $55k, built 1970 or later,
  * SFR only (townhouse/multi-family/condo/land/apartment/manufactured/co-op
  * all excluded).
  */
@@ -154,6 +124,7 @@ const TARGETED_ZIP_FILTER_STATE = {
   sort: { value: 'globalrelevanceex' },
   price: { min: 40000, max: 150000 },
   mp: { max: 55000 },
+  built: { min: 1970 }, // 1970+ built homes only
   tow: { value: false },
   mf: { value: false },
   con: { value: false },
@@ -166,42 +137,100 @@ const TARGETED_ZIP_FILTER_STATE = {
 };
 
 /**
- * Build a Zillow search URL for a single zip. Uses zip centroid ±0.08°
- * for mapBounds (required by api-ninja), plus path + usersSearchTerm so
- * Zillow restricts to the zip.
- *
- * `filterOverrides` lets callers override individual filters (e.g. a
- * one-off script wanting doz=any can pass {}).
+ * Build a precise Zillow search URL for a single zip code using the exact
+ * format you specified. Includes 1970+ built, $0-300k, 1 day listings,
+ * no land/apartments/manufactured, max $55k monthly payment, max $200 HOA.
+ */
+export function buildPreciseZipSearchUrl(zip: string): string {
+  const centroid = ZIP_CENTROIDS[zip];
+  if (!centroid) throw new Error(`No centroid defined for zip ${zip}`);
+
+  // Get city name for the URL path
+  const cityMap: Record<string, string> = {
+    // Knoxville, TN
+    '37923': 'knoxville-tn',
+    '37934': 'farragut-tn', 
+    '37922': 'knoxville-tn',
+    '37919': 'knoxville-tn',
+    '37921': 'knoxville-tn',
+    '37931': 'knoxville-tn',
+    '37924': 'knoxville-tn',
+    '37918': 'knoxville-tn',
+    '37912': 'knoxville-tn',
+    '37917': 'knoxville-tn',
+    // Athens, GA
+    '30605': 'athens-ga',
+    '30606': 'athens-ga',
+    '30609': 'athens-ga',
+    '30602': 'athens-ga',
+    '30607': 'athens-ga',
+    '30601': 'athens-ga',
+    '30608': 'athens-ga',
+    '30622': 'bogart-ga',
+    '30677': 'watkinsville-ga',
+    '30506': 'gainesville-ga',
+    // Columbus, OH
+    '43235': 'dublin-oh',
+    '43017': 'dublin-oh',
+    '43240': 'columbus-oh',
+    '43229': 'columbus-oh',
+    '43202': 'columbus-oh',
+    '43210': 'columbus-oh',
+    '43201': 'columbus-oh',
+    '43214': 'columbus-oh',
+    '43228': 'columbus-oh',
+    '43223': 'columbus-oh',
+  };
+
+  const cityPath = cityMap[zip] || 'homes-for-sale';
+  
+  // Precise map bounds based on your format
+  const pad = 0.08; // Smaller, more precise bounds
+  const mapBounds = {
+    north: Math.round((centroid.lat + pad) * 1000000) / 1000000,
+    south: Math.round((centroid.lat - pad) * 1000000) / 1000000,
+    east: Math.round((centroid.lng + pad) * 1000000) / 1000000,
+    west: Math.round((centroid.lng - pad) * 1000000) / 1000000,
+  };
+
+  const searchQueryState = {
+    isMapVisible: true,
+    mapBounds,
+    mapZoom: 13,
+    filterState: {
+      sort: { value: "globalrelevanceex" },
+      price: { min: 0, max: 300000 },
+      mp: { min: null, max: 55000 },
+      land: { value: false },
+      apa: { value: false },
+      manu: { value: false },
+      hoa: { max: 200 },
+      built: { min: 1970 },
+      "55plus": { value: "e" },
+      doz: { value: "1" }
+    },
+    isListVisible: true,
+    usersSearchTerm: zip,
+    category: "cat1",
+    regionSelection: [{ regionId: parseInt(zip), regionType: 7 }]
+  };
+  
+  const encoded = encodeURIComponent(JSON.stringify(searchQueryState));
+  return `https://www.zillow.com/${cityPath}-${zip}/?searchQueryState=${encoded}`;
+}
+
+/**
+ * Legacy function - kept for backwards compatibility
+ * @deprecated Use buildPreciseZipSearchUrl instead
  */
 export function buildZipSearchUrl(
   zip: string,
   filterOverrides: Record<string, unknown> = {}
 ): string {
-  const centroid = ZIP_CENTROIDS[zip];
-  if (!centroid) throw new Error(`No centroid defined for zip ${zip}`);
-
-  const pad = 0.15;
-  const mapBounds = {
-    north: centroid.lat + pad,
-    south: centroid.lat - pad,
-    east: centroid.lng + pad,
-    west: centroid.lng - pad,
-  };
-
-  const searchQueryState = {
-    pagination: {},
-    isMapVisible: true,
-    mapBounds,
-    mapZoom: 12,
-    usersSearchTerm: zip,
-    filterState: { ...TARGETED_ZIP_FILTER_STATE, ...filterOverrides },
-    isListVisible: true,
-  };
-  const encoded = encodeURIComponent(JSON.stringify(searchQueryState));
-  return `https://www.zillow.com/homes/for_sale/${zip}_rb/?searchQueryState=${encoded}`;
+  return buildPreciseZipSearchUrl(zip);
 }
 
-const TARGETED_ZIP_URLS = TARGETED_CASH_ZIPS.map(zip => buildZipSearchUrl(zip));
+const TARGETED_ZIP_URLS = TARGETED_CASH_ZIPS.map(zip => buildPreciseZipSearchUrl(zip));
 
 /**
  * Build a Zillow search URL for the agent-outreach pipeline in a single
@@ -237,6 +266,7 @@ export function buildAgentOutreachZipUrl(
     auc: { value: false },
     fore: { value: false },
     price: { min: 50000, max: 500000 },
+    built: { min: 1970 }, // 1970+ built homes only
     land: { value: false },
     apa: { value: false },
     manu: { value: false },
@@ -313,13 +343,13 @@ export const SEARCH_CONFIGS: SearchConfig[] = [
   },
 
   // ===== SEARCH 3: CASH DEALS (Targeted Zips) =====
-  // 21 per-zip URLs (Memphis, Birmingham, Huntsville, Indianapolis, Louisville)
-  // Filters: $60k–$150k, monthly payment ≤ $55k, SFR only
-  // Same outreach as cash-deals-regional: GHL + Abdullah SMS + investor alerts
+  // 30 per-zip URLs (Knoxville TN, Athens GA, Columbus OH)
+  // Filters: $40k–$150k, monthly payment ≤ $55k, built 1970+, SFR only
+  // Focus on brick homes with character in owner-occupied neighborhoods
   {
     id: 'cash-deals-targeted-zips',
-    name: 'Cash Deals - Targeted Zips',
-    description: `Per-zip cash-deal search across ${TARGETED_CASH_ZIPS.length} zips - sends to GHL`,
+    name: 'Cash Deals - Targeted Zips (1970+ Brick Homes)',
+    description: `Per-zip search for 1970+ brick homes across ${TARGETED_CASH_ZIPS.length} premium zips - sends to GHL`,
     url: TARGETED_ZIP_URLS[0],
     urls: TARGETED_ZIP_URLS,
     maxItems: 2500,

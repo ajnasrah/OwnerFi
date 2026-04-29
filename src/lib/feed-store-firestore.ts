@@ -3,7 +3,7 @@
 
 import { db } from './firebase';
 import { collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, query, where, orderBy, limit as firestoreLimit, runTransaction } from 'firebase/firestore';
-import { Brand } from '@/config/constants';
+import { Brand } from '../config/constants';
 
 export interface FeedSource {
   id: string;
@@ -153,16 +153,19 @@ export async function getAllFeedSources(category?: Brand): Promise<FeedSource[]>
 
   const sources: FeedSource[] = [];
 
-  // If category specified, get from that collection only
+  // PERFORMANCE OPTIMIZATION: Add limits to prevent expensive full scans
   if (category) {
     const collectionName = getCollectionName('FEEDS', category);
-    const snapshot = await getDocs(collection(db, collectionName));
+    // Add reasonable limit to prevent runaway costs - feeds should be small collections anyway
+    const snapshot = await getDocs(query(collection(db, collectionName), firestoreLimit(1000)));
     snapshot.docs.forEach(doc => sources.push(doc.data() as FeedSource));
   } else {
-    // Get from all collections
-    const carzSnapshot = await getDocs(collection(db, COLLECTIONS.CARZ.FEEDS));
-    const ownerfiSnapshot = await getDocs(collection(db, COLLECTIONS.OWNERFI.FEEDS));
-    const gazaSnapshot = await getDocs(collection(db, COLLECTIONS.GAZA.FEEDS));
+    // Get from all collections with limits
+    const [carzSnapshot, ownerfiSnapshot, gazaSnapshot] = await Promise.all([
+      getDocs(query(collection(db, COLLECTIONS.CARZ.FEEDS), firestoreLimit(1000))),
+      getDocs(query(collection(db, COLLECTIONS.OWNERFI.FEEDS), firestoreLimit(1000))),
+      getDocs(query(collection(db, COLLECTIONS.GAZA.FEEDS), firestoreLimit(1000))),
+    ]);
     carzSnapshot.docs.forEach(doc => sources.push(doc.data() as FeedSource));
     ownerfiSnapshot.docs.forEach(doc => sources.push(doc.data() as FeedSource));
     gazaSnapshot.docs.forEach(doc => sources.push(doc.data() as FeedSource));

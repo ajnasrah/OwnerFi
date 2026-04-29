@@ -12,6 +12,8 @@ import { PropertyListing } from '@/lib/property-schema';
 import { BuyerDashboardView } from '@/lib/view-models';
 import { OWNER_FINANCING_FACTS, SAFE_UI_LABELS } from '@/lib/legal-disclaimers';
 import { trackEvent } from '@/components/analytics/AnalyticsProvider';
+import AgentSwiper from '@/components/agents/AgentSwiper';
+import { Users } from 'lucide-react';
 
 // Extended Property interface that includes PropertyListing fields
 interface Property extends Partial<PropertyListing> {
@@ -59,6 +61,7 @@ export default function Dashboard() {
   const [likedProperties, setLikedProperties] = useState<string[]>([]);
   const [showTutorial, setShowTutorial] = useState(false);
   const [currentFact, setCurrentFact] = useState('');
+  const [currentView, setCurrentView] = useState<'properties' | 'agents'>('properties');
 
   // Filter upgrade prompt for old users
   const { shouldShow: shouldShowFilterUpgrade, dismissPrompt: dismissFilterUpgrade } = useFilterUpgradePrompt(profile);
@@ -416,16 +419,59 @@ export default function Dashboard() {
         onComplete={() => setShowTutorial(false)}
       />
 
-      {/* Content - PropertySwiper shows both owner finance and cash deals */}
-      <PropertySwiper2
-        properties={propertyListings}
-        onLike={handleLikeProperty}
-        onPass={handlePassProperty}
-        favorites={likedProperties}
-        passedIds={[]}
-        isLoading={loading}
-        bottomOffset="md:bottom-0 bottom-14"
-      />
+      {/* View Toggle Header */}
+      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-30">
+        <div className="bg-white/90 backdrop-blur-md rounded-full p-1 shadow-lg border border-gray-200">
+          <div className="flex space-x-1">
+            <button
+              onClick={() => setCurrentView('properties')}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                currentView === 'properties'
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              }`}
+            >
+              Properties
+            </button>
+            <button
+              onClick={() => setCurrentView('agents')}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center ${
+                currentView === 'agents'
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              }`}
+            >
+              <Users className="w-4 h-4 mr-1" />
+              Agents
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Content */}
+      {currentView === 'properties' ? (
+        /* Property Swiper */
+        <PropertySwiper2
+          properties={propertyListings}
+          onLike={handleLikeProperty}
+          onPass={handlePassProperty}
+          favorites={likedProperties}
+          passedIds={[]}
+          isLoading={loading}
+          bottomOffset="md:bottom-0 bottom-14"
+        />
+      ) : (
+        /* Agents View */
+        <div className="h-full bg-gray-50 pt-16 pb-20 overflow-y-auto">
+          <div className="max-w-6xl mx-auto p-6">
+            <AgentSwiper 
+              city={profile?.city || 'Memphis'} 
+              state={profile?.state || 'TN'}
+              className="w-full"
+            />
+          </div>
+        </div>
+      )}
 
       {/* Filter Upgrade Modal - One-time prompt for old users */}
       {shouldShowFilterUpgrade && (

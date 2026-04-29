@@ -19,8 +19,14 @@ import { getCitiesWithinRadiusComprehensive, getCityCoordinatesComprehensive, ge
 import { Timestamp } from 'firebase/firestore';
 import { BuyerProfile } from './firebase-models';
 
+// Global rate limiter for geocoding API calls to prevent cost explosions
+const GEOCODING_CALLS = new Map<string, number>();
+const GEOCODING_RATE_LIMIT = 10; // Max 10 calls per hour
+const RATE_LIMIT_WINDOW = 60 * 60 * 1000; // 1 hour in ms
+
 /**
  * Geocode a city using Google Maps API when local database doesn't recognize it
+ * COST PROTECTED: Rate limited to prevent expense explosions
  * Used as fallback for small/unincorporated communities
  */
 async function geocodeCityWithGoogle(
@@ -33,6 +39,16 @@ async function geocodeCityWithGoogle(
     return null;
   }
 
+  // COST PROTECTION: Rate limiting
+  const now = Date.now();
+  const hourKey = Math.floor(now / RATE_LIMIT_WINDOW).toString();
+  const currentHourCalls = GEOCODING_CALLS.get(hourKey) || 0;
+  
+  if (currentHourCalls >= GEOCODING_RATE_LIMIT) {
+    console.warn(`🚨 [FILTER] Geocoding rate limit exceeded (${currentHourCalls}/${GEOCODING_RATE_LIMIT} calls this hour). Blocking "${city}, ${state}" to prevent costs.`);
+    return null;
+  }
+
   try {
     const address = `${city}, ${state}, USA`;
     const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}`;
@@ -40,9 +56,18 @@ async function geocodeCityWithGoogle(
     const response = await fetch(url);
     const data = await response.json();
 
+    // Update rate limiter AFTER successful API call
+    GEOCODING_CALLS.set(hourKey, currentHourCalls + 1);
+    
+    // Cleanup old rate limit entries to prevent memory leaks
+    if (GEOCODING_CALLS.size > 24) { // Keep only last 24 hours
+      const oldestKey = Math.min(...Array.from(GEOCODING_CALLS.keys()).map(Number)).toString();
+      GEOCODING_CALLS.delete(oldestKey);
+    }
+
     if (data.status === 'OK' && data.results?.[0]?.geometry?.location) {
       const { lat, lng } = data.results[0].geometry.location;
-      console.log(`✅ [FILTER] Google geocoded "${city}, ${state}" to (${lat}, ${lng})`);
+      console.log(`✅ [FILTER] Google geocoded "${city}, ${state}" to (${lat}, ${lng}) [${currentHourCalls + 1}/${GEOCODING_RATE_LIMIT} calls this hour]`);
       return { lat, lng };
     }
 

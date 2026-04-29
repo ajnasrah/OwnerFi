@@ -6,7 +6,9 @@ import {
   serverTimestamp,
   writeBatch,
   collection,
-  getDocs
+  getDocs,
+  query,
+  limit as firestoreLimit
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { logError, logInfo } from '@/lib/logger';
@@ -755,16 +757,18 @@ export async function POST(request: NextRequest) {
       duplicates: [] as { row: number; id: string; data: string[] }[]
     };
 
-    // TODO(perf): this scans the entire `properties` collection on every
-    // upload (costs N reads where N = total properties). Should instead
-    // project candidate doc IDs from the CSV and `getAll(...refs)` only
-    // those — drops cost from O(collection) to O(upload rows). Not doing
-    // here because this file uses the web SDK + would require a larger
-    // refactor. Admin uploads are infrequent so the bill is survivable.
+    // PERFORMANCE FIX: Add safety limit to prevent runaway costs
+    // TODO(perf): Replace with batched getAll() using CSV-projected doc IDs
+    // For now, adding limit to prevent expensive full collection scans
     const existingIds = new Set<string>();
     try {
-      const propertiesSnapshot = await getDocs(collection(db, 'properties'));
+      console.log('⚠️  [UPLOAD] Scanning properties with safety limit to prevent costs...');
+      const propertiesSnapshot = await getDocs(query(
+        collection(db, 'properties'),
+        firestoreLimit(50000) // Safety limit - most uploads should be smaller
+      ));
       propertiesSnapshot.forEach(doc => existingIds.add(doc.id));
+      console.log(`✅ [UPLOAD] Scanned ${existingIds.size} existing properties for deduplication`);
     } catch (error) {
       console.error('Error fetching existing properties:', error);
     }

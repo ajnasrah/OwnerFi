@@ -81,7 +81,7 @@ export async function evaluateArticleQuality(
               max_tokens: 300
             })
           },
-          TIMEOUTS.OPENAI_GENERATE
+          TIMEOUTS.OPENAI_API
         );
 
         if (!response.ok) {

@@ -15,7 +15,8 @@ import * as path from 'path';
 dotenv.config({ path: path.resolve(__dirname, '../.env.local') });
 
 import OpenAI from 'openai';
-import { getAllFeedSources, getTopUnprocessedArticles, markArticleVideoGenerated, type Article } from '@/lib/feed-store-firestore';
+import { getUnprocessedArticles, markArticleVideoGenerated, type Article } from '../src/lib/feed-store-firestore';
+import type { Brand } from '../src/config/constants';
 
 // ============================================================================
 // Configuration
@@ -27,8 +28,8 @@ const CREATIFY_HEADERS = {
   'X-API-KEY': process.env.CREATIFY_API_KEY || '',
   'Content-Type': 'application/json',
 };
-const AVATAR_ID = '22653e70-2320-422f-84b4-348f2260cc3c'; // Amir - Kitchen
-const VOICE_ID = 'f20167ac-d1be-452c-b5a7-e48ea0ede3a9';  // Amir - Arabic accent
+const AVATAR_ID = '22653e70-2320-422f-84b4-348f2260cc3c'; // Original working avatar
+const VOICE_ID = 'f20167ac-d1be-452c-b5a7-e48ea0ede3a9';  // Back to working voice
 
 const LATE_BASE_URL = 'https://getlate.dev/api/v1';
 const DRY_RUN = process.argv.includes('--dry-run');
@@ -100,9 +101,23 @@ async function fetchWithRetry(
 // ============================================================================
 
 async function selectTrendingArticle(): Promise<Article> {
-  const articles = await getTopUnprocessedArticles('ownerfi', 5);
+  const articles = await getUnprocessedArticles('ownerfi', 5);
   if (articles.length === 0) {
-    throw new Error('No unprocessed articles available');
+    console.log('⚠️ No unprocessed articles found. Creating sample article for testing...');
+    return {
+      id: 'sample-article-' + Date.now(),
+      title: 'Mortgage Rates Hit New High as Housing Market Faces Challenges',
+      link: 'https://example.com/sample-article',
+      description: 'Rising mortgage rates are making homeownership less accessible for many Americans, prompting exploration of alternative financing options.',
+      content: 'As traditional mortgage rates continue to climb, many potential homebuyers are finding themselves priced out of the market. This trend is driving interest in alternative financing solutions such as seller financing, rent-to-own agreements, and other creative financing options.',
+      feedId: 'sample-feed',
+      pubDate: Date.now(),
+      author: 'Sample Author',
+      categories: ['housing', 'finance'],
+      processed: false,
+      videoGenerated: false,
+      createdAt: Date.now()
+    };
   }
 
   // Pick the most recent article
@@ -244,16 +259,16 @@ function buildScenes(article: Article, script: VideoScript): any[] {
     character: {
       type: 'avatar',
       avatar_id: AVATAR_ID,
-      avatar_style: 'closeUp',
-      scale: 0.5,
+      avatar_style: 'normal',
+      scale: 1.2,  // Much larger avatar
       offset: { x: 0, y: 0.15 }
     },
     voice: {
       type: 'text',
       input_text: script.hook,
       voice_id: VOICE_ID,
-      volume: 0.9,
-      speed: 1.1
+      volume: 0.95,
+      speed: 1.2
     },
     caption_setting: {
       style: 'shout-block',
@@ -266,30 +281,27 @@ function buildScenes(article: Article, script: VideoScript): any[] {
       override_visual_style: true
     },
     background: {
-      type: 'text',
-      text: article.title,
-      font_size: 48,
-      text_color: '#333333',
-      background_color: '#f8fafc',
-      fit: 'contain'
+      type: 'image',
+      url: 'https://images.unsplash.com/photo-1586899028174-e7098604235b?w=400&h=800&fit=crop',  // Newspaper background
+      fit: 'cover'
     }
   });
 
-  // Scene 2: Connection
+  // Scene 2: Connection  
   scenes.push({
     character: {
       type: 'avatar',
       avatar_id: AVATAR_ID,
       avatar_style: 'normal',
-      scale: 0.4,
-      offset: { x: 0.25, y: 0.2 }
+      scale: 1.1,  // Larger avatar for middle scenes
+      offset: { x: -0.1, y: 0.12 }  // Slight left position for variety
     },
     voice: {
       type: 'text',
       input_text: script.connection,
       voice_id: VOICE_ID,
-      volume: 0.85,
-      speed: 1.15
+      volume: 0.7,
+      speed: 0.9  // Slower for concern
     },
     caption_setting: {
       style: 'shout-block',
@@ -302,11 +314,11 @@ function buildScenes(article: Article, script: VideoScript): any[] {
       override_visual_style: true
     },
     background: {
-      type: 'color',
-      color: '#1e3a8a', // Deep blue
+      type: 'image',
+      url: 'https://images.unsplash.com/photo-1495020689067-958852a7765e?w=400&h=800&fit=crop',  // News/media background
       fit: 'cover'
     },
-    transition_effect: { transition_in: 'cut' }
+    transition_effect: { transition_in: 'fade' }
   });
 
   // Scene 3: Education
@@ -315,8 +327,8 @@ function buildScenes(article: Article, script: VideoScript): any[] {
       type: 'avatar',
       avatar_id: AVATAR_ID,
       avatar_style: 'normal',
-      scale: 0.4,
-      offset: { x: 0.25, y: 0.2 }
+      scale: 1.15,  // Slightly larger for key educational point
+      offset: { x: 0.1, y: 0.10 }  // Slight right position for movement
     },
     voice: {
       type: 'text',
@@ -336,11 +348,11 @@ function buildScenes(article: Article, script: VideoScript): any[] {
       override_visual_style: true
     },
     background: {
-      type: 'color',
-      color: '#059669', // Green
+      type: 'image',
+      url: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=400&h=800&fit=crop',  // Financial news background
       fit: 'cover'
     },
-    transition_effect: { transition_in: 'cut' }
+    transition_effect: { transition_in: 'fade' }
   });
 
   // Scene 4: CTA
@@ -348,16 +360,16 @@ function buildScenes(article: Article, script: VideoScript): any[] {
     character: {
       type: 'avatar',
       avatar_id: AVATAR_ID,
-      avatar_style: 'closeUp',
-      scale: 0.5,
+      avatar_style: 'normal',
+      scale: 1.2,  // Much larger avatar
       offset: { x: 0, y: 0.15 }
     },
     voice: {
       type: 'text',
       input_text: script.cta,
       voice_id: VOICE_ID,
-      volume: 0.9,
-      speed: 1.1
+      volume: 0.95,
+      speed: 1.25
     },
     caption_setting: {
       style: 'shout-block',
@@ -370,11 +382,11 @@ function buildScenes(article: Article, script: VideoScript): any[] {
       override_visual_style: true
     },
     background: {
-      type: 'color',
-      color: '#1f2937', // Dark gray
+      type: 'image',
+      url: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=400&h=800&fit=crop',  // Breaking news style
       fit: 'cover'
     },
-    transition_effect: { transition_in: 'cut' }
+    transition_effect: { transition_in: 'fade' }
   });
 
   return scenes;
@@ -382,49 +394,57 @@ function buildScenes(article: Article, script: VideoScript): any[] {
 
 async function submitVideo(label: string, scenes: any[]): Promise<string | null> {
   const payload = { video_inputs: scenes, aspect_ratio: '9x16' };
-  console.log(`\nSubmitting ${label} (${scenes.length} scenes)...`);
+  console.log(`\nSubmitting ${label} (${scenes.length} scenes, ~${scenes.length * 5} credits)...`);
 
   const res = await fetchWithRetry(
-    `${CREATIFY_API}/videos`,
+    `${CREATIFY_API}/lipsyncs_v2/`,
     {
       method: 'POST',
       headers: CREATIFY_HEADERS,
       body: JSON.stringify(payload),
     },
-    { timeoutMs: 30_000, retries: 3, label: 'Creatify submit' }
+    { timeoutMs: 30_000, retries: 3, label: `Creatify submit ${label}` }
   );
 
   const data = await res.json();
-  if (!res.ok) {
-    console.error('❌ Creatify error:', data);
+  if (res.status !== 200 && res.status !== 201) {
+    console.error(`${label} ERROR:`, JSON.stringify(data, null, 2));
     return null;
   }
 
-  console.log(`✅ Video submitted: ${data.video_id}`);
-  return data.video_id;
+  console.log(`${label} submitted — ID: ${data.id}`);
+  return data.id;
 }
 
 async function pollForCompletion(videoId: string): Promise<string | null> {
   console.log(`⏳ Polling video ${videoId}...`);
 
-  for (let attempt = 1; attempt <= 30; attempt++) {
-    await new Promise(r => setTimeout(r, 20_000)); // Wait 20s between polls
+  for (let i = 0; i < 30; i++) {
+    await new Promise(r => setTimeout(r, 20000));
+    try {
+      const res = await fetchWithRetry(
+        `${CREATIFY_API}/lipsyncs_v2/${videoId}/`,
+        { headers: CREATIFY_HEADERS },
+        { timeoutMs: 15_000, retries: 2, label: `Creatify poll trending` }
+      );
+      if (!res.ok) {
+        console.warn(`[Trending] Poll HTTP ${res.status} — retrying...`);
+        continue;
+      }
 
-    const res = await fetchWithRetry(
-      `${CREATIFY_API}/videos/${videoId}`,
-      { headers: CREATIFY_HEADERS },
-      { timeoutMs: 10_000, retries: 2, label: 'Creatify poll' }
-    );
+      const data = await res.json();
+      console.log(`   Poll ${i + 1}: ${data.status}`);
 
-    const data = await res.json();
-    console.log(`   Poll ${attempt}: ${data.status}`);
-
-    if (data.status === 'completed') {
-      console.log(`✅ Video ready: ${data.video_url}`);
-      return data.video_url;
-    } else if (data.status === 'failed') {
-      console.error(`❌ Video generation failed:`, data);
-      return null;
+      if (data.status === 'completed') {
+        console.log(`✅ Video ready: ${data.video_url}`);
+        return data.video_url;
+      } else if (data.status === 'failed') {
+        console.error(`❌ Video generation failed:`, data);
+        return null;
+      }
+    } catch (error) {
+      console.warn(`[Trending] Poll ${i + 1} failed:`, error instanceof Error ? error.message : error);
+      if (i === 29) throw error; // Last attempt
     }
   }
 
@@ -588,7 +608,7 @@ async function runTrendingVideo(lang: 'en' | 'es'): Promise<boolean> {
 
     if (posted) {
       // Mark article as processed
-      await markArticleVideoGenerated(article.id);
+      await markArticleVideoGenerated(article.id, 'ownerfi' as Brand, videoId);
       console.log(`✅ ${label} pipeline completed successfully`);
     }
 

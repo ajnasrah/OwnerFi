@@ -2,14 +2,24 @@ name: Daily Video Pipeline
 
 on:
   schedule:
-    # EN at 10:00am CST / 11:00am CDT = 16:00 UTC
+    # Property videos: EN at 10:00am CST = 16:00 UTC
     - cron: '0 16 * * *'
-    # ES at 10:30am CST / 11:30am CDT = 16:30 UTC
+    # Property videos: ES at 10:30am CST = 16:30 UTC  
     - cron: '30 16 * * *'
+    # Trending articles: EN at 2:00pm CST = 20:00 UTC
+    - cron: '0 20 * * *'
+    # Trending articles: ES at 2:30pm CST = 20:30 UTC
+    - cron: '30 20 * * *'
     # R2 cleanup every Sunday at midnight UTC
     - cron: '0 0 * * 0'
   workflow_dispatch:
     inputs:
+      video_type:
+        description: 'Type of video to generate'
+        required: true
+        default: 'property'
+        type: choice
+        options: [property, trending, both]
       lang:
         description: 'Language to generate'
         required: true
@@ -63,24 +73,27 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
-    # Only needed for EN (card generation uses Puppeteer)
+    # Only needed for property videos (card generation uses Puppeteer)
     - name: Install Puppeteer system dependencies
-      if: github.event.schedule != '30 16 * * *'
+      if: github.event.schedule == '0 16 * * *' || github.event.schedule == '30 16 * * *' || github.event_name == 'workflow_dispatch'
       run: |
         sudo apt-get update
         sudo apt-get install -y libgbm1 libnss3 libatk-bridge2.0-0 libxcomposite1 libxrandr2 libxdamage1 libcups2 libdrm2 libpango-1.0-0 libcairo2 libasound2t64 || \
         sudo apt-get install -y libgbm1 libnss3 libatk-bridge2.0-0 libxcomposite1 libxrandr2 libxdamage1 libcups2 libdrm2 libpango-1.0-0 libcairo2 libasound2
 
-    - name: Determine language
-      id: lang
+    - name: Determine video type and language
+      id: config
       run: |
         if [ "${{ github.event_name }}" = "schedule" ]; then
-          if [ "${{ github.event.schedule }}" = "0 16 * * *" ]; then
-            echo "lang=en" >> $GITHUB_OUTPUT
-          else
-            echo "lang=es" >> $GITHUB_OUTPUT
-          fi
+          case "${{ github.event.schedule }}" in
+            "0 16 * * *")   echo "type=property" >> $GITHUB_OUTPUT; echo "lang=en" >> $GITHUB_OUTPUT ;;
+            "30 16 * * *")  echo "type=property" >> $GITHUB_OUTPUT; echo "lang=es" >> $GITHUB_OUTPUT ;;
+            "0 20 * * *")   echo "type=trending" >> $GITHUB_OUTPUT; echo "lang=en" >> $GITHUB_OUTPUT ;;
+            "30 20 * * *")  echo "type=trending" >> $GITHUB_OUTPUT; echo "lang=es" >> $GITHUB_OUTPUT ;;
+            *) echo "type=property" >> $GITHUB_OUTPUT; echo "lang=en" >> $GITHUB_OUTPUT ;;
+          esac
         else
+          echo "type=${{ inputs.video_type || 'property' }}" >> $GITHUB_OUTPUT
           echo "lang=${{ inputs.lang || 'en' }}" >> $GITHUB_OUTPUT
         fi
 
@@ -88,7 +101,18 @@ jobs:
       run: |
         DRY_FLAG=""
         if [ "${{ inputs.dry_run }}" = "true" ]; then DRY_FLAG="--dry-run"; fi
-        npx tsx scripts/ownerfi-daily-video.ts --lang ${{ steps.lang.outputs.lang }} $DRY_FLAG
+        
+        if [ "${{ steps.config.outputs.type }}" = "trending" ]; then
+          echo "🚀 Running TRENDING article video pipeline..."
+          npx tsx scripts/trending-article-video.ts --lang ${{ steps.config.outputs.lang }} $DRY_FLAG
+        elif [ "${{ steps.config.outputs.type }}" = "both" ]; then
+          echo "🚀 Running BOTH property + trending video pipelines..."
+          npx tsx scripts/ownerfi-daily-video.ts --lang ${{ steps.config.outputs.lang }} $DRY_FLAG
+          npx tsx scripts/trending-article-video.ts --lang ${{ steps.config.outputs.lang }} $DRY_FLAG
+        else
+          echo "🚀 Running PROPERTY video pipeline..."
+          npx tsx scripts/ownerfi-daily-video.ts --lang ${{ steps.config.outputs.lang }} $DRY_FLAG
+        fi
       env:
         # Firebase (Firestore rotation state)
         FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}

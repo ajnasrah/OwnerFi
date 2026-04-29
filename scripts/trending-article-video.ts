@@ -12,8 +12,9 @@
 
 import * as dotenv from 'dotenv';
 import * as path from 'path';
-dotenv.config({ path: path.resolve(__dirname, '../.env.local') });
 
+// Load environment variables from .env.local
+dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 import OpenAI from 'openai';
 import { getUnprocessedArticles, markArticleVideoGenerated, type Article } from '../src/lib/feed-store-firestore';
 import type { Brand } from '../src/config/constants';
@@ -251,7 +252,7 @@ Hazlo relevante y educativo, no promocional.`;
 // Video Generation 
 // ============================================================================
 
-function buildScenes(article: Article, script: VideoScript): any[] {
+async function buildScenes(article: Article, script: VideoScript): Promise<any[]> {
   const scenes: any[] = [];
 
   // Scene 1: Hook with article title as background
@@ -282,7 +283,7 @@ function buildScenes(article: Article, script: VideoScript): any[] {
     },
     background: {
       type: 'image',
-      url: 'https://images.unsplash.com/photo-1586899028174-e7098604235b?w=400&h=800&fit=crop',  // Newspaper background
+      url: `https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=720&h=1280&fit=crop&q=80`,  // Professional news background
       fit: 'cover'
     }
   });
@@ -315,7 +316,7 @@ function buildScenes(article: Article, script: VideoScript): any[] {
     },
     background: {
       type: 'image',
-      url: 'https://images.unsplash.com/photo-1495020689067-958852a7765e?w=400&h=800&fit=crop',  // News/media background
+      url: `https://images.unsplash.com/photo-1495020689067-958852a7765e?w=720&h=1280&fit=crop&q=80`,  // News media background
       fit: 'cover'
     },
     transition_effect: { transition_in: 'fade' }
@@ -349,7 +350,7 @@ function buildScenes(article: Article, script: VideoScript): any[] {
     },
     background: {
       type: 'image',
-      url: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=400&h=800&fit=crop',  // Financial news background
+      url: `https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=720&h=1280&fit=crop&q=80`,  // Breaking news background
       fit: 'cover'
     },
     transition_effect: { transition_in: 'fade' }
@@ -383,7 +384,7 @@ function buildScenes(article: Article, script: VideoScript): any[] {
     },
     background: {
       type: 'image',
-      url: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=400&h=800&fit=crop',  // Breaking news style
+      url: `https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=720&h=1280&fit=crop&q=80`,  // Professional news background
       fit: 'cover'
     },
     transition_effect: { transition_in: 'fade' }
@@ -590,7 +591,7 @@ async function runTrendingVideo(lang: 'en' | 'es'): Promise<boolean> {
 
     // 3. Submit video
     console.log(`\n=== ${label}: Submit Video ===`);
-    const scenes = buildScenes(article, script);
+    const scenes = await buildScenes(article, script);
     const videoId = await submitVideo(label, scenes);
     if (!videoId) return false;
 

@@ -6,9 +6,7 @@ import {
   createABTest,
   createHookTest,
   createCaptionTest,
-  createPostingTimeTest,
-  type ABTest,
-  type TestVariationType
+  createPostingTimeTest
 } from '@/lib/ab-testing';
 
 export async function POST(request: NextRequest) {

@@ -110,6 +110,7 @@ export default function SocialDashboard() {
       const interval = setInterval(loadStatus, 60000); // refresh every 60s
       return () => clearInterval(interval);
     }
+    return undefined;
   }, [authStatus, session, loadStatus]);
 
   const triggerWorkflow = async (workflowFile: string, inputs?: Record<string, string>) => {

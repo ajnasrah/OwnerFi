@@ -1,5 +1,4 @@
 'use client';
-// @ts-nocheck
 
 import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { useSession } from 'next-auth/react';
@@ -224,6 +223,7 @@ export default function AdminDashboard() {
     id: string;
     name?: string;
     email?: string;
+    phone?: string;
     message?: string;
     createdAt?: unknown;
   }
@@ -1746,7 +1746,7 @@ export default function AdminDashboard() {
                               min="0"
                               step="0.5"
                               value={manualPropertyData.bathrooms || ''}
-                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, bathrooms: e.target.value })}
+                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, bathrooms: parseFloat(e.target.value) || 0 })}
                               className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#00BC7D] focus:border-[#00BC7D]"
                             />
                           </div>
@@ -1756,7 +1756,7 @@ export default function AdminDashboard() {
                               type="number"
                               min="0"
                               value={manualPropertyData.squareFeet || ''}
-                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, squareFeet: e.target.value })}
+                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, squareFeet: parseInt(e.target.value) || 0 })}
                               className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#00BC7D] focus:border-[#00BC7D]"
                             />
                           </div>
@@ -1767,7 +1767,7 @@ export default function AdminDashboard() {
                               min="1800"
                               max={new Date().getFullYear() + 1}
                               value={manualPropertyData.yearBuilt || ''}
-                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, yearBuilt: e.target.value })}
+                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, yearBuilt: parseInt(e.target.value) || undefined })}
                               className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#00BC7D] focus:border-[#00BC7D]"
                             />
                           </div>
@@ -1785,7 +1785,7 @@ export default function AdminDashboard() {
                               required
                               min="0"
                               value={manualPropertyData.listPrice || ''}
-                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, listPrice: e.target.value })}
+                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, listPrice: parseFloat(e.target.value) || 0 })}
                               className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#00BC7D] focus:border-[#00BC7D]"
                             />
                           </div>
@@ -1796,7 +1796,7 @@ export default function AdminDashboard() {
                               required
                               min="0"
                               value={manualPropertyData.downPaymentAmount || ''}
-                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, downPaymentAmount: e.target.value })}
+                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, downPaymentAmount: parseFloat(e.target.value) || undefined })}
                               className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#00BC7D] focus:border-[#00BC7D]"
                             />
                           </div>
@@ -1809,7 +1809,7 @@ export default function AdminDashboard() {
                               max="100"
                               step="0.1"
                               value={manualPropertyData.downPaymentPercent || ''}
-                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, downPaymentPercent: e.target.value })}
+                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, downPaymentPercent: parseFloat(e.target.value) || undefined })}
                               className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#00BC7D] focus:border-[#00BC7D]"
                             />
                           </div>
@@ -1820,7 +1820,7 @@ export default function AdminDashboard() {
                               required
                               min="0"
                               value={manualPropertyData.monthlyPayment || ''}
-                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, monthlyPayment: e.target.value })}
+                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, monthlyPayment: parseFloat(e.target.value) || undefined })}
                               className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#00BC7D] focus:border-[#00BC7D]"
                             />
                           </div>
@@ -1833,7 +1833,7 @@ export default function AdminDashboard() {
                               max="100"
                               step="0.01"
                               value={manualPropertyData.interestRate || ''}
-                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, interestRate: e.target.value })}
+                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, interestRate: parseFloat(e.target.value) || undefined })}
                               className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#00BC7D] focus:border-[#00BC7D]"
                             />
                           </div>
@@ -1845,7 +1845,7 @@ export default function AdminDashboard() {
                               min="1"
                               max="50"
                               value={manualPropertyData.termYears || ''}
-                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, termYears: e.target.value })}
+                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, termYears: parseInt(e.target.value) || undefined })}
                               className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#00BC7D] focus:border-[#00BC7D]"
                             />
                           </div>
@@ -1870,8 +1870,8 @@ export default function AdminDashboard() {
                             <label className="block text-sm font-medium text-slate-300">Image URLs (comma-separated)</label>
                             <textarea
                               rows={2}
-                              value={manualPropertyData.imageUrls || ''}
-                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, imageUrls: e.target.value })}
+                              value={Array.isArray(manualPropertyData.imageUrls) ? manualPropertyData.imageUrls.join(', ') : (manualPropertyData.imageUrls || '')}
+                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, imageUrls: e.target.value.split(',').map(url => url.trim()).filter(url => url.length > 0) })}
                               className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#00BC7D] focus:border-[#00BC7D]"
                               placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg"
                             />

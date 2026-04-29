@@ -247,8 +247,23 @@ curl -X POST http://localhost:3000/api/add-zip-codes \
 - No 55+ communities
 - **NO days-on-market filter** (shows ALL active listings)
 
+### Automated Processing Pipeline:
+1. **Full Property Details**: Uses `runAllInOneScraper()` to get descriptions + agent contact info
+2. **Unified Filtering**: Every property runs through owner finance and cash deal detection
+3. **Quality Control**: Only qualified properties (owner finance OR cash deals) are saved
+4. **Agent Outreach Queue**: Properties with agent contact info automatically go to GoHighLevel webhook
+5. **Cost Analysis**: Real-time market scoring prevents expensive market expansion
+
+### How It Works:
+- **Input**: Zip codes + city name
+- **Output**: Qualified properties in main collection + agent outreach queue
+- **Filtering**: Strict owner finance keywords + sub-80% ARV cash deals
+- **Integration**: Direct GoHighLevel webhook for agent outreach
+- **Validation**: Automated cost analysis warns about expensive markets
+
 ### Next Steps:
 1. Test scraping Memphis zip codes first (highest score)
-2. Add Toledo and Cleveland zip codes (scores 160, 155)
+2. Add Toledo and Cleveland zip codes (scores 160, 155)  
 3. Expand to Indianapolis and Detroit as needed
 4. Monitor automated cost analysis warnings for market changes
+5. Properties automatically flow to website display and agent outreach

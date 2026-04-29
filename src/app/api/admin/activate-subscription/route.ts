@@ -1,10 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import {
-  doc,
-  updateDoc,
-  setDoc,
-  serverTimestamp
-} from 'firebase/firestore';
+import { FieldValue } from 'firebase-admin/firestore';
 import { getAdminDb } from '@/lib/firebase-admin';
 import { randomUUID } from 'crypto';
 import { requireRole } from '@/lib/auth-helpers';
@@ -18,12 +13,12 @@ export async function POST(request: NextRequest) {
     
     // Update realtor to active subscription
     const db = await getAdminDb();
-    await updateDoc(doc(db, 'realtors', realtorId), {
+    await db.collection('realtors').doc(realtorId).update({
       credits: 748 + creditsToAdd, // Keep existing credits plus new ones
       currentPlan: plan,
       subscriptionStatus: 'active',
       isOnTrial: false,
-      updatedAt: serverTimestamp()
+      updatedAt: FieldValue.serverTimestamp()
     });
     
     // Create subscription record
@@ -31,7 +26,7 @@ export async function POST(request: NextRequest) {
     const periodEnd = new Date();
     periodEnd.setDate(periodEnd.getDate() + 30);
     
-    await setDoc(doc(db, 'realtorSubscriptions', randomUUID()), {
+    await db.collection('realtorSubscriptions').doc(randomUUID()).set({
       realtorId: realtorId,
       plan: plan,
       status: 'active',
@@ -39,18 +34,18 @@ export async function POST(request: NextRequest) {
       creditsPerMonth: 10,
       currentPeriodStart: periodStart,
       currentPeriodEnd: periodEnd,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp()
     });
     
     // Add transaction record
-    await setDoc(doc(db, 'transactions', randomUUID()), {
+    await db.collection('transactions').doc(randomUUID()).set({
       realtorId: realtorId,
       type: 'subscription_start',
       description: 'Professional Package subscription activated',
       amount: 1000,
       credits: creditsToAdd,
-      createdAt: serverTimestamp()
+      createdAt: FieldValue.serverTimestamp()
     });
     
     return NextResponse.json({

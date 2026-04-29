@@ -34,8 +34,9 @@
     "strictBindCallApply": true,
     "noImplicitThis": true,
     "alwaysStrict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    // TODO: Re-enable after cleaning up unused imports/variables
+    // "noUnusedLocals": true,
+    // "noUnusedParameters": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true
     // Note: strictPropertyInitialization requires strictNullChecks

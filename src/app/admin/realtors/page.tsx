@@ -293,7 +293,7 @@ export default function AdminRealtors() {
                           return new Date(ts._seconds * 1000).toLocaleDateString();
                         }
                         // Handle ISO string or other date formats
-                        const date = new Date(ts);
+                        const date = new Date(ts as string);
                         return isNaN(date.getTime()) ? 'N/A' : date.toLocaleDateString();
                       })()}
                     </td>

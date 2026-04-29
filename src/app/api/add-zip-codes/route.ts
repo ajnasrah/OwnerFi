@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirebaseAdmin } from '@/lib/scraper-v2/firebase-admin';
-import { runSearchScraper } from '@/lib/scraper-v2/apify-client';
+import { runAllInOneScraper } from '@/lib/scraper-v2/apify-client';
+import { runUnifiedFilter } from '@/lib/scraper-v2/unified-filter';
 import { ApifyClient } from 'apify-client';
 import { hasStrictOwnerfinancing } from '@/lib/owner-financing-filter-strict';
 import { hasNegativeKeywords } from '@/lib/negative-keywords';
@@ -71,7 +72,6 @@ const CITY_PATHS: Record<string, string> = {
   
   // Great Lakes - Affordable with potential
   'buffalo': 'buffalo-ny',              // Rising star, tourism growth
-  'milwaukee': 'milwaukee-wi',          // Brewery City renaissance
   'grand-rapids': 'grand-rapids-mi',    // Furniture capital revival
   'rockford': 'rockford-il',            // Chicago spillover market
   
@@ -193,10 +193,11 @@ export async function POST(request: NextRequest) {
     console.log(`Scraping ${zipCodes.length} new zip codes in ${city}:`, zipCodes);
     console.log('Generated URLs:', urls);
     
-    // Run scraper on new zip codes
-    const properties = await runSearchScraper(urls, {
-      maxResults: 2000, // Get all properties per zip
-      mode: 'pagination'
+    // Run scraper on new zip codes with FULL DETAILS + AGENT INFO for GoHighLevel
+    const properties = await runAllInOneScraper(urls, {
+      maxItems: 2000, // Get all properties per zip
+      includeDetails: true, // Get property descriptions for owner finance detection
+      timeoutSecs: 600 // 10 minutes for large batches
     });
     
     console.log(`Found ${properties.length} properties in new zip codes`);
@@ -220,13 +221,17 @@ export async function POST(request: NextRequest) {
       }
     }
     
-    // Save directly to main properties collection for agent outreach
+    // Process properties through unified filter and save qualified ones
     const { db } = getFirebaseAdmin();
     const mainCollection = db.collection('properties');
+    const agentOutreachQueue = db.collection('agent_outreach_queue');
     const batch = db.batch();
     
     let saved = 0;
     let skipped = 0;
+    let qualifiedForAgentOutreach = 0;
+    let qualifiedOwnerFinance = 0;
+    let qualifiedCashDeals = 0;
     
     for (const prop of properties) {
       if (prop.zpid) {
@@ -237,23 +242,100 @@ export async function POST(request: NextRequest) {
           continue;
         }
         
-        // Clean undefined values and add to main collection
-        const cleanProp = Object.fromEntries(
-          Object.entries({
-            ...prop,
-            addedToAgentOutreach: false,
-            newZipCodeScrape: true,
-            newZipCodes: zipCodes,
-            scrapedAt: new Date().toISOString()
-          }).filter(([_, value]) => value !== undefined)
+        // Run unified filter to determine if property qualifies
+        const filterResult = runUnifiedFilter(
+          prop.description,
+          typeof prop.price === 'string' ? parseFloat(prop.price) : prop.price,
+          prop.zestimate,
+          prop.homeType,
+          {
+            isAuction: prop.isAuction,
+            isForeclosure: prop.isForeclosure,
+            isBankOwned: prop.isBankOwned
+          }
         );
         
-        batch.set(mainCollection.doc(`prop_${prop.zpid}`), cleanProp);
-        saved++;
-        
-        // Commit every 400 to avoid batch size limits
-        if (saved % 400 === 0) {
-          await batch.commit();
+        // Only save properties that pass at least one filter
+        if (filterResult.shouldSave) {
+          // Transform property data with unified filter results
+          const transformedProperty = {
+            ...prop,
+            // Add unified filter results
+            isOwnerfinance: filterResult.isOwnerfinance,
+            isCashDeal: filterResult.isCashDeal,
+            dealTypes: filterResult.dealTypes,
+            
+            // Metadata
+            ownerFinanceKeywords: filterResult.ownerFinanceKeywords,
+            primaryOwnerfinanceKeyword: filterResult.primaryOwnerfinanceKeyword,
+            financingType: filterResult.financingType,
+            cashDealReason: filterResult.cashDealReason,
+            discountPercentage: filterResult.discountPercentage,
+            eightyPercentOfZestimate: filterResult.eightyPercentOfZestimate,
+            needsWork: filterResult.needsWork,
+            needsWorkKeywords: filterResult.needsWorkKeywords,
+            isFixer: filterResult.isFixer,
+            isLand: filterResult.isLand,
+            suspiciousDiscount: filterResult.suspiciousDiscount,
+            
+            // Processing flags
+            scrapedAt: new Date().toISOString(),
+            newZipCodeScrape: true,
+            newZipCodes: zipCodes,
+            processedThroughUnifiedFilter: true,
+            isActive: true, // Make properties visible on website
+            source: 'scraper-v2', // Standard source for new scrapes
+          };
+          
+          // Count qualified properties
+          if (filterResult.isOwnerfinance) qualifiedOwnerFinance++;
+          if (filterResult.isCashDeal) qualifiedCashDeals++;
+          
+          // Add to agent outreach queue if property has agent contact info
+          if (prop.agentPhone || prop.agentEmail) {
+            const agentOutreachDoc = {
+              zpid: prop.zpid,
+              address: prop.address,
+              city: prop.city,
+              state: prop.state,
+              price: prop.price,
+              zestimate: prop.zestimate,
+              agentPhone: prop.agentPhone,
+              agentEmail: prop.agentEmail,
+              agentName: prop.agentName,
+              brokerName: prop.brokerName,
+              brokerPhone: prop.brokerPhone,
+              dealType: filterResult.isOwnerfinance ? 'owner_finance' : filterResult.isCashDeal ? 'cash_deal' : 'rental',
+              isOwnerfinance: filterResult.isOwnerfinance,
+              isCashDeal: filterResult.isCashDeal,
+              addedAt: new Date(),
+              status: 'pending',
+              source: 'new_zip_scrape',
+              newZipCodes: zipCodes,
+              marketScore: marketAnalysis?.score || null
+            };
+            
+            // Clean undefined values from agent outreach doc
+            const cleanAgentDoc = Object.fromEntries(
+              Object.entries(agentOutreachDoc).filter(([_, value]) => value !== undefined)
+            );
+            
+            batch.set(agentOutreachQueue.doc(), cleanAgentDoc);
+            qualifiedForAgentOutreach++;
+          }
+          
+          // Clean undefined values from main property doc
+          const cleanProp = Object.fromEntries(
+            Object.entries(transformedProperty).filter(([_, value]) => value !== undefined)
+          );
+          
+          batch.set(mainCollection.doc(`prop_${prop.zpid}`), cleanProp);
+          saved++;
+          
+          // Commit every 400 to avoid batch size limits
+          if (saved % 400 === 0) {
+            await batch.commit();
+          }
         }
       }
     }
@@ -263,16 +345,17 @@ export async function POST(request: NextRequest) {
       await batch.commit();
     }
     
-    console.log(`New zip codes complete: ${saved} properties added to agent outreach queue`);
+    console.log(`New zip codes complete: ${saved} qualified properties saved, ${qualifiedForAgentOutreach} added to agent outreach queue`);
     
     return NextResponse.json({
       success: true,
       zipCodes,
       city,
       totalProperties: properties.length,
-      ownerFinance,
-      cashDeals,
-      savedToAgentOutreach: saved,
+      qualifiedProperties: saved,
+      qualifiedOwnerFinance,
+      qualifiedCashDeals,
+      savedToAgentOutreach: qualifiedForAgentOutreach,
       skippedDuplicates: skipped,
       urls: urls.length,
       // AUTOMATED COST ANALYSIS RESULTS
@@ -283,7 +366,7 @@ export async function POST(request: NextRequest) {
         advantages: marketAnalysis.advantages
       } : null,
       qualifiedMarket: qualifiedMarkets.includes(city.toLowerCase()),
-      message: `Successfully added ${saved} properties from ${zipCodes.length} new zip codes in ${city} to agent outreach${marketAnalysis ? ` (Market Score: ${marketAnalysis.score}/100)` : ''}`
+      message: `Successfully processed ${properties.length} properties from ${zipCodes.length} zip codes in ${city}. ${saved} qualified properties saved (${qualifiedOwnerFinance} owner finance, ${qualifiedCashDeals} cash deals). ${qualifiedForAgentOutreach} added to agent outreach queue${marketAnalysis ? ` (Market Score: ${marketAnalysis.score}/100)` : ''}`
     });
     
   } catch (error: any) {

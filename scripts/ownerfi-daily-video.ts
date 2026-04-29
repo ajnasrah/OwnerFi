@@ -210,27 +210,29 @@ async function generateScript(cards: CardData[], lang: 'en' | 'es'): Promise<Vid
 TODAY'S DATE: ${dayOfWeek}, ${month} ${today.getDate()} - use trending references from TODAY.
 
 VIRAL HOOK FORMULAS (rotate between these):
-1. "I found [shocking detail] in [location]" 
-2. "POV: You're paying $[rent] in rent when you could own this for $[payment]"
-3. "Nobody talks about this homebuying hack in [state]"
-4. "Wait till you see the [specific feature] in house #3"
-5. "The bank said no but the seller said..."
-6. "$[price]? In THIS economy? Let me show you..."
-7. "Why is nobody talking about these [state] houses?"
+1. "These sellers might finance directly"
+2. "POV: You just discovered seller financing exists"
+3. "When banks say no, some sellers say maybe"
+4. "No bank? Some sellers have options"
+5. "Seller financing opportunities exist"
+6. "Direct from owner financing is real"
+7. "Skip the bank? It's possible with some sellers"
 
-AUDIENCE: Frustrated renters, 20-35, doom-scrolling at night, dreaming of escape.
+AUDIENCE: Renters curious about homeownership alternatives.
 
-VOICE: Like you're FaceTiming your best friend with breaking news. Urgent but not salesy.
+VOICE: Intriguing but responsible. Like sharing an insider tip responsibly.
 
-NEVER SAY: "check out", "don't miss", "act now", "limited time", "guaranteed"
+NEVER SAY: Prices, addresses, "guaranteed", "you qualify", "easy", "no credit needed"
+ALWAYS SAY: "Some sellers", "may consider", "potentially available", "worth exploring"
+FOCUS ON: The concept of seller financing, not specific deals
 
 OUTPUT FORMAT (JSON):
 {
-  "hook": "MUST stop the scroll in 2 seconds. Use shock, curiosity, or contradiction. Max 10 words.",
-  "intro": "Quick context. Mention CHEAPEST price immediately. Under 25 words.",
-  "cta": "Follow for tomorrow's deals. Link in bio. Under 10 words.",
-  "postCaption": "Create FOMO without saying 'don't miss'. Make them think 'what if I don't watch?' Under 100 chars.",
-  "postTitle": "Clickbait that delivers. Numbers + location + shock value. Under 100 chars.",
+  "hook": "Intriguing opener about seller financing possibility. Max 10 words.",
+  "intro": "We find homes where sellers may offer financing. Under 25 words.",
+  "cta": "Explore options at Ownerfi. Link in bio. Under 10 words.",
+  "postCaption": "Intriguing caption about seller financing. Compliant. Under 100 chars.",
+  "postTitle": "Engaging title about seller financing options. Under 100 chars.",
   "trending": "Suggest a trending audio/sound that would work (optional)"
 }`
     : `Creas guiones VIRALES de TikTok/Instagram sobre bienes raíces que paran el scroll al instante.
@@ -238,17 +240,17 @@ OUTPUT FORMAT (JSON):
 FECHA DE HOY: ${dayOfWeek}, ${month} ${today.getDate()} - usa referencias de tendencias de HOY.
 
 FÓRMULAS DE GANCHO VIRAL (rotar entre estas):
-1. "Encontré [detalle impactante] en [ubicación]"
-2. "POV: Pagas $[renta] de renta cuando podrías ser dueño por $[pago]"
-3. "Nadie habla de este truco para comprar casa en [estado]"
-4. "Espera a ver el/la [característica] en la casa #3"
-5. "El banco dijo no pero el vendedor dijo..."
-6. "¿$[precio]? ¿En ESTA economía? Déjame mostrarte..."
-7. "¿Por qué nadie habla de estas casas en [estado]?"
+1. "Estos vendedores podrían financiar directamente"
+2. "POV: Acabas de descubrir que existe financiamiento del vendedor"
+3. "Cuando los bancos dicen no, algunos vendedores dicen tal vez"
+4. "¿Sin banco? Algunos vendedores tienen opciones"
+5. "Existen oportunidades de financiamiento del vendedor"
+6. "Financiamiento directo del dueño es real"
+7. "¿Saltar el banco? Es posible con algunos vendedores"
 
-AUDIENCIA: Latinos frustrados rentando, 20-35, scrolleando de noche, soñando con escapar.
+AUDIENCIA: Personas interesadas en aprender sobre opciones de vivienda.
 
-VOZ: Como si estuvieras en FaceTime con tu mejor amigo con noticias urgentes.
+VOZ: Educativa e informativa. Como un maestro útil explicando conceptos.
 
 CUMPLIMIENTO — NUNCA DIGAS:
 - "sin verificación de crédito", "aprobación garantizada", "todos califican"
@@ -262,11 +264,11 @@ CONTEXTO:
 
 FORMATO DE SALIDA (JSON):
 {
-  "hook": "Línea inicial directa y fuerte (max 12 palabras). Un dolor específico. Diferente cada vez.",
-  "intro": "2-3 oraciones cortas. Presenta las casas naturalmente. Menciona el precio más bajo. Menos de 35 palabras.",
-  "cta": "Una oración. Que sigan a Ownerfi. Mencionar link en bio. Menos de 15 palabras.",
-  "postCaption": "Crea FOMO sin decir 'no te lo pierdas'. Haz que piensen '¿y si no lo veo?' Menos de 100 caracteres.",
-  "postTitle": "Clickbait que cumple. Números + ubicación + impacto. Menos de 100 caracteres.",
+  "hook": "Apertura educativa sobre owner financing. Max 10 palabras.",
+  "intro": "Explica qué hacemos - conectamos personas con oportunidades de owner financing. Menos de 25 palabras.",
+  "cta": "Aprende más en Ownerfi. Link en bio. Menos de 10 palabras.",
+  "postCaption": "Pie educativo sobre owner financing. Sin promesas falsas. Menos de 100 caracteres.",
+  "postTitle": "Título informativo sobre educación de owner financing. Menos de 100 caracteres.",
   "trending": "Sugiere un audio/sonido trending que funcionaría (opcional)"
 }`;
 
@@ -278,18 +280,20 @@ FORMATO DE SALIDA (JSON):
   const selectedHook = hookTypes[Math.floor(Math.random() * hookTypes.length)];
 
   const userPrompt = lang === 'en'
-    ? `Create a VIRAL script using the "${selectedHook}" hook type. 
-    ${cards.length} homes in ${stateName}. 
-    CHEAPEST: $${Math.round(lowestPrice / 1000)}K
-    Cities: ${cities}
-    Make it IMPOSSIBLE to scroll past. Think: "What would make ME stop scrolling at 11pm?"
-    Remember: 70% watch rate needed for viral. First 2 seconds = EVERYTHING.`
-    : `Crea un guión VIRAL usando el gancho tipo "${selectedHook}".
-    ${cards.length} casas en ${stateName}.
-    MÁS BARATA: $${Math.round(lowestPrice / 1000)}K
-    Ciudades: ${cities}
-    Hazlo IMPOSIBLE de ignorar. Piensa: "¿Qué me haría parar de scrollear a las 11pm?"
-    Recuerda: 70% de retención necesaria para viral. Primeros 2 segundos = TODO.`;
+    ? `Create an INTRIGUING script using the "${selectedHook}" hook.
+    We help people explore seller financing options.
+    DO NOT: mention prices, specific locations, or make guarantees.
+    DO: Create curiosity about seller financing as a concept.
+    Key message: Some sellers offer financing when banks won't.
+    Use: "some sellers", "may consider", "potentially", "explore options".
+    Make it compelling but compliant.`
+    : `Crea un guión INTRIGANTE usando el gancho "${selectedHook}".
+    Ayudamos a personas explorar opciones de financiamiento del vendedor.
+    NO: menciones precios, ubicaciones específicas, o hagas garantías.
+    SÍ: Crea curiosidad sobre el financiamiento del vendedor como concepto.
+    Mensaje clave: Algunos vendedores ofrecen financiamiento cuando los bancos no.
+    Usa: "algunos vendedores", "podrían considerar", "potencialmente", "explorar opciones".
+    Hazlo atractivo pero responsable.`;
 
   const res = await openai.chat.completions.create({
     model: 'gpt-4o-mini', temperature: 0.95, max_tokens: 600,
@@ -300,27 +304,32 @@ FORMATO DE SALIDA (JSON):
   const parsed = JSON.parse(res.choices[0].message.content || '{}');
 
   function buildNarrations(cards: CardData[], lang: 'en' | 'es'): string[] {
-    return cards.map(c => {
-      const priceStr = c.price >= 1000 ? `${Math.round(c.price / 1000)}K` : `${c.price}`;
-      if (lang === 'en') {
-        const details = [c.beds ? `${c.beds} bed` : '', c.baths ? `${c.baths} bath` : '', c.sqft ? `${c.sqft.toLocaleString()} square feet` : ''].filter(Boolean).join(', ');
-        const monthly = c.monthly && c.monthly > 0 ? ` Estimated $${Math.round(c.monthly).toLocaleString()} a month.` : '';
-        const detailsPart = details ? `${details}. ` : '';
-        return `${c.city}, ${c.state}. ${detailsPart}Listed at ${priceStr}.${monthly}`;
-      } else {
-        const details = [c.beds ? `${c.beds} cuartos` : '', c.baths ? `${c.baths} baños` : '', c.sqft ? `${c.sqft.toLocaleString()} pies cuadrados` : ''].filter(Boolean).join(', ');
-        const monthly = c.monthly && c.monthly > 0 ? ` Estimado $${Math.round(c.monthly).toLocaleString()} al mes.` : '';
-        const detailsPart = details ? `${details}. ` : '';
-        return `${c.city}, ${c.state}. ${detailsPart}Precio ${priceStr}.${monthly}`;
-      }
-    });
+    // Focus on the opportunity, not specifics
+    const narratives = lang === 'en' 
+      ? [
+          "Example one: A home where the seller may consider financing.",
+          "Example two: Another opportunity for potential seller financing.",
+          "Example three: One more home with possible owner financing.",
+          "These are examples of homes we've found where sellers might finance.",
+          "Remember: Terms vary. Each situation is unique."
+        ]
+      : [
+          "Ejemplo uno: Una casa donde el vendedor podría financiar.",
+          "Ejemplo dos: Otra oportunidad de posible financiamiento del vendedor.",
+          "Ejemplo tres: Una casa más con potencial owner financing.",
+          "Estos son ejemplos de casas donde los vendedores podrían financiar.",
+          "Recuerda: Los términos varían. Cada situación es única."
+        ];
+    
+    // Show examples without revealing specifics
+    return narratives.slice(0, Math.min(cards.length, 3));
   }
 
-  const defaultHook = lang === 'en' ? 'Check out these owner finance homes.' : 'Mira estas casas con owner financing.';
-  const defaultIntro = lang === 'en' ? `We found ${cards.length} homes in ${stateName}.` : `Encontramos ${cards.length} casas en ${stateName}.`;
-  const defaultCta = lang === 'en' ? 'Follow Ownerfi for new deals every day. Link in bio.' : 'Sigue a Ownerfi para nuevas casas cada día. Link en bio.';
-  const defaultCaption = lang === 'en' ? `These ${stateName} homes don't need a bank to say yes` : `Estas casas en ${stateName} no necesitan banco para comprarlas`;
-  const defaultTitle = lang === 'en' ? `Owner finance homes in ${stateName} starting at $${Math.round(lowestPrice / 1000)}K` : `Casas con owner financing en ${stateName} desde $${Math.round(lowestPrice / 1000)}K`;
+  const defaultHook = lang === 'en' ? 'Some sellers finance directly.' : 'Algunos vendedores financian directamente.';
+  const defaultIntro = lang === 'en' ? `We found homes where sellers may offer financing.` : `Encontramos casas donde vendedores podrían financiar.`;
+  const defaultCta = lang === 'en' ? 'Explore more at Ownerfi. Link in bio.' : 'Explora más en Ownerfi. Link en bio.';
+  const defaultCaption = lang === 'en' ? `When banks say no, some sellers say maybe` : `Cuando bancos dicen no, algunos vendedores dicen tal vez`;
+  const defaultTitle = lang === 'en' ? `Seller financing opportunities - explore options` : `Oportunidades de financiamiento del vendedor`;
 
   const script: VideoScript = {
     hook: parsed.hook || defaultHook,
@@ -674,13 +683,31 @@ function buildPostMeta(cards: CardData[], script: VideoScript, lang: 'en' | 'es'
   const allHashtags = [...cityHashtags, ...stateHashtags, ...selectedViral, ...selectedNiche];
   const finalHashtags = [...new Set(allHashtags)].slice(0, 10).join(' '); // TikTok recommends 3-5, IG allows up to 30
 
-  // Add subtle variation to caption to prevent duplicate rejection
-  const variationPhrases = lang === 'en' 
-    ? ['', 'Check this out:', 'New drop:', 'Just listed:', 'Fresh find:', 'Today only:', 'Breaking:']
-    : ['', 'Mira esto:', 'Nuevo:', 'Recién listado:', 'Encontré esto:', 'Solo hoy:', 'Última hora:'];
+  // Add subtle daily variation to prevent duplicate rejection
+  const dayVariations = lang === 'en' 
+    ? [
+        '', 
+        'New opportunities:', 
+        'Just found:', 
+        'Available now:', 
+        'This week:', 
+        'Recently added:', 
+        'Worth exploring:'
+      ]
+    : [
+        '', 
+        'Nuevas oportunidades:', 
+        'Recién encontrado:', 
+        'Disponible ahora:', 
+        'Esta semana:', 
+        'Agregado recientemente:', 
+        'Vale la pena explorar:'
+      ];
   
-  const randomPhrase = variationPhrases[Math.floor(Math.random() * variationPhrases.length)];
-  const finalCaption = randomPhrase ? `${randomPhrase} ${script.postCaption}` : script.postCaption;
+  // Use day of week for consistent daily variation
+  const dayIndex = new Date().getDay();
+  const dayPhrase = dayVariations[dayIndex];
+  const finalCaption = dayPhrase ? `${dayPhrase} ${script.postCaption}` : script.postCaption;
 
   return {
     caption: finalCaption,

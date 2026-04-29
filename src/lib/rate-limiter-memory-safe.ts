@@ -76,7 +76,7 @@ export class MemorySafeRateLimiter {
   /**
    * Get current usage stats without modifying the counter
    */
-  getUsage(identifier: string = 'default'): { current: number; limit: number; resetTime: number } {
+  getUsage(_identifier: string = 'default'): { current: number; limit: number; resetTime: number } {
     const now = Date.now();
     const windowKey = Math.floor(now / this.config.windowMs).toString();
     const current = this.calls.get(windowKey) || 0;

@@ -10,23 +10,6 @@
  * @see scripts/analyze-negative-pattern-failures.ts for analysis
  */
 
-/**
- * Core financing terms to look for
- */
-const FINANCING_TERMS = [
-  'owner financing',
-  'owner finance',
-  'seller financing',
-  'seller finance',
-  'creative financing',
-  'creative finance',
-  'owner carry',
-  'seller carry',
-  'owner terms',
-  'seller terms',
-  'owner financed',
-  'seller financed',
-];
 
 /**
  * Flexible financing term pattern that matches:

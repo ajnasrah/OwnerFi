@@ -1,0 +1,26 @@
+
+> ownerfi@0.1.0 build
+> next build
+
+▲ Next.js 16.1.0 (Turbopack)
+- Environments: .env.local, .env.production
+- Experiments (use with caution):
+  ✓ optimizeCss
+
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+✓ Compiled successfully in 8.7s
+  Running TypeScript ...
+Failed to compile.
+
+./src/app/admin/manage/page.tsx:640:25
+Type error: Object literal may only specify known properties, and 'error' does not exist in type 'SetStateAction<{ success: boolean; message: string; count?: number; }>'.
+
+[0m [90m 638 |[39m       }
+ [90m 639 |[39m     } [36mcatch[39m (error) {
+[31m[1m>[22m[39m[90m 640 |[39m       setUploadResult({ error[33m:[39m [32m`Upload failed: ${(error as Error).message}`[39m })[33m;[39m
+ [90m     |[39m                         [31m[1m^[22m[39m
+ [90m 641 |[39m     } [36mfinally[39m {
+ [90m 642 |[39m       setUploading([36mfalse[39m)[33m;[39m
+ [90m 643 |[39m     }[0m
+Next.js build worker exited with code: 1 and signal: null

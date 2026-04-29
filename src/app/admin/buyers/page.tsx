@@ -1007,13 +1007,13 @@ export default function AdminBuyers() {
                       <div className="text-slate-300 text-sm">
                         {(() => {
                           if (!buyer.createdAt) return 'N/A';
-                          const ts = buyer.createdAt as { toDate?: () => Date; _seconds?: number } | string | Date;
+                          const ts = buyer.createdAt as any;
                           // Handle Firestore Timestamp with toDate() method
-                          if (typeof ts === 'object' && typeof ts.toDate === 'function') {
+                          if (typeof ts === 'object' && ts !== null && 'toDate' in ts && typeof ts.toDate === 'function') {
                             return new Date(ts.toDate()).toLocaleDateString();
                           }
                           // Handle serialized Firestore timestamp { _seconds, _nanoseconds }
-                          if (typeof ts === 'object' && typeof ts._seconds === 'number') {
+                          if (typeof ts === 'object' && ts !== null && '_seconds' in ts && typeof ts._seconds === 'number') {
                             return new Date(ts._seconds * 1000).toLocaleDateString();
                           }
                           // Handle ISO string or other date formats

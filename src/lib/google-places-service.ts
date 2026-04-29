@@ -147,7 +147,7 @@ export class GooglePlacesService {
   }
   
   // Update existing service area with new primary city
-  static async updateServiceArea(currentServiceArea: ServiceArea, newPrimaryCityQuery: string): Promise<ServiceArea> {
+  static async updateServiceArea(_currentServiceArea: ServiceArea, newPrimaryCityQuery: string): Promise<ServiceArea> {
     try {
       return await this.createServiceArea(newPrimaryCityQuery);
     } catch (error) {

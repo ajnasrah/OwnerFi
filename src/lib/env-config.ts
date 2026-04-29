@@ -46,17 +46,6 @@ function optionalEnv(key: string, defaultValue: string = ''): string {
   return process.env[key] || defaultValue;
 }
 
-function requireEnvUrl(key: string, description?: string): string {
-  const value = requireEnv(key, description);
-
-  // Validate URL format
-  try {
-    new URL(value);
-    return value;
-  } catch {
-    throw new Error(`Invalid URL format for ${key}: ${value}`);
-  }
-}
 
 // API Keys Configuration with lazy evaluation (prevents stale keys in serverless)
 // Uses getters to read env vars fresh on each access
@@ -261,7 +250,7 @@ export function validateEnvironment(): { valid: boolean; errors: string[] } {
 
   try {
     // Test all required variables by accessing them
-    const testAccess = {
+    const _testAccess = {
       apiKeys: apiKeys.heygen && apiKeys.submagic && apiKeys.late && apiKeys.openai,
       firebase: firebase.apiKey && firebase.projectId,
       cloudflare: cloudflare.r2.accountId && cloudflare.r2.bucketName,

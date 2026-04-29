@@ -1,5 +1,5 @@
 import { unifiedDb } from './unified-db';
-import { BuyerProfile, normalizeState } from './firebase-models';
+import { normalizeState } from './firebase-models';
 
 // Simplified property interface for matching algorithm
 interface PropertyForMatching {

@@ -1,5 +1,4 @@
-import { unifiedDb } from './unified-db';
-import { BuyerProfile, normalizeState } from './firebase-models';
+import { normalizeState } from './firebase-models';
 import * as admin from 'firebase-admin';
 
 // Simplified property interface for matching algorithm
@@ -346,8 +345,6 @@ export async function matchPropertyToBuyersEfficient(propertyId: string) {
     let hasMore = true;
 
     // If property has location, we can optimize by querying only buyers interested in that area
-    const propertyState = normalizeState(property.state);
-    const propertyCity = normalizeCity(property.city);
 
     while (hasMore) {
       // Build query with cursor

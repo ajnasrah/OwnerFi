@@ -259,7 +259,7 @@ function generateGeohash(lat: number, lng: number, precision: number = 3): strin
  */
 export function shouldUpdateFilter(
   currentCity: string,
-  currentState: string,
+  _currentState: string,
   storedFilter?: BuyerProfile['filter'],
   requestedRadius?: number,
 ): boolean {

@@ -9,7 +9,7 @@
  */
 
 import { db } from './firebase';
-import { collection, doc, getDoc, getDocs, setDoc, updateDoc, query, where, orderBy, limit as firestoreLimit, runTransaction } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, setDoc, updateDoc, query, where, orderBy, limit as firestoreLimit } from 'firebase/firestore';
 
 export interface PropertyShowcaseWorkflow {
   // Identity

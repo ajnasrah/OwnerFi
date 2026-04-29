@@ -477,9 +477,6 @@ describe('Referral System APIs', () => {
           token: 'a'.repeat(64),
           signatureTypedName: 'John Doe',
           signatureCheckbox: true,
-          agreeTCPA: true,
-          agreeCreativeFinance: true,
-          agreeDataAsIs: true,
         }),
       });
 
@@ -497,9 +494,6 @@ describe('Referral System APIs', () => {
         body: JSON.stringify({
           signatureTypedName: 'John Doe',
           signatureCheckbox: true,
-          agreeTCPA: true,
-          agreeCreativeFinance: true,
-          agreeDataAsIs: true,
         }),
       });
 
@@ -519,9 +513,6 @@ describe('Referral System APIs', () => {
           token: 'invalid',
           signatureTypedName: 'John Doe',
           signatureCheckbox: true,
-          agreeTCPA: true,
-          agreeCreativeFinance: true,
-          agreeDataAsIs: true,
         }),
       });
 
@@ -540,9 +531,6 @@ describe('Referral System APIs', () => {
         body: JSON.stringify({
           token: 'a'.repeat(64),
           signatureCheckbox: true,
-          agreeTCPA: true,
-          agreeCreativeFinance: true,
-          agreeDataAsIs: true,
         }),
       });
 
@@ -622,9 +610,6 @@ describe('Referral System APIs', () => {
           token: 'a'.repeat(64),
           signatureTypedName: '   ',
           signatureCheckbox: true,
-          agreeTCPA: true,
-          agreeCreativeFinance: true,
-          agreeDataAsIs: true,
         }),
       });
 
@@ -649,9 +634,6 @@ describe('Referral System APIs', () => {
           token: 'a'.repeat(64),
           signatureTypedName: 'John Doe',
           signatureCheckbox: true,
-          agreeTCPA: true,
-          agreeCreativeFinance: true,
-          agreeDataAsIs: true,
         }),
       });
 
@@ -678,9 +660,6 @@ describe('Referral System APIs', () => {
           token: 'a'.repeat(64),
           signatureTypedName: 'John Doe',
           signatureCheckbox: true,
-          agreeTCPA: true,
-          agreeCreativeFinance: true,
-          agreeDataAsIs: true,
         }),
       });
 
@@ -712,9 +691,6 @@ describe('Referral System APIs', () => {
           token: 'a'.repeat(64),
           signatureTypedName: 'John Doe',
           signatureCheckbox: true,
-          agreeTCPA: true,
-          agreeCreativeFinance: true,
-          agreeDataAsIs: true,
         }),
       });
 
@@ -752,9 +728,6 @@ describe('Referral System APIs', () => {
           token: 'a'.repeat(64),
           signatureTypedName: 'John Doe',
           signatureCheckbox: true,
-          agreeTCPA: true,
-          agreeCreativeFinance: true,
-          agreeDataAsIs: true,
         }),
       });
 
@@ -825,9 +798,6 @@ describe('Referral System APIs', () => {
           token: 'a'.repeat(64),
           signatureTypedName: 'Jane Doe',
           signatureCheckbox: true,
-          agreeTCPA: true,
-          agreeCreativeFinance: true,
-          agreeDataAsIs: true,
         }),
       });
 

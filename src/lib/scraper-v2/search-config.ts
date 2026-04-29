@@ -120,21 +120,6 @@ export const ZIP_CENTROIDS: Record<string, { lat: number; lng: number }> = {
  * SFR only (townhouse/multi-family/condo/land/apartment/manufactured/co-op
  * all excluded).
  */
-const TARGETED_ZIP_FILTER_STATE = {
-  sort: { value: 'globalrelevanceex' },
-  price: { min: 40000, max: 150000 },
-  mp: { max: 55000 },
-  built: { min: 1970 }, // 1970+ built homes only
-  tow: { value: false },
-  mf: { value: false },
-  con: { value: false },
-  land: { value: false },
-  apa: { value: false },
-  manu: { value: false },
-  apco: { value: false },
-  pf: { value: true },
-  pmf: { value: true },
-};
 
 /**
  * Build a precise Zillow search URL for a single zip code using the exact
@@ -207,7 +192,7 @@ export function buildPreciseZipSearchUrl(zip: string): string {
       hoa: { max: 200 },
       built: { min: 1970 },
       "55plus": { value: "e" },
-      // doz: { value: "1" }  // REMOVED - getting ALL properties
+      doz: { value: "1" }
     },
     isListVisible: true,
     usersSearchTerm: zip,
@@ -225,7 +210,7 @@ export function buildPreciseZipSearchUrl(zip: string): string {
  */
 export function buildZipSearchUrl(
   zip: string,
-  filterOverrides: Record<string, unknown> = {}
+  _filterOverrides: Record<string, unknown> = {}
 ): string {
   return buildPreciseZipSearchUrl(zip);
 }

@@ -215,7 +215,7 @@ function parseStreetAddress(fullAddr: string, city?: string): string {
  * DISABLED: Cost protection - Street View Static API costs $7/1000 requests
  * Using empty string fallback to prevent unexpected charges
  */
-function getStreetViewImage(address: string): string {
+function getStreetViewImage(_address: string): string {
   // COST PROTECTION: Street View Static API disabled
   // Original cost: $7 per 1000 requests without rate limiting
   // Risk: Could trigger $35+ charges during property imports

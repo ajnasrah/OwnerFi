@@ -78,7 +78,7 @@ export const OWNER_FINANCING_FACTS = [
 /**
  * Helper function to format disclaimer text with appropriate styling
  */
-export function formatDisclaimer(text: string, size: 'xs' | 'sm' = 'xs'): string {
+export function formatDisclaimer(text: string, _size: 'xs' | 'sm' = 'xs'): string {
   return text;
 }
 

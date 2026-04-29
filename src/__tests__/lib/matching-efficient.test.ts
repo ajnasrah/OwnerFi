@@ -13,15 +13,55 @@ import {
 import * as admin from 'firebase-admin';
 
 // Mock Firebase Admin
+let mockDocExists = true;
+const mockDoc = {
+  get exists() { return mockDocExists; },
+  data: jest.fn(() => ({
+    id: 'buyer1',
+    userId: 'user1',
+    isActive: true,
+    preferredCities: ['Austin'],
+    preferredStates: ['TX'],
+    minBedrooms: 2,
+    maxBedrooms: 4,
+    minBathrooms: 1,
+    minPrice: 100000,
+    maxPrice: 500000
+  }))
+};
+
+const mockQuery = {
+  where: jest.fn().mockReturnThis(),
+  orderBy: jest.fn().mockReturnThis(),
+  limit: jest.fn().mockReturnThis(),
+  startAfter: jest.fn().mockReturnThis(),
+  get: jest.fn().mockResolvedValue({
+    docs: [mockDoc],
+    empty: false,
+    size: 1
+  })
+};
+
 jest.mock('firebase-admin', () => ({
   initializeApp: jest.fn(),
   apps: [],
   firestore: jest.fn(() => ({
-    collection: jest.fn().mockReturnThis(),
-    doc: jest.fn().mockReturnThis(),
-    get: jest.fn(),
-    set: jest.fn(),
-    update: jest.fn(),
+    collection: jest.fn(() => ({
+      doc: jest.fn(() => ({
+        get: jest.fn().mockResolvedValue(mockDoc),
+        set: jest.fn().mockResolvedValue(undefined),
+        update: jest.fn().mockResolvedValue(undefined),
+        ref: { id: 'doc1' }
+      })),
+      where: jest.fn(() => mockQuery),
+      orderBy: jest.fn(() => mockQuery),
+      limit: jest.fn(() => mockQuery),
+      get: jest.fn().mockResolvedValue({
+        docs: [{ ...mockDoc, id: 'doc1', ref: { id: 'doc1' } }],
+        empty: false,
+        size: 1
+      })
+    })),
     batch: jest.fn(() => ({
       set: jest.fn(),
       update: jest.fn(),
@@ -29,6 +69,9 @@ jest.mock('firebase-admin', () => ({
     })),
     FieldValue: {
       serverTimestamp: jest.fn(() => new Date())
+    },
+    FieldPath: {
+      documentId: jest.fn(() => '__name__')
     }
   })),
   credential: {
@@ -39,6 +82,7 @@ jest.mock('firebase-admin', () => ({
 describe('Memory-Efficient Property Matching', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockDocExists = true; // Reset to default
   });
 
   describe('isPropertyMatch', () => {
@@ -217,13 +261,8 @@ describe('Memory-Efficient Property Matching', () => {
     });
 
     it('should throw error for non-existent buyer', async () => {
-      (mockFirestore.collection as jest.Mock).mockImplementation(() => ({
-        doc: jest.fn(() => ({
-          get: jest.fn().mockResolvedValue({
-            exists: false
-          })
-        }))
-      }));
+      // Set mock to return non-existent document
+      mockDocExists = false;
       
       await expect(matchBuyerToPropertiesEfficient('invalid'))
         .rejects.toThrow('Buyer not found');
@@ -231,7 +270,6 @@ describe('Memory-Efficient Property Matching', () => {
   });
 
   describe('matchPropertyToBuyersEfficient', () => {
-    const mockFirestore = admin.firestore() as jest.MockedObject<admin.firestore.Firestore>;
     
     beforeEach(() => {
       // Mock property document
@@ -298,13 +336,8 @@ describe('Memory-Efficient Property Matching', () => {
     });
 
     it('should throw error for non-existent property', async () => {
-      (mockFirestore.collection as jest.Mock).mockImplementation(() => ({
-        doc: jest.fn(() => ({
-          get: jest.fn().mockResolvedValue({
-            exists: false
-          })
-        }))
-      }));
+      // Set mock to return non-existent document
+      mockDocExists = false;
       
       await expect(matchPropertyToBuyersEfficient('invalid'))
         .rejects.toThrow('Property not found');

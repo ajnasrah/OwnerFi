@@ -75,8 +75,8 @@ export function calculatePropertyFinancials(data: PartialPropertyData): Property
   let interestRate = 0;
   let termYearsForCalculation = 0; // Internal use for calculations
   let interestRateForCalculation = 0; // Internal use for calculations
-  const wasTermYearsProvided = !!(providedTermYears && providedTermYears > 0);
-  const wasInterestRateProvided = !!(providedInterestRate && providedInterestRate > 0);
+  const _wasTermYearsProvided = !!(providedTermYears && providedTermYears > 0);
+  const _wasInterestRateProvided = !!(providedInterestRate && providedInterestRate > 0);
 
   if (providedMonthlyPayment > 0) {
     // PRIORITY 1: Monthly payment provided - use it directly

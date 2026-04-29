@@ -149,12 +149,6 @@ const nextConfig = {
     NEXT_PUBLIC_APP_VERSION: process.env.npm_package_version,
   },
 
-  // ESLint configuration for build process
-  eslint: {
-    // CRITICAL FIX: Enable ESLint during builds to catch errors
-    ignoreDuringBuilds: false
-  },
-
   // TypeScript configuration for build process
   typescript: {
     // CRITICAL FIX: Enable TypeScript checks during builds

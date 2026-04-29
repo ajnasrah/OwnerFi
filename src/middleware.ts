@@ -34,6 +34,13 @@ const BYPASS_PATHS = [
   '/api/v2/scraper/',         // Scraper v2 cron endpoints
   '/api/workers/',            // Background workers
   '/api/admin/',              // Admin API endpoints
+  '/api/add-zip-codes',           // Add new zip code markets
+  '/api/scrape-all',          // One-time scraper endpoint
+  '/api/migrate-snapshot',    // Migration endpoint
+  '/api/queue-properties-for-outreach', // Queue properties for agent outreach
+  '/api/process-migrated-properties', // Process migrated properties through unified filter
+  '/api/rescrape-with-details',       // Re-scrape with full property details
+  '/api/market-rankings',             // Automated market cost analysis
   '/_next/',                  // Next.js internals
   '/favicon.ico',
   '/robots.txt',

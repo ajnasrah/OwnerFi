@@ -16,7 +16,7 @@ interface ScreenshotOptions {
  * Generate Google Business profile URL for embedding
  */
 export function getGoogleBusinessEmbedUrl(placeId: string, options: ScreenshotOptions = {}): string {
-  const { width = 400, height = 300 } = options;
+  const { width: _width = 400, height: _height = 300 } = options;
   
   // Use Google Maps embed API for business profile
   const baseUrl = 'https://www.google.com/maps/embed/v1/place';
@@ -35,7 +35,7 @@ export function getGoogleBusinessEmbedUrl(placeId: string, options: ScreenshotOp
  * Generate static Google Business profile image URL
  * COST OPTIMIZATION: Only generate if needed, prefer regular photos
  */
-export function getGoogleBusinessImageUrl(placeId: string, options: ScreenshotOptions = {}): string | null {
+export function getGoogleBusinessImageUrl(placeId: string, _options: ScreenshotOptions = {}): string | null {
   // DISABLED FOR COST CONTROL - Street View Static API costs $7 per 1000 requests
   // This feature would add significant costs with no clear revenue benefit
   // Instead, we'll rely on Google Business Photos which are free

@@ -30,19 +30,6 @@ const ACS_VARIABLES = {
   totalEducationPop: 'B15003_001E',
 };
 
-// NAICS codes for industry categories
-const NAICS_CATEGORIES = {
-  retail: '44-45',
-  foodService: '72',
-  healthcare: '62',
-  professionalServices: '54',
-  manufacturing: '31-33',
-  finance: '52',
-  realEstate: '53',
-  construction: '23',
-  wholesale: '42',
-  transportation: '48-49',
-};
 
 // Industry name mappings
 const NAICS_NAMES: Record<string, string> = {

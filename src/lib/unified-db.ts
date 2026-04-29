@@ -17,7 +17,7 @@ import { db as firebaseDb } from './firebase';
 import { RealtorProfile, BuyerProfile, PropertyMatch, RealtorSubscription, User } from './firebase-models';
 import { PropertyListing } from './property-schema';
 import { queueNearbyCitiesForProperty } from './property-enhancement';
-import { getAllPhoneFormats, normalizePhone } from './phone-utils';
+import { getAllPhoneFormats } from './phone-utils';
 
 
 // Replace the old db import with this unified Firebase-only implementation

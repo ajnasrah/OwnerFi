@@ -48,11 +48,7 @@ export default function AdminBuyers() {
   const [exporting, setExporting] = useState(false);
   const exportDropdownRef = useRef<HTMLDivElement>(null);
 
-  // Tab state
-  const [activeTab, setActiveTab] = useState<'table' | 'map'>('table');
-  const [mapFilter, setMapFilter] = useState<'available' | 'all'>('available');
-  const [allBuyersForMap, setAllBuyersForMap] = useState<BuyerAdminView[]>([]);
-  const [loadingMap, setLoadingMap] = useState(false);
+  // Tab state removed - unused variables
 
   // Close dropdown when clicking outside
   useEffect(() => {

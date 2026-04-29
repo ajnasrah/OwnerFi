@@ -197,10 +197,17 @@ async function generateScript(cards: CardData[], lang: 'en' | 'es'): Promise<Vid
   const cities = cards.map(c => c.city).join(', ');
   const stateName = cards[0].state;
 
+  // Add date variation to ensure unique content
+  const today = new Date();
+  const dayOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][today.getDay()];
+  const month = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][today.getMonth()];
+  
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
   const systemPrompt = lang === 'en'
     ? `You write punchy short-form video scripts for Ownerfi — a platform that helps renters find homes where sellers would consider owner financing.
+    
+IMPORTANT: Today is ${dayOfWeek}, ${month} ${today.getDate()}. Make the content unique for today by varying the approach, angle, or specific language used.
 
 TARGET AUDIENCE: 20-35 year olds currently renting who can't buy through traditional mortgages.
 
@@ -225,6 +232,8 @@ OUTPUT FORMAT (JSON):
   "postTitle": "Short punchy title under 150 characters for YouTube/TikTok. Create curiosity about these specific homes. Mention the state."
 }`
     : `Escribes guiones cortos y directos para videos de Ownerfi — una plataforma que ayuda a personas que rentan a encontrar casas donde los vendedores podrían considerar financiamiento directo (owner financing).
+    
+IMPORTANTE: Hoy es ${dayOfWeek}, ${month} ${today.getDate()}. Haz el contenido único para hoy variando el enfoque, ángulo, o lenguaje específico usado.
 
 AUDIENCIA: Latinos de 20-35 años rentando en EE.UU. que no califican para hipotecas tradicionales.
 
@@ -533,8 +542,12 @@ function buildPostMeta(cards: CardData[], script: VideoScript, lang: 'en' | 'es'
   const allHashtags = [...cityHashtags, ...stateHashtags, ...coreHashtags];
   const uniqueHashtags = [...new Set(allHashtags)].join(' ');
 
+  // Add date to caption to ensure uniqueness
+  const today = new Date();
+  const dateStr = `${today.getMonth() + 1}/${today.getDate()}`;
+  
   return {
-    caption: script.postCaption,
+    caption: `${script.postCaption} [${dateStr}]`,
     title: script.postTitle,
     hashtags: uniqueHashtags,
   };

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react';
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -83,14 +83,13 @@ export default function AdminDashboard() {
   });
 
   // Properties state
-  const [properties, setProperties] = useState<AdminProperty[]>([]);
-  const [loadingProperties, setLoadingProperties] = useState(false);
-  const [selectedProperties, setSelectedProperties] = useState<string[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(75);
-  const [addressSearch, setAddressSearch] = useState('');
-  const [sortField, setSortField] = useState<'address' | 'city' | 'state' | 'listPrice' | 'bedrooms' | 'downPaymentAmount' | 'monthlyPayment' | null>('address');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [_properties, setProperties] = useState<AdminProperty[]>([]);
+  const [_loadingProperties, setLoadingProperties] = useState(false);
+  const [_currentPage, _setCurrentPage] = useState(1);
+  const [_itemsPerPage] = useState(75);
+  const [_addressSearch, _setAddressSearch] = useState('');
+  const [_sortField, _setSortField] = useState<'address' | 'city' | 'state' | 'listPrice' | 'bedrooms' | 'downPaymentAmount' | 'monthlyPayment' | null>('address');
+  const [_sortDirection, _setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   const [editingProperty, setEditingProperty] = useState<AdminProperty | null>(null);
 
@@ -212,9 +211,9 @@ export default function AdminDashboard() {
   }
   const [newPropertiesData, setNewPropertiesData] = useState<NewProperty[]>([]);
   const [loadingNewProperties, setLoadingNewProperties] = useState(false);
-  const [exportingGHL, setExportingGHL] = useState(false);
+  const [_exportingGHL, _setExportingGHL] = useState(false);
   const [sendingToGHL, setSendingToGHL] = useState(false);
-  const [ghlSendResult, setGhlSendResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [_ghlSendResult, setGhlSendResult] = useState<{ success: boolean; message: string } | null>(null);
 
   // Disputes state
   const [disputes, setDisputes] = useState<LeadDispute[]>([]);
@@ -246,7 +245,7 @@ export default function AdminDashboard() {
   const [editForm, setEditForm] = useState<Partial<AdminProperty>>({});
 
   // Edit modal state - extra fields
-  const [newImageUrl, setNewImageUrl] = useState('');
+  const [_newImageUrl, _setNewImageUrl] = useState('');
 
   // Auth check
   useEffect(() => {
@@ -308,7 +307,7 @@ export default function AdminDashboard() {
         setProperties(data.properties);
         setStats(prev => ({ ...prev, totalProperties: data.total || data.properties.length }));
         if (!limit && resetPage) {
-          setCurrentPage(1);
+          _setCurrentPage(1);
         }
       }
     } catch (error) {
@@ -334,28 +333,6 @@ export default function AdminDashboard() {
     }
   }, []);
 
-  const handleExportGHL = async () => {
-    setExportingGHL(true);
-    try {
-      const response = await fetch('/api/admin/zillow-imports/export-ghl');
-      if (!response.ok) throw new Error('Export failed');
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `zillow_imports_ghl_${new Date().toISOString().split('T')[0]}.xlsx`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } catch (error) {
-      console.error('Failed to export to GHL format:', error);
-      alert('Failed to export properties');
-    } finally {
-      setExportingGHL(false);
-    }
-  };
 
   const handleSendToGHL = async () => {
     if (!confirm(`Send ${newPropertiesData.length} properties to GoHighLevel webhook?`)) {
@@ -489,15 +466,9 @@ export default function AdminDashboard() {
 
   // Property management functions
   // ✅ PERFORMANCE FIX: Removed duplicate sorting logic - now handled by useMemo
-  const handleSort = (field: 'address' | 'city' | 'state' | 'listPrice' | 'bedrooms' | 'downPaymentAmount' | 'monthlyPayment') => {
-    const newDirection = sortField === field && sortDirection === 'asc' ? 'desc' : 'asc';
-    setSortField(field);
-    setSortDirection(newDirection);
-    // Sorting now handled automatically by filteredProperties useMemo
-  };
 
-  // ✅ PERFORMANCE FIX: Memoize filtering to prevent recalculation on every render
-  const filteredProperties = useMemo(() => {
+  // Filtering logic removed - was unused
+  /* const _filteredProperties = useMemo(() => {
     let filteredProps = properties;
 
     // Apply search filter - search by address or city
@@ -559,19 +530,11 @@ export default function AdminDashboard() {
     }
 
     return filteredProps;
-  }, [properties, addressSearch, sortField, sortDirection]);
+  }, [properties, addressSearch, sortField, sortDirection]); */
 
-  // ✅ PERFORMANCE FIX: Memoize pagination to prevent recalculation on every render
-  const paginatedProperties = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
-    return filteredProperties.slice(start, start + itemsPerPage);
-  }, [filteredProperties, currentPage, itemsPerPage]);
+  // Pagination logic removed - was unused
 
-  // ✅ PERFORMANCE FIX: Memoize total pages calculation
-  const totalPages = useMemo(() =>
-    Math.ceil(filteredProperties.length / itemsPerPage),
-    [filteredProperties.length, itemsPerPage]
-  );
+  // Total pages calculation removed - was unused
 
   // Helper function to recalculate financials when price or related fields change
   const handlePriceChange = (newPrice: number) => {
@@ -660,7 +623,7 @@ export default function AdminDashboard() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        setUploadResult({ error: errorData.error || `HTTP ${response.status}` });
+        setUploadResult({ success: false, message: errorData.error || `HTTP ${response.status}` });
         return;
       }
 
@@ -674,7 +637,7 @@ export default function AdminDashboard() {
         loadStats(); // Refresh stats
       }
     } catch (error) {
-      setUploadResult({ error: `Upload failed: ${(error as Error).message}` });
+      setUploadResult({ success: false, message: `Upload failed: ${(error as Error).message}` });
     } finally {
       setUploading(false);
     }
@@ -944,10 +907,10 @@ export default function AdminDashboard() {
                 </button>
                 <button
                   onClick={() => fetchProperties(undefined, false)}
-                  disabled={loadingProperties}
+                  disabled={_loadingProperties}
                   className="px-4 py-2 bg-[#00BC7D] text-white text-sm font-medium rounded-lg hover:bg-[#009B66] transition-colors disabled:bg-slate-600 shadow-sm"
                 >
-                  {loadingProperties ? 'Refreshing...' : 'Refresh'}
+                  {_loadingProperties ? 'Refreshing...' : 'Refresh'}
                 </button>
               </div>
             )}

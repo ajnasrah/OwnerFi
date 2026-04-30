@@ -224,7 +224,7 @@ export async function updateWorkflowStatusWithValidation(
     const { db } = await import('./firebase-admin');
     const workflowDoc = await db.collection(`${brand}_workflow_queue`).doc(workflowId).get();
     
-    if (!workflowDoc.exists()) {
+    if (!workflowDoc.exists) {
       return { success: false, error: 'Workflow not found' };
     }
 

@@ -105,49 +105,17 @@ export const PropertySwiper2 = memo(function PropertySwiper2({
     }
   };
 
-  // Handle touch/mouse end — right swipe = like, left swipe = pass.
-  // This matches the hero tagline ("Swipe Your Way Into Your Dream Home") and
-  // matches the `showAction` indicator that already telegraphs like/pass
-  // during the drag.
+  // Handle touch/mouse end — DISABLED swipe-to-like/pass functionality
+  // Only buttons should trigger like/pass actions for normal browsing
   const handleEnd = () => {
     if (!isDragging || animating) return;
 
     setIsDragging(false);
 
-    const absX = Math.abs(dragOffset.x);
-    const elapsed = dragStart ? Date.now() - dragStart.time : 1000;
-    const velocity = absX / Math.max(elapsed, 1); // px per ms
-
-    // Require EITHER a fast flick (velocity > 0.5 px/ms) OR a long drag (> 35% screen width)
-    const screenThreshold = window.innerWidth * 0.35;
-    const isIntentionalSwipe = swipeLocked === 'horizontal' && (velocity > 0.5 || absX > screenThreshold);
-
-    if (isIntentionalSwipe && currentProperty) {
-      if (dragOffset.x > 0) {
-        // Swiped right → like the current property
-        if (!hasTrackedFirstSwipe.current) {
-          hasTrackedFirstSwipe.current = true;
-          trackEvent('swipe_first', { action: 'like' });
-        }
-        setAnimating(true);
-        onLike(currentProperty);
-        animateCard('like');
-      } else {
-        // Swiped left → pass on the current property
-        if (!hasTrackedFirstSwipe.current) {
-          hasTrackedFirstSwipe.current = true;
-          trackEvent('swipe_first', { action: 'pass' });
-        }
-        setAnimating(true);
-        onPass(currentProperty);
-        animateCard('pass');
-      }
-    } else {
-      // Not enough swipe - reset
-      setDragOffset({ x: 0, y: 0 });
-      setShowAction(null);
-      setSwipeLocked(null);
-    }
+    // Always reset - no swipe actions, only button clicks
+    setDragOffset({ x: 0, y: 0 });
+    setShowAction(null);
+    setSwipeLocked(null);
 
     setDragStart(null);
   };

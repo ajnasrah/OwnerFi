@@ -205,7 +205,7 @@ export class BudgetTracker {
     
     const doc = await db.collection('budget_periods').doc(periodId).get();
     
-    if (doc.exists()) {
+    if (doc.exists) {
       return { id: periodId, ...doc.data() } as BudgetPeriod;
     }
 
@@ -302,7 +302,7 @@ export class BudgetTracker {
     if (percentageUsed >= 75 && !budgetPeriod.alerts?.warning75) {
       warnings.push(`⚠️ 75% of ${budgetPeriod.period} budget used for ${budgetPeriod.service} (${budgetPeriod.brand})`);
       await this.updateBudgetPeriod(budgetPeriod.id, {
-        'alerts.warning75': true
+        alerts: { ...budgetPeriod.alerts, warning75: true }
       });
     }
 
@@ -310,7 +310,7 @@ export class BudgetTracker {
     if (percentageUsed >= 90 && !budgetPeriod.alerts?.warning90) {
       warnings.push(`🚨 90% of ${budgetPeriod.period} budget used for ${budgetPeriod.service} (${budgetPeriod.brand})`);
       await this.updateBudgetPeriod(budgetPeriod.id, {
-        'alerts.warning90': true
+        alerts: { ...budgetPeriod.alerts, warning90: true }
       });
     }
 
@@ -318,7 +318,7 @@ export class BudgetTracker {
     if (percentageUsed >= 100 && !budgetPeriod.alerts?.limitExceeded) {
       warnings.push(`🔴 Budget limit exceeded for ${budgetPeriod.service} (${budgetPeriod.brand}) - ${budgetPeriod.period}`);
       await this.updateBudgetPeriod(budgetPeriod.id, {
-        'alerts.limitExceeded': true
+        alerts: { ...budgetPeriod.alerts, limitExceeded: true }
       });
     }
 

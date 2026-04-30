@@ -61,12 +61,33 @@ export async function getAdminAuth() {
   return adminAuth;
 }
 
-// Legacy exports for backward compatibility (these will be null initially)
-export { adminDb, adminAuth };
+// Ensure Firebase is initialized and return non-null db
+export function getDb(): Firestore {
+  if (!isInitialized) {
+    throw new Error('Firebase Admin not initialized. Call getAdminDb() first in async context.');
+  }
+  if (!adminDb) {
+    throw new Error('Firebase Admin failed to initialize - check configuration');
+  }
+  return adminDb;
+}
 
-// Alias export for common usage pattern
-export const db = adminDb;
-export const admin = { db: adminDb, auth: adminAuth };
+// Safe direct export that initializes lazily
+let _dbProxy: Firestore | null = null;
+export const db = new Proxy({} as Firestore, {
+  get(target, prop) {
+    if (!_dbProxy) {
+      if (!isInitialized || !adminDb) {
+        throw new Error('Firebase Admin not initialized. Ensure getAdminDb() is called first in async context.');
+      }
+      _dbProxy = adminDb;
+    }
+    return _dbProxy[prop as keyof Firestore];
+  }
+});
+
+// Legacy exports for backward compatibility 
+export { adminDb, adminAuth };
 
 // Alias for code that expects getFirestore
 export const getFirestore = getAdminDb;

@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
       
       const output = execSync(command, {
         encoding: 'utf8',
-        timeout: 20 * 60 * 1000, // 20 minute timeout
+        timeout: 9 * 60 * 1000, // 9 minute timeout (under Vercel 10min limit)
         env: {
           ...process.env,
           NODE_ENV: 'production'

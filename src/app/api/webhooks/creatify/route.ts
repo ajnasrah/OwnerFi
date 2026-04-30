@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase-admin';
 import { uploadVideoToR2 } from '@/lib/r2-upload';
+import { validateWebhookSignature } from '@/lib/webhook-validation';
 import { isWebhookProcessed, markWebhookProcessed } from '@/lib/webhook-idempotency';
 import { triggerLatePosting } from '@/lib/social-posting';
 
@@ -14,7 +15,25 @@ interface CreatifyWebhookPayload {
 
 export async function POST(req: NextRequest) {
   try {
-    const payload: CreatifyWebhookPayload = await req.json();
+    // Validate webhook signature if secret is configured
+    const webhookSecret = process.env.CREATIFY_WEBHOOK_SECRET;
+    const signature = req.headers.get('x-creatify-signature');
+    
+    let payload: CreatifyWebhookPayload;
+    let requestBody: string;
+    
+    if (webhookSecret && signature) {
+      requestBody = await req.text();
+      const isValid = await validateWebhookSignature(requestBody, signature, webhookSecret);
+      if (!isValid) {
+        console.error('[Creatify Webhook] Invalid signature');
+        return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
+      }
+      payload = JSON.parse(requestBody);
+    } else {
+      payload = await req.json();
+      requestBody = JSON.stringify(payload);
+    }
     
     // Check idempotency
     const { processed } = await isWebhookProcessed('creatify', `${payload.id}-${payload.status}`, undefined, payload);

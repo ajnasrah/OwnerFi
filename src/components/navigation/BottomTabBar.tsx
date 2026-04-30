@@ -45,10 +45,10 @@ export function BottomTabBar({ tabs }: BottomTabBarProps) {
     <>
       {/* Mobile Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 z-header md:hidden bg-[#111625]/95 backdrop-blur-xl border-t border-slate-700/50 pb-safe">
-        <div className="flex items-center justify-around h-14 px-1">
+        <div className="flex items-center justify-around h-20 px-1">
           {tabs.map((tab) => {
             const active = tab.key === activeKey;
-            const className = `flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors ${
+            const className = `flex flex-col items-center justify-center gap-1 flex-1 h-full transition-colors ${
               active ? 'text-[#00BC7D]' : 'text-slate-500'
             }`;
 
@@ -62,7 +62,7 @@ export function BottomTabBar({ tabs }: BottomTabBarProps) {
                     </span>
                   )}
                 </span>
-                <span className="text-[10px] font-medium leading-none">{tab.label}</span>
+                <span className="text-xs font-medium leading-none">{tab.label}</span>
               </>
             );
 
@@ -84,11 +84,11 @@ export function BottomTabBar({ tabs }: BottomTabBarProps) {
       </nav>
 
       {/* Desktop Sidebar Navigation */}
-      <nav className="hidden md:block fixed left-0 top-0 h-full z-40 bg-[#111625]/95 backdrop-blur-xl border-r border-slate-700/50">
-        <div className="flex flex-col w-20 h-full py-4">
+      <nav className="hidden md:block fixed left-0 top-16 z-40 bg-[#111625]/95 backdrop-blur-xl border-r border-slate-700/50" style={{height: 'calc(100vh - 64px)'}}>
+        <div className="flex flex-col w-32 h-full py-6">
           {tabs.map((tab) => {
             const active = tab.key === activeKey;
-            const className = `flex flex-col items-center justify-center gap-2 p-3 mx-2 mb-2 rounded-lg transition-colors ${
+            const className = `flex flex-col items-center justify-center gap-3 p-4 mx-3 mb-3 rounded-lg transition-colors ${
               active ? 'text-[#00BC7D] bg-[#00BC7D]/10' : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
             }`;
 
@@ -102,7 +102,7 @@ export function BottomTabBar({ tabs }: BottomTabBarProps) {
                     </span>
                   )}
                 </span>
-                <span className="text-[10px] font-medium leading-none text-center">{tab.label}</span>
+                <span className="text-xs font-medium leading-none text-center">{tab.label}</span>
               </>
             );
 

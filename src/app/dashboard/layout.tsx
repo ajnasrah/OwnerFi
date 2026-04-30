@@ -117,7 +117,7 @@ export default function DashboardLayout({
     <>
       <Header />
       {/* Main content with sidebar spacing on desktop */}
-      <div className="md:ml-20">
+      <div className="md:ml-32">
         {children}
       </div>
       {/* Don't render tabs until session is loaded to avoid flashing wrong tabs */}
@@ -128,9 +128,9 @@ export default function DashboardLayout({
 
       {/* Chatbot — available on all dashboard pages, pushed above mobile tab bar */}
       {isChatbotOpen ? (
-        <Chatbot isOpen={isChatbotOpen} onClose={() => setIsChatbotOpen(false)} bottomClass="bottom-6 md:bottom-6 max-md:bottom-20" initialMessage={chatPrefill} />
+        <Chatbot isOpen={isChatbotOpen} onClose={() => setIsChatbotOpen(false)} bottomClass="bottom-6 md:bottom-6 max-md:bottom-24" initialMessage={chatPrefill} />
       ) : (
-        <FloatingChatbotButton onClick={(prefill) => openChat(prefill)} bottomClass="bottom-6 md:bottom-6 max-md:bottom-20" />
+        <FloatingChatbotButton onClick={(prefill) => openChat(prefill)} bottomClass="bottom-6 md:bottom-6 max-md:bottom-24" />
       )}
     </>
   );

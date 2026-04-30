@@ -7,6 +7,7 @@ import HomePageClient from './HomePageClient'
 import { LegalFooter } from '@/components/ui/LegalFooter'
 import HeroVideo from '@/components/ui/HeroVideo'
 import { SmartCTAButton } from '@/components/ui/SmartCTAButton'
+import { SlidersHorizontal } from 'lucide-react'
 
 // Force dynamic rendering to prevent static generation errors with headers()
 export const dynamic = 'force-dynamic'
@@ -194,8 +195,9 @@ export default async function HomePage() {
                 <Link href="/how-owner-finance-works" className="hidden sm:inline-flex text-sm text-slate-400 hover:text-white px-3 py-2 rounded-lg transition-colors">
                   How It Works
                 </Link>
-                <Link href="/for-realtors" className="hidden sm:inline-flex text-sm text-slate-400 hover:text-white px-3 py-2 rounded-lg transition-colors">
-                  For Realtors
+                <Link href="/dashboard/settings" className="hidden sm:inline-flex items-center gap-1 text-sm text-slate-400 hover:text-white px-3 py-2 rounded-lg transition-colors">
+                  <SlidersHorizontal className="w-4 h-4" />
+                  Filters
                 </Link>
                 {session ? (
                   <Link href={getDashboardUrl()} className="bg-[#00BC7D] hover:bg-[#00d68f] text-white px-4 py-2 rounded-lg font-semibold text-sm transition-colors">

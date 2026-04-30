@@ -12,7 +12,7 @@ import { PropertyListing } from '@/lib/property-schema';
 import { BuyerDashboardView } from '@/lib/view-models';
 import { OWNER_FINANCING_FACTS, SAFE_UI_LABELS } from '@/lib/legal-disclaimers';
 import { trackEvent } from '@/components/analytics/AnalyticsProvider';
-import AgentSwiper from '@/components/agents/AgentSwiper';
+import { RealtorDiscoveryCard } from '@/components/dashboard/RealtorDiscoveryCard';
 import { Users, Settings, SlidersHorizontal } from 'lucide-react';
 
 // Extended Property interface that includes PropertyListing fields
@@ -61,7 +61,8 @@ export default function Dashboard() {
   const [likedProperties, setLikedProperties] = useState<string[]>([]);
   const [showTutorial, setShowTutorial] = useState(false);
   const [currentFact, setCurrentFact] = useState('');
-  const [currentView, setCurrentView] = useState<'properties' | 'agents'>('properties');
+  const [showRealtorSuggestion, setShowRealtorSuggestion] = useState(false);
+  const [propertyInteractions, setPropertyInteractions] = useState(0);
 
   // Filter upgrade prompt for old users
   const { shouldShow: shouldShowFilterUpgrade, dismissPrompt: dismissFilterUpgrade } = useFilterUpgradePrompt(profile);
@@ -155,11 +156,25 @@ export default function Dashboard() {
     }
   };
 
+  // Show realtor suggestion after user has interacted with properties
+  useEffect(() => {
+    if (propertyInteractions >= 5 && !showRealtorSuggestion) {
+      // Show suggestion after 5 property interactions (likes/passes)
+      const timer = setTimeout(() => {
+        setShowRealtorSuggestion(true);
+      }, 2000); // Delay to avoid interrupting browsing
+      return () => clearTimeout(timer);
+    }
+  }, [propertyInteractions, showRealtorSuggestion]);
+
   // PERF: Memoized toggle like handler to prevent re-renders
   const toggleLike = useCallback(async (propertyId: string, property?: Property) => {
     try {
       const isLiked = likedProperties.includes(propertyId);
       const action = isLiked ? 'unlike' : 'like';
+      
+      // Track interaction for realtor suggestion
+      setPropertyInteractions(prev => prev + 1);
 
       // Include property context for ML training
       const propertyContext = property ? {
@@ -284,6 +299,9 @@ export default function Dashboard() {
   // PERF: Memoized handler for passing a property
   const handlePassProperty = useCallback(async (property: PropertyListing) => {
     try {
+      // Track interaction for realtor suggestion
+      setPropertyInteractions(prev => prev + 1);
+      
       // Track the pass event
       trackEvent('property_pass', {
         property_id: property.id,
@@ -413,35 +431,6 @@ export default function Dashboard() {
         onComplete={() => setShowTutorial(false)}
       />
 
-      {/* View Toggle Header - Always visible on all devices */}
-      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50">
-        <div className="bg-white/95 backdrop-blur-md rounded-full p-1 shadow-xl border border-gray-200">
-          <div className="flex space-x-1">
-            <button
-              onClick={() => setCurrentView('properties')}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                currentView === 'properties'
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-              }`}
-            >
-              Properties
-            </button>
-            <button
-              onClick={() => setCurrentView('agents')}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center ${
-                currentView === 'agents'
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-              }`}
-            >
-              <Users className="w-4 h-4 mr-1" />
-              Find Realtors
-            </button>
-          </div>
-        </div>
-      </div>
-
       {/* Settings Button - Top Right - Always visible on all devices */}
       <div className="absolute top-4 right-4 z-50">
         <Link href="/dashboard/settings">
@@ -451,29 +440,25 @@ export default function Dashboard() {
         </Link>
       </div>
 
-      {/* Content */}
-      {currentView === 'properties' ? (
-        /* Property Swiper */
-        <PropertySwiper2
-          properties={propertyListings}
-          onLike={handleLikeProperty}
-          onPass={handlePassProperty}
-          favorites={likedProperties}
-          passedIds={[]}
-          isLoading={loading}
-          bottomOffset="md:bottom-0 bottom-14"
+      {/* Property Swiper */}
+      <PropertySwiper2
+        properties={propertyListings}
+        onLike={handleLikeProperty}
+        onPass={handlePassProperty}
+        favorites={likedProperties}
+        passedIds={[]}
+        isLoading={loading}
+        bottomOffset="md:bottom-0 bottom-14"
+      />
+
+      {/* Realtor Discovery Card - Shows after user interaction */}
+      {showRealtorSuggestion && (
+        <RealtorDiscoveryCard
+          city={profile?.city}
+          state={profile?.state}
+          onClose={() => setShowRealtorSuggestion(false)}
+          onExplore={() => router.push('/dashboard/realtors')}
         />
-      ) : (
-        /* Agents View */
-        <div className="h-full bg-gray-50 pt-16 pb-20 overflow-y-auto">
-          <div className="max-w-6xl mx-auto p-6">
-            <AgentSwiper 
-              city={profile?.city || 'Memphis'} 
-              state={profile?.state || 'TN'}
-              className="w-full"
-            />
-          </div>
-        </div>
       )}
 
       {/* Filter Upgrade Modal - One-time prompt for old users */}

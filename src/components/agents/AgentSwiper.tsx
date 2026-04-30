@@ -146,6 +146,9 @@ export default function AgentSwiper({
     }
   }, []);
 
+  // Get current agent safely
+  const currentAgent = agents[currentAgentIndex];
+
   // Keyboard navigation
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
@@ -344,7 +347,6 @@ export default function AgentSwiper({
     );
   }
 
-  const currentAgent = agents[currentAgentIndex];
   if (!currentAgent) return null;
 
   return (
@@ -363,12 +365,12 @@ export default function AgentSwiper({
       </div>
 
       {/* Agent Card */}
-      <Card 
-        className="overflow-hidden shadow-lg select-none"
+      <div
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
+        <Card className="overflow-hidden shadow-lg select-none">
         <CardContent className="p-0">
           {/* Agent Photo/Business Profile */}
           <div className="relative h-48 bg-gradient-to-b from-blue-500 to-blue-600 flex items-center justify-center overflow-hidden">
@@ -461,7 +463,8 @@ export default function AgentSwiper({
             </div>
           </div>
         </CardContent>
-      </Card>
+        </Card>
+      </div>
 
       {/* Action Buttons */}
       <div className="flex justify-center space-x-4">

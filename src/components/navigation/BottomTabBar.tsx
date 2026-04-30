@@ -42,43 +42,86 @@ export function BottomTabBar({ tabs }: BottomTabBarProps) {
   }, null);
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-header md:hidden bg-[#111625]/95 backdrop-blur-xl border-t border-slate-700/50 pb-safe">
-      <div className="flex items-center justify-around h-14 px-1">
-        {tabs.map((tab) => {
-          const active = tab.key === activeKey;
-          const className = `flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors ${
-            active ? 'text-[#00BC7D]' : 'text-slate-500'
-          }`;
+    <>
+      {/* Mobile Bottom Navigation */}
+      <nav className="fixed bottom-0 left-0 right-0 z-header md:hidden bg-[#111625]/95 backdrop-blur-xl border-t border-slate-700/50 pb-safe">
+        <div className="flex items-center justify-around h-14 px-1">
+          {tabs.map((tab) => {
+            const active = tab.key === activeKey;
+            const className = `flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors ${
+              active ? 'text-[#00BC7D]' : 'text-slate-500'
+            }`;
 
-          const content = (
-            <>
-              <span className="relative">
-                {tab.icon}
-                {tab.badge !== undefined && tab.badge > 0 && (
-                  <span className="absolute -top-1 -right-2 bg-red-500 text-white text-[9px] rounded-full w-3.5 h-3.5 flex items-center justify-center font-bold">
-                    {tab.badge > 99 ? '99' : tab.badge}
-                  </span>
-                )}
-              </span>
-              <span className="text-[10px] font-medium leading-none">{tab.label}</span>
-            </>
-          );
-
-          if (tab.href) {
-            return (
-              <Link key={tab.key} href={tab.href} className={className}>
-                {content}
-              </Link>
+            const content = (
+              <>
+                <span className="relative">
+                  {tab.icon}
+                  {tab.badge !== undefined && tab.badge > 0 && (
+                    <span className="absolute -top-1 -right-2 bg-red-500 text-white text-[9px] rounded-full w-3.5 h-3.5 flex items-center justify-center font-bold">
+                      {tab.badge > 99 ? '99' : tab.badge}
+                    </span>
+                  )}
+                </span>
+                <span className="text-[10px] font-medium leading-none">{tab.label}</span>
+              </>
             );
-          }
 
-          return (
-            <button key={tab.key} onClick={tab.onClick} className={className}>
-              {content}
-            </button>
-          );
-        })}
-      </div>
-    </nav>
+            if (tab.href) {
+              return (
+                <Link key={tab.key} href={tab.href} className={className}>
+                  {content}
+                </Link>
+              );
+            }
+
+            return (
+              <button key={tab.key} onClick={tab.onClick} className={className}>
+                {content}
+              </button>
+            );
+          })}
+        </div>
+      </nav>
+
+      {/* Desktop Sidebar Navigation */}
+      <nav className="hidden md:block fixed left-0 top-0 h-full z-40 bg-[#111625]/95 backdrop-blur-xl border-r border-slate-700/50">
+        <div className="flex flex-col w-20 h-full py-4">
+          {tabs.map((tab) => {
+            const active = tab.key === activeKey;
+            const className = `flex flex-col items-center justify-center gap-2 p-3 mx-2 mb-2 rounded-lg transition-colors ${
+              active ? 'text-[#00BC7D] bg-[#00BC7D]/10' : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+            }`;
+
+            const content = (
+              <>
+                <span className="relative">
+                  {tab.icon}
+                  {tab.badge !== undefined && tab.badge > 0 && (
+                    <span className="absolute -top-1 -right-2 bg-red-500 text-white text-[9px] rounded-full w-4 h-4 flex items-center justify-center font-bold">
+                      {tab.badge > 99 ? '99' : tab.badge}
+                    </span>
+                  )}
+                </span>
+                <span className="text-[10px] font-medium leading-none text-center">{tab.label}</span>
+              </>
+            );
+
+            if (tab.href) {
+              return (
+                <Link key={tab.key} href={tab.href} className={className}>
+                  {content}
+                </Link>
+              );
+            }
+
+            return (
+              <button key={tab.key} onClick={tab.onClick} className={className}>
+                {content}
+              </button>
+            );
+          })}
+        </div>
+      </nav>
+    </>
   );
 }

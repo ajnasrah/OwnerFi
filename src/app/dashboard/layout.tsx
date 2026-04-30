@@ -116,7 +116,10 @@ export default function DashboardLayout({
   return (
     <>
       <Header />
-      {children}
+      {/* Main content with sidebar spacing on desktop */}
+      <div className="md:ml-20">
+        {children}
+      </div>
       {/* Don't render tabs until session is loaded to avoid flashing wrong tabs */}
       {status !== 'loading' && <BottomTabBar tabs={tabs} />}
 

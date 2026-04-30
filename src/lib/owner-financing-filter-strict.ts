@@ -67,7 +67,7 @@ const STRICT_PATTERNS = [
  * @returns StrictFilterResult with pass/fail and ALL matched keywords
  */
 export function hasStrictOwnerfinancing(description: string | null | undefined): StrictFilterResult {
-  if (!description || description.trim().length === 0) {
+  if (!description || typeof description !== 'string' || description.trim().length === 0) {
     return {
       passes: false,
       matchedKeywords: [],

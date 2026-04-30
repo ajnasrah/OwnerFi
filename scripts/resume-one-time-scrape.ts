@@ -1,9 +1,9 @@
 #!/usr/bin/env npx tsx
 /**
- * One-time script to scrape ALL properties in target zip codes
- * WITHOUT days-on-market filter (gets all active listings)
+ * RESUME One-time script to scrape remaining empty zip codes
  * 
- * USES IDENTICAL PIPELINE as cron job - just different time filter
+ * This script continues where the previous one-time script left off
+ * by focusing only on zip codes with 0 properties currently
  */
 
 import * as dotenv from 'dotenv';
@@ -31,7 +31,6 @@ dotenv.config({ path: '.env.local' });
  * Remove doz filter from URL to get ALL listings (not just 1-day)
  */
 function removeDozFilter(url: string): string {
-  // Decode URL, remove doz parameter, re-encode
   const match = url.match(/searchQueryState=([^&]+)/);
   if (!match) return url;
   
@@ -39,7 +38,6 @@ function removeDozFilter(url: string): string {
     const decoded = decodeURIComponent(match[1]);
     const queryState = JSON.parse(decoded);
     
-    // Remove days on Zillow filter
     if (queryState.filterState && queryState.filterState.doz) {
       delete queryState.filterState.doz;
     }
@@ -52,22 +50,65 @@ function removeDozFilter(url: string): string {
   }
 }
 
-async function runOneTimeScrape() {
-  console.log('=== ONE-TIME SCRAPER: ALL PROPERTIES IN TARGET ZIPS ===\n');
-  console.log('Target URLs:', TARGETED_ZIP_URLS.length);
-  console.log('Using IDENTICAL URLs as cron job - just removing doz filter\n');
+/**
+ * Check if zip code needs processing (has 0 properties)
+ */
+async function checkZipNeedsProcessing(db: any, zipCode: string): Promise<boolean> {
+  try {
+    const snapshot = await db.collection('properties')
+      .where('zipCode', '==', zipCode)
+      .count()
+      .get();
+    
+    return snapshot.data().count === 0;
+  } catch (error) {
+    console.error(`Error checking zip ${zipCode}:`, error);
+    return true; // Process on error to be safe
+  }
+}
 
+async function resumeOneTimeScrape() {
+  console.log('=== RESUME ONE-TIME SCRAPER: EMPTY ZIP CODES ONLY ===\n');
+  
   const apiKey = process.env.APIFY_API_KEY;
   if (!apiKey) {
     throw new Error('APIFY_API_KEY is required');
   }
 
-  // Get Firebase
   const { db } = getFirebaseAdmin();
 
-  // Collect properties for Typesense indexing
-  const typesenseProperties: UnifiedProperty[] = [];
+  // First, identify empty zip codes
+  console.log('Identifying empty zip codes...');
+  const emptyZipUrls: { url: string; zip: string }[] = [];
+  
+  for (const url of TARGETED_ZIP_URLS) {
+    const zipMatch = url.match(/(\d{5})/);
+    const zip = zipMatch ? zipMatch[1] : null;
+    
+    if (!zip) {
+      console.log(`❌ Could not extract zip from URL: ${url.substring(0, 50)}...`);
+      continue;
+    }
+    
+    const needsProcessing = await checkZipNeedsProcessing(db, zip);
+    if (needsProcessing) {
+      emptyZipUrls.push({ url, zip });
+      console.log(`✅ ${zip} - EMPTY (will process)`);
+    } else {
+      console.log(`⏭️  ${zip} - HAS DATA (skipping)`);
+    }
+  }
+  
+  console.log(`\nFound ${emptyZipUrls.length} empty zip codes to process`);
+  console.log(`Skipped ${TARGETED_ZIP_URLS.length - emptyZipUrls.length} zip codes that already have data`);
+  
+  if (emptyZipUrls.length === 0) {
+    console.log('🎉 All zip codes already have data! No work to do.');
+    return;
+  }
 
+  // Process empty zip codes
+  const typesenseProperties: UnifiedProperty[] = [];
   const allResults: any[] = [];
   let totalProperties = 0;
   let ownerFinanceCount = 0;
@@ -78,33 +119,28 @@ async function runOneTimeScrape() {
   let duplicatesSkipped = 0;
   let filteredOut = 0;
 
-  // Process each URL from the exact same list as cron job
-  for (let i = 0; i < TARGETED_ZIP_URLS.length; i++) {
-    const originalUrl = TARGETED_ZIP_URLS[i];
-    const url = removeDozFilter(originalUrl); // Remove doz filter to get ALL listings
+  for (let i = 0; i < emptyZipUrls.length; i++) {
+    const { url: originalUrl, zip } = emptyZipUrls[i];
+    const url = removeDozFilter(originalUrl);
     
-    // Extract zip code for logging
-    const zipMatch = url.match(/(\d{5})/);
-    const zip = zipMatch ? zipMatch[1] : `URL-${i+1}`;
-    
-    console.log(`\n[${i + 1}/${TARGETED_ZIP_URLS.length}] Processing ${zip}...`);
+    console.log(`\n[${i + 1}/${emptyZipUrls.length}] Processing ${zip}...`);
     console.log(`  URL: ${url.substring(0, 100)}...`);
 
     try {
-      // STEP 1: Get basic property list (IDENTICAL to cron)
+      // STEP 1: Get basic property list
       const searchResults = await runSearchScraper([url], {
-        maxResults: 200, // Get more results per zip
+        maxResults: 300, // Increase for empty zips
         mode: 'pagination'
       });
       
       console.log(`  ✅ Found ${searchResults.length} search results`);
       
       if (searchResults.length === 0) {
-        console.log(`  No properties found for ${zip}`);
+        console.log(`  📭 No properties found for ${zip}`);
         continue;
       }
 
-      // STEP 2: Check for duplicates (IDENTICAL to cron)
+      // STEP 2: Check for duplicates
       const newProperties = [];
       const existingZpids = new Set();
       
@@ -122,19 +158,19 @@ async function runOneTimeScrape() {
         }
       }
       
-      console.log(`  New properties to process: ${newProperties.length} (${existingZpids.size} duplicates skipped)`);
+      console.log(`  🆕 New properties to process: ${newProperties.length} (${existingZpids.size} duplicates skipped)`);
       
       if (newProperties.length === 0) {
-        console.log(`  All properties already exist for ${zip}`);
+        console.log(`  ℹ️  All properties already exist for ${zip}`);
         continue;
       }
 
-      // STEP 3: Get full property details (IDENTICAL to cron)
+      // STEP 3: Get full property details
       const propertyUrls = newProperties
         .map((p: any) => p.detailUrl || p.url)
         .filter((url: string) => url && url.includes('zillow.com'));
         
-      console.log(`  Getting details for ${propertyUrls.length} new properties...`);
+      console.log(`  📋 Getting details for ${propertyUrls.length} new properties...`);
       
       let detailedProperties: ScrapedProperty[] = [];
       if (propertyUrls.length > 0) {
@@ -142,13 +178,12 @@ async function runOneTimeScrape() {
           detailedProperties = await runDetailScraper(propertyUrls, { timeoutSecs: 300 });
           console.log(`  ✅ Got ${detailedProperties.length} detailed properties`);
         } catch (detailError: any) {
-          console.error(`  ❌ Detail scraper error: ${detailError}`);
-          // Fall back to search results without details
+          console.error(`  ❌ Detail scraper error: ${detailError.message}`);
           detailedProperties = newProperties;
         }
       }
 
-      // STEP 4: Merge images from search to details (IDENTICAL to cron)
+      // STEP 4: Merge images from search to details
       const searchByZpid = new Map();
       for (const prop of searchResults) {
         if (prop.zpid) searchByZpid.set(String(prop.zpid), prop);
@@ -164,9 +199,9 @@ async function runOneTimeScrape() {
           }
         }
       }
-      console.log(`  Merged images for ${imagesMerged} properties`);
+      console.log(`  🖼️  Merged images for ${imagesMerged} properties`);
       
-      // STEP 5: Process each property through IDENTICAL pipeline as cron
+      // STEP 5: Process each property
       let zipOwnerFinance = 0;
       let zipCashDeals = 0;
       
@@ -174,19 +209,16 @@ async function runOneTimeScrape() {
         totalProperties++;
 
         try {
-          // STEP 1: Transform property (identical to cron)
-          const property = transformProperty(raw, 'scraper-v2', 'one-time');
+          const property = transformProperty(raw, 'scraper-v2', 'resume-one-time');
           transformSucceeded++;
 
-          // STEP 2: Validate property (identical to cron)
           const validation = validateProperty(property);
           if (!validation.valid) {
-            console.log(`    ❌ Validation failed for ${property.zpid}: ${validation.reason || 'Unknown validation error'}`);
+            console.log(`    ❌ Validation failed for ${property.zpid}: ${validation.reason}`);
             validationFailed++;
             continue;
           }
 
-          // STEP 3: Check for duplicates (identical to cron)
           const docId = `zpid_${property.zpid}`;
           const existingDoc = await db.collection('properties').doc(docId).get();
           if (existingDoc.exists) {
@@ -194,7 +226,6 @@ async function runOneTimeScrape() {
             continue;
           }
 
-          // STEP 4: Run unified filter (identical to cron)
           const filterResult = runUnifiedFilter(
             property,
             property.description || '',
@@ -202,19 +233,14 @@ async function runOneTimeScrape() {
             property.publicRemarks || ''
           );
 
-          // STEP 5: Check if property passes either filter
           if (!filterResult.passesOwnerfinance && !filterResult.passesCashDeal) {
             filteredOut++;
             continue;
           }
 
-          // STEP 6: Create unified document (identical to cron)
           const docData = createUnifiedPropertyDoc(property, filterResult);
-
-          // STEP 7: Save to Firebase (identical to cron)
           await db.collection('properties').doc(docId).set(docData, { merge: true });
 
-          // Count by type
           if (filterResult.passesOwnerfinance) {
             zipOwnerFinance++;
             ownerFinanceCount++;
@@ -224,10 +250,8 @@ async function runOneTimeScrape() {
             cashDealCount++;
           }
 
-          // Add to Typesense batch
           typesenseProperties.push(docData as UnifiedProperty);
 
-          // Add to results (match cron job format)
           allResults.push({
             zpid: property.zpid,
             searchZip: zip,
@@ -248,20 +272,20 @@ async function runOneTimeScrape() {
       }
       
       console.log(`  📊 Owner Finance: ${zipOwnerFinance}, Cash Deals: ${zipCashDeals}`);
-      console.log(`  📊 Processed: ${transformSucceeded}, Failed: ${transformFailed}, Filtered Out: ${filteredOut}`);
 
-      // Small delay between requests
-      if (i < TARGETED_ZIP_URLS.length - 1) {
-        console.log('  Waiting 3 seconds...');
-        await new Promise(resolve => setTimeout(resolve, 3000));
+      // Delay between zips to be respectful
+      if (i < emptyZipUrls.length - 1) {
+        console.log('  ⏳ Waiting 5 seconds...');
+        await new Promise(resolve => setTimeout(resolve, 5000));
       }
 
     } catch (error) {
-      console.error(`  ❌ Error scraping ${zip}:`, error);
+      console.error(`  💥 Error scraping ${zip}:`, error);
     }
   }
 
-  console.log('\n=== SCRAPING COMPLETE ===');
+  console.log('\n=== RESUME SCRAPING COMPLETE ===');
+  console.log(`Empty zips processed: ${emptyZipUrls.length}`);
   console.log(`Total properties found: ${totalProperties}`);
   console.log(`Transform succeeded: ${transformSucceeded}`);
   console.log(`Transform failed: ${transformFailed}`);
@@ -271,7 +295,7 @@ async function runOneTimeScrape() {
   console.log(`Owner finance opportunities: ${ownerFinanceCount}`);
   console.log(`Cash deals (< 80% ARV): ${cashDealCount}`);
 
-  // Index to Typesense if we have properties
+  // Index to Typesense
   if (typesenseProperties.length > 0) {
     try {
       console.log(`\n[TYPESENSE] Indexing ${typesenseProperties.length} properties...`);
@@ -282,16 +306,18 @@ async function runOneTimeScrape() {
     }
   }
 
-  // Save results to JSON file
+  // Save results
   if (allResults.length > 0) {
-    console.log('\nSaving results to file...');
+    console.log('\n📁 Saving results to file...');
     
     const fs = await import('fs/promises');
-    const outputFile = `one_time_scrape_${new Date().toISOString().split('T')[0]}.json`;
+    const outputFile = `resume_scrape_${new Date().toISOString().split('T')[0]}.json`;
     
     const output = {
       metadata: {
         scrapedAt: new Date().toISOString(),
+        emptyZipsProcessed: emptyZipUrls.length,
+        emptyZips: emptyZipUrls.map(z => z.zip),
         totalProperties: totalProperties,
         transformSucceeded,
         transformFailed,
@@ -300,9 +326,7 @@ async function runOneTimeScrape() {
         filteredOut,
         ownerFinanceCount,
         cashDealCount,
-        urlsProcessed: TARGETED_ZIP_URLS.length,
-        withoutDaysFilter: true,
-        usesIdenticalPipeline: true
+        resumeRun: true
       },
       properties: allResults
     };
@@ -311,24 +335,11 @@ async function runOneTimeScrape() {
     console.log(`✅ Results saved to ${outputFile}`);
   }
 
-  // Generate summary report
-  console.log('\n=== SUMMARY REPORT ===');
-  console.log('Zip Code Breakdown:');
-  
-  const zipSummary: Record<string, number> = {};
-  for (const result of allResults) {
-    zipSummary[result.searchZip] = (zipSummary[result.searchZip] || 0) + 1;
-  }
-  
-  for (const [zip, count] of Object.entries(zipSummary).sort()) {
-    console.log(`  ${zip}: ${count} properties`);
-  }
-  
-  console.log('\n✨ Script complete!');
+  console.log('\n✨ Resume script complete!');
 }
 
 // Run the script
-runOneTimeScrape().catch(error => {
-  console.error('Fatal error:', error);
+resumeOneTimeScrape().catch(error => {
+  console.error('💀 Fatal error:', error);
   process.exit(1);
 });

@@ -105,7 +105,7 @@ const FINANCING_TYPE_PATTERNS: {
 export function detectFinancingType(
   description: string | null | undefined
 ): FinancingTypeResult {
-  if (!description || description.trim().length === 0) {
+  if (!description || typeof description !== 'string' || description.trim().length === 0) {
     return {
       financingType: null,
       allTypes: [],

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase-admin';
 import { uploadVideoToR2 } from '@/lib/r2-upload';
-import { isWebhookProcessed, markWebhookProcessed, generateIdempotencyKey } from '@/lib/webhook-idempotency';
+import { isWebhookProcessed, markWebhookProcessed } from '@/lib/webhook-idempotency';
 import { triggerLatePosting } from '@/lib/social-posting';
 
 interface CreatifyWebhookPayload {
@@ -17,9 +17,9 @@ export async function POST(req: NextRequest) {
     const payload: CreatifyWebhookPayload = await req.json();
     
     // Check idempotency
-    const idempotencyKey = generateIdempotencyKey('creatify', `${payload.id}-${payload.status}`);
+    const { processed } = await isWebhookProcessed('creatify', `${payload.id}-${payload.status}`, undefined, payload);
     
-    if (await isWebhookProcessed(idempotencyKey)) {
+    if (processed) {
       console.log(`[Creatify Webhook] Duplicate webhook for render ${payload.id}, skipping`);
       return NextResponse.json({ status: 'duplicate_ignored' });
     }
@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
           }
         }
 
-        await markWebhookProcessed(idempotencyKey, 'creatify');
+        await markWebhookProcessed('creatify', `${payload.id}-${payload.status}`);
         
         return NextResponse.json({ 
           status: 'success',
@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
         });
       } else if (status === 'failed') {
         console.error(`[Creatify Webhook] Render failed: ${error}`);
-        await markWebhookProcessed(idempotencyKey, 'creatify');
+        await markWebhookProcessed('creatify', `${payload.id}-${payload.status}`);
         return NextResponse.json({ 
           status: 'failed',
           renderId: id,
@@ -132,7 +132,7 @@ export async function POST(req: NextRequest) {
           }
         }
 
-        await markWebhookProcessed(idempotencyKey, 'creatify');
+        await markWebhookProcessed('creatify', `${payload.id}-${payload.status}`);
         return NextResponse.json({ 
           status: 'success',
           workflowId: context.workflowId,
@@ -146,7 +146,7 @@ export async function POST(req: NextRequest) {
           statusChangedAt: Date.now()
         });
 
-        await markWebhookProcessed(idempotencyKey, 'creatify');
+        await markWebhookProcessed('creatify', `${payload.id}-${payload.status}`);
         return NextResponse.json({ 
           status: 'failed',
           workflowId: context.workflowId,

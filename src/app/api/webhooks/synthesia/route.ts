@@ -3,7 +3,7 @@ import { db } from '@/lib/firebase-admin';
 import { updateWorkflowStatus } from '@/lib/feed-store-firestore';
 import { uploadVideoToR2 } from '@/lib/r2-upload';
 import { validateWebhookSignature } from '@/lib/webhook-validation';
-import { isWebhookProcessed, markWebhookProcessed, generateIdempotencyKey } from '@/lib/webhook-idempotency';
+import { isWebhookProcessed, markWebhookProcessed } from '@/lib/webhook-idempotency';
 import { Brand } from '@/config/constants';
 
 interface SynthesiaWebhookPayload {
@@ -38,9 +38,9 @@ export async function POST(req: NextRequest) {
     const payload: SynthesiaWebhookPayload = await req.json();
     
     // Check idempotency
-    const idempotencyKey = generateIdempotencyKey('synthesia', `${payload.videoId}-${payload.status}`);
+    const { processed } = await isWebhookProcessed('synthesia', `${payload.videoId}-${payload.status}`, undefined, payload);
     
-    if (await isWebhookProcessed(idempotencyKey)) {
+    if (processed) {
       console.log(`[Synthesia Webhook] Duplicate webhook for video ${payload.videoId}, skipping`);
       return NextResponse.json({ status: 'duplicate_ignored' });
     }
@@ -96,15 +96,11 @@ export async function POST(req: NextRequest) {
       }
 
       // Update workflow
-      await updateWorkflowStatus(
-        workflowId,
-        brand,
-        'submagic_processing',
-        {
-          synthesiaVideoUrl: r2VideoUrl || download,
-          statusChangedAt: Date.now()
-        }
-      );
+      await updateWorkflowStatus(workflowId, brand, {
+        status: 'submagic_processing',
+        synthesiaVideoUrl: r2VideoUrl || download,
+        statusChangedAt: Date.now()
+      });
 
       // Trigger Submagic if configured
       if (process.env.SUBMAGIC_API_KEY) {
@@ -129,19 +125,21 @@ export async function POST(req: NextRequest) {
           }
         } catch (err) {
           console.error('[Synthesia Webhook] Failed to trigger Submagic:', err);
-          await updateWorkflowStatus(workflowId, brand, 'posting', {
+          await updateWorkflowStatus(workflowId, brand, {
+            status: 'posting',
             submagicSkipped: true,
             finalVideoUrl: r2VideoUrl || download
           });
         }
       } else {
-        await updateWorkflowStatus(workflowId, brand, 'posting', {
+        await updateWorkflowStatus(workflowId, brand, {
+          status: 'posting',
           submagicSkipped: true,
           finalVideoUrl: r2VideoUrl || download
         });
       }
 
-      await markWebhookProcessed(idempotencyKey, 'synthesia');
+      await markWebhookProcessed('synthesia', `${payload.videoId}-${payload.status}`);
       
       return NextResponse.json({ 
         status: 'success',
@@ -152,15 +150,11 @@ export async function POST(req: NextRequest) {
     } else if (status === 'failed') {
       console.error(`[Synthesia Webhook] Video failed for workflow ${workflowId}: ${error}`);
       
-      await updateWorkflowStatus(
-        workflowId,
-        brand,
-        'video_processing_failed',
-        {
-          error: error || 'Synthesia processing failed',
-          statusChangedAt: Date.now()
-        }
-      );
+      await updateWorkflowStatus(workflowId, brand, {
+        status: 'video_processing_failed',
+        error: error || 'Synthesia processing failed',
+        statusChangedAt: Date.now()
+      });
 
       // Trigger retry if under limit
       const retryCount = workflowData.retryCount || 0;
@@ -174,7 +168,7 @@ export async function POST(req: NextRequest) {
         });
       }
 
-      await markWebhookProcessed(idempotencyKey, 'synthesia');
+      await markWebhookProcessed('synthesia', `${payload.videoId}-${payload.status}`);
       
       return NextResponse.json({ 
         status: 'failed',

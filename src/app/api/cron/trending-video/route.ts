@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
 
     try {
       // Execute the script
-      const command = `cd /var/task && npx tsx scripts/trending-article-video.ts --lang ${lang}${dryRun ? ' --dry-run' : ''}`;
+      const command = `cd ${process.cwd()} && npx tsx scripts/trending-article-video.ts --lang ${lang}${dryRun ? ' --dry-run' : ''}`;
       
       const output = execSync(command, {
         encoding: 'utf8',

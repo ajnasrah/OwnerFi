@@ -171,8 +171,24 @@ export class BudgetTracker {
 
     } catch (error) {
       console.error('[Budget Tracker] Budget check failed:', error);
-      // Fail open in case of errors
-      return { allowed: true };
+      // Fail closed for security - alert and block spending
+      if (process.env.SLACK_WEBHOOK_URL) {
+        try {
+          await fetch(process.env.SLACK_WEBHOOK_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              text: `🚨 Budget System Error: ${error}\nBlocking ${brand}/${service} spending for safety.`
+            })
+          });
+        } catch (slackError) {
+          console.error('[Budget Tracker] Failed to send error alert:', slackError);
+        }
+      }
+      return { 
+        allowed: false, 
+        reason: 'Budget system error - spending blocked for safety'
+      };
     }
   }
 

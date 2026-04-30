@@ -50,7 +50,6 @@ export class WorkflowStateMachine {
 
     // Submagic transitions
     { from: 'submagic_processing', to: 'posting' },
-    { from: 'submagic_processing', to: 'posting' }, // Skip on failure, use original
     { from: 'submagic_processing', to: 'failed' },
 
     // Final transitions
@@ -259,7 +258,10 @@ export async function updateWorkflowStatusWithValidation(
     };
 
     // Update workflow with validation
-    await updateWorkflowStatus(workflowId, brand as any, validation.newState);
+    await updateWorkflowStatus(workflowId, brand as any, { 
+      status: validation.newState,
+      ...enhancedUpdates
+    });
 
     console.log(`[Workflow State Machine] Valid transition: ${currentStatus} → ${validation.newState}`);
     return { success: true };

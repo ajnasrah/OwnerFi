@@ -3,7 +3,7 @@ import { db } from '@/lib/firebase-admin';
 import { updateWorkflowStatus } from '@/lib/feed-store-firestore';
 import { uploadVideoToR2 } from '@/lib/r2-upload';
 import { validateWebhookSignature } from '@/lib/webhook-validation';
-import { isWebhookProcessed, markWebhookProcessed, generateIdempotencyKey } from '@/lib/webhook-idempotency';
+import { isWebhookProcessed, markWebhookProcessed } from '@/lib/webhook-idempotency';
 import { Brand } from '@/config/constants';
 
 interface HeyGenWebhookPayload {
@@ -40,9 +40,9 @@ export async function POST(req: NextRequest) {
     const payload: HeyGenWebhookPayload = await req.json();
     
     // Check idempotency to prevent duplicate processing
-    const idempotencyKey = generateIdempotencyKey('heygen', payload.event_data.video_id);
+    const { processed } = await isWebhookProcessed('heygen', payload.event_data.video_id, undefined, payload);
     
-    if (await isWebhookProcessed(idempotencyKey)) {
+    if (processed) {
       console.log(`[HeyGen Webhook] Duplicate webhook for video ${payload.event_data.video_id}, skipping`);
       return NextResponse.json({ status: 'duplicate_ignored' });
     }
@@ -101,16 +101,12 @@ export async function POST(req: NextRequest) {
       }
 
       // Update workflow status
-      await updateWorkflowStatus(
-        workflowId,
-        brand,
-        'submagic_processing', // Next step in pipeline
-        {
-          heygenVideoUrl: video_url,
-          heygenVideoR2Url: r2VideoUrl,
-          statusChangedAt: Date.now()
-        }
-      );
+      await updateWorkflowStatus(workflowId, brand, {
+        status: 'submagic_processing',
+        heygenVideoUrl: video_url,
+        heygenVideoR2Url: r2VideoUrl,
+        statusChangedAt: Date.now()
+      });
 
       // Trigger next step (Submagic processing) if configured
       if (process.env.SUBMAGIC_API_KEY) {
@@ -136,21 +132,23 @@ export async function POST(req: NextRequest) {
         } catch (err) {
           console.error('[HeyGen Webhook] Failed to trigger Submagic:', err);
           // Update status to skip Submagic
-          await updateWorkflowStatus(workflowId, brand, 'posting', {
+          await updateWorkflowStatus(workflowId, brand, {
+            status: 'posting',
             submagicSkipped: true,
             finalVideoUrl: r2VideoUrl || video_url
           });
         }
       } else {
         // No Submagic configured, skip to posting
-        await updateWorkflowStatus(workflowId, brand, 'posting', {
+        await updateWorkflowStatus(workflowId, brand, {
+          status: 'posting',
           submagicSkipped: true,
           finalVideoUrl: r2VideoUrl || video_url
         });
       }
 
       // Mark idempotency key as processed
-      await markWebhookProcessed(idempotencyKey, 'heygen');
+      await markWebhookProcessed('heygen', video_id);
       
       return NextResponse.json({ 
         status: 'success',
@@ -162,15 +160,11 @@ export async function POST(req: NextRequest) {
       console.error(`[HeyGen Webhook] Video failed for workflow ${workflowId}: ${error}`);
       
       // Update workflow as failed
-      await updateWorkflowStatus(
-        workflowId,
-        brand,
-        'video_processing_failed',
-        {
-          error: error || 'HeyGen processing failed',
-          statusChangedAt: Date.now()
-        }
-      );
+      await updateWorkflowStatus(workflowId, brand, {
+        status: 'video_processing_failed',
+        error: error || 'HeyGen processing failed',
+        statusChangedAt: Date.now()
+      });
 
       // Trigger retry if under retry limit
       const retryCount = workflowData.retryCount || 0;
@@ -186,7 +180,7 @@ export async function POST(req: NextRequest) {
       }
 
       // Mark idempotency key as processed
-      await markWebhookProcessed(idempotencyKey, 'heygen');
+      await markWebhookProcessed('heygen', video_id);
       
       return NextResponse.json({ 
         status: 'failed',

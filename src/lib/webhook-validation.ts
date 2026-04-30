@@ -14,11 +14,25 @@ export async function validateWebhookSignature(
     hmac.update(body);
     const expectedSignature = hmac.digest('hex');
     
+    // Handle different signature formats (hex, base64, etc.)
+    let normalizedSignature = signature;
+    if (signature.startsWith('sha256=')) {
+      normalizedSignature = signature.substring(7);
+    } else if (signature.startsWith('sha1=')) {
+      normalizedSignature = signature.substring(5);
+    }
+    
+    // Convert both to same encoding for comparison
+    const sigBuffer = Buffer.from(normalizedSignature, 'hex');
+    const expectedBuffer = Buffer.from(expectedSignature, 'hex');
+    
+    // Ensure buffers are same length for timing-safe comparison
+    if (sigBuffer.length !== expectedBuffer.length) {
+      return false;
+    }
+    
     // Use timing-safe comparison to prevent timing attacks
-    return crypto.timingSafeEqual(
-      Buffer.from(signature),
-      Buffer.from(expectedSignature)
-    );
+    return crypto.timingSafeEqual(sigBuffer, expectedBuffer);
   } catch (error) {
     console.error('Webhook signature validation error:', error);
     return false;

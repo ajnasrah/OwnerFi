@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase-admin';
 import { updateWorkflowStatus, findWorkflowBySubmagicId } from '@/lib/feed-store-firestore';
 import { uploadVideoToR2 } from '@/lib/r2-upload';
-import { isWebhookProcessed, markWebhookProcessed, generateIdempotencyKey } from '@/lib/webhook-idempotency';
+import { isWebhookProcessed, markWebhookProcessed } from '@/lib/webhook-idempotency';
 import { triggerLatePosting } from '@/lib/social-posting';
 import { Brand } from '@/config/constants';
 
@@ -24,9 +24,9 @@ export async function POST(req: NextRequest) {
     const payload: SubmagicWebhookPayload = await req.json();
     
     // Check idempotency
-    const idempotencyKey = generateIdempotencyKey('submagic', `${payload.projectId}-${payload.status}`);
+    const { processed } = await isWebhookProcessed('submagic', `${payload.projectId}-${payload.status}`, undefined, payload);
     
-    if (await isWebhookProcessed(idempotencyKey)) {
+    if (processed) {
       console.log(`[Submagic Webhook] Duplicate webhook for project ${payload.projectId}, skipping`);
       return NextResponse.json({ status: 'duplicate_ignored' });
     }
@@ -59,7 +59,8 @@ export async function POST(req: NextRequest) {
 
       if (!videoUrl) {
         console.error(`[Submagic Webhook] No video URL in completed webhook`);
-        await updateWorkflowStatus(workflowId, brand, 'failed', {
+        await updateWorkflowStatus(workflowId, brand, {
+          status: 'failed',
           error: 'Submagic completed but no video URL provided',
           statusChangedAt: Date.now()
         });
@@ -79,16 +80,12 @@ export async function POST(req: NextRequest) {
       }
 
       // Update workflow with final video
-      await updateWorkflowStatus(
-        workflowId,
-        brand,
-        'posting',
-        {
-          submagicDownloadUrl: videoUrl,
-          finalVideoUrl: r2VideoUrl || videoUrl,
-          statusChangedAt: Date.now()
-        }
-      );
+      await updateWorkflowStatus(workflowId, brand, {
+        status: 'posting',
+        submagicDownloadUrl: videoUrl,
+        finalVideoUrl: r2VideoUrl || videoUrl,
+        statusChangedAt: Date.now()
+      });
 
       // Trigger Late.dev posting
       try {
@@ -101,7 +98,8 @@ export async function POST(req: NextRequest) {
         });
 
         if (posted) {
-          await updateWorkflowStatus(workflowId, brand, 'completed', {
+          await updateWorkflowStatus(workflowId, brand, {
+            status: 'completed',
             completedAt: Date.now(),
             statusChangedAt: Date.now()
           });
@@ -110,13 +108,14 @@ export async function POST(req: NextRequest) {
         }
       } catch (postError) {
         console.error('[Submagic Webhook] Failed to post to Late.dev:', postError);
-        await updateWorkflowStatus(workflowId, brand, 'failed', {
+        await updateWorkflowStatus(workflowId, brand, {
+          status: 'failed',
           error: `Posting failed: ${postError}`,
           statusChangedAt: Date.now()
         });
       }
 
-      await markWebhookProcessed(idempotencyKey, 'submagic');
+      await markWebhookProcessed('submagic', `${payload.projectId}-${payload.status}`);
       
       return NextResponse.json({ 
         status: 'success',
@@ -129,22 +128,19 @@ export async function POST(req: NextRequest) {
       console.error(`[Submagic Webhook] Processing failed for workflow ${workflowId}: ${error}`);
       
       // Mark workflow as failed
-      await updateWorkflowStatus(
-        workflowId,
-        brand,
-        'failed',
-        {
-          error: error || 'Submagic processing failed',
-          statusChangedAt: Date.now()
-        }
-      );
+      await updateWorkflowStatus(workflowId, brand, {
+        status: 'failed',
+        error: error || 'Submagic processing failed',
+        statusChangedAt: Date.now()
+      });
 
       // For Submagic failures, we might want to skip and use the original video
       if (workflow.heygenVideoR2Url || workflow.synthesiaVideoUrl) {
         console.log(`[Submagic Webhook] Falling back to original video`);
         const originalVideo = workflow.heygenVideoR2Url || workflow.synthesiaVideoUrl;
         
-        await updateWorkflowStatus(workflowId, brand, 'posting', {
+        await updateWorkflowStatus(workflowId, brand, {
+          status: 'posting',
           submagicSkipped: true,
           finalVideoUrl: originalVideo,
           error: `Submagic failed, using original video: ${error}`
@@ -160,7 +156,8 @@ export async function POST(req: NextRequest) {
             title: workflow.title
           });
           
-          await updateWorkflowStatus(workflowId, brand, 'completed', {
+          await updateWorkflowStatus(workflowId, brand, {
+            status: 'completed',
             completedAt: Date.now()
           });
         } catch (postError) {
@@ -168,7 +165,7 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      await markWebhookProcessed(idempotencyKey, 'submagic');
+      await markWebhookProcessed('submagic', `${payload.projectId}-${payload.status}`);
       
       return NextResponse.json({ 
         status: 'failed',

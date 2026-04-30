@@ -151,8 +151,11 @@ export default async function HomePage() {
   const getDashboardUrl = () => {
     if (!session?.user) return '/dashboard'
     const userRole = (session.user as any).role
+    const isInvestor = (session.user as any).isInvestor
+    
     if (userRole === 'admin') return '/admin'
     if (userRole === 'realtor') return '/realtor-dashboard'
+    if (isInvestor === true) return '/dashboard/investor'
     return '/dashboard'
   }
 

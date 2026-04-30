@@ -47,7 +47,8 @@ export function Header({ className = '' }: HeaderProps) {
                   size="sm"
                   href={
                     (session as unknown as ExtendedSession)?.user?.role === 'admin' ? '/admin' :
-                    (session as unknown as ExtendedSession)?.user?.role === 'realtor' ? '/realtor-dashboard/buyers' : '/dashboard'
+                    (session as unknown as ExtendedSession)?.user?.role === 'realtor' ? '/realtor-dashboard/buyers' :
+                    (session?.user as any)?.isInvestor === true ? '/dashboard/investor' : '/dashboard'
                   }
                   className="bg-[#00BC7D] hover:bg-[#00d68f] text-white px-5 py-2 rounded-lg font-semibold text-sm transition-all duration-200"
                 >

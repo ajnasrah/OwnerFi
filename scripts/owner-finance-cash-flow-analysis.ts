@@ -372,11 +372,11 @@ async function runOwnerFinanceCashFlowAnalysis() {
   await fs.writeFile(outputFile, JSON.stringify(results, null, 2));
   console.log(`\n✅ Analysis complete! Results saved to ${outputFile}`);
   
-  // Save CSV of top performers for easy viewing
+  // Save CSV of top performers with ALL EXPENSE DETAILS for easy viewing
   const csvFile = `owner_finance_top_performers_${new Date().toISOString().split('T')[0]}.csv`;
-  const csvHeaders = 'ZPID,Address,City,State,ZIP,Price,Rent,Cash Flow,ROI,Down Payment,Monthly Mortgage,Total Expenses,Bedrooms,Bathrooms,Year Built';
+  const csvHeaders = 'ZPID,Address,City,State,ZIP,Price,Rent Estimate,Down Payment (10%),Loan Amount,Monthly Mortgage,Monthly Tax,Monthly Insurance,Monthly HOA,Total Monthly Expenses,Monthly Cash Flow,Annual Cash Flow,Cash-on-Cash ROI %,Annual Tax Amount,Annual Insurance Amount,Bedrooms,Bathrooms,Year Built,Property Type';
   const csvRows = topPerformers.map(p => 
-    `${p.zpid},"${p.address}","${p.city}",${p.state},${p.zipCode},${p.price},${p.rentEstimate},${p.monthlyCashFlow},${p.cashOnCashReturn},${p.downPayment},${p.monthlyMortgage},${p.totalMonthlyExpenses},${p.bedrooms},${p.bathrooms},${p.yearBuilt}`
+    `${p.zpid},"${p.address}","${p.city}",${p.state},${p.zipCode},${p.price},${p.rentEstimate},${p.downPayment},${p.loanAmount},${p.monthlyMortgage},${p.monthlyTax},${p.monthlyInsurance},${p.monthlyHOA},${p.totalMonthlyExpenses},${p.monthlyCashFlow},${p.annualCashFlow},${p.cashOnCashReturn},${p.taxAnnualAmount},${p.insuranceEstimate},${p.bedrooms},${p.bathrooms},${p.yearBuilt},"${p.propertyType}"`
   );
   
   await fs.writeFile(csvFile, csvHeaders + '\n' + csvRows.join('\n'));

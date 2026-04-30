@@ -1,0 +1,21 @@
+ZPID,Address,City,State,ZIP,Price,Rent,Property Type,Found Tax Data,Real Annual Tax,Tax Source,CSV Tax,Monthly Mortgage,Monthly Tax,Monthly Insurance,Monthly HOA,Total Expenses,Monthly Cash Flow,Annual Cash Flow,ROI %,Down Payment
+333384174,"9385 Pocida CT #101","Naples",FL,34119,494977,7066,"CONDO",NO,0,"none",0,0,0,0,0,0,0,0,0,0
+81797271,"8997 Cambria CIR #2002, Naples, FL 34113","Naples",FL,34113,375000,6392,"CONDO",YES,2861,annualTaxAmount,2860,1812,238,200,1367,3617,2775,33298,88.79,37500
+54164317,"1281 Solana RD, Naples, FL 34103","Naples",FL,34103,425000,5754,"CONDO",YES,3969,annualTaxAmount,3968,2053,331,300,895,3579,2175,26099,61.41,42500
+46882644,"3601 S Ocean Boulevard #307, South Palm Beach, FL 33480","South Palm Beach",FL,33480,375000,5143,"CONDO",YES,1401,annualTaxAmount,1401,1812,117,200,837,2966,2177,26130,69.68,37500
+2060763121,"17 Pepperwood Way, Soquel, CA 95073","Soquel",CA,95073,398000,4141,"Unknown",NO,0,"none",0,0,0,0,0,0,0,0,0,0
+62865966,"8723 Carrollwood Cv N, Cordova, TN 38016","Cordova",TN,38016,225000,2965,"Unknown",NO,0,"none",0,0,0,0,0,0,0,0,0,0
+2068091278,"1194 State Hwy 12 #49, Montesano, WA 98563","Montesano",WA,98563,47500,2068,"Unknown",NO,0,"none",0,0,0,0,0,0,0,0,0,0
+2126285116,"9402 Beech Park St, Capitol Heights, MD 20743","Capitol Heights",MD,20743,79900,2106,"Unknown",NO,0,"none",0,0,0,0,0,0,0,0,0,0
+456181091,"530 New Ave SW","Grand Rapids",MI,49503,231700,3053,"CONDO",NO,0,"none",0,0,0,0,0,0,0,0,0,0
+2101498979,"18741 SW 344th Dr, Homestead, FL 33034","Homestead",FL,33034,125000,3072,"Unknown",NO,0,"none",0,0,0,0,0,0,0,0,0,0
+456181062,"436 Pleasant St SW, Grand Rapids, MI 49503","Grand Rapids",MI,49503,231700,2919,"CONDO",YES,2526,propertyTaxRate,0,1119,210,200,215,1745,1174,14089,60.81,23170
+456181063,"440 Pleasant St SW, Grand Rapids, MI 49503","Grand Rapids",MI,49503,231700,2919,"CONDO",YES,2526,propertyTaxRate,0,1119,210,200,215,1745,1174,14089,60.81,23170
+456181071,"448 Pleasant St SW, Grand Rapids, MI 49503","Grand Rapids",MI,49503,231700,2919,"CONDO",YES,2526,propertyTaxRate,0,1119,210,200,215,1745,1174,14089,60.81,23170
+456181092,"452 Pleasant St SW, Grand Rapids, MI 49503","Grand Rapids",MI,49503,231700,2919,"CONDO",YES,2526,propertyTaxRate,0,1119,210,200,215,1745,1174,14089,60.81,23170
+44809945,"8568 Heather Blvd, Weeki Wachee, FL 34613","Weeki Wachee",FL,34613,249900,2896,"Unknown",NO,0,"none",0,0,0,0,0,0,0,0,0,0
+460213806,"7152 Crowder Blvd, New Orleans, LA 70126","New Orleans",LA,70126,97000,2123,"Unknown",NO,0,"none",0,0,0,0,0,0,0,0,0,0
+58511348,"204 Wynnfield Way, McDonough, GA 30252","McDonough",GA,30252,333750,3247,"Unknown",NO,0,"none",0,0,0,0,0,0,0,0,0,0
+193905590,"1608 Backus St, Paducah, TX 79248","Paducah",TX,79248,35000,1803,"Unknown",NO,0,"none",0,0,0,0,0,0,0,0,0,0
+443424247,"3200 N Port Royale Dr N #511, Fort Lauderdale, FL 33308","Fort Lauderdale",FL,33308,370000,3409,"Unknown",NO,0,"none",0,0,0,0,0,0,0,0,0,0
+2071497189,"1375 Pasadena Ave S LOT 511, Saint Petersburg, FL 33707","Saint Petersburg",FL,33707,69999,1928,"Unknown",NO,0,"none",0,0,0,0,0,0,0,0,0,0

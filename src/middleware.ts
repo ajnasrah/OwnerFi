@@ -34,6 +34,7 @@ const BYPASS_PATHS = [
   '/api/v2/scraper/',         // Scraper v2 cron endpoints
   '/api/workers/',            // Background workers
   '/api/admin/',              // Admin API endpoints
+  '/api/agents/',             // Agent search endpoints
   '/api/add-zip-codes',           // Add new zip code markets
   '/api/scrape-all',          // One-time scraper endpoint
   '/api/migrate-snapshot',    // Migration endpoint

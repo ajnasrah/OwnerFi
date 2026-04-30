@@ -6,7 +6,6 @@ import { Button } from './Button';
 import { OwnerfiLogo } from './OwnerfiLogo';
 import { ExtendedSession } from '@/types/session';
 import { trackEvent } from '@/components/analytics/AnalyticsProvider';
-import { SlidersHorizontal } from 'lucide-react';
 
 interface HeaderProps {
   className?: string;
@@ -35,16 +34,14 @@ export function Header({ className = '' }: HeaderProps) {
             >
               How It Works
             </Link>
-            <Link
-              href="/dashboard/settings"
-              className="hidden sm:inline-flex items-center gap-1 text-sm text-slate-400 hover:text-white px-3 py-2 rounded-lg transition-colors"
-            >
-              <SlidersHorizontal className="w-4 h-4" />
-              Filters
-            </Link>
-
             {session?.user ? (
               <div className="flex items-center gap-2 ml-2">
+                <Link
+                  href="/dashboard/settings"
+                  className="hidden sm:inline-flex text-sm text-slate-400 hover:text-white px-3 py-2 rounded-lg transition-colors"
+                >
+                  Manage Search
+                </Link>
                 <Button
                   variant="primary"
                   size="sm"

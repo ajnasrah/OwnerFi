@@ -109,9 +109,9 @@ function analyzeProperty(property: any): PropertyAnalysis | null {
   
   // Calculate monthly payments
   const monthlyMortgage = calculateMortgagePayment(loanAmount, interestRate, loanTermYears);
-  const monthlyTax = (property.taxAnnualAmount || 0) / 12;
-  const monthlyInsurance = property.insuranceEstimate || defaultInsurance;
-  const monthlyHOA = property.hoaFee || 0;
+  const monthlyTax = (property.annualTaxAmount || 0) / 12;
+  const monthlyInsurance = property.annualHomeownersInsurance ? property.annualHomeownersInsurance / 12 : defaultInsurance;
+  const monthlyHOA = property.monthlyHoaFee || property.hoa || 0;
   
   const totalMonthlyExpenses = monthlyMortgage + monthlyTax + monthlyInsurance + monthlyHOA;
   const monthlyCashFlow = property.rentEstimate - totalMonthlyExpenses;
@@ -121,7 +121,7 @@ function analyzeProperty(property: any): PropertyAnalysis | null {
   return {
     // Property Info
     zpid: property.zpid || 'Unknown',
-    address: property.address || 'Unknown Address',
+    address: property.fullAddress || property.streetAddress || property.address || 'Unknown Address',
     city: property.city || 'Unknown',
     state: property.state || 'Unknown',
     zipCode: property.zipCode || 'Unknown',

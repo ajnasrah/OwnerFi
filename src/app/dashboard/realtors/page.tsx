@@ -37,6 +37,7 @@ export default function RealtorsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [likedAgents, setLikedAgents] = useState<Set<string>>(new Set());
+  const [dislikedAgents, setDislikedAgents] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
 
@@ -139,14 +140,44 @@ export default function RealtorsPage() {
         newLiked.delete(agentId);
       } else {
         newLiked.add(agentId);
+        // Remove from disliked if we're liking
+        setDislikedAgents(prevDisliked => {
+          const newDisliked = new Set(prevDisliked);
+          newDisliked.delete(agentId);
+          return newDisliked;
+        });
       }
       return newLiked;
     });
   };
 
+  const toggleDislike = (agentId: string) => {
+    setDislikedAgents(prev => {
+      const newDisliked = new Set(prev);
+      if (newDisliked.has(agentId)) {
+        newDisliked.delete(agentId);
+      } else {
+        newDisliked.add(agentId);
+        // Remove from liked if we're disliking
+        setLikedAgents(prevLiked => {
+          const newLiked = new Set(prevLiked);
+          newLiked.delete(agentId);
+          return newLiked;
+        });
+      }
+      return newDisliked;
+    });
+  };
+
   const getCurrentPageAgents = () => {
     const startIndex = currentPage * AGENTS_PER_PAGE;
-    return agents.slice(startIndex, startIndex + AGENTS_PER_PAGE);
+    // Filter out disliked agents
+    const visibleAgents = agents.filter(agent => !dislikedAgents.has(agent.id));
+    return visibleAgents.slice(startIndex, startIndex + AGENTS_PER_PAGE);
+  };
+
+  const getVisibleAgentsCount = () => {
+    return agents.filter(agent => !dislikedAgents.has(agent.id)).length;
   };
 
   const totalPages = Math.ceil(agents.length / AGENTS_PER_PAGE);
@@ -182,51 +213,51 @@ export default function RealtorsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#0a0e1a]"> {/* Dark background like main site */}
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
+      <div className="bg-[#111625]/95 backdrop-blur-xl border-b border-white/[0.06] sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <Button
                 variant="outline"
                 onClick={() => router.back()}
-                className="flex items-center space-x-2"
+                className="flex items-center space-x-2 bg-transparent border-slate-600 text-white hover:bg-slate-700"
               >
                 <ArrowLeft className="w-4 h-4" />
                 <span>Back</span>
               </Button>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Find Realtors</h1>
-                <p className="text-gray-600">
+                <h1 className="text-2xl font-bold text-white">Find Realtors</h1>
+                <p className="text-slate-400">
                   Top-rated agents in {profile?.city}, {profile?.state}
                 </p>
               </div>
             </div>
-            <div className="text-right text-sm text-gray-600">
-              {agents.length} agents found • {likedAgents.size} liked
+            <div className="text-right text-sm text-slate-400">
+              {getVisibleAgentsCount()} agents • {likedAgents.size} liked • {dislikedAgents.size} hidden
             </div>
           </div>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        {agents.length === 0 ? (
+      {/* Content - Fixed height with proper scrolling */}
+      <div className="max-w-6xl mx-auto px-4 py-8 pb-32 overflow-y-auto" style={{maxHeight: 'calc(100vh - 120px)'}}>
+        {getVisibleAgentsCount() === 0 ? (
           <div className="text-center py-12">
-            <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No agents found</h3>
-            <p className="text-gray-600 mb-4">
-              Try searching in a different area or check back later.
+            <Users className="w-12 h-12 text-slate-500 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-white mb-2">No agents found</h3>
+            <p className="text-slate-400 mb-4">
+              {dislikedAgents.size > 0 ? 'All agents have been hidden. Try expanding your search or refreshing the page.' : 'Try searching in a different area or check back later.'}
             </p>
-            <Button onClick={loadData}>Search Again</Button>
+            <Button onClick={loadData} className="bg-[#00BC7D] hover:bg-[#00d68f] text-white">Search Again</Button>
           </div>
         ) : (
           <>
             {/* Agents Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               {currentPageAgents.map((agent) => (
-                <Card key={agent.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                <Card key={agent.id} className="overflow-hidden hover:shadow-lg transition-shadow bg-[#1e1b2e] border-slate-700">
                   <div className="relative">
                     {/* Agent Photo */}
                     <div className="h-48 bg-gradient-to-b from-blue-500 to-blue-600 flex items-center justify-center">
@@ -247,17 +278,31 @@ export default function RealtorsPage() {
                       )}
                     </div>
                     
-                    {/* Like Button */}
-                    <button
-                      onClick={() => toggleLike(agent.id)}
-                      className={`absolute top-3 right-3 w-10 h-10 rounded-full flex items-center justify-center transition-all ${
-                        likedAgents.has(agent.id)
-                          ? 'bg-red-500 text-white'
-                          : 'bg-white/90 text-gray-600 hover:bg-white'
-                      }`}
-                    >
-                      <Heart className={`w-5 h-5 ${likedAgents.has(agent.id) ? 'fill-current' : ''}`} />
-                    </button>
+                    {/* Like and Dislike Buttons */}
+                    <div className="absolute top-3 right-3 flex gap-2">
+                      <button
+                        onClick={() => toggleDislike(agent.id)}
+                        className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+                          dislikedAgents.has(agent.id)
+                            ? 'bg-red-500 text-white'
+                            : 'bg-black/40 text-white hover:bg-red-500'
+                        }`}
+                        title="Hide this agent"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={() => toggleLike(agent.id)}
+                        className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+                          likedAgents.has(agent.id)
+                            ? 'bg-[#00BC7D] text-white'
+                            : 'bg-black/40 text-white hover:bg-[#00BC7D]'
+                        }`}
+                        title="Save this agent"
+                      >
+                        <Heart className={`w-5 h-5 ${likedAgents.has(agent.id) ? 'fill-current' : ''}`} />
+                      </button>
+                    </div>
                     
                     {/* Featured Badge */}
                     {agent.isFeatured && (
@@ -269,15 +314,15 @@ export default function RealtorsPage() {
                   
                   {/* Agent Info */}
                   <div className="p-4">
-                    <h3 className="text-lg font-bold text-gray-900 mb-2">{agent.name}</h3>
+                    <h3 className="text-lg font-bold text-white mb-2">{agent.name}</h3>
                     
                     {/* Rating */}
                     <div className="flex items-center mb-3">
                       <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                      <span className="ml-1 text-sm font-semibold text-gray-900">
+                      <span className="ml-1 text-sm font-semibold text-white">
                         {agent.rating.toFixed(1)}
                       </span>
-                      <span className="ml-1 text-sm text-gray-600">
+                      <span className="ml-1 text-sm text-slate-400">
                         ({agent.reviewCount} reviews)
                       </span>
                     </div>
@@ -287,7 +332,7 @@ export default function RealtorsPage() {
                       {agent.specializations.slice(0, 2).map((spec) => (
                         <span
                           key={spec}
-                          className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
+                          className="px-2 py-1 bg-[#00BC7D]/20 text-[#00BC7D] text-xs rounded-full"
                         >
                           {spec}
                         </span>
@@ -300,7 +345,7 @@ export default function RealtorsPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="w-full justify-start"
+                          className="w-full justify-start bg-transparent border-slate-600 text-white hover:bg-slate-700"
                           onClick={() => window.open(`tel:${agent.phone}`, '_self')}
                         >
                           <Phone className="w-4 h-4 mr-2" />
@@ -309,7 +354,7 @@ export default function RealtorsPage() {
                       )}
                       <Button
                         size="sm"
-                        className="w-full justify-start bg-blue-600 hover:bg-blue-700"
+                        className="w-full justify-start bg-[#00BC7D] hover:bg-[#00d68f] text-white"
                         onClick={() => window.open(agent.googleMapsUrl, '_blank')}
                       >
                         <ExternalLink className="w-4 h-4 mr-2" />
@@ -328,22 +373,26 @@ export default function RealtorsPage() {
                   variant="outline"
                   onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
                   disabled={currentPage === 0}
+                  className="bg-transparent border-slate-600 text-white hover:bg-slate-700 disabled:opacity-50"
                 >
                   Previous
                 </Button>
-                <span className="text-sm text-gray-600">
-                  Page {currentPage + 1} of {Math.max(1, totalPages)}
+                <span className="text-sm text-slate-400">
+                  Page {currentPage + 1} of {Math.max(1, Math.ceil(getVisibleAgentsCount() / AGENTS_PER_PAGE))}
                 </span>
                 <Button
                   variant="outline"
                   onClick={() => {
                     const nextPage = currentPage + 1;
-                    if (nextPage >= totalPages && hasMore) {
+                    const visibleAgentsCount = getVisibleAgentsCount();
+                    const newTotalPages = Math.ceil(visibleAgentsCount / AGENTS_PER_PAGE);
+                    if (nextPage >= newTotalPages && hasMore) {
                       loadMore();
                     }
                     setCurrentPage(nextPage);
                   }}
-                  disabled={currentPage >= totalPages - 1 && !hasMore}
+                  disabled={currentPage >= Math.ceil(getVisibleAgentsCount() / AGENTS_PER_PAGE) - 1 && !hasMore}
+                  className="bg-transparent border-slate-600 text-white hover:bg-slate-700 disabled:opacity-50"
                 >
                   Next
                 </Button>
@@ -354,7 +403,7 @@ export default function RealtorsPage() {
                   variant="outline"
                   onClick={loadMore}
                   disabled={loading}
-                  className="flex items-center space-x-2"
+                  className="flex items-center space-x-2 bg-[#00BC7D] hover:bg-[#00d68f] text-white border-[#00BC7D]"
                 >
                   {loading && <Loader2 className="w-4 h-4 animate-spin" />}
                   <span>Load More</span>

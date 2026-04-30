@@ -431,19 +431,6 @@ export default function Dashboard() {
         onComplete={() => setShowTutorial(false)}
       />
 
-      {/* Action Buttons - Top Right - Always visible on all devices */}
-      <div className="absolute top-4 right-4 z-50 flex gap-2">
-        <Link href="/dashboard/realtors">
-          <button className="bg-white/95 backdrop-blur-md rounded-full p-3 shadow-xl border border-gray-200 hover:bg-white transition-all">
-            <Users className="w-5 h-5 text-gray-700" />
-          </button>
-        </Link>
-        <Link href="/dashboard/settings">
-          <button className="bg-white/95 backdrop-blur-md rounded-full p-3 shadow-xl border border-gray-200 hover:bg-white transition-all">
-            <SlidersHorizontal className="w-5 h-5 text-gray-700" />
-          </button>
-        </Link>
-      </div>
 
       {/* Property Swiper */}
       <PropertySwiper2

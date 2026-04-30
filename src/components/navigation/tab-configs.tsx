@@ -30,21 +30,23 @@ export function getRealtorTabs(): TabItem[] {
   ];
 }
 
-// ── Buyer tabs (3) ──
+// ── Buyer tabs (4) ──
 export function getBuyerTabs(opts: { likedCount: number }): TabItem[] {
   return [
     { key: 'browse', label: 'Browse', href: '/dashboard', icon: HomeIcon },
     { key: 'saved', label: 'Saved', href: '/dashboard/liked', icon: HeartIcon, badge: opts.likedCount },
+    { key: 'realtors', label: 'Realtors', href: '/dashboard/realtors', icon: UsersIcon },
     { key: 'settings', label: 'Filters', href: '/dashboard/settings', icon: SlidersIcon },
   ];
 }
 
-// ── Investor tabs (4) ──
+// ── Investor tabs (5) ──
 export function getInvestorTabs(opts: { likedCount: number }): TabItem[] {
   return [
     { key: 'browse', label: 'Browse', href: '/dashboard', icon: HomeIcon },
     { key: 'deals', label: 'Deals', href: '/dashboard/investor', icon: ChartIcon },
     { key: 'saved', label: 'Saved', href: '/dashboard/liked', icon: HeartIcon, badge: opts.likedCount },
+    { key: 'realtors', label: 'Realtors', href: '/dashboard/realtors', icon: UsersIcon },
     { key: 'settings', label: 'Filters', href: '/dashboard/settings', icon: SlidersIcon },
   ];
 }

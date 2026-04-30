@@ -1,0 +1,51 @@
+ZPID,Address,City,State,Price,Rent,Down Payment,Loan Amount,Monthly Mortgage,Monthly Tax,Monthly Insurance,Monthly HOA,Total Expenses,Monthly Cash Flow,Annual Cash Flow,ROI,Has Real Tax Data,Has Real Insurance Data,Has HOA Data,Annual Tax Amount,Annual Insurance Amount
+2060763121,"17 Pepperwood Way, Soquel, CA 95073","Soquel",CA,398000,4141,39800,358200,1923,0,150,0,2073,2068,24817,62.35,false,false,false,0,0
+62865966,"8723 Carrollwood Cv N, Cordova, TN 38016","Cordova",TN,225000,2965,22500,202500,1087,0,150,33,1270,1695,20339,90.4,false,false,true,0,0
+2068091278,"1194 State Hwy 12 #49, Montesano, WA 98563","Montesano",WA,47500,2068,4750,42750,229,0,150,0,379,1689,20262,426.57,false,false,false,0,0
+2126285116,"9402 Beech Park St, Capitol Heights, MD 20743","Capitol Heights",MD,79900,2106,7990,71910,386,0,150,0,536,1570,18840,235.79,false,false,false,0,0
+2101498979,"18741 SW 344th Dr, Homestead, FL 33034","Homestead",FL,125000,3072,12500,112500,604,0,150,763,1517,1555,18661,149.29,false,false,true,0,0
+44809945,"8568 Heather Blvd, Weeki Wachee, FL 34613","Weeki Wachee",FL,249900,2896,24990,224910,1207,0,150,25,1382,1514,18164,72.68,false,false,true,0,0
+460213806,"7152 Crowder Blvd, New Orleans, LA 70126","New Orleans",LA,97000,2123,9700,87300,469,0,150,0,619,1504,18052,186.11,false,false,false,0,0
+58511348,"204 Wynnfield Way, McDonough, GA 30252","McDonough",GA,333750,3247,33375,300375,1612,0,150,0,1762,1485,17814,53.38,false,false,false,0,0
+193905590,"1608 Backus St, Paducah, TX 79248","Paducah",TX,35000,1803,3500,31500,169,0,150,0,319,1484,17807,508.77,false,false,false,0,0
+443424247,"3200 N Port Royale Dr N #511, Fort Lauderdale, FL 33308","Fort Lauderdale",FL,370000,3409,37000,333000,1788,0,150,0,1938,1471,17657,47.72,false,false,false,0,0
+2071497189,"1375 Pasadena Ave S LOT 511, Saint Petersburg, FL 33707","Saint Petersburg",FL,69999,1928,7000,62999,338,0,150,0,488,1440,17278,246.83,false,false,false,0,0
+45497675,"628 SE 21st St, Cape Coral, FL 33990","Cape Coral",FL,375000,3343,37500,337500,1812,0,150,0,1962,1381,16575,44.2,false,false,false,0,0
+459971563,"388 Lukeman Ln, Tallahassee, FL 32304","Tallahassee",FL,45000,1748,4500,40500,217,0,150,0,367,1381,16567,368.16,false,false,false,0,0
+47789956,"5051 N Highway A1a #T-4, Hutchinson Island, FL 34949","Hutchinson Island",FL,407500,4921,40750,366750,1969,0,150,1465,3584,1337,16046,39.38,false,false,true,0,0
+89745211,"11642 Addison Chase Dr, Riverview, FL 33579","Riverview",FL,274000,2857,27400,246600,1324,0,150,47,1521,1336,16034,58.52,false,false,true,0,0
+61310151,"500 Loop Rd, Savoy, MA 01256","Savoy",MA,229000,2504,22900,206100,1106,0,150,0,1256,1248,14971,65.38,false,false,false,0,0
+251443900,"6026 Hackberry Branch Ln, Richmond, TX 77407","Richmond",TX,365000,3205,36500,328500,1763,0,150,60,1973,1232,14778,40.49,false,false,true,0,0
+77387412,"443 N Doris St, Wichita, KS 67212","Wichita",KS,85000,1787,8500,76500,411,0,150,0,561,1226,14716,173.13,false,false,false,0,0
+67971603,"301 S Coppell Rd TRAILER 14-1, Coppell, TX 75019","Coppell",TX,75900,2681,7590,68310,367,0,150,1018,1535,1146,13756,181.23,false,false,true,0,0
+2068744451,"366156 E 5730th Rd, Terlton, OK 74081","Terlton",OK,109000,1819,10900,98100,527,0,150,0,677,1142,13709,125.77,false,false,false,0,0
+71940614,"1934 Red Tail Dr, Conover, NC 28613","Conover",NC,38900,1476,3890,35010,188,0,150,0,338,1138,13657,351.07,false,false,false,0,0
+845608,"1571 NW 93rd Ct, Clive, IA 50325","Clive",IA,270000,2577,27000,243000,1304,0,150,0,1454,1123,13470,49.89,false,false,false,0,0
+338183691,"721 Durango Ln, Cleburne, TX 76033","Cleburne",TX,265000,2575,26500,238500,1280,0,150,33,1463,1112,13340,50.34,false,false,true,0,0
+333041292,"6510 Stadium Dr, Abilene, TX 79606","Abilene",TX,315750,2778,31575,284175,1526,0,150,0,1676,1102,13230,41.9,false,false,false,0,0
+2060836318,"3534 Mildren Bnd, Crandall, TX 75114","Crandall",TX,122000,1884,12200,109800,589,0,150,50,789,1095,13135,107.66,false,false,true,0,0
+306857462,"4329 W Park Row Blvd #46A, Corsicana, TX 75110","Corsicana",TX,30000,1377,3000,27000,145,0,150,0,295,1082,12985,432.82,false,false,false,0,0
+75876813,"3809 Appaloosa Dr, Elkhorn, NE 68022","Elkhorn",NE,329000,2813,32900,296100,1590,0,150,0,1740,1073,12882,39.15,false,false,false,0,0
+336903378,"6320 Dartford Dr, Mesquite, TX 75181","Mesquite",TX,376000,3058,37600,338400,1817,0,150,29,1996,1062,12749,33.91,false,false,true,0,0
+2129059548,"1275 La Costa Village Blvd, Port Orange, FL 32129","Port Orange",FL,90000,1634,9000,81000,435,0,150,0,585,1049,12590,139.89,false,false,false,0,0
+53659862,"800 Lakeland St, Fayetteville, NC 28301","Fayetteville",NC,24999,1306,2500,22499,121,0,150,0,271,1035,12423,496.93,false,false,false,0,0
+81786748,"2104 Avensong Ln #P304, Panama City Beach, FL 32408","Panama City Beach",FL,189900,2100,18990,170910,917,0,150,0,1067,1033,12390,65.25,false,false,false,0,0
+23828470,"48 Home St SW, Grand Rapids, MI 49507","Grand Rapids",MI,250000,2388,25000,225000,1208,0,150,0,1358,1030,12362,49.45,false,false,false,0,0
+71033558,"7127 Northland St, Jacksonville, FL 32208","Jacksonville",FL,199900,2146,19990,179910,966,0,150,0,1116,1030,12362,61.84,false,false,false,0,0
+331554825,"43601 E Florida Ave, Hemet, CA 92544","Hemet",CA,38500,1350,3850,34650,186,0,150,0,336,1014,12168,316.05,false,false,false,0,0
+52983438,"5422 Portland Rd NE UNIT 133, Salem, OR 97305","Salem",OR,89950,1599,8995,80955,435,0,150,0,585,1014,12173,135.33,false,false,false,0,0
+55133699,"1502 S Westgate Ave, Lakeland, FL 33803","Lakeland",FL,115000,1716,11500,103500,556,0,150,0,706,1010,12125,105.43,false,false,false,0,0
+96429361,"136 Katora Ln, Pelzer, SC 29669","Pelzer",SC,49000,1392,4900,44100,237,0,150,0,387,1005,12063,246.19,false,false,false,0,0
+65251742,"6307 Starview Dr, Lancaster, CA 93536","Lancaster",CA,599999,4217,60000,539999,2899,0,150,179,3228,989,11870,19.78,false,false,true,0,0
+45387010,"4411 Bay Beach Ln APT 744, Fort Myers Beach, FL 33931","Fort Myers Beach",FL,400000,4018,40000,360000,1933,0,150,967,3050,968,11621,29.05,false,false,true,0,0
+48185611,"14834 SW 160th St, Rose Hill, KS 67133","Rose Hill",KS,205000,2107,20500,184500,990,0,150,0,1140,967,11599,56.58,false,false,false,0,0
+45577254,"716 Violet St, Tallahassee, FL 32308","Tallahassee",FL,257500,2352,25750,231750,1244,0,150,0,1394,958,11495,44.64,false,false,false,0,0
+113023354,"5 W Pond, Rockport, TX 78382","Rockport",TX,599000,4029,59900,539100,2894,0,150,31,3075,954,11448,19.11,false,false,true,0,0
+27187944,"8105 Courageous Dr, Rowlett, TX 75089","Rowlett",TX,225000,2174,22500,202500,1087,0,150,0,1237,937,11243,49.97,false,false,false,0,0
+87372281,"807 N Austin St, Jasper, TX 75951","Jasper",TX,65900,1399,6590,59310,318,0,150,0,468,931,11167,169.46,false,false,false,0,0
+43706506,"2464 HOPKINS Street, Orange Park, FL 32073","Orange Park",FL,315000,2600,31500,283500,1522,0,150,0,1672,928,11137,35.36,false,false,false,0,0
+108431854,"540 N Datil St, Clewiston, FL 33440","Clewiston",FL,80000,1456,8000,72000,387,0,150,0,537,919,11034,137.92,false,false,false,0,0
+2082955631,"9913 River Rd Trlr 30, Wilmington, NC 28412","Wilmington",NC,110000,1597,11000,99000,531,0,150,0,681,916,10987,99.88,false,false,false,0,0
+234405779,"540 Highlands Ave, Dickinson, ND 58601","Dickinson",ND,335000,2682,33500,301500,1619,0,150,0,1769,913,10962,32.72,false,false,false,0,0
+27021902,"516 Clover Ln, Garland, TX 75043","Garland",TX,249000,2261,24900,224100,1203,0,150,0,1353,908,10896,43.76,false,false,false,0,0
+80614609,"7208 Timber Rd, Alvarado, TX 76009","Alvarado",TX,209000,2061,20900,188100,1010,0,150,0,1160,901,10815,51.75,false,false,false,0,0

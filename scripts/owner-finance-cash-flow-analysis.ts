@@ -97,6 +97,15 @@ function analyzeProperty(property: any): PropertyAnalysis | null {
     return null;
   }
   
+  // Debug log for first few properties
+  if (property.zpid && (property.zpid === '101317013' || property.zpid === '101344699')) {
+    console.log(`DEBUG - Property ${property.zpid}:`);
+    console.log(`  annualTaxAmount: ${property.annualTaxAmount}`);
+    console.log(`  annualHomeownersInsurance: ${property.annualHomeownersInsurance}`);
+    console.log(`  monthlyHoaFee: ${property.monthlyHoaFee}`);
+    console.log(`  hoa: ${property.hoa}`);
+  }
+  
   // Investment assumptions
   const downPaymentPercent = 0.10;
   const interestRate = 0.05;
@@ -133,9 +142,9 @@ function analyzeProperty(property: any): PropertyAnalysis | null {
     
     // Financial Data
     rentEstimate: property.rentEstimate,
-    taxAnnualAmount: property.taxAnnualAmount || 0,
-    hoaFee: property.hoaFee || 0,
-    insuranceEstimate: property.insuranceEstimate || defaultInsurance,
+    taxAnnualAmount: property.annualTaxAmount || 0,
+    hoaFee: property.monthlyHoaFee || property.hoa || 0,
+    insuranceEstimate: property.annualHomeownersInsurance || (defaultInsurance * 12),
     
     // Investment Calculations
     downPayment: Math.round(downPayment),
@@ -202,7 +211,10 @@ async function runOwnerFinanceCashFlowAnalysis() {
       continue;
     }
     
-    if (property.propertyType && !property.propertyType.toLowerCase().includes('single family')) {
+    // Allow single family AND condos (many owner finance properties are condos)
+    if (property.propertyType && 
+        !property.propertyType.toLowerCase().includes('single family') &&
+        !property.propertyType.toLowerCase().includes('condo')) {
       filtered.notSingleFamily++;
       continue;
     }

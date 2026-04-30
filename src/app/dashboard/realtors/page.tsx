@@ -106,10 +106,18 @@ export default function RealtorsPage() {
       
       const data = await response.json();
       
+      console.log('Agents API Response:', data); // Debug log
+      
       if (data.success) {
-        const validAgents = (data.agents || []).filter((agent: Agent) => 
-          agent.name && agent.name.trim() !== ''
+        const allAgents = data.agents || [];
+        console.log('All agents from API:', allAgents); // Debug log
+        
+        // More lenient filtering - allow agents even with minimal data
+        const validAgents = allAgents.filter((agent: Agent) => 
+          agent.id && (agent.name?.trim() || agent.id)
         );
+        
+        console.log('Valid agents after filtering:', validAgents); // Debug log
         
         if (offset === 0) {
           setAgents(validAgents);
@@ -314,30 +322,55 @@ export default function RealtorsPage() {
                   
                   {/* Agent Info */}
                   <div className="p-4">
-                    <h3 className="text-lg font-bold text-white mb-2">{agent.name}</h3>
+                    <h3 className="text-lg font-bold text-white mb-2">
+                      {agent.name || 'Real Estate Professional'}
+                    </h3>
+                    
+                    {/* Address/Location */}
+                    {agent.address && (
+                      <div className="text-xs text-slate-400 mb-2 truncate">
+                        📍 {agent.address}
+                      </div>
+                    )}
                     
                     {/* Rating */}
                     <div className="flex items-center mb-3">
                       <Star className="w-4 h-4 text-yellow-400 fill-current" />
                       <span className="ml-1 text-sm font-semibold text-white">
-                        {agent.rating.toFixed(1)}
+                        {agent.rating?.toFixed(1) || 'N/A'}
                       </span>
                       <span className="ml-1 text-sm text-slate-400">
-                        ({agent.reviewCount} reviews)
+                        ({agent.reviewCount || 0} reviews)
                       </span>
                     </div>
                     
-                    {/* Specializations */}
-                    <div className="flex flex-wrap gap-1 mb-4">
-                      {agent.specializations.slice(0, 2).map((spec) => (
-                        <span
-                          key={spec}
-                          className="px-2 py-1 bg-[#00BC7D]/20 text-[#00BC7D] text-xs rounded-full"
-                        >
-                          {spec}
-                        </span>
-                      ))}
+                    {/* Contact Info */}
+                    <div className="space-y-1 mb-3">
+                      {agent.phone && (
+                        <div className="text-xs text-slate-300 flex items-center gap-1">
+                          📞 {agent.phone}
+                        </div>
+                      )}
+                      {agent.website && (
+                        <div className="text-xs text-slate-300 flex items-center gap-1 truncate">
+                          🌐 {agent.website.replace(/^https?:\/\//, '')}
+                        </div>
+                      )}
                     </div>
+                    
+                    {/* Specializations */}
+                    {agent.specializations && agent.specializations.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mb-4">
+                        {agent.specializations.slice(0, 2).map((spec) => (
+                          <span
+                            key={spec}
+                            className="px-2 py-1 bg-[#00BC7D]/20 text-[#00BC7D] text-xs rounded-full"
+                          >
+                            {spec}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                     
                     {/* Actions */}
                     <div className="space-y-2">

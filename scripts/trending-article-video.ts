@@ -569,16 +569,36 @@ async function postToLate(videoUrl: string, caption: string, title?: string): Pr
 
 async function runTrendingVideo(lang: 'en' | 'es'): Promise<boolean> {
   const label = `${lang.toUpperCase()} Trending`;
+  const startTime = Date.now();
 
   try {
     // 1. Select trending article
     console.log(`\n=== ${label}: Select Trending Article ===`);
-    const article = await selectTrendingArticle();
+    let article: Article;
+    try {
+      article = await selectTrendingArticle();
+    } catch (error) {
+      console.error(`❌ ${label} article selection failed:`, error);
+      return false;
+    }
 
     // 2. Generate script
     console.log(`\n=== ${label}: Generate Script ===`);
-    const script = await generateScript(article, lang);
-    const meta = buildPostMeta(script, lang);
+    let script: VideoScript;
+    let meta: PostMeta;
+    try {
+      script = await generateScript(article, lang);
+      meta = buildPostMeta(script, lang);
+    } catch (error) {
+      console.error(`❌ ${label} script generation failed:`, error);
+      // Mark article as failed to prevent re-selection
+      try {
+        await markArticleVideoGenerated(article.id, 'ownerfi', 'script_generation_failed');
+      } catch (markError) {
+        console.error('Failed to mark article:', markError);
+      }
+      return false;
+    }
 
     if (DRY_RUN) {
       console.log(`\n${label} Post Preview:`);
@@ -591,31 +611,77 @@ async function runTrendingVideo(lang: 'en' | 'es'): Promise<boolean> {
 
     // 3. Submit video
     console.log(`\n=== ${label}: Submit Video ===`);
-    const scenes = await buildScenes(article, script);
-    const videoId = await submitVideo(label, scenes);
-    if (!videoId) return false;
+    let videoId: string | null = null;
+    try {
+      const scenes = await buildScenes(article, script);
+      videoId = await submitVideo(label, scenes);
+      if (!videoId) {
+        throw new Error('Video submission returned no ID');
+      }
+    } catch (error) {
+      console.error(`❌ ${label} video submission failed:`, error);
+      try {
+        await markArticleVideoGenerated(article.id, 'ownerfi', 'video_submission_failed');
+      } catch (markError) {
+        console.error('Failed to mark article:', markError);
+      }
+      return false;
+    }
 
     // 4. Poll for completion
     console.log(`\n=== ${label}: Poll for Completion ===`);
-    const videoUrl = await pollForCompletion(videoId);
-    if (!videoUrl) return false;
+    let videoUrl: string | null = null;
+    try {
+      videoUrl = await pollForCompletion(videoId);
+      if (!videoUrl) {
+        throw new Error('Video polling returned no URL');
+      }
+    } catch (error) {
+      console.error(`❌ ${label} video completion failed:`, error);
+      try {
+        await markArticleVideoGenerated(article.id, 'ownerfi' as Brand, 'video_polling_failed');
+      } catch (markError) {
+        console.error('Failed to mark article:', markError);
+      }
+      return false;
+    }
 
-    // 5. Post to social media
+    // 5. Mark article as processed (before posting to prevent retries)
+    try {
+      await markArticleVideoGenerated(article.id, 'ownerfi' as Brand, videoId);
+    } catch (error) {
+      console.error(`⚠️ ${label} failed to mark article:`, error);
+      // Continue - video was created successfully
+    }
+
+    // 6. Post to social media
     console.log(`\n=== ${label}: Post to Late.dev ===`);
     console.log(`  Title: "${meta.title}"`);
     console.log(`  Caption: "${meta.caption}"`);
     console.log(`  Hashtags: ${meta.hashtags}`);
-    const posted = await postToLate(videoUrl, `${meta.caption}\n\n${meta.hashtags}`, meta.title);
-
-    if (posted) {
-      // Mark article as processed
-      await markArticleVideoGenerated(article.id, 'ownerfi' as Brand, videoId);
-      console.log(`✅ ${label} pipeline completed successfully`);
+    
+    let posted = false;
+    try {
+      posted = await postToLate(videoUrl, `${meta.caption}\n\n${meta.hashtags}`, meta.title);
+      if (posted) {
+        console.log(`✅ ${label} posted to social media successfully`);
+      } else {
+        console.error(`⚠️ ${label} posting failed but video created`);
+      }
+    } catch (error) {
+      console.error(`⚠️ ${label} posting error:`, error);
+      // Video was created successfully even if posting failed
     }
 
-    return posted;
+    const elapsedTime = Math.round((Date.now() - startTime) / 1000);
+    console.log(`\n✅ ${label} pipeline completed in ${elapsedTime}s`);
+    console.log(`   Video: ${videoUrl}`);
+    console.log(`   Posted: ${posted ? 'Yes' : 'No (manual posting required)'}`);
+    
+    return true; // Return true if video was created
+    
   } catch (error) {
-    console.error(`❌ ${label} pipeline failed:`, error);
+    console.error(`❌ ${label} pipeline failed with unexpected error:`, error);
     return false;
   }
 }
@@ -624,11 +690,29 @@ async function main() {
   console.log('🚀 Trending Article Video Pipeline');
   console.log(`   Language: ${LANG}`);
   console.log(`   Dry run: ${DRY_RUN}`);
+  console.log(`   Time: ${new Date().toISOString()}`);
 
   const startTime = Date.now();
+  let success = false;
 
   try {
-    const success = await runTrendingVideo(LANG);
+    // Check required environment variables
+    if (!DRY_RUN) {
+      const required = [
+        'CREATIFY_API_ID',
+        'CREATIFY_API_KEY',
+        'OPENAI_API_KEY',
+        'LATE_API_KEY',
+        'LATE_OWNERFI_PROFILE_ID'
+      ];
+      
+      const missing = required.filter(key => !process.env[key]);
+      if (missing.length > 0) {
+        throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
+      }
+    }
+
+    success = await runTrendingVideo(LANG);
     const duration = Math.round((Date.now() - startTime) / 1000);
 
     console.log('\n============================================');
@@ -640,7 +724,26 @@ async function main() {
       process.exit(1);
     }
   } catch (error) {
-    console.error('❌ Pipeline error:', error);
+    const duration = Math.round((Date.now() - startTime) / 1000);
+    console.error('\n❌ Pipeline crashed:', error);
+    console.error(`   Duration: ${duration}s`);
+    console.error(`   Exit code: 1`);
+    
+    // Send error notification if configured
+    if (process.env.SLACK_WEBHOOK_URL) {
+      try {
+        await fetch(process.env.SLACK_WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text: `🚨 Trending Video Pipeline Failed\nLanguage: ${LANG}\nError: ${error}\nDuration: ${duration}s`
+          })
+        });
+      } catch (notifyError) {
+        console.error('Failed to send error notification:', notifyError);
+      }
+    }
+    
     process.exit(1);
   }
 }

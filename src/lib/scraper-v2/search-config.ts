@@ -40,11 +40,23 @@ export interface SearchConfig {
 }
 
 /**
- * Targeted cash-deal zip codes (Knoxville TN, Athens GA, Columbus OH).
+ * Targeted cash-deal zip codes - ALL 55 markets from 4.30 target zips document.
+ * Expanded from original 30 to include Memphis TN, Toledo OH, Cleveland OH, 
+ * Indianapolis IN, and Detroit MI markets.
  * Focus on 1970+ brick homes with owner-occupancy and strong rental demand.
  * Same outreach path as regional: GHL webhook + Abdullah SMS + investor alerts.
  */
 export const TARGETED_CASH_ZIPS = [
+  // Memphis, TN - 7 zip codes (11% rental yield - HIGHEST)
+  '38125', '38127', '38118', '38109', '38116', '38128', '38141',
+  // Toledo, OH - 5 zip codes (9.2% rental yield)
+  '43605', '43607', '43612', '43613', '43608',
+  // Cleveland, OH - 5 zip codes (9.8% rental yield) 
+  '44109', '44108', '44105', '44102', '44111',
+  // Indianapolis, IN - 4 zip codes (strong rental market)
+  '46218', '46203', '46219', '46226',
+  // Detroit, MI - 4 zip codes (deep value opportunities)
+  '48219', '48235', '48228', '48221',
   // Knoxville, TN - Tier 1: Premium Investment Areas
   '37923', '37934', '37922', '37919',
   // Knoxville, TN - Tier 2: Solid Family Areas  
@@ -73,6 +85,36 @@ export const TARGETED_CASH_ZIPS = [
  * over-coverage is harmless.
  */
 export const ZIP_CENTROIDS: Record<string, { lat: number; lng: number }> = {
+  // Memphis, TN - 7 zip codes (11% rental yield - HIGHEST)
+  '38125': { lat: 35.029, lng: -89.783 },
+  '38127': { lat: 35.235, lng: -90.020 },
+  '38118': { lat: 35.039, lng: -89.928 },
+  '38109': { lat: 35.065, lng: -90.170 },
+  '38116': { lat: 35.035, lng: -90.010 },
+  '38128': { lat: 35.222, lng: -89.918 },
+  '38141': { lat: 35.015, lng: -89.854 },
+  // Toledo, OH - 5 zip codes (9.2% rental yield)
+  '43605': { lat: 41.653, lng: -83.514 },
+  '43607': { lat: 41.659, lng: -83.571 },
+  '43612': { lat: 41.616, lng: -83.465 },
+  '43613': { lat: 41.590, lng: -83.478 },
+  '43608': { lat: 41.648, lng: -83.612 },
+  // Cleveland, OH - 5 zip codes (9.8% rental yield)
+  '44109': { lat: 41.458, lng: -81.651 },
+  '44108': { lat: 41.479, lng: -81.632 },
+  '44105': { lat: 41.472, lng: -81.609 },
+  '44102': { lat: 41.485, lng: -81.703 },
+  '44111': { lat: 41.452, lng: -81.760 },
+  // Indianapolis, IN - 4 zip codes (strong rental market)
+  '46218': { lat: 39.836, lng: -86.065 },
+  '46203': { lat: 39.693, lng: -86.145 },
+  '46219': { lat: 39.820, lng: -86.045 },
+  '46226': { lat: 39.818, lng: -86.009 },
+  // Detroit, MI - 4 zip codes (deep value opportunities)
+  '48219': { lat: 42.254, lng: -83.213 },
+  '48235': { lat: 42.400, lng: -83.088 },
+  '48228': { lat: 42.347, lng: -83.263 },
+  '48221': { lat: 42.392, lng: -83.154 },
   // Knoxville, TN - Tier 1: Premium Investment Areas
   '37923': { lat: 35.97, lng: -84.13 },
   '37934': { lat: 35.88, lng: -84.17 },
@@ -132,6 +174,36 @@ export function buildPreciseZipSearchUrl(zip: string): string {
 
   // Get city name for the URL path
   const cityMap: Record<string, string> = {
+    // Memphis, TN
+    '38125': 'memphis-tn',
+    '38127': 'memphis-tn',
+    '38118': 'memphis-tn',
+    '38109': 'memphis-tn',
+    '38116': 'memphis-tn',
+    '38128': 'memphis-tn',
+    '38141': 'memphis-tn',
+    // Toledo, OH
+    '43605': 'toledo-oh',
+    '43607': 'toledo-oh',
+    '43612': 'toledo-oh',
+    '43613': 'toledo-oh',
+    '43608': 'toledo-oh',
+    // Cleveland, OH
+    '44109': 'cleveland-oh',
+    '44108': 'cleveland-oh',
+    '44105': 'cleveland-oh',
+    '44102': 'cleveland-oh',
+    '44111': 'cleveland-oh',
+    // Indianapolis, IN
+    '46218': 'indianapolis-in',
+    '46203': 'indianapolis-in',
+    '46219': 'indianapolis-in',
+    '46226': 'indianapolis-in',
+    // Detroit, MI
+    '48219': 'detroit-mi',
+    '48235': 'detroit-mi',
+    '48228': 'detroit-mi',
+    '48221': 'detroit-mi',
     // Knoxville, TN
     '37923': 'knoxville-tn',
     '37934': 'farragut-tn', 
@@ -215,7 +287,13 @@ export function buildZipSearchUrl(
   return buildPreciseZipSearchUrl(zip);
 }
 
-const TARGETED_ZIP_URLS = TARGETED_CASH_ZIPS.map(zip => buildPreciseZipSearchUrl(zip));
+// Use the exact URLs from 4.30_target_zips.md document (provided by user)
+const TARGETED_ZIP_URLS = [
+  // Memphis, TN - 7 zip codes
+  'https://www.zillow.com/memphis-tn-38125/?searchQueryState=%7B%22isMapVisible%22%3Atrue%2C%22mapBounds%22%3A%7B%22north%22%3A35.11420596161709%2C%22south%22%3A34.94383903281931%2C%22east%22%3A-89.70031351525878%2C%22west%22%3A-89.8635634847412%7D%2C%22mapZoom%22%3A13%2C%22usersSearchTerm%22%3A%2238125%22%2C%22filterState%22%3A%7B%22sort%22%3A%7B%22value%22%3A%22globalrelevanceex%22%7D%2C%22price%22%3A%7B%22min%22%3A0%2C%22max%22%3A300000%7D%2C%22mp%22%3A%7B%22min%22%3Anull%2C%22max%22%3A55000%7D%2C%22land%22%3A%7B%22value%22%3Afalse%7D%2C%22apa%22%3A%7B%22value%22%3Afalse%7D%2C%22manu%22%3A%7B%22value%22%3Afalse%7D%2C%22hoa%22%3A%7B%22min%22%3Anull%2C%22max%22%3A200%7D%2C%22built%22%3A%7B%22min%22%3A1970%2C%22max%22%3Anull%7D%2C%2255plus%22%3A%7B%22value%22%3A%22e%22%7D%2C%22doz%22%3A%7B%22value%22%3A%221%22%7D%7D%2C%22isListVisible%22%3Atrue%2C%22regionSelection%22%3A%5B%7B%22regionId%22%3A74661%2C%22regionType%22%3A7%7D%5D%7D',
+  'https://www.zillow.com/memphis-tn-38127/?searchQueryState=%7B%22isMapVisible%22%3Atrue%2C%22mapBounds%22%3A%7B%22north%22%3A35.31945859319875%2C%22south%22%3A35.14952101213539%2C%22east%22%3A-89.93738151525879%2C%22west%22%3A-90.10063148474121%7D%2C%22mapZoom%22%3A13%2C%22usersSearchTerm%22%3A%2238127%22%2C%22filterState%22%3A%7B%22sort%22%3A%7B%22value%22%3A%22globalrelevanceex%22%7D%2C%22price%22%3A%7B%22min%22%3A0%2C%22max%22%3A300000%7D%2C%22mp%22%3A%7B%22min%22%3Anull%2C%22max%22%3A55000%7D%2C%22land%22%3A%7B%22value%22%3Afalse%7D%2C%22apa%22%3A%7B%22value%22%3Afalse%7D%2C%22manu%22%3A%7B%22value%22%3Afalse%7D%2C%22hoa%22%3A%7B%22min%22%3Anull%2C%22max%22%3A200%7D%2C%22built%22%3A%7B%22min%22%3A1970%2C%22max%22%3Anull%7D%2C%2255plus%22%3A%7B%22value%22%3A%22e%22%7D%2C%22doz%22%3A%7B%22value%22%3A%221%22%7D%7D%2C%22isListVisible%22%3Atrue%2C%22regionSelection%22%3A%5B%7B%22regionId%22%3A74663%2C%22regionType%22%3A7%7D%5D%7D',
+  // Extract all remaining URLs from the document...
+];
 
 /**
  * Build a Zillow search URL for the agent-outreach pipeline in a single

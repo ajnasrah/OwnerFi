@@ -798,30 +798,96 @@ async function main() {
     }
   }
 
+  // Check required environment variables
+  if (!DRY_RUN) {
+    const required = [
+      'CREATIFY_API_ID',
+      'CREATIFY_API_KEY',
+      'OPENAI_API_KEY',
+      'LATE_API_KEY',
+      'LATE_OWNERFI_PROFILE_ID',
+      'R2_ACCESS_KEY_ID',
+      'R2_SECRET_ACCESS_KEY',
+      'R2_BUCKET_NAME'
+    ];
+    
+    const missing = required.filter(key => !process.env[key]);
+    if (missing.length > 0) {
+      throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
+    }
+  }
+
   // Run language(s)
   let enPosted = false;
   let esPosted = false;
+  let enError: Error | null = null;
+  let esError: Error | null = null;
 
-  if (LANG === 'both') {
-    // Parallel
-    [enPosted, esPosted] = await Promise.all([
-      runLang(cards, 'en'),
-      runLang(cards, 'es'),
-    ]);
-  } else if (LANG === 'en') {
-    enPosted = await runLang(cards, 'en');
-  } else {
-    esPosted = await runLang(cards, 'es');
+  try {
+    if (LANG === 'both') {
+      // Run in parallel with error capture
+      const results = await Promise.allSettled([
+        runLang(cards, 'en'),
+        runLang(cards, 'es'),
+      ]);
+      
+      enPosted = results[0].status === 'fulfilled' ? results[0].value : false;
+      esPosted = results[1].status === 'fulfilled' ? results[1].value : false;
+      
+      if (results[0].status === 'rejected') enError = results[0].reason;
+      if (results[1].status === 'rejected') esError = results[1].reason;
+      
+    } else if (LANG === 'en') {
+      try {
+        enPosted = await runLang(cards, 'en');
+      } catch (error) {
+        enError = error as Error;
+        console.error('❌ EN pipeline failed:', error);
+      }
+    } else {
+      try {
+        esPosted = await runLang(cards, 'es');
+      } catch (error) {
+        esError = error as Error;
+        console.error('❌ ES pipeline failed:', error);
+      }
+    }
+  } catch (error) {
+    console.error('❌ Pipeline execution failed:', error);
+    throw error;
   }
 
   const duration = Math.round((Date.now() - startTime) / 1000);
   console.log(`\n============================================`);
   console.log(`  Pipeline complete in ${duration}s`);
-  if (LANG === 'both' || LANG === 'en') console.log(`  EN: ${enPosted ? 'POSTED' : 'FAILED'}`);
-  if (LANG === 'both' || LANG === 'es') console.log(`  ES: ${esPosted ? 'POSTED' : 'FAILED'}`);
+  if (LANG === 'both' || LANG === 'en') {
+    console.log(`  EN: ${enPosted ? 'POSTED' : 'FAILED'}${enError ? ` (${enError.message})` : ''}`);
+  }
+  if (LANG === 'both' || LANG === 'es') {
+    console.log(`  ES: ${esPosted ? 'POSTED' : 'FAILED'}${esError ? ` (${esError.message})` : ''}`);
+  }
   console.log('============================================\n');
 
   if (DRY_RUN) return;
+
+  // Send error notifications if configured
+  if ((enError || esError) && process.env.SLACK_WEBHOOK_URL) {
+    try {
+      const failedLangs = [];
+      if (enError) failedLangs.push(`EN: ${enError.message}`);
+      if (esError) failedLangs.push(`ES: ${esError.message}`);
+      
+      await fetch(process.env.SLACK_WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: `🚨 Daily Video Pipeline Errors\n${failedLangs.join('\n')}\nDuration: ${duration}s`
+        })
+      });
+    } catch (notifyError) {
+      console.error('Failed to send error notification:', notifyError);
+    }
+  }
 
   // Exit non-zero if the requested language(s) all failed
   if (LANG === 'both' && !enPosted && !esPosted) {
@@ -839,6 +905,20 @@ async function main() {
 }
 
 main().catch(err => {
-  console.error('Pipeline failed:', err);
+  console.error('\n❌ Pipeline crashed with unhandled error:', err);
+  console.error(`   Time: ${new Date().toISOString()}`);
+  console.error(`   Stack: ${err.stack}`);
+  
+  // Send crash notification
+  if (process.env.SLACK_WEBHOOK_URL) {
+    fetch(process.env.SLACK_WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text: `💥 Daily Video Pipeline CRASHED\nError: ${err.message}\nStack: ${err.stack?.split('\n')[1] || 'No stack'}`
+      })
+    }).catch(console.error);
+  }
+  
   process.exit(1);
 });

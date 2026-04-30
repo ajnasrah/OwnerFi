@@ -48,6 +48,18 @@
     {
       "path": "/api/cron/recalculate-matches",
       "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/daily-video",
+      "schedule": "0 12 * * *"
+    },
+    {
+      "path": "/api/cron/trending-video",
+      "schedule": "0 */6 * * *"
+    },
+    {
+      "path": "/api/cron/workflow-monitor",
+      "schedule": "*/15 * * * *"
     }
   ],
   "functions": {
@@ -83,6 +95,15 @@
     },
     "src/app/api/cron/recalculate-matches/route.ts": {
       "maxDuration": 600
+    },
+    "src/app/api/cron/daily-video/route.ts": {
+      "maxDuration": 600
+    },
+    "src/app/api/cron/trending-video/route.ts": {
+      "maxDuration": 300
+    },
+    "src/app/api/cron/workflow-monitor/route.ts": {
+      "maxDuration": 120
     }
   },
   "headers": [

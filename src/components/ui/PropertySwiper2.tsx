@@ -66,9 +66,7 @@ export const PropertySwiper2 = memo(function PropertySwiper2({
     }
   }, [visibleProperties.length, currentIndex]);
 
-  // Handle touch/mouse start. Right/middle mouse buttons never count as a
-  // drag — only the primary (left) button. Otherwise right-click-drag
-  // would accidentally fire a like/pass on desktop.
+  // Handle touch/mouse start - Allow navigation, prevent like/dislike
   const handleStart = (e: React.TouchEvent | React.MouseEvent) => {
     if (animating) return;
     if ('button' in e && (e as React.MouseEvent).button !== 0) return;
@@ -79,7 +77,7 @@ export const PropertySwiper2 = memo(function PropertySwiper2({
     setSwipeLocked(null);
   };
 
-  // Handle touch/mouse move
+  // Handle touch/mouse move - Allow navigation preview, no like/dislike actions
   const handleMove = (e: React.TouchEvent | React.MouseEvent) => {
     if (!dragStart || !isDragging || animating) return;
 
@@ -92,38 +90,51 @@ export const PropertySwiper2 = memo(function PropertySwiper2({
       setSwipeLocked(Math.abs(deltaX) > Math.abs(deltaY) ? 'horizontal' : 'vertical');
     }
 
-    // Only track horizontal swipes for card navigation
-    if (swipeLocked === 'vertical') return;
-
-    setDragOffset({ x: deltaX, y: deltaY });
-
-    // Show action indicator based on drag direction
-    if (Math.abs(deltaX) > 80) {
-      setShowAction(deltaX > 0 ? 'like' : 'pass');
-    } else {
-      setShowAction(null);
+    // Only show card movement for navigation, no like/dislike indicators
+    if (swipeLocked === 'horizontal') {
+      setDragOffset({ x: deltaX * 0.3, y: deltaY * 0.1 }); // Reduced movement for preview only
     }
+    
+    // Never show like/dislike actions
+    setShowAction(null);
   };
 
-  // Handle touch/mouse end — DISABLED swipe-to-like/pass functionality
-  // Only buttons should trigger like/pass actions for normal browsing
+  // Handle touch/mouse end - Allow navigation, no like/dislike actions
   const handleEnd = () => {
     if (!isDragging || animating) return;
 
     setIsDragging(false);
 
-    // Always reset - no swipe actions, only button clicks
-    setDragOffset({ x: 0, y: 0 });
-    setShowAction(null);
-    setSwipeLocked(null);
+    const absX = Math.abs(dragOffset.x);
+    const elapsed = dragStart ? Date.now() - dragStart.time : 1000;
+    const velocity = absX / Math.max(elapsed, 1); // px per ms
+
+    // Only allow navigation to next property with strong swipe (no like/dislike)
+    const screenThreshold = window.innerWidth * 0.25; // Easier threshold for navigation
+    const isNavigationSwipe = swipeLocked === 'horizontal' && (velocity > 0.3 || absX > screenThreshold);
+
+    if (isNavigationSwipe) {
+      // Just navigate to next property without like/dislike action
+      setAnimating(true);
+      setTimeout(() => {
+        goToNext();
+        setAnimating(false);
+        setDragOffset({ x: 0, y: 0 });
+        setShowAction(null);
+      }, 150);
+    } else {
+      // Reset to center
+      setDragOffset({ x: 0, y: 0 });
+      setShowAction(null);
+      setSwipeLocked(null);
+    }
 
     setDragStart(null);
   };
 
-  // Navigation helpers — goToNext no longer loops once we hit the end,
-  // so the "ALL CAUGHT UP!" empty state is reachable again.
+  // Navigation helpers - advance to next property or show "ALL CAUGHT UP"
   const goToNext = () => {
-    setCurrentIndex(prev => Math.min(prev + 1, visibleProperties.length - 1));
+    setCurrentIndex(prev => prev + 1); // Allow going past last property to trigger "ALL CAUGHT UP"
   };
 
   // Animate card off screen - Faster animation
@@ -270,17 +281,6 @@ export const PropertySwiper2 = memo(function PropertySwiper2({
       onMouseLeave={handleEnd}
       style={{ width: '100vw', maxWidth: '100vw', overflowX: 'hidden' }}
     >
-      {/* Filter button — top-right of swiper */}
-      <Link
-        href="/dashboard/settings"
-        className="absolute top-3 right-3 z-overlay w-11 h-11 rounded-full bg-slate-900/70 hover:bg-slate-900/90 backdrop-blur-md border border-white/10 flex items-center justify-center text-white shadow-lg transition-all active:scale-95"
-        aria-label="Filters"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M6 12h12M10 18h4" />
-        </svg>
-      </Link>
 
       {/* Cards Stack */}
       <div className="absolute top-1 left-1 right-1 bottom-24 sm:top-2 sm:left-2 sm:right-2 flex items-center justify-center" style={{ maxWidth: '100%' }}>
@@ -296,27 +296,6 @@ export const PropertySwiper2 = memo(function PropertySwiper2({
             style={getCardStyle(true)}
             isPriority={true}
           />
-          {/* Swipe action indicator — tells the user which way commits to
-              like vs pass before they release the swipe. Rotation applied via
-              inline style to avoid Tailwind class-order race between
-              rotate-[-12deg] and rotate-[12deg]. */}
-          {showAction && (
-            <div
-              className={`absolute top-6 pointer-events-none select-none font-black text-3xl sm:text-4xl tracking-widest px-4 py-2 border-4 rounded-xl ${
-                showAction === 'like'
-                  ? 'right-6 text-[#00BC7D] border-[#00BC7D]'
-                  : 'left-6 text-red-500 border-red-500'
-              }`}
-              style={{
-                zIndex: 20,
-                transform: showAction === 'like' ? 'rotate(-12deg)' : 'rotate(12deg)',
-              }}
-              aria-live="polite"
-              role="status"
-            >
-              {showAction === 'like' ? 'LIKE' : 'PASS'}
-            </div>
-          )}
         </div>
 
       </div>

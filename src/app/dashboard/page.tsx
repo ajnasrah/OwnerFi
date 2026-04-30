@@ -145,15 +145,9 @@ export default function Dashboard() {
 
       setProperties(ownerFinanceProps);
 
-      // Show tutorial for users who haven't completed it yet
-      const tutorialCompleted = localStorage.getItem('buyerTutorialCompleted');
-
-      if (propertiesData.properties?.length > 0 && !tutorialCompleted) {
-        // Show tutorial for any user who hasn't seen it —
-        // not just brand-new accounts (catches users who signed up before tutorial existed)
-        setShowTutorial(true);
-        localStorage.removeItem('isNewBuyerAccount');
-      }
+      // Tutorial disabled - buyers want immediate access to properties
+      // Tutorial was causing confusion and showing every login
+      setShowTutorial(false);
     } catch {
       // Error loading properties
     } finally {
@@ -419,9 +413,9 @@ export default function Dashboard() {
         onComplete={() => setShowTutorial(false)}
       />
 
-      {/* View Toggle Header */}
-      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-30">
-        <div className="bg-white/90 backdrop-blur-md rounded-full p-1 shadow-lg border border-gray-200">
+      {/* View Toggle Header - Always visible on all devices */}
+      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50">
+        <div className="bg-white/95 backdrop-blur-md rounded-full p-1 shadow-xl border border-gray-200">
           <div className="flex space-x-1">
             <button
               onClick={() => setCurrentView('properties')}
@@ -448,10 +442,10 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Settings Button - Top Right */}
-      <div className="absolute top-4 right-4 z-30">
+      {/* Settings Button - Top Right - Always visible on all devices */}
+      <div className="absolute top-4 right-4 z-50">
         <Link href="/dashboard/settings">
-          <button className="bg-white/90 backdrop-blur-md rounded-full p-3 shadow-lg border border-gray-200 hover:bg-white/95 transition-all">
+          <button className="bg-white/95 backdrop-blur-md rounded-full p-3 shadow-xl border border-gray-200 hover:bg-white transition-all">
             <SlidersHorizontal className="w-5 h-5 text-gray-700" />
           </button>
         </Link>

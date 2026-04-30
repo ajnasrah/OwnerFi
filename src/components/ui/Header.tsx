@@ -34,12 +34,6 @@ export function Header({ className = '' }: HeaderProps) {
             >
               How It Works
             </Link>
-            <Link
-              href="/for-realtors"
-              className="hidden sm:inline-flex text-sm text-slate-400 hover:text-white px-3 py-2 rounded-lg transition-colors"
-            >
-              For Realtors
-            </Link>
 
             {session?.user ? (
               <div className="flex items-center gap-2 ml-2">

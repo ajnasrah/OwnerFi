@@ -36,6 +36,8 @@ export default function BuyerSettings() {
     maxSquareFeet: '',
     minPrice: '',
     maxPrice: '',
+    minYearBuilt: '',
+    maxYearBuilt: '',
     // Communication preferences — granular SMS toggle separate from STOP
     // (STOP via Twilio fully revokes TCPA consent; this toggle just pauses
     // marketing/deal-alert SMS while keeping the account and consent intact).
@@ -96,6 +98,8 @@ export default function BuyerSettings() {
           maxSquareFeet: data.profile.maxSquareFeet?.toString() || '',
           minPrice: data.profile.minPrice?.toString() || '',
           maxPrice: data.profile.maxPrice?.toString() || '',
+          minYearBuilt: data.profile.minYearBuilt?.toString() || '',
+          maxYearBuilt: data.profile.maxYearBuilt?.toString() || '',
           // Default true; respect explicit false if user has already opted out.
           smsNotifications: data.profile.smsNotifications !== false,
         });
@@ -194,6 +198,8 @@ export default function BuyerSettings() {
           ...(formData.maxSquareFeet && { maxSquareFeet: Number(formData.maxSquareFeet) }),
           ...(formData.minPrice && { minPrice: Number(formData.minPrice) }),
           ...(formData.maxPrice && { maxPrice: Number(formData.maxPrice) }),
+          ...(formData.minYearBuilt && { minYearBuilt: Number(formData.minYearBuilt) }),
+          ...(formData.maxYearBuilt && { maxYearBuilt: Number(formData.maxYearBuilt) }),
           // Communication preferences — write explicitly so toggling back to
           // true is persisted (not just captured on initial signup).
           smsNotifications: formData.smsNotifications,
@@ -208,8 +214,8 @@ export default function BuyerSettings() {
         trackFormSuccess({ city: formData.city });
         setSuccess('Preferences updated successfully!');
 
-        // Redirect back to the appropriate dashboard
-        router.push(formData.isInvestor ? '/dashboard/investor' : '/dashboard');
+        // Always redirect to regular dashboard - it handles investor mode internally
+        router.push('/dashboard');
       }
     } catch {
       setError('Failed to save preferences');
@@ -605,6 +611,36 @@ export default function BuyerSettings() {
                   </div>
                 </div>
               </div>
+
+              {/* Year Built - Only show for investors */}
+              {formData.isInvestor && (
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center gap-1">
+                    <span>🏗️</span>
+                    <span>Year Built</span>
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      type="number"
+                      min="1800"
+                      max={new Date().getFullYear()}
+                      value={formData.minYearBuilt}
+                      onChange={(e) => setFormData(prev => ({ ...prev, minYearBuilt: e.target.value }))}
+                      className="w-full bg-[#111625]/50 border border-slate-600/50 rounded-lg px-2 py-1 text-sm text-white placeholder-slate-500 focus:border-purple-500/50 focus:outline-none transition-all"
+                      placeholder="Min (1950)"
+                    />
+                    <input
+                      type="number"
+                      min="1800"
+                      max={new Date().getFullYear()}
+                      value={formData.maxYearBuilt}
+                      onChange={(e) => setFormData(prev => ({ ...prev, maxYearBuilt: e.target.value }))}
+                      className="w-full bg-[#111625]/50 border border-slate-600/50 rounded-lg px-2 py-1 text-sm text-white placeholder-slate-500 focus:border-purple-500/50 focus:outline-none transition-all"
+                      placeholder={`Max (${new Date().getFullYear()})`}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

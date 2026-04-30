@@ -5,7 +5,7 @@ import { FilterEditor } from '@/components/filters/FilterEditor';
 import { FilterConfig, EMPTY_FILTER } from '@/lib/filter-schema';
 
 export type DealTypeFilter = 'all' | 'owner_finance' | 'cash_deal';
-export type PriceFilter = 'none' | 'under80' | 'under100k' | '100k-200k' | '200k-300k';
+export type PriceFilter = 'none' | 'under80';
 type SortField = 'price' | 'percentOfArv' | 'discount' | 'monthlyPayment';
 
 interface InvestorFilterBarProps {
@@ -42,9 +42,7 @@ const DEAL_TYPE_FILTERS: { key: DealTypeFilter; label: string; shortLabel: strin
 
 const PRICE_FILTERS: { key: PriceFilter; label: string }[] = [
   { key: 'under80', label: '<80% Zest' },
-  { key: 'under100k', label: '<$100K' },
-  { key: '100k-200k', label: '$100-200K' },
-  { key: '200k-300k', label: '$200-300K' },
+  // Removed price range shortcuts - investors should use settings for specific ranges
 ];
 
 const SORT_OPTIONS: { value: SortField; label: string }[] = [

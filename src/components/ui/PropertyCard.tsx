@@ -334,34 +334,32 @@ export const PropertyCard = React.memo(function PropertyCard({ property, isFavor
                     const rent = (propertyRecord.rentEstimate as number | undefined) || property.rentZestimate;
                     if (!zest && !rent) return null;
                     return (
-                      <div className="bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 rounded-2xl p-4">
-                        <h3 className="font-bold text-purple-900 mb-1 flex items-center gap-2 text-sm">
+                      <div className="bg-slate-50 border border-slate-200 rounded-lg p-3">
+                        <h3 className="font-medium text-slate-700 mb-2 flex items-center gap-2 text-xs">
                           <span>📊</span>
                           <span>Market Estimates</span>
                         </h3>
-                        <p className="text-[9px] text-purple-700 mb-3 leading-tight bg-purple-100 rounded-lg p-2">
-                          ⚠️ These estimates are provided by third-party data sources (Zillow). Ownerfi does not calculate or verify these values. Use for reference only.
-                        </p>
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="flex gap-2 text-xs">
                           {zest && zest > 0 && (
-                            <div className="bg-white/60 rounded-xl p-3">
-                              <div className="text-xs text-purple-700 mb-1">Zestimate®</div>
-                              <div className="text-xl font-black text-purple-900">
+                            <div className="flex-1">
+                              <div className="text-slate-500 text-[10px] mb-0.5">Zestimate®</div>
+                              <div className="text-sm font-semibold text-slate-700">
                                 ${zest.toLocaleString()}
                               </div>
-                              <div className="text-[9px] text-purple-600">Zillow estimate - not verified</div>
                             </div>
                           )}
                           {rent && rent > 0 && (
-                            <div className="bg-white/60 rounded-xl p-3">
-                              <div className="text-xs text-purple-700 mb-1">Rent Zestimate®</div>
-                              <div className="text-xl font-black text-purple-900">
+                            <div className="flex-1">
+                              <div className="text-slate-500 text-[10px] mb-0.5">Rent Est.</div>
+                              <div className="text-sm font-semibold text-slate-700">
                                 ${rent.toLocaleString()}/mo
                               </div>
-                              <div className="text-[9px] text-purple-600">Zillow estimate - not verified</div>
                             </div>
                           )}
                         </div>
+                        <p className="text-[9px] text-slate-500 mt-2 leading-tight">
+                          Third-party estimates • Not verified by Ownerfi
+                        </p>
                       </div>
                     );
                   })()}

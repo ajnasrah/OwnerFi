@@ -73,6 +73,10 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
+    # Clean tsx cache to prevent stale compiled artifacts
+    - name: Clean build cache
+      run: rm -rf node_modules/.cache
+
     # Only needed for property videos (card generation uses Puppeteer)
     - name: Install Puppeteer system dependencies
       if: github.event.schedule == '0 16 * * *' || github.event.schedule == '30 16 * * *' || (github.event_name == 'workflow_dispatch' && (inputs.video_type == 'property' || inputs.video_type == 'both'))

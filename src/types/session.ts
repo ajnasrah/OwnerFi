@@ -8,6 +8,7 @@ export interface ExtendedUser {
   image?: string | null;
   phone?: string | null;
   role: 'buyer' | 'realtor' | 'admin';
+  isInvestor?: boolean;
 }
 
 // Extended session interface

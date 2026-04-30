@@ -87,6 +87,7 @@ export const authOptions = {
               name: user.name,
               phone: user.phone,
               role: effectiveRole,
+              isInvestor: user.isInvestor,
             };
           } catch (error) {
             console.error('❌ [AUTH] Phone auth error:', error);
@@ -137,6 +138,7 @@ export const authOptions = {
             name: userData.name,
             phone: userData.phone,
             role: userData.role,
+            isInvestor: userData.isInvestor,
           };
         }
 
@@ -149,6 +151,7 @@ export const authOptions = {
       if (user) {
         token.role = user.role;
         token.phone = user.phone;
+        (token as any).isInvestor = user.isInvestor;
         (token as unknown as { deletedCheckedAt?: number }).deletedCheckedAt = Date.now();
       } else {
         // Existing-JWT refresh path (no `user` param). Periodically re-check
@@ -184,7 +187,7 @@ export const authOptions = {
     },
     async session({ session, token }: {
       session: Session;
-      token: JWT & { role?: string; phone?: string | null };
+      token: JWT & { role?: string; phone?: string | null; isInvestor?: boolean };
     }) {
       if (!token || (token as unknown as { role?: string }).role === 'deleted') {
         // Return a minimal unauthenticated-looking session so callers that
@@ -195,6 +198,7 @@ export const authOptions = {
         session.user.id = (token as JWT & { sub: string }).sub;
         session.user.role = token.role;
         session.user.phone = token.phone;
+        (session.user as any).isInvestor = token.isInvestor;
       }
       return session;
     },

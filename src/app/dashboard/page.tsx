@@ -436,7 +436,7 @@ export default function Dashboard() {
               }`}
             >
               <Users className="w-4 h-4 mr-1" />
-              Agents
+              Find Realtors
             </button>
           </div>
         </div>

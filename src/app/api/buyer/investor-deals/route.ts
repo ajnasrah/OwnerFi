@@ -310,15 +310,12 @@ export async function GET(request: NextRequest) {
     if (excludeAuctions) {
       allDeals = allDeals.filter(d => !d.isAuction && !d.isForeclosure && !d.isBankOwned);
     }
-    // ARV filter applies to CASH DEALS only — cash deals are by definition a
-    // discount to ARV, so %ARV is load-bearing. Owner-finance properties are
-    // about financing terms, not discount; agent-confirmed OF listings can be
-    // priced at or above Zestimate and should still surface. Properties that
-    // qualify for BOTH keep OF dealType at this stage and are exempted too
-    // (they get re-filtered on the cash tab below if needed).
+    // ARV filter applies to ALL deal types when explicitly requested.
+    // When user selects "Under 80% Zest", show only properties priced below
+    // the specified percentage of their estimated value, regardless of deal type.
     if (maxArvPercent !== undefined) {
       allDeals = allDeals.filter(d => {
-        if (d.dealType === 'owner_finance') return true;
+        // Apply ARV filter to all deal types when explicitly requested
         return d.percentOfArv !== null && d.percentOfArv !== undefined && d.percentOfArv <= maxArvPercent;
       });
     }

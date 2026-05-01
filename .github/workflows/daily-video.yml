@@ -4,12 +4,12 @@ on:
   schedule:
     # Property videos: EN at 10:00am CST = 16:00 UTC
     - cron: '0 16 * * *'
-    # Property videos: ES at 10:30am CST = 16:30 UTC  
-    - cron: '30 16 * * *'
+    # Property videos: ES at 10:30am CST = 16:30 UTC - PAUSED due to duplicate content
+    # - cron: '30 16 * * *'
     # Trending articles: EN at 2:00pm CST = 20:00 UTC
     - cron: '0 20 * * *'
-    # Trending articles: ES at 2:30pm CST = 20:30 UTC
-    - cron: '30 20 * * *'
+    # Trending articles: ES at 2:30pm CST = 20:30 UTC - PAUSED due to duplicate content
+    # - cron: '30 20 * * *'
     # R2 cleanup every Sunday at midnight UTC
     - cron: '0 0 * * 0'
   workflow_dispatch:

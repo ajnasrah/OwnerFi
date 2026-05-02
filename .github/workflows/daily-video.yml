@@ -111,11 +111,11 @@ jobs:
           npx tsx scripts/trending-article-video.ts --lang ${{ steps.config.outputs.lang }} $DRY_FLAG
         elif [ "${{ steps.config.outputs.type }}" = "both" ]; then
           echo "🚀 Running BOTH property + trending video pipelines..."
-          npx tsx scripts/ownerfi-daily-video.ts --lang ${{ steps.config.outputs.lang }} $DRY_FLAG
+          npx tsx scripts/ownerfi-daily-video-v2.ts --lang ${{ steps.config.outputs.lang }} $DRY_FLAG
           npx tsx scripts/trending-article-video.ts --lang ${{ steps.config.outputs.lang }} $DRY_FLAG
         else
-          echo "🚀 Running PROPERTY video pipeline..."
-          npx tsx scripts/ownerfi-daily-video.ts --lang ${{ steps.config.outputs.lang }} $DRY_FLAG
+          echo "🚀 Running PROPERTY video pipeline V2..."
+          npx tsx scripts/ownerfi-daily-video-v2.ts --lang ${{ steps.config.outputs.lang }} $DRY_FLAG
         fi
       env:
         # Firebase (Firestore rotation state + articles)

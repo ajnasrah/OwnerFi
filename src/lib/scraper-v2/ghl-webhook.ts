@@ -25,6 +25,13 @@ export interface GHLPropertyPayload {
   imgSrc?: string;
   source: string;
   scrapedAt: string;
+  // Filter results - so GHL knows if this is owner finance or cash deal
+  dealType: string;
+  isOwnerFinance: boolean;
+  isCashDeal: boolean;
+  ownerFinanceKeywords?: string[];
+  discountPercentage?: number;
+  needsWork?: boolean;
 }
 
 /**
@@ -115,7 +122,23 @@ export function toGHLPayload(property: {
   zillowUrl?: string;
   imgSrc?: string;
   firstPropertyImage?: string;
-}): GHLPropertyPayload {
+}, filterResult?: any): GHLPropertyPayload {
+  // Calculate discount percentage if we have price and zestimate
+  let discountPercentage: number | undefined;
+  if (property.price && property.estimate && property.estimate > 0) {
+    discountPercentage = Math.round(((property.estimate - property.price) / property.estimate) * 100);
+  }
+  
+  // Determine deal type from filter result
+  let dealType = 'standard';
+  if (filterResult) {
+    if (filterResult.passesOwnerfinance) {
+      dealType = 'owner_finance';
+    } else if (filterResult.passesCashDeal) {
+      dealType = 'cash_deal';
+    }
+  }
+  
   return {
     zpid: property.zpid,
     address: property.fullAddress || property.streetAddress || '',
@@ -134,5 +157,12 @@ export function toGHLPayload(property: {
     imgSrc: property.imgSrc || property.firstPropertyImage,
     source: 'cash-deals-regional',
     scrapedAt: new Date().toISOString(),
+    // Add filter results to payload
+    dealType,
+    isOwnerFinance: filterResult?.passesOwnerfinance || false,
+    isCashDeal: filterResult?.passesCashDeal || false,
+    ownerFinanceKeywords: filterResult?.ownerFinanceKeywords || [],
+    discountPercentage,
+    needsWork: filterResult?.needsWork || false,
   };
 }

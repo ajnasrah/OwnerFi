@@ -265,7 +265,7 @@ export default function RealtorsPage() {
             {/* Agents Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               {currentPageAgents.map((agent) => (
-                <Card key={agent.id} className="overflow-hidden hover:shadow-lg transition-shadow bg-[#1e1b2e] border-slate-700">
+                <div key={agent.id} className="overflow-hidden hover:shadow-lg transition-shadow bg-[#1e1b2e] border border-slate-700 rounded-xl">
                   <div className="relative">
                     {/* Agent Photo */}
                     <div className="h-48 bg-gradient-to-b from-blue-500 to-blue-600 flex items-center justify-center">
@@ -345,26 +345,28 @@ export default function RealtorsPage() {
                     </div>
                     
                     {/* Contact Info */}
-                    <div className="space-y-1 mb-3">
-                      {agent.phone && (
-                        <div className="text-xs text-slate-300 flex items-center gap-1">
-                          📞 {agent.phone}
-                        </div>
-                      )}
-                      {agent.website && (
-                        <div className="text-xs text-slate-300 flex items-center gap-1 truncate">
-                          🌐 {agent.website.replace(/^https?:\/\//, '')}
-                        </div>
-                      )}
-                    </div>
+                    {(agent.phone || agent.website) && (
+                      <div className="space-y-1 mb-3">
+                        {agent.phone && (
+                          <div className="text-xs text-slate-300 flex items-center gap-1">
+                            📞 {agent.phone}
+                          </div>
+                        )}
+                        {agent.website && (
+                          <div className="text-xs text-slate-300 flex items-center gap-1 truncate">
+                            🌐 {agent.website.replace(/^https?:\/\//, '')}
+                          </div>
+                        )}
+                      </div>
+                    )}
                     
                     {/* Specializations */}
                     {agent.specializations && agent.specializations.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mb-4">
+                      <div className="flex flex-wrap gap-1 mb-3">
                         {agent.specializations.slice(0, 2).map((spec) => (
                           <span
                             key={spec}
-                            className="px-2 py-1 bg-[#00BC7D]/20 text-[#00BC7D] text-xs rounded-full"
+                            className="px-2 py-1 bg-slate-700/50 text-[#00BC7D] text-xs rounded-full"
                           >
                             {spec}
                           </span>
@@ -373,12 +375,12 @@ export default function RealtorsPage() {
                     )}
                     
                     {/* Actions */}
-                    <div className="space-y-2">
+                    <div className="flex flex-col gap-2">
                       {agent.phone && (
                         <Button
                           variant="outline"
                           size="sm"
-                          className="w-full justify-start bg-transparent border-slate-600 text-white hover:bg-slate-700"
+                          className="w-full bg-slate-700/50 border-slate-600 text-white hover:bg-slate-600"
                           onClick={() => window.open(`tel:${agent.phone}`, '_self')}
                         >
                           <Phone className="w-4 h-4 mr-2" />
@@ -387,7 +389,7 @@ export default function RealtorsPage() {
                       )}
                       <Button
                         size="sm"
-                        className="w-full justify-start bg-[#00BC7D] hover:bg-[#00d68f] text-white"
+                        className="w-full bg-[#00BC7D] hover:bg-[#00d68f] text-white"
                         onClick={() => window.open(agent.googleMapsUrl, '_blank')}
                       >
                         <ExternalLink className="w-4 h-4 mr-2" />
@@ -395,7 +397,7 @@ export default function RealtorsPage() {
                       </Button>
                     </div>
                   </div>
-                </Card>
+                </div>
               ))}
             </div>
             

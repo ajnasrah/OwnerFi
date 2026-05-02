@@ -588,8 +588,27 @@ async function runTypesenseSearch(
     if (page > 4) break; // Safety: max 4 pages (1000 results)
   }
 
+  // Deduplicate results by address (case-insensitive) to prevent showing same property multiple times
+  const uniqueProperties = new Map<string, any>();
+  
+  for (const hit of allHits) {
+    const doc = hit.document as Record<string, unknown>;
+    const address = (doc.address as string || '').toLowerCase().trim();
+    const zpid = doc.zpid as number | undefined;
+    
+    // Use address as primary dedup key, fall back to zpid if no address
+    const dedupKey = address || `zpid_${zpid}`;
+    
+    // Skip if we've already seen this property
+    if (!dedupKey || uniqueProperties.has(dedupKey)) {
+      continue;
+    }
+    
+    uniqueProperties.set(dedupKey, hit);
+  }
+  
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return allHits.map((hit: any) => {
+  return Array.from(uniqueProperties.values()).map((hit: any) => {
     const doc = hit.document as Record<string, unknown>;
 
     // Skip non-FOR_SALE properties (PENDING, SOLD, etc.).

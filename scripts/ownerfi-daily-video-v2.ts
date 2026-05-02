@@ -15,7 +15,7 @@ dotenv.config({ path: '.env.local' });
 import { OpenAI } from 'openai';
 import { execSync } from 'child_process';
 import * as fs from 'fs/promises';
-import { getFirebaseAdmin } from '../src/lib/firebase-admin';
+import { getFirebaseAdmin } from '../src/lib/scraper-v2/firebase-admin';
 
 // TYPES
 interface VideoScript {
@@ -137,7 +137,32 @@ async function generateDynamicScript(cards: CardData[], lang: 'en' | 'es'): Prom
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   
   // COMPLETELY DIFFERENT PROMPT STRUCTURE
-  const systemPrompt = `You are a viral content creator. Today's theme: ${todayTheme.theme}
+  const systemPrompt = lang === 'es' ?
+    `Eres un creador de contenido viral. Tema de hoy: ${todayTheme.theme}
+Estructura: ${todayTheme.structure}
+Contexto de tiempo: publicación de ${timePeriod}
+Energía: ${timeConfig.energy}
+Ángulo estacional: ${selectedSeasonalAngle}
+Semilla de fecha para unicidad: ${dailySeed}
+
+Crea un video ${todayTheme.structure} sobre bienes raíces/compra de vivienda que:
+1. NUNCA menciona "financiamiento del vendedor" directamente en los primeros 5 segundos
+2. Usa ${todayTheme.angle} como mensaje principal
+3. Cuenta una historia o comparte información de manera ${timeConfig.energy}
+4. Hace referencia a ${selectedSeasonalAngle} naturalmente
+5. Suena como una persona real en TikTok, no un negocio
+
+TIPOS DE ESTRUCTURA:
+- story: Cuenta una historia relacionable con un giro
+- educational: Enseña algo valioso
+- news: Comparte información o actualizaciones de última hora
+- comparison: Compara dos cosas
+- tips: Da consejos accionables
+- myth: Desmiente una idea errónea común
+- trend: Discute lo que está de moda
+
+Devuelve SOLO JSON válido, sin formato markdown, sin bloques de código:` :
+    `You are a viral content creator. Today's theme: ${todayTheme.theme}
 Structure: ${todayTheme.structure}
 Time context: ${timePeriod} post
 Energy: ${timeConfig.energy}
@@ -160,7 +185,7 @@ STRUCTURE TYPES:
 - myth: Bust a common misconception
 - trend: Discuss what's trending
 
-OUTPUT JSON:
+Return ONLY valid JSON, no markdown formatting, no code blocks:
 {
   "theme": "The theme name",
   "structure": "The structure type",
@@ -237,7 +262,21 @@ OUTPUT JSON:
     ? `Properties from ${cards[0].city}, ${cards[0].state}`
     : 'Various locations';
   
-  const userPrompt = `Create a ${todayTheme.structure} video.
+  const userPrompt = lang === 'es' ?
+    `Crea un video estilo ${todayTheme.structure}.
+Tema: ${todayTheme.theme}
+Inicio: "${starter}"
+Contexto de ubicación: ${locationContext}
+Hora: ${timePeriod} (${hour}:00)
+Ángulo estacional: ${selectedSeasonalAngle}
+
+Hazlo completamente único. Haz referencias a eventos actuales, cultura pop o tendencias.
+No uses lenguaje genérico de bienes raíces. Piensa como un creador de contenido.
+El video debe sentirse nativo de las redes sociales, no como un anuncio.
+Enfócate en ${todayTheme.angle}.
+
+Clave: Haz que la gente sienta curiosidad sobre alternativas de compra de vivienda sin ser vendedor.` :
+    `Create a ${todayTheme.structure} video.
 Theme: ${todayTheme.theme}
 Starter: "${starter}"
 Location context: ${locationContext}
@@ -266,8 +305,20 @@ Key: Make people curious about alternative home buying without being salesy.`;
 
   const content = response.choices[0].message.content || '{}';
   
+  // Strip markdown code blocks if present
+  let cleanContent = content;
+  if (content.includes('```')) {
+    cleanContent = content.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+  }
+  
   try {
-    const parsed = JSON.parse(content);
+    const parsed = JSON.parse(cleanContent);
+    
+    // Validate required fields
+    if (!parsed.scenes || !Array.isArray(parsed.scenes)) {
+      console.error('Invalid response: missing scenes array');
+      throw new Error('Invalid response format');
+    }
     
     // Add variety to hashtags based on location and time
     const locationHashtags = cards.length > 0 
@@ -299,10 +350,14 @@ Key: Make people curious about alternative home buying without being salesy.`;
     return parsed as VideoScript;
   } catch (error) {
     console.error('Failed to parse GPT response:', error);
+    if (process.env.DEBUG) {
+      console.error('Raw content:', content.substring(0, 500));
+      console.error('Clean content:', cleanContent.substring(0, 500));
+    }
     // Fallback script with high variety
     return {
       theme: todayTheme.theme,
-      structure: todayTheme.structure,
+      structure: todayTheme.structure as VideoScript['structure'],
       hook: starter.split('...')[0],
       scenes: [
         { text: `${starter} There's a way to buy homes without traditional banks.`, duration: 4, emotion: 'curious' },
@@ -313,15 +368,17 @@ Key: Make people curious about alternative home buying without being salesy.`;
       caption: `${selectedSeasonalAngle} discoveries 🏠`,
       title: `${todayTheme.angle} | ${timePeriod} edition`,
       hashtags: ['#realestate', '#homebuying', `#${todayTheme.theme}`, `#${season}2024`],
-      voiceStyle: timeConfig.energy as any
+      voiceStyle: timeConfig.energy as VideoScript['voiceStyle']
     };
   }
 }
 
-async function createVideoScenes(script: VideoScript, cards: CardData[]): Promise<any[]> {
+async function createVideoScenes(script: VideoScript, cards: CardData[], lang: 'en' | 'es' = 'en'): Promise<any[]> {
   const scenes = [];
   const AVATAR_ID = process.env.CREATIFY_AVATAR_ID || 'jeremy_e86cf3';
-  const VOICE_ID = process.env.CREATIFY_VOICE_ID || 'en-US-AndrewMultilingualNeural';
+  const VOICE_ID = lang === 'es' 
+    ? (process.env.CREATIFY_VOICE_ID_ES || 'es-ES-AlvaroNeural')
+    : (process.env.CREATIFY_VOICE_ID || 'en-US-AndrewMultilingualNeural');
   
   // Map voice styles to actual parameters
   const voiceParams = {
@@ -379,7 +436,7 @@ async function createVideoScenes(script: VideoScript, cards: CardData[]): Promis
         fit: index === 0 ? 'cover' : 'contain'
       },
       transition_effect: {
-        transition_in: ['fade', 'slide', 'zoom'][index % 3]
+        transition_in: 'fade' // Creatify only supports fade
       }
     });
   });
@@ -399,7 +456,7 @@ async function main() {
   try {
     // Step 1: Generate property cards (reuse existing function)
     console.log('=== STEP 1: Generate Property Cards ===\n');
-    const cardsOutput = execSync('npx tsx scripts/generate-product-cards.ts', { encoding: 'utf8' });
+    const cardsOutput = execSync('npx tsx scripts/generate-property-cards.ts', { encoding: 'utf8' });
     console.log(cardsOutput);
     
     // Load card data
@@ -425,7 +482,7 @@ async function main() {
     
     // Step 3: Create video
     console.log('\n=== STEP 3: Create Video ===\n');
-    const scenes = await createVideoScenes(script, cards);
+    const scenes = await createVideoScenes(script, cards, lang);
     
     // Submit to Creatify
     const CREATIFY_API = 'https://api.creatify.ai/api';

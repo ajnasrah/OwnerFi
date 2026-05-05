@@ -413,6 +413,11 @@ async function submitVideo(label: string, scenes: any[]): Promise<string | null>
     return null;
   }
 
+  if (!data.id) {
+    console.error(`${label} ERROR: No ID in response:`, JSON.stringify(data, null, 2));
+    return null;
+  }
+
   console.log(`${label} submitted — ID: ${data.id}`);
   return data.id;
 }
@@ -423,8 +428,9 @@ async function pollForCompletion(videoId: string): Promise<string | null> {
   for (let i = 0; i < 30; i++) {
     await new Promise(r => setTimeout(r, 20000));
     try {
+      // Note: Poll at v1 endpoint even though we submitted to v2 (matching working script)
       const res = await fetchWithRetry(
-        `${CREATIFY_API}/lipsyncs_v2/${videoId}/`,
+        `${CREATIFY_API}/lipsyncs/${videoId}/`,
         { headers: CREATIFY_HEADERS },
         { timeoutMs: 15_000, retries: 2, label: `Creatify poll trending` }
       );
@@ -434,14 +440,27 @@ async function pollForCompletion(videoId: string): Promise<string | null> {
       }
 
       const data = await res.json();
-      console.log(`   Poll ${i + 1}: ${data.status}`);
+      console.log(`   Poll ${i + 1}: ${data.status}${data.progress ? ` (${Math.round(data.progress * 100)}%)` : ''}`);
 
-      if (data.status === 'completed') {
-        console.log(`✅ Video ready: ${data.video_url}`);
-        return data.video_url;
-      } else if (data.status === 'failed') {
-        console.error(`❌ Video generation failed:`, data);
+      if (data.status === 'done' || data.status === 'completed') {
+        // v1 endpoint returns 'output' field when done
+        const videoUrl = data.output || data.video_url || data.url;
+        if (videoUrl) {
+          console.log(`✅ Video ready: ${videoUrl}`);
+          return videoUrl;
+        } else {
+          console.error(`⚠️ Status ${data.status} but no video URL. Full response:`, JSON.stringify(data, null, 2));
+          // Continue polling - API might still be processing
+        }
+      } else if (data.status === 'failed' || data.status === 'error') {
+        console.error(`❌ Video generation failed:`, JSON.stringify(data, null, 2));
         return null;
+      } else if (data.status === 'processing' || data.status === 'pending' || data.status === 'running') {
+        // Continue polling
+        continue;
+      } else {
+        // Log unexpected status
+        console.warn(`   Unexpected status: ${data.status}`);
       }
     } catch (error) {
       console.warn(`[Trending] Poll ${i + 1} failed:`, error instanceof Error ? error.message : error);

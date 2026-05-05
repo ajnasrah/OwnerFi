@@ -14,11 +14,11 @@ const EllipsisIcon = <svg className="w-5 h-5" fill="none" stroke="currentColor" 
 // ── Admin tabs (5) ──
 export function getAdminTabs(): TabItem[] {
   return [
-    { key: 'hub', label: 'Hub', href: '/admin', icon: GridIcon },
+    { key: 'hub', label: 'Hub', href: '/admin', icon: GridIcon, matchPaths: ['/admin/manage', '/admin/cash-deals', '/admin/social-dashboard'] },
     { key: 'browse', label: 'Browse', href: '/dashboard', icon: HomeIcon },
     { key: 'investor', label: 'Deals', href: '/dashboard/investor', icon: ChartIcon, matchPaths: ['/dashboard/investor'] },
     { key: 'buyers', label: 'Buyers', href: '/admin/buyers', icon: UsersIcon },
-    { key: 'more', label: 'More', href: '/admin/manage', icon: EllipsisIcon, matchPaths: ['/admin/cash-deals', '/admin/manage', '/admin/social-dashboard'] },
+    { key: 'more', label: 'More', href: '/admin', icon: EllipsisIcon },
   ];
 }
 

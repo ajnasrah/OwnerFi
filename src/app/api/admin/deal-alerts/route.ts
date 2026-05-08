@@ -107,6 +107,9 @@ export async function GET(request: NextRequest) {
 
       const percentOfArv = Math.round((price / zestimate) * 100 * 10) / 10;
 
+      // Skip properties with unreliable Zestimate data (below 40%)
+      if (percentOfArv < 40) return;
+
       // Must be under 80% ARV
       if (percentOfArv >= 80) return;
 

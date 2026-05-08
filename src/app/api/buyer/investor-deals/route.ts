@@ -310,6 +310,24 @@ export async function GET(request: NextRequest) {
     if (excludeAuctions) {
       allDeals = allDeals.filter(d => !d.isAuction && !d.isForeclosure && !d.isBankOwned);
     }
+    // Hide Zestimate data when percentOfArv is below 40% (unreliable data)
+    // This prevents showing wildly incorrect Zestimate values
+    allDeals = allDeals.map(d => {
+      if (d.percentOfArv !== null && d.percentOfArv !== undefined) {
+        if (d.percentOfArv < 40) {
+          // Hide Zestimate-related fields when data is unreliable
+          return {
+            ...d,
+            percentOfArv: null,  // Hide the percentage
+            arv: undefined,      // Hide the Zestimate/ARV
+            discount: undefined, // Hide the discount
+            zestimate: undefined // Hide the Zestimate
+          };
+        }
+      }
+      return d;
+    });
+    
     // ARV filter applies to ALL deal types when explicitly requested.
     // When user selects "Under 80% Zest", show only properties priced below
     // the specified percentage of their estimated value, regardless of deal type.

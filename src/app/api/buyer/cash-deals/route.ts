@@ -233,6 +233,15 @@ async function searchCashDealsTypesense(
       // Land detection
       isLand: doc.isLand === true || LAND_TYPES.has(((doc.propertyType as string) || '').toLowerCase()),
     };
+  }).map((deal: CashDeal & { needsWork?: boolean }) => {
+    // Hide Zestimate data when percentOfArv is below 40% (unreliable)
+    if (deal.percentOfArv !== null && deal.percentOfArv < 40) {
+      // Clear Zestimate-related fields when data is unreliable
+      deal.percentOfArv = null;
+      deal.arv = 0;
+      deal.discount = 0;
+    }
+    return deal;
   }).filter((deal: CashDeal & { needsWork?: boolean }) => {
     // Show if: under 80% ARV OR has investor keywords (needsWork)
     // Properties without zestimate (percentOfArv = null) only show if needsWork is true

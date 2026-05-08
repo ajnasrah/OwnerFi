@@ -602,6 +602,20 @@ export async function GET(request: NextRequest) {
       console.log(`[cash-deals] Fetched and cached ${allDeals.length} deals from unified collection in ${Date.now() - startTime}ms`);
     }
 
+    // Hide Zestimate data when percentOfArv is below 40% (unreliable data)
+    allDeals = allDeals.map((deal: NormalizedProperty) => {
+      if (deal.percentOfArv !== null && deal.percentOfArv !== undefined && deal.percentOfArv < 40) {
+        // Clear Zestimate-related fields when data is unreliable
+        return {
+          ...deal,
+          percentOfArv: null,
+          arv: 0,
+          discount: null
+        };
+      }
+      return deal;
+    });
+
     // Apply collection/dealType filter in memory (for backwards compatibility)
     if (collectionFilter) {
       if (collectionFilter === 'cash_houses') {

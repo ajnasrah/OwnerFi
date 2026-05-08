@@ -31,6 +31,12 @@ export function LegalFooter({
               All property information is estimated and not guaranteed. No advice is provided.
               Consult licensed professionals for all real estate, financial, and legal decisions.
             </p>
+            <p className="text-red-700 text-xs leading-relaxed mb-2">
+              <strong>Third-Party Data Notice:</strong> This platform displays property information compiled from various public sources and third-party data providers for informational purposes only. 
+              We do not originate, create, or verify this information. All trademarks, data, and content remain property of their respective owners. 
+              Property details, pricing, and availability must be independently verified. We make no representations about data accuracy or completeness.
+              Users must conduct their own due diligence before making any real estate decisions.
+            </p>
             <p className="text-red-700 text-xs leading-relaxed font-medium">
               <strong>Owner Financing Availability:</strong> Listings may or may not be available with owner financing. Financing type and availability must be independently verified with the seller or their agent.
             </p>

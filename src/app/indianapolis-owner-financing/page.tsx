@@ -19,6 +19,7 @@ export const metadata: Metadata = {
     title: 'Owner Financing Indianapolis - Better Than Rent to Own',
     description: 'Find owner financed homes across Indianapolis. Immediate ownership, no banks needed.',
   },
+  
   alternates: {
     canonical: 'https://ownerfi.ai/indianapolis-owner-financing',
   }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth-helpers';
 import { FirebaseDB } from '@/lib/firebase-db';
+import { DEAL_ALERT_PRICE } from '@/lib/pricing';
 import Stripe from 'stripe';
 
 function getStripe() {
@@ -61,13 +62,13 @@ export async function POST(request: NextRequest) {
       },
       line_items: [{
         price_data: {
-          currency: 'usd',
-          recurring: { interval: 'month' },
+          currency: DEAL_ALERT_PRICE.currency,
+          recurring: { interval: DEAL_ALERT_PRICE.interval },
           product_data: {
-            name: 'Investor Deal Alerts',
-            description: 'SMS alerts for investment deals below your ARV threshold - $5/month',
+            name: DEAL_ALERT_PRICE.name,
+            description: DEAL_ALERT_PRICE.description,
           },
-          unit_amount: 500, // $5.00 in cents
+          unit_amount: DEAL_ALERT_PRICE.amount,
         },
         quantity: 1,
       }],

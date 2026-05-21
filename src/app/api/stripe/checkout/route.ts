@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSessionWithRole } from '@/lib/auth-utils';
+import { CREDIT_PACKAGES } from '@/lib/pricing';
 import Stripe from 'stripe';
 
 function getStripe() {
@@ -7,14 +8,6 @@ function getStripe() {
     apiVersion: '2025-08-27.basil',
   });
 }
-
-// New credit package system - matches simple-checkout
-const CREDIT_PACKAGES = {
-  '1_credit': { credits: 1, price: 300, name: '1 Lead Credit', recurring: false },
-  '4_credits': { credits: 4, price: 500, name: '4 Lead Credits (Monthly)', recurring: true },
-  '10_credits': { credits: 10, price: 1000, name: '10 Lead Credits (Monthly)', recurring: true },
-  '60_credits': { credits: 60, price: 3000, name: '60 Lead Credits', recurring: false },
-};
 
 export async function POST(request: NextRequest) {
   const stripe = getStripe();

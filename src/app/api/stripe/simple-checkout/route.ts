@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
+import { CREDIT_PACKAGES } from '@/lib/pricing';
 import { ExtendedSession } from '@/types/session';
 import Stripe from 'stripe';
 
@@ -9,14 +10,6 @@ function getStripe() {
     apiVersion: '2025-08-27.basil',
   });
 }
-
-// Simple credit packages - prices in dollars
-const CREDIT_PACKAGES = {
-  '1_credit': { credits: 1, price: 300, name: '1 Lead Credit', recurring: false }, // $300
-  '4_credits': { credits: 4, price: 500, name: '4 Lead Credits (Monthly)', recurring: true }, // $500/mo
-  '10_credits': { credits: 10, price: 1000, name: '10 Lead Credits (Monthly)', recurring: true }, // $1,000/mo
-  '60_credits': { credits: 60, price: 3000, name: '60 Lead Credits', recurring: false }, // $3,000
-};
 
 export async function POST(request: NextRequest) {
   const stripe = getStripe();

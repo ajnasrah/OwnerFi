@@ -1,17 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { normalizePhone } from '@/lib/phone-utils';
 import { db } from '@/lib/firebase';
-import { 
-  collection, 
-  doc, 
-  setDoc, 
-  updateDoc, 
+import {
+  collection,
+  doc,
+  setDoc,
+  updateDoc,
   serverTimestamp,
   query,
   where,
   getDocs
 } from 'firebase/firestore';
-import { sendTwilioSMS } from '@/lib/agent-outreach/twilio-sms';
+// Aliased to avoid collision with the local `sendSMS` VAPI tool-call
+// handler defined further down in this file.
+import { sendSMS as sendTwilioSMS } from '@/lib/agent-outreach/twilio-sms';
 
 /**
  * VAPI Receptionist Webhook Handler
@@ -31,10 +33,50 @@ interface VAPIMessage {
   };
   function?: {
     name: string;
-    arguments?: Record<string, any>;
+    /**
+     * VAPI delivers tool-call arguments as opaque JSON whose shape
+     * depends on which tool was invoked (see the per-handler arg
+     * interfaces below). Typed as `unknown` here; the dispatch in
+     * [handleFunctionCall] casts to the matching per-tool shape.
+     */
+    arguments?: Record<string, unknown>;
   };
   transcript?: string;
-  analysis?: Record<string, any>;
+  analysis?: Record<string, unknown>;
+}
+
+interface CaptureContactArgs {
+  name?: string;
+  phone?: string;
+  email?: string;
+  role?: string;
+  city?: string;
+  state?: string;
+}
+
+interface ScheduleCallbackArgs {
+  preferred_time?: string;
+  reason?: string;
+}
+
+interface AddPropertyLeadArgs {
+  address?: string;
+  city?: string;
+  state?: string;
+  price?: number;
+  agent_name?: string;
+  agent_phone?: string;
+  owner_finance_confirmed?: boolean;
+}
+
+interface SendSMSArgs {
+  content_type?: string;
+  custom_message?: string;
+}
+
+interface TransferToHumanArgs {
+  reason?: string;
+  department?: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -43,20 +85,20 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const message: VAPIMessage = body.message || body;
-    
+
     // Handle different message types
     switch (message.type) {
       case 'function-call':
         return handleFunctionCall(message);
-      
+
       case 'end-of-call-report':
         return handleEndOfCall(message);
-      
+
       case 'status-update':
         // Log status updates but don't process
         console.log('📊 Status update:', message);
         return NextResponse.json({ success: true });
-      
+
       default:
         console.log('⚠️ Unknown message type:', message.type);
         return NextResponse.json({ success: true });
@@ -78,33 +120,37 @@ async function handleFunctionCall(message: VAPIMessage): Promise<NextResponse> {
 
   console.log(`  📞 Function: ${functionName}`);
   console.log(`  📱 Customer: ${customerPhone}`);
-  
+
   try {
     switch (functionName) {
       case 'capture_contact':
-        return await captureContact(args, callId);
-      
+        return await captureContact(args as CaptureContactArgs, callId);
+
       case 'schedule_callback':
-        return await scheduleCallback(args, customerPhone, callId);
-      
+        return await scheduleCallback(
+          args as ScheduleCallbackArgs,
+          customerPhone,
+          callId,
+        );
+
       case 'add_property_lead':
-        return await addPropertyLead(args, callId);
-      
+        return await addPropertyLead(args as AddPropertyLeadArgs, callId);
+
       case 'send_sms':
-        return await sendSMS(args, customerPhone);
-      
+        return await sendSMS(args as SendSMSArgs, customerPhone);
+
       case 'transfer_to_human':
-        return await transferToHuman(args);
-      
+        return await transferToHuman(args as TransferToHumanArgs);
+
       default:
         console.warn(`⚠️ Unknown function: ${functionName}`);
-        return NextResponse.json({ 
-          result: `Function ${functionName} not implemented` 
+        return NextResponse.json({
+          result: `Function ${functionName} not implemented`
         });
     }
   } catch (error) {
     console.error(`❌ Error in ${functionName}:`, error);
-    return NextResponse.json({ 
+    return NextResponse.json({
       result: `Error processing ${functionName}`,
       error: error instanceof Error ? error.message : 'Unknown error'
     });
@@ -112,20 +158,20 @@ async function handleFunctionCall(message: VAPIMessage): Promise<NextResponse> {
 }
 
 async function captureContact(
-  args: Record<string, any>,
+  args: CaptureContactArgs,
   callId?: string
 ): Promise<NextResponse> {
   const { name, phone, email, role, city, state } = args;
-  
+
   if (!phone || !role) {
-    return NextResponse.json({ 
-      result: "Missing required fields: phone and role are required" 
+    return NextResponse.json({
+      result: "Missing required fields: phone and role are required"
     });
   }
 
   const normalizedPhone = normalizePhone(phone);
   const contactId = `contact_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  
+
   // Store contact in Firestore
   const contactData = {
     id: contactId,
@@ -143,7 +189,7 @@ async function captureContact(
 
   // Store in appropriate collection based on role
   const collectionName = role === 'realtor' ? 'realtorContacts' : 'buyerContacts';
-  
+
   await setDoc(
     doc(db, collectionName, contactId),
     contactData
@@ -175,29 +221,29 @@ async function captureContact(
   }
 
   console.log(`✅ Contact captured: ${contactId} (${role})`);
-  
-  return NextResponse.json({ 
+
+  return NextResponse.json({
     result: `Contact information saved. ID: ${contactId}`,
-    contactId 
+    contactId
   });
 }
 
 async function scheduleCallback(
-  args: Record<string, any>,
+  args: ScheduleCallbackArgs,
   customerPhone?: string,
   callId?: string
 ): Promise<NextResponse> {
   const { preferred_time, reason } = args;
-  
+
   if (!customerPhone || !preferred_time) {
-    return NextResponse.json({ 
-      result: "Cannot schedule callback without phone number and preferred time" 
+    return NextResponse.json({
+      result: "Cannot schedule callback without phone number and preferred time"
     });
   }
 
   const callbackId = `callback_${Date.now()}`;
   const normalizedPhone = normalizePhone(customerPhone);
-  
+
   // Store callback request
   await setDoc(
     doc(db, 'callbackRequests', callbackId),
@@ -213,36 +259,36 @@ async function scheduleCallback(
   );
 
   console.log(`📅 Callback scheduled: ${callbackId}`);
-  
-  return NextResponse.json({ 
+
+  return NextResponse.json({
     result: `Callback scheduled for ${preferred_time}. We'll call you at ${customerPhone}.`,
-    callbackId 
+    callbackId
   });
 }
 
 async function addPropertyLead(
-  args: Record<string, any>,
+  args: AddPropertyLeadArgs,
   callId?: string
 ): Promise<NextResponse> {
-  const { 
-    address, 
-    city, 
-    state, 
-    price, 
-    agent_name, 
-    agent_phone, 
-    owner_finance_confirmed 
+  const {
+    address,
+    city,
+    state,
+    price,
+    agent_name,
+    agent_phone,
+    owner_finance_confirmed
   } = args;
 
   if (!address || !city || !state || !agent_phone) {
-    return NextResponse.json({ 
-      result: "Missing required property information" 
+    return NextResponse.json({
+      result: "Missing required property information"
     });
   }
 
   const propertyLeadId = `property_lead_${Date.now()}`;
   const normalizedAgentPhone = normalizePhone(agent_phone);
-  
+
   // Store property lead for review
   await setDoc(
     doc(db, 'propertyLeads', propertyLeadId),
@@ -282,81 +328,83 @@ async function addPropertyLead(
   }
 
   console.log(`🏠 Property lead added: ${propertyLeadId}`);
-  
-  return NextResponse.json({ 
+
+  return NextResponse.json({
     result: `Property information received. Our team will follow up about ${address}.`,
-    propertyLeadId 
+    propertyLeadId
   });
 }
 
 async function sendSMS(
-  args: Record<string, any>,
+  args: SendSMSArgs,
   customerPhone?: string
 ): Promise<NextResponse> {
   const { content_type, custom_message } = args;
-  
+
   if (!customerPhone) {
-    return NextResponse.json({ 
-      result: "Cannot send SMS without phone number" 
+    return NextResponse.json({
+      result: "Cannot send SMS without phone number"
     });
   }
 
   const normalizedPhone = normalizePhone(customerPhone);
   let messageBody = '';
-  
+
   // Determine message content based on type
   switch (content_type) {
     case 'signup_link':
       messageBody = 'Welcome to OwnerFi! Sign up free to browse owner-financed homes: https://ownerfi.ai/auth';
       break;
-    
+
     case 'property_link':
       messageBody = 'View your saved properties at: https://ownerfi.ai/dashboard/liked';
       break;
-    
+
     case 'agent_agreement':
       messageBody = 'Learn about our realtor referral program: https://ownerfi.ai/for-realtors';
       break;
-    
+
     case 'custom':
       messageBody = custom_message || 'Thank you for calling OwnerFi!';
       break;
-    
+
     default:
       messageBody = 'Thank you for calling OwnerFi! Visit https://ownerfi.ai to get started.';
   }
 
   // Send SMS via Twilio
   try {
-    await sendTwilioSMS(normalizedPhone, messageBody, {
-      source: 'receptionist',
-      contentType: content_type
-    });
-    
+    // `isResponse: true` — bypasses the business-hours guard in
+    // sendTwilioSMS because this SMS is a direct reply to a customer
+    // who just called the VAPI receptionist (inbound-initiated).
+    // Outbound marketing SMS still go through the guard via the
+    // default `isResponse: false`.
+    await sendTwilioSMS(normalizedPhone, messageBody, { isResponse: true });
+
     console.log(`📱 SMS sent to ${normalizedPhone}: ${content_type}`);
-    
-    return NextResponse.json({ 
+
+    return NextResponse.json({
       result: `Text message sent to ${customerPhone}`,
-      messageType: content_type 
+      messageType: content_type
     });
   } catch (error) {
     console.error('❌ SMS send failed:', error);
-    return NextResponse.json({ 
-      result: "Unable to send text message at this time" 
+    return NextResponse.json({
+      result: "Unable to send text message at this time"
     });
   }
 }
 
 async function transferToHuman(
-  args: Record<string, any>
+  args: TransferToHumanArgs
 ): Promise<NextResponse> {
   const { reason, department } = args;
-  
+
   console.log(`☎️ Transfer requested: ${department} - ${reason}`);
-  
+
   // In production, this would trigger a transfer to a live agent
   // For now, we'll return instructions for VAPI to handle
-  
+
   // Determine transfer number based on department
   let transferNumber = '';
   switch (department) {
@@ -372,11 +420,11 @@ async function transferToHuman(
     default:
       transferNumber = process.env.DEFAULT_PHONE_NUMBER || '+19015551234';
   }
-  
-  return NextResponse.json({ 
+
+  return NextResponse.json({
     result: `Transferring to ${department}`,
     action: 'transfer',
-    transferNumber 
+    transferNumber
   });
 }
 
@@ -385,11 +433,11 @@ async function handleEndOfCall(message: VAPIMessage): Promise<NextResponse> {
   const customerPhone = message.call?.customer?.number;
   const transcript = message.transcript || '';
   const analysis = message.analysis || {};
-  
+
   console.log(`📞 Call ended: ${callId}`);
   console.log(`  Duration: ${analysis.duration || 'unknown'}`);
   console.log(`  Customer: ${customerPhone}`);
-  
+
   if (!callId) {
     return NextResponse.json({ success: true });
   }
@@ -411,7 +459,7 @@ async function handleEndOfCall(message: VAPIMessage): Promise<NextResponse> {
   // Update any contacts created during this call
   if (customerPhone) {
     const normalizedPhone = normalizePhone(customerPhone);
-    
+
     // Check buyer contacts
     const buyerQuery = query(
       collection(db, 'buyerContacts'),
@@ -419,7 +467,7 @@ async function handleEndOfCall(message: VAPIMessage): Promise<NextResponse> {
       where('callId', '==', callId)
     );
     const buyerSnap = await getDocs(buyerQuery);
-    
+
     if (!buyerSnap.empty) {
       const contactDoc = buyerSnap.docs[0];
       await updateDoc(contactDoc.ref, {
@@ -428,7 +476,7 @@ async function handleEndOfCall(message: VAPIMessage): Promise<NextResponse> {
         updatedAt: serverTimestamp()
       });
     }
-    
+
     // Check realtor contacts
     const realtorQuery = query(
       collection(db, 'realtorContacts'),
@@ -436,7 +484,7 @@ async function handleEndOfCall(message: VAPIMessage): Promise<NextResponse> {
       where('callId', '==', callId)
     );
     const realtorSnap = await getDocs(realtorQuery);
-    
+
     if (!realtorSnap.empty) {
       const contactDoc = realtorSnap.docs[0];
       await updateDoc(contactDoc.ref, {
@@ -446,10 +494,10 @@ async function handleEndOfCall(message: VAPIMessage): Promise<NextResponse> {
       });
     }
   }
-  
+
   console.log('✅ Call log saved');
-  
-  return NextResponse.json({ 
+
+  return NextResponse.json({
     success: true,
     callId,
     message: 'Call ended and logged successfully'

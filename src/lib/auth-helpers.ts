@@ -9,6 +9,7 @@ import { authOptions } from './auth';
 import { NextResponse } from 'next/server';
 import { ErrorResponses } from './api-error-handler';
 import { AuditHelpers } from './audit-logger';
+import { getSessionFromBearer } from './mobile-auth-bridge';
 
 // Re-export extractActorFromRequest for convenience
 export { extractActorFromRequest } from './audit-logger';
@@ -62,12 +63,19 @@ export async function getSessionWithRole(
 }
 
 /**
- * Require authentication - returns error response if not authenticated
+ * Require authentication - returns error response if not authenticated.
+ *
+ * Tries the NextAuth session cookie first (web). If absent, falls
+ * back to verifying an `Authorization: Bearer <Firebase ID token>`
+ * header via getSessionFromBearer (mobile). Either path returns the
+ * same ExtendedSession shape — route handlers can't tell which
+ * transport authenticated the call.
  */
 export async function requireAuth(
   request: Request
 ): Promise<{ session: ExtendedSession } | { error: NextResponse }> {
-  const session = await getTypedSession();
+  const session =
+    (await getTypedSession()) ?? (await getSessionFromBearer(request));
 
   if (!session?.user) {
     await AuditHelpers.logAuthFailure(
@@ -85,36 +93,35 @@ export async function requireAuth(
 }
 
 /**
- * Require specific role - returns error response if not authorized
+ * Require specific role - returns error response if not authorized.
+ *
+ * Delegates authentication to requireAuth so the NextAuth-session +
+ * Firebase-Bearer fallback only lives in one place; this helper just
+ * adds the role check on top.
  */
 export async function requireRole(
   request: Request,
   requiredRole: UserRole | UserRole[]
 ): Promise<{ session: ExtendedSession } | { error: NextResponse }> {
-  const session = await getSessionWithRole(requiredRole);
+  const authResult = await requireAuth(request);
+  if ('error' in authResult) return authResult;
 
-  if (!session) {
-    const anySession = await getTypedSession();
+  const { session } = authResult;
+  const roles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
+  if (roles.includes(session.user.role)) return { session };
 
-    await AuditHelpers.logAuthFailure(
-      {
-        userId: anySession?.user?.id,
-        email: anySession?.user?.email,
-        role: anySession?.user?.role,
-        ipAddress: request.headers.get('x-forwarded-for') || 'unknown',
-        userAgent: request.headers.get('user-agent') || 'unknown',
-      },
-      `Required role: ${Array.isArray(requiredRole) ? requiredRole.join(' or ') : requiredRole}, found: ${anySession?.user?.role || 'none'}`
-    );
+  await AuditHelpers.logAuthFailure(
+    {
+      userId: session.user.id,
+      email: session.user.email,
+      role: session.user.role,
+      ipAddress: request.headers.get('x-forwarded-for') || 'unknown',
+      userAgent: request.headers.get('user-agent') || 'unknown',
+    },
+    `Required role: ${Array.isArray(requiredRole) ? requiredRole.join(' or ') : requiredRole}, found: ${session.user.role}`
+  );
 
-    return {
-      error: anySession?.user
-        ? ErrorResponses.forbidden('Insufficient permissions')
-        : ErrorResponses.unauthorized()
-    };
-  }
-
-  return { session };
+  return { error: ErrorResponses.forbidden('Insufficient permissions') };
 }
 
 /**

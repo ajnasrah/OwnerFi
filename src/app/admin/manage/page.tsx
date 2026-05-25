@@ -783,7 +783,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="h-screen overflow-hidden bg-[#111625] flex flex-col md:flex-row">
+    <div className="h-screen overflow-hidden bg-[#111625] flex flex-col md:flex-row md:pl-32">
       {/* Mobile Dropdown Navigation */}
       <div className="md:hidden bg-slate-800 border-b border-slate-700 p-4">
         <select
@@ -802,70 +802,10 @@ export default function AdminDashboard() {
         </select>
       </div>
 
-      {/* Desktop Sidebar */}
-      <div className="hidden md:flex w-64 lg:w-72 bg-slate-800 shadow-xl border-r border-slate-700 flex-shrink-0 relative flex-col h-screen">
-        {/* Navigation Menu */}
-        <nav className="p-4 space-y-2 flex-1 overflow-y-auto">
-          {[
-            { key: 'overview', label: 'Overview', icon: '📊', count: null },
-            { key: 'properties', label: 'Properties', icon: '🏠', count: stats.totalProperties },
-            { key: 'upload', label: 'Upload', icon: '📤', count: null },
-            { key: 'buyers', label: 'Buyers', icon: '👤', count: stats.totalBuyers },
-            { key: 'realtors', label: 'Realtors', icon: '🏢', count: stats.totalRealtors },
-            { key: 'disputes', label: 'Disputes', icon: '⚖️', count: stats.pendingDisputes },
-            { key: 'contacts', label: 'Contacts', icon: '📧', count: null },
-            { key: 'social', label: 'Social & Articles', icon: '📱', count: null },
-          ].map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key as any)}
-              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-left transition-all duration-200 group ${
-                activeTab === tab.key
-                  ? 'bg-gradient-to-r from-[#00BC7D] to-[#009B66] text-white shadow-lg transform scale-[1.02]'
-                  : 'text-slate-300 hover:bg-slate-700 hover:text-white'
-              }`}
-            >
-              <div className="flex items-center space-x-3">
-                <span className="text-lg">{tab.icon}</span>
-                <span className="font-medium">{tab.label}</span>
-              </div>
-              {tab.count !== null && tab.count > 0 && (
-                <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
-                  activeTab === tab.key
-                    ? 'bg-slate-800/20 text-white'
-                    : tab.key === 'disputes'
-                    ? 'bg-red-100 text-red-700 animate-pulse'
-                    : 'bg-slate-200 text-slate-300'
-                }`}>
-                  {tab.count}
-                </span>
-              )}
-            </button>
-          ))}
-        </nav>
-
-        {/* External Dashboards */}
-        <div className="p-4 space-y-2 border-t border-slate-700 flex-shrink-0">
-          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider px-4 mb-2">
-            Dashboards
-          </div>
-          <Link
-            href="/admin/analytics"
-            className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left transition-all duration-200 text-slate-300 hover:bg-slate-700 hover:text-white"
-          >
-            <span className="text-lg">📈</span>
-            <span className="font-medium">Analytics</span>
-          </Link>
-          <Link
-            href="/admin/costs"
-            className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left transition-all duration-200 text-slate-300 hover:bg-slate-700 hover:text-white"
-          >
-            <span className="text-lg">💰</span>
-            <span className="font-medium">Cost Tracking</span>
-          </Link>
-        </div>
-
-      </div>
+      {/* Desktop Sidebar - Disabled to avoid conflict with BottomTabBar navigation */}
+      {/* <div className="hidden md:flex w-64 lg:w-72 bg-slate-800 shadow-xl border-r border-slate-700 flex-shrink-0 relative flex-col h-screen">
+        ... navigation content removed ...
+      </div> */}
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col w-full">

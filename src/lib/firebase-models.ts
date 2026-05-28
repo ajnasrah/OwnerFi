@@ -7,8 +7,14 @@ import { Timestamp } from 'firebase/firestore';
 export interface User {
   id: string;
   email: string;
-  name: string; 
+  name: string;
   phone?: string; // Optional phone number
+  // Whether `phone` has been OTP-verified by the user via the
+  // post-signup `POST /api/auth/verify-phone` flow (or the original
+  // phone-OTP signup path, which implies verification at create time).
+  // Mobile reads this off the Firestore user doc and gates the
+  // pulsing-badge + verify-phone tile on it. Missing/false = unverified.
+  phoneNumberVerified?: boolean;
   company?: string; // Optional company name
   licenseState?: string; // Optional license state
   stripeCustomerId?: string; // Optional Stripe customer ID

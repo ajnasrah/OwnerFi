@@ -220,6 +220,11 @@ export async function POST(request: NextRequest) {
       const { FirebaseDB } = await import('@/lib/firebase-db');
       await FirebaseDB.updateDocument('users', existingEmailUser.id, {
         phone: normalizedPhone,
+        // Phone reached this branch through an OTP-verified signup
+        // flow, so the number is verified from the moment we link it
+        // to the existing email account. Mobile reads this bit to
+        // gate the verify-phone enforcement badge.
+        phoneNumberVerified: true,
         updatedAt: Timestamp.now(),
         migratedToPhoneAuth: true,
         migratedAt: Timestamp.now()
@@ -236,6 +241,10 @@ export async function POST(request: NextRequest) {
           name: `${firstName} ${lastName}`.trim(),
           email: email.toLowerCase().trim(),
           phone: normalizedPhone,
+          // Phone-OTP signup verifies the number before this point,
+          // so the user lands fully phone-verified — mobile's
+          // verify-phone enforcement badge stays hidden for them.
+          phoneNumberVerified: true,
           role,
           password: '' // Empty password for phone-auth users
         });

@@ -110,6 +110,13 @@ export default function AdminHub() {
       title: 'Admin Panel',
       description: 'Properties, realtors, buyers in bulk',
       color: 'purple',
+    },
+    {
+      href: '/admin/smart-auction',
+      icon: '🚗',
+      title: 'Smart Auction',
+      description: 'Auto-fill vehicle damages with AI mapping',
+      color: 'blue',
     }
   ];
 
@@ -117,6 +124,7 @@ export default function AdminHub() {
     { href: '/admin/realtors', label: 'Realtors' },
     { href: '/admin/scraper', label: 'Scraper Upload' },
     { href: '/admin/manual-upload', label: 'Zillow Upload' },
+    { href: '/admin/smart-auction', label: 'Smart Auction' },
     { href: '/admin/logs', label: 'System Logs' },
     { href: '/admin/ghl-logs', label: 'GHL Logs' },
     { href: '/admin/cash-deals', label: 'Cash Deals' },

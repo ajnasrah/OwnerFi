@@ -550,21 +550,21 @@ async function main() {
       accounts: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'twitter', 'threads', 'bluesky']
     };
     
-    const lateResponse = await fetch('https://api.late.dev/posts', {
+    const lateResponse = await fetch('https://api.zernio.com/v1/posts', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${process.env.LATE_API_KEY}`,
         'Content-Type': 'application/json',
-        'X-Profile-Id': process.env.LATE_OWNERFI_PROFILE_ID!
+        'Profile-Key': process.env.LATE_OWNERFI_PROFILE_ID!
       },
       body: JSON.stringify(latePayload)
     });
     
     if (lateResponse.ok) {
-      console.log('✅ Posted to all platforms successfully!');
+      console.log('✅ Posted to all social platforms via Zernio successfully!');
     } else {
       const error = await lateResponse.json();
-      console.error('❌ Late.dev error:', error);
+      console.error('❌ Zernio API error:', error);
       
       // If duplicate, add more uniqueness
       if (lateResponse.status === 409) {
@@ -574,12 +574,12 @@ async function main() {
         latePayload.description = `${randomEmoji} ${uniqueCaption} | ${Date.now()}`;
         latePayload.name = `${uniqueTitle} #${Math.random().toString(36).substr(2, 5)}`;
         
-        const retryResponse = await fetch('https://api.late.dev/posts', {
+        const retryResponse = await fetch('https://api.zernio.com/v1/posts', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${process.env.LATE_API_KEY}`,
             'Content-Type': 'application/json',
-            'X-Profile-Id': process.env.LATE_OWNERFI_PROFILE_ID!
+            'Profile-Key': process.env.LATE_OWNERFI_PROFILE_ID!
           },
           body: JSON.stringify(latePayload)
         });

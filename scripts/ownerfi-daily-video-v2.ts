@@ -434,10 +434,10 @@ Key: Make people curious about alternative home buying without being salesy.`;
     
     // Combine all hashtags with variety
     parsed.hashtags = [
-      ...parsed.hashtags.slice(0, 3),
-      ...locationHashtags.slice(0, 2),
-      ...timeHashtags.slice(0, 1),
-      ...seasonHashtags.slice(0, 1)
+      ...(parsed.hashtags || []).slice(0, 3),
+      ...(locationHashtags || []).slice(0, 2),
+      ...(timeHashtags || []).slice(0, 1),
+      ...(seasonHashtags || []).slice(0, 1)
     ];
     
     // Ensure voiceStyle is always defined
@@ -551,20 +551,23 @@ async function main() {
   
   const lang = process.argv.includes('--lang=es') ? 'es' : 'en';
   const dryRun = process.argv.includes('--dry-run');
+  const monitor = new PipelineMonitor();
   
   try {
     // Step 1: Generate property cards (reuse existing function)
-    console.log('=== STEP 1: Generate Property Cards ===\n');
+    monitor.startStep('Generate Property Cards');
     const cardsOutput = execSync('npx tsx scripts/generate-property-cards.ts', { encoding: 'utf8' });
     console.log(cardsOutput);
+    monitor.endStep('Generate Property Cards');
     
     // Load card data
     const cardsData = await fs.readFile('/tmp/ownerfi-cards.json', 'utf8');
     const cards: CardData[] = JSON.parse(cardsData);
     
     // Step 2: Generate dynamic script
-    console.log('\n=== STEP 2: Generate Dynamic Script ===\n');
+    monitor.startStep('Generate Dynamic Script');
     const script = await generateDynamicScript(cards, lang);
+    monitor.endStep('Generate Dynamic Script');
     
     console.log(`Theme: ${script.theme}`);
     console.log(`Structure: ${script.structure}`);
@@ -580,7 +583,7 @@ async function main() {
     }
     
     // Step 3: Create video
-    console.log('\n=== STEP 3: Create Video ===\n');
+    monitor.startStep('Create Video');
     const scenes = await createVideoScenes(script, cards, lang);
     
     // Submit to Creatify
@@ -640,6 +643,7 @@ async function main() {
       if (status.status === 'done') {
         videoUrl = status.output;
         console.log(`✅ Video ready: ${videoUrl}`);
+        monitor.endStep('Create Video');
         break;
       } else if (status.status === 'failed') {
         throw new Error('Video generation failed');
@@ -652,8 +656,8 @@ async function main() {
       throw new Error('Video generation timed out');
     }
     
-    // Step 4: Post to Late.dev with unique content
-    console.log('\n=== STEP 4: Post to Social Media ===\n');
+    // Step 4: Post to social media with unique content
+    monitor.startStep('Post to Social Media');
     
     // Add timestamp to make content unique
     const uniqueCaption = `${script.caption} | ${new Date().toLocaleTimeString()}`;
@@ -691,6 +695,7 @@ async function main() {
     
     if (lateResponse.ok) {
       console.log('✅ Posted to all social platforms via Zernio successfully!');
+      monitor.endStep('Post to Social Media');
     } else {
       const error = await lateResponse.json();
       console.error('❌ Zernio API error:', error);
@@ -730,10 +735,12 @@ async function main() {
       success: true
     }, { merge: true });
     
+    await monitor.finish();
     console.log('\n✅ Pipeline complete!');
     
   } catch (error) {
     console.error('Pipeline failed:', error);
+    await monitor.finish();
     process.exit(1);
   }
 }

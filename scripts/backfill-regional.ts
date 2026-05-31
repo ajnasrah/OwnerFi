@@ -83,15 +83,29 @@ async function backfillRegional() {
       return;
     }
     
-    // Step 3: Get property details
+    // Step 3: Get property details (in batches)
     console.log('\n[STEP 3] Getting property details...');
     const propertyUrls = newProperties
       .map((p: any) => p.detailUrl || p.url)
       .filter((url: string) => url && url.includes('zillow.com'))
       .slice(0, 2500); // Process up to 2500 properties
     
-    const detailedProperties = await runDetailScraper(propertyUrls, { timeoutSecs: 300 });
-    console.log(`Got ${detailedProperties.length} detailed properties`);
+    const detailedProperties: any[] = [];
+    const batchSize = 500;
+    
+    for (let i = 0; i < propertyUrls.length; i += batchSize) {
+      const batch = propertyUrls.slice(i, i + batchSize);
+      console.log(`Getting details for batch ${Math.floor(i/batchSize) + 1} (${batch.length} properties)...`);
+      try {
+        const batchDetails = await runDetailScraper(batch, { timeoutSecs: 300 });
+        detailedProperties.push(...batchDetails);
+        console.log(`  Batch complete: ${batchDetails.length} properties`);
+      } catch (error: any) {
+        console.error(`  Batch failed: ${error.message}`);
+      }
+    }
+    
+    console.log(`Got ${detailedProperties.length} detailed properties total`);
     
     // Merge images from search results
     const searchByZpid = new Map();

@@ -22,7 +22,7 @@ export const revalidate = 0;
 
 export const metadata: Metadata = {
   title: "Ownerfi - Owner Financed Properties | No Bank Financing Needed",
-  description: "Find owner financed homes in Texas, Florida, and Georgia. Skip the bank, buy directly from owners with flexible financing. Low down payments, no credit checks required.",
+  description: "Find owner financed homes nationwide. Skip the bank, buy directly from owners with flexible financing. Low down payments, no credit checks required.",
   keywords: "owner financing, owner financed homes, seller financing, no bank financing, buy house without bank, owner finance texas, owner finance florida, owner finance georgia, creative financing, rent to own homes",
   authors: [{ name: "Ownerfi" }],
   creator: "Ownerfi",
@@ -44,7 +44,7 @@ export const metadata: Metadata = {
     url: 'https://ownerfi.ai',
     siteName: 'Ownerfi',
     title: 'Ownerfi - Owner Financed Properties | No Bank Financing Needed',
-    description: 'Find owner financed homes in Texas, Florida, and Georgia. Skip the bank with flexible seller financing options.',
+    description: 'Find owner financed homes nationwide. Skip the bank with flexible seller financing options.',
     images: [
       {
         url: 'https://ownerfi.ai/og-image.png',

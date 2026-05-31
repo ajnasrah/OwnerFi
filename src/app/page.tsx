@@ -22,10 +22,10 @@ export const metadata: Metadata = {
     url: 'https://ownerfi.ai',
     siteName: 'Ownerfi',
     title: 'Owner Financed Homes | No Bank Financing Needed',
-    description: 'Find owner financed properties in Texas, Florida, and Georgia. Skip the bank with flexible seller financing options. Low down payments, bad credit OK.',
+    description: 'Find owner financed properties nationwide. Skip the bank with flexible seller financing options. Low down payments, bad credit OK.',
     images: [
       {
-        url: 'https://ownerfi.ai/og-homepage.png',
+        url: 'https://ownerfi.ai/og-image.png',
         width: 1200,
         height: 630,
         alt: 'Ownerfi - Owner Financed Properties Platform',
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Owner Financed Homes - No Bank Needed | Ownerfi',
     description: 'Find seller financed homes with flexible terms. Skip traditional bank financing.',
-    images: ['https://ownerfi.ai/og-homepage.png'],
+    images: ['https://ownerfi.ai/og-image.png'],
     creator: '@ownerfi',
   },
 

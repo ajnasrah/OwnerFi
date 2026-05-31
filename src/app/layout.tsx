@@ -58,8 +58,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Ownerfi - Owner Financed Properties',
-    description: 'Find owner financed homes with flexible financing. No bank needed.',
+    title: 'Ownerfi - Owner Financed Properties | No Bank Financing Needed',
+    description: 'Find owner financed homes nationwide. Skip the bank with flexible seller financing options.',
     images: ['https://ownerfi.ai/og-image.png'],
   },
   alternates: {

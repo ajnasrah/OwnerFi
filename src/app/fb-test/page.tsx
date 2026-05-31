@@ -17,6 +17,12 @@ export const metadata: Metadata = {
     ],
     type: 'website',
   },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Facebook Test Page',
+    description: 'This is a test page to verify Facebook Open Graph tags are working',
+    images: ['https://ownerfi.ai/og-image.png'],
+  },
 };
 
 export default function FacebookTestPage() {

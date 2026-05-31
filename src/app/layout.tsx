@@ -51,6 +51,7 @@ export const metadata: Metadata = {
         width: 1200,
         height: 630,
         alt: 'Ownerfi - Owner Financed Properties',
+        type: 'image/png',
       },
     ],
   },
@@ -69,7 +70,12 @@ export const metadata: Metadata = {
     title: "Ownerfi"
   },
   other: {
-    'mobile-web-app-capable': 'yes'
+    'mobile-web-app-capable': 'yes',
+    'fb:app_id': '590921764080268',
+    'og:image:secure_url': 'https://ownerfi.ai/og-image.png',
+    'og:image:width': '1200',
+    'og:image:height': '630',
+    'og:image:alt': 'Ownerfi - Find Owner Financed Properties',
   },
   formatDetection: {
     telephone: false,

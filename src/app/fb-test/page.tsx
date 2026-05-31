@@ -1,27 +1,46 @@
 import { Metadata } from 'next';
 
+// Force override all parent metadata to prevent inheritance issues
 export const metadata: Metadata = {
+  metadataBase: new URL('https://ownerfi.ai'),
   title: 'Facebook Test Page',
   description: 'Testing Facebook Open Graph tags',
+  
+  // Explicitly set all OpenGraph properties
   openGraph: {
     title: 'Facebook Test Page',
     description: 'This is a test page to verify Facebook Open Graph tags are working',
     url: 'https://ownerfi.ai/fb-test',
     siteName: 'Ownerfi',
+    locale: 'en_US',
+    type: 'website',
     images: [
       {
         url: 'https://ownerfi.ai/og-image.png',
         width: 1200,
         height: 630,
+        alt: 'Test Page Image',
       },
     ],
-    type: 'website',
   },
+  
+  // Explicitly override Twitter to match OpenGraph
   twitter: {
     card: 'summary_large_image',
-    title: 'Facebook Test Page',
+    site: '@ownerfi',
+    creator: '@ownerfi',
+    title: 'Facebook Test Page', // Must match og:title exactly
     description: 'This is a test page to verify Facebook Open Graph tags are working',
-    images: ['https://ownerfi.ai/og-image.png'],
+    images: {
+      url: 'https://ownerfi.ai/og-image.png',
+      alt: 'Test Page Image',
+    },
+  },
+  
+  // Disable robots for test page
+  robots: {
+    index: false,
+    follow: false,
   },
 };
 

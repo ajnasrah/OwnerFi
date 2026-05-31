@@ -316,8 +316,8 @@ export async function GET(request: NextRequest) {
       await logRef.update({
         batchSize: toProcess.length,
         problematicCount: problematicDocs.length,
-        neverCheckedCount: neverCheckedSnap.size,
-        oldCheckedCount: oldCheckedSnap.size,
+        neverCheckedCount: neverCheckedDocs.length,
+        oldCheckedCount: oldCheckedDocs.length,
       });
 
       // Run Apify scraper

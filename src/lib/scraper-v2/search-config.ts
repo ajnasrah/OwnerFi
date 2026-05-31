@@ -446,22 +446,6 @@ export const SEARCH_CONFIGS: SearchConfig[] = [
     type: 'cash_deals',
     sendToGHL: true,
   },
-
-  // ===== SEARCH 3: CASH DEALS (Targeted Zips) =====
-  // 30 per-zip URLs (Knoxville TN, Athens GA, Columbus OH)
-  // Filters: $40k–$150k, monthly payment ≤ $55k, built 1970+, SFR only
-  // Focus on brick homes with character in owner-occupied neighborhoods
-  {
-    id: 'cash-deals-targeted-zips',
-    name: 'Cash Deals - Targeted Zips (1970+ Brick Homes)',
-    description: `Per-zip search for 1970+ brick homes across ${TARGETED_CASH_ZIPS.length} premium zips - sends to GHL`,
-    url: TARGETED_ZIP_URLS[0],
-    urls: TARGETED_ZIP_URLS,
-    maxItems: 2500,
-    type: 'cash_deals',
-    sendToGHL: true,
-    zipFilter: TARGETED_CASH_ZIPS,
-  },
 ];
 
 /**

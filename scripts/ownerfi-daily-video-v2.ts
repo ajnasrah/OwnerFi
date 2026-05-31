@@ -375,10 +375,11 @@ Key: Make people curious about alternative home buying without being salesy.`;
 
 async function createVideoScenes(script: VideoScript, cards: CardData[], lang: 'en' | 'es' = 'en'): Promise<any[]> {
   const scenes = [];
-  const AVATAR_ID = process.env.CREATIFY_AVATAR_ID || 'jeremy_e86cf3';
+  // Use valid UUIDs from the working realtor script
+  const AVATAR_ID = process.env.CREATIFY_AVATAR_ID || '22653e70-2320-422f-84b4-348f2260cc3c'; // Amir avatar
   const VOICE_ID = lang === 'es' 
-    ? (process.env.CREATIFY_VOICE_ID_ES || 'es-ES-AlvaroNeural')
-    : (process.env.CREATIFY_VOICE_ID || 'en-US-AndrewMultilingualNeural');
+    ? (process.env.CREATIFY_VOICE_ID_ES || 'f20167ac-d1be-452c-b5a7-e48ea0ede3a9')
+    : (process.env.CREATIFY_VOICE_ID || 'f20167ac-d1be-452c-b5a7-e48ea0ede3a9');
   
   // Map voice styles to actual parameters
   const voiceParams = {

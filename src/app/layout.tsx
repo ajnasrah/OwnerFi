@@ -55,8 +55,6 @@ export const metadata: Metadata = {
         secureUrl: 'https://ownerfi.ai/og-image.png',
       },
     ],
-    // @ts-ignore - Next.js doesn't have this in types but Facebook requires it
-    'fb:app_id': '590921764080268',
   },
   twitter: {
     card: 'summary_large_image',
@@ -102,6 +100,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full" data-scroll-behavior="smooth">
       <head>
+        {/* Facebook App ID - Must use property attribute */}
+        <meta property="fb:app_id" content="590921764080268" />
+        
         {/* Favicons & app icons */}
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />

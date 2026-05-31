@@ -361,14 +361,26 @@ async function runUnifiedScraper(): Promise<{
     let detailedProperties: ScrapedProperty[] = [];
 
     if (urlsToProcess.length > 0) {
-      try {
-        detailedProperties = await runDetailScraper(urlsToProcess, { timeoutSecs: 300 });
-        console.log(`[DETAILS] Got ${detailedProperties.length} detailed properties`);
-      } catch (detailError: any) {
-        console.error(`[DETAILS] Error: ${detailError.message}`);
-        // Fall back to search results without details
-        detailedProperties = newProperties.slice(0, MAX_DETAIL_URLS);
+      // Process in batches of 500 to avoid timeouts
+      const BATCH_SIZE = 500;
+      
+      for (let i = 0; i < urlsToProcess.length; i += BATCH_SIZE) {
+        const batch = urlsToProcess.slice(i, i + BATCH_SIZE);
+        console.log(`[DETAILS] Processing batch ${Math.floor(i/BATCH_SIZE) + 1} (${batch.length} properties)...`);
+        
+        try {
+          const batchDetails = await runDetailScraper(batch, { timeoutSecs: 300 });
+          detailedProperties.push(...batchDetails);
+          console.log(`  Batch complete: ${batchDetails.length} properties`);
+        } catch (detailError: any) {
+          console.error(`  Batch failed: ${detailError.message}`);
+          // Add search results as fallback for failed batch
+          const fallbackProps = newProperties.slice(i, i + BATCH_SIZE);
+          detailedProperties.push(...fallbackProps);
+        }
       }
+      
+      console.log(`[DETAILS] Got ${detailedProperties.length} detailed properties total`);
     }
 
     // MERGE: Copy images from search results to detail results

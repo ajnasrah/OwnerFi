@@ -33,8 +33,6 @@ export const metadata: Metadata = {
         secureUrl: 'https://ownerfi.ai/og-image.png',
       },
     ],
-    // @ts-ignore - Next.js doesn't have this in types but Facebook requires it
-    'fb:app_id': '590921764080268',
   },
 
   twitter: {

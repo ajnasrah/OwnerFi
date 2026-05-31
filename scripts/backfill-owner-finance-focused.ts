@@ -7,19 +7,18 @@ import {
   createUnifiedPropertyDoc 
 } from '../src/lib/scraper-v2/property-transformer';
 import { indexPropertiesBatch } from '../src/lib/typesense/sync';
-import { sendBatchToGHLWebhook, toGHLPayload } from '../src/lib/scraper-v2/ghl-webhook';
 
-async function backfillRegional() {
-  console.log('=== REGIONAL BACKFILL SEARCH ===');
+async function backfillOwnerFinanceFocused() {
+  console.log('=== OWNER FINANCE FOCUSED BACKFILL ===');
   console.log('Time:', new Date().toISOString());
-  console.log('Search: Regional with quality filters (NO day limit for backfill)');
-  console.log('Filters: 3+ beds, 1.5+ baths, built 1950+, no condos/land/55+');
+  console.log('Search: Owner finance with all filters (no foreclosure, no 55+, built 1950+, no MF/land/apartments/manufactured)');
+  console.log('Expected: ~3,500 properties');
   console.log('');
   
   const { db } = getFirebaseAdmin();
   
-  // Same URL but WITHOUT the doz (days on Zillow) filter for backfill
-  const backfillUrl = 'https://www.zillow.com/homes/for_sale/?searchQueryState=%7B%22isMapVisible%22%3Atrue%2C%22mapBounds%22%3A%7B%22north%22%3A42.94690053337595%2C%22south%22%3A32.73013902510411%2C%22east%22%3A-90.31017955650849%2C%22west%22%3A-103.36193736900849%7D%2C%22mapZoom%22%3A7%2C%22filterState%22%3A%7B%22sort%22%3A%7B%22value%22%3A%22globalrelevanceex%22%7D%2C%22nc%22%3A%7B%22value%22%3Afalse%7D%2C%22pmf%22%3A%7B%22value%22%3Atrue%7D%2C%22pf%22%3A%7B%22value%22%3Atrue%7D%2C%22price%22%3A%7B%22min%22%3A0%2C%22max%22%3A700000%7D%2C%22mp%22%3A%7B%22min%22%3Anull%2C%22max%22%3A55000%7D%2C%22tow%22%3A%7B%22value%22%3Afalse%7D%2C%22con%22%3A%7B%22value%22%3Afalse%7D%2C%22land%22%3A%7B%22value%22%3Afalse%7D%2C%22apa%22%3A%7B%22value%22%3Afalse%7D%2C%22manu%22%3A%7B%22value%22%3Afalse%7D%2C%22apco%22%3A%7B%22value%22%3Afalse%7D%2C%22built%22%3A%7B%22min%22%3A1950%7D%2C%2255plus%22%3A%7B%22value%22%3A%22e%22%7D%2C%22beds%22%3A%7B%22min%22%3A3%7D%2C%22baths%22%3A%7B%22min%22%3A1.5%7D%7D%2C%22isListVisible%22%3Atrue%2C%22customRegionId%22%3A%22df7046a1c6X1-CR13v9mnyofzovu_179s8e%22%2C%22pagination%22%3A%7B%7D%2C%22usersSearchTerm%22%3A%22%22%7D';
+  // Focused search with all the filters
+  const backfillUrl = 'https://www.zillow.com/homes/for_sale/?searchQueryState=%7B%22pagination%22%3A%7B%7D%2C%22isMapVisible%22%3Atrue%2C%22mapBounds%22%3A%7B%22west%22%3A-124.35063425572206%2C%22east%22%3A-72.14360300572206%2C%22south%22%3A4.056014034205165%2C%22north%22%3A48.730804337116965%7D%2C%22mapZoom%22%3A5%2C%22usersSearchTerm%22%3A%22%22%2C%22customRegionId%22%3A%227737068f7fX1-CR1vsn1vnm6xxbg_1d5w1n%22%2C%22filterState%22%3A%7B%22sort%22%3A%7B%22value%22%3A%22globalrelevanceex%22%7D%2C%22pmf%22%3A%7B%22value%22%3Atrue%7D%2C%22pf%22%3A%7B%22value%22%3Atrue%7D%2C%22price%22%3A%7B%22min%22%3A0%2C%22max%22%3A750000%7D%2C%22att%22%3A%7B%22value%22%3A%22%5C%22owner%20financing%5C%22%20%2C%20%5C%22seller%20financing%5C%22%20%2C%20%5C%22owner%20carry%5C%22%20%2C%20%5C%22seller%20carry%5C%22%20%2C%20%5C%22owner%20terms%5C%22%20%2C%20%5C%22seller%20terms%5C%22%20%2C%20%5C%22rent%20to%20own%5C%22%20%2C%20%5C%22lease%20option%5C%22%20%2C%20%5C%22contract%20for%20deed%5C%22%20%2C%20%5C%22land%20contract%5C%22%20%2C%20%5C%22assumable%20loan%5C%22%20%2C%20%5C%22no%20bank%20needed%5C%22%22%7D%2C%2255plus%22%3A%7B%22value%22%3A%22e%22%7D%2C%22fore%22%3A%7B%22value%22%3Afalse%7D%2C%22mf%22%3A%7B%22value%22%3Afalse%7D%2C%22land%22%3A%7B%22value%22%3Afalse%7D%2C%22apa%22%3A%7B%22value%22%3Afalse%7D%2C%22manu%22%3A%7B%22value%22%3Afalse%7D%2C%22auc%22%3A%7B%22value%22%3Afalse%7D%2C%22built%22%3A%7B%22min%22%3A1950%7D%7D%2C%22isListVisible%22%3Atrue%7D';
   
   const metrics = {
     totalFound: 0,
@@ -28,7 +27,7 @@ async function backfillRegional() {
     savedOwnerFinance: 0,
     savedCashDeal: 0,
     savedBoth: 0,
-    sentToGHL: 0,
+    indexed: 0,
     errors: [] as any[]
   };
   
@@ -36,7 +35,7 @@ async function backfillRegional() {
     // Step 1: Run search
     console.log('[STEP 1] Running search scraper...');
     const searchResults = await runSearchScraper([backfillUrl], {
-      maxResults: 2500,
+      maxResults: 4000, // Set to 4000 to capture all ~3500
       mode: 'pagination'
     });
     
@@ -83,15 +82,21 @@ async function backfillRegional() {
       return;
     }
     
-    // Step 3: Get property details
+    // Step 3: Get property details (in batches of 500)
     console.log('\n[STEP 3] Getting property details...');
+    const allDetailedProperties: any[] = [];
     const propertyUrls = newProperties
       .map((p: any) => p.detailUrl || p.url)
-      .filter((url: string) => url && url.includes('zillow.com'))
-      .slice(0, 2500); // Process up to 2500 properties
+      .filter((url: string) => url && url.includes('zillow.com'));
     
-    const detailedProperties = await runDetailScraper(propertyUrls, { timeoutSecs: 300 });
-    console.log(`Got ${detailedProperties.length} detailed properties`);
+    for (let i = 0; i < propertyUrls.length; i += 500) {
+      const batch = propertyUrls.slice(i, i + 500);
+      console.log(`Getting details for batch ${Math.floor(i/500) + 1} (${batch.length} properties)...`);
+      const detailedBatch = await runDetailScraper(batch, { timeoutSecs: 300 });
+      allDetailedProperties.push(...detailedBatch);
+    }
+    
+    console.log(`Got ${allDetailedProperties.length} detailed properties total`);
     
     // Merge images from search results
     const searchByZpid = new Map();
@@ -101,7 +106,7 @@ async function backfillRegional() {
       }
     }
     
-    for (const prop of detailedProperties) {
+    for (const prop of allDetailedProperties) {
       if (!prop.imgSrc && prop.zpid) {
         const searchItem = searchByZpid.get(String(prop.zpid));
         if (searchItem?.imgSrc) {
@@ -115,9 +120,8 @@ async function backfillRegional() {
     const batch = db.batch();
     let batchCount = 0;
     const typesenseProps: any[] = [];
-    const ghlProps: any[] = [];
     
-    for (const raw of detailedProperties) {
+    for (const raw of allDetailedProperties) {
       try {
         const property = transformProperty(raw, 'backfill', 'unified');
         const validation = validateProperty(property);
@@ -143,11 +147,6 @@ async function backfillRegional() {
         const docRef = db.collection('properties').doc(docId);
         const docData = createUnifiedPropertyDoc(property, filterResult);
         
-        // Mark as regional for GHL
-        (docData as any).sentToGHL = true;
-        (docData as any).sentToGHLAt = new Date();
-        (docData as any).isRegional = true;
-        
         batch.set(docRef, docData, { merge: true });
         batchCount++;
         metrics.processed++;
@@ -160,25 +159,8 @@ async function backfillRegional() {
           metrics.savedCashDeal++;
         }
         
-        // Collect for GHL
-        ghlProps.push({
-          zpid: property.zpid,
-          fullAddress: property.fullAddress,
-          streetAddress: property.streetAddress,
-          city: property.city,
-          state: property.state,
-          zipCode: property.zipCode,
-          price: property.price,
-          estimate: property.estimate,
-          bedrooms: property.bedrooms,
-          bathrooms: property.bathrooms,
-          livingArea: property.squareFoot,
-          yearBuilt: property.yearBuilt,
-          homeType: property.homeType,
-          description: property.description,
-          zillowUrl: property.url,
-          imgSrc: property.firstPropertyImage,
-        });
+        // Collect for Typesense
+        typesenseProps.push(property);
         
         console.log(`  [${filterResult.isOwnerfinance ? 'OF' : ''}${filterResult.isCashDeal ? 'CASH' : ''}] ${property.fullAddress}`);
         
@@ -195,20 +177,15 @@ async function backfillRegional() {
       await batch.commit();
     }
     
-    // Step 5: Send to GHL
-    if (ghlProps.length > 0) {
-      console.log('\n[STEP 5] Sending to GHL webhook...');
+    // Step 5: Index to Typesense
+    if (typesenseProps.length > 0) {
+      console.log('\n[STEP 5] Indexing to Typesense...');
       try {
-        const ghlPayloads = ghlProps.map(p => toGHLPayload(p));
-        const ghlResult = await sendBatchToGHLWebhook(ghlPayloads, {
-          delayMs: 100,
-          onProgress: (sent, total) => {
-            console.log(`[GHL] Progress: ${sent}/${total}`);
-          },
-        });
-        metrics.sentToGHL = ghlResult.sent;
+        await indexPropertiesBatch(typesenseProps);
+        metrics.indexed = typesenseProps.length;
+        console.log(`Indexed ${typesenseProps.length} properties`);
       } catch (error: any) {
-        console.error('[GHL] Error:', error.message);
+        console.error('[Typesense] Error:', error.message);
       }
     }
     
@@ -219,7 +196,7 @@ async function backfillRegional() {
     console.log(`Owner Finance: ${metrics.savedOwnerFinance}`);
     console.log(`Cash Deals: ${metrics.savedCashDeal}`);
     console.log(`Both: ${metrics.savedBoth}`);
-    console.log(`Sent to GHL: ${metrics.sentToGHL}`);
+    console.log(`Indexed: ${metrics.indexed}`);
     console.log(`Errors: ${metrics.errors.length}`);
     
   } catch (error: any) {
@@ -228,4 +205,4 @@ async function backfillRegional() {
 }
 
 // Run the backfill
-backfillRegional().catch(console.error);
+backfillOwnerFinanceFocused().catch(console.error);

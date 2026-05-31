@@ -195,29 +195,45 @@ export async function GET(request: NextRequest) {
       
       console.log(`Found ${problematicDocs.length} properties with problematic statuses`);
 
-      // PRIORITY 2: Properties never checked or not checked in 7+ days
+      // PRIORITY 2: Get active properties and filter in memory to avoid index requirements
+      const activePropsSnap = await db.collection('properties')
+        .where('isActive', '==', true)
+        .limit(500) // Get a larger batch and filter in memory
+        .get();
+      
       const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-      const [neverCheckedSnap, oldCheckedSnap] = await Promise.all([
-        db.collection('properties')
-          .where('isActive', '==', true)
-          .where('lastStatusCheck', '==', null)
-          .limit(50)
-          .get(),
-        db.collection('properties')
-          .where('isActive', '==', true)
-          .where('lastStatusCheck', '<', sevenDaysAgo)
-          .orderBy('lastStatusCheck', 'asc')
-          .limit(50)
-          .get()
-      ]);
+      const neverCheckedDocs = [];
+      const oldCheckedDocs = [];
+      
+      activePropsSnap.docs.forEach(doc => {
+        const data = doc.data();
+        const lastCheck = data.lastStatusCheck?.toDate?.();
+        
+        if (!lastCheck) {
+          if (neverCheckedDocs.length < 50) {
+            neverCheckedDocs.push(doc);
+          }
+        } else if (lastCheck < sevenDaysAgo) {
+          if (oldCheckedDocs.length < 50) {
+            oldCheckedDocs.push(doc);
+          }
+        }
+      });
+      
+      // Sort old checked by date
+      oldCheckedDocs.sort((a, b) => {
+        const aDate = a.data().lastStatusCheck?.toDate?.() || new Date(0);
+        const bDate = b.data().lastStatusCheck?.toDate?.() || new Date(0);
+        return aDate.getTime() - bDate.getTime();
+      });
 
-      console.log(`Found ${neverCheckedSnap.size} never checked, ${oldCheckedSnap.size} not checked in 7+ days`);
+      console.log(`Found ${neverCheckedDocs.length} never checked, ${oldCheckedDocs.length} not checked in 7+ days`);
 
       // Combine all priority properties
       const allPriorityDocs = [
         ...problematicDocs,
-        ...neverCheckedSnap.docs,
-        ...oldCheckedSnap.docs
+        ...neverCheckedDocs,
+        ...oldCheckedDocs
       ];
 
       // Deduplicate by ID
@@ -249,13 +265,20 @@ export async function GET(request: NextRequest) {
 
       // If we still have room, add some regular active properties
       if (toProcess.length < MAX_BATCH_SIZE) {
+        // Get more active properties without ordering to avoid index requirement
         const regularPropsSnap = await db.collection('properties')
           .where('isActive', '==', true)
-          .orderBy('lastStatusCheck', 'asc')
-          .limit(MAX_BATCH_SIZE - toProcess.length)
+          .limit(300)
           .get();
+        
+        // Sort in memory by lastStatusCheck (oldest first)
+        const sortedDocs = regularPropsSnap.docs.sort((a, b) => {
+          const aDate = a.data().lastStatusCheck?.toDate?.() || new Date(0);
+          const bDate = b.data().lastStatusCheck?.toDate?.() || new Date(0);
+          return aDate.getTime() - bDate.getTime();
+        });
           
-        for (const doc of regularPropsSnap.docs) {
+        for (const doc of sortedDocs) {
           if (seenIds.has(doc.id)) continue;
           
           const data = doc.data();

@@ -41,9 +41,16 @@ export async function POST(request: NextRequest) {
     const stripe = getStripe();
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXTAUTH_URL;
 
+    // Mobile clients (flutter_web_auth_2) need the Stripe return URL
+    // to match their registered callback scheme (ownerfi://) so the
+    // in-app browser auto-dismisses. Web clients omit the body and
+    // get the dashboard fallback.
+    const body = await request.json().catch(() => ({}));
+    const returnUrl = typeof body?.returnUrl === 'string' ? body.returnUrl : undefined;
+
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: customerId,
-      return_url: `${baseUrl}/dashboard/investor`,
+      return_url: returnUrl || `${baseUrl}/dashboard/investor`,
     });
 
     return NextResponse.json({ url: portalSession.url });

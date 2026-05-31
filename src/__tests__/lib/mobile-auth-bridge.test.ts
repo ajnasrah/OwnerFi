@@ -170,6 +170,24 @@ describe('getSessionFromBearer — happy path', () => {
     expect(mockVerifyIdToken).toHaveBeenCalledWith('valid.jwt.here');
   });
 
+  it('plumbs phone through to the session when the user record has one', async () => {
+    stubAdminAuth();
+    mockVerifyIdToken.mockResolvedValue({
+      uid: 'user-1',
+      exp: FUTURE_EXP_SECONDS,
+    } as never);
+    mockFindById.mockResolvedValue({
+      ...buyerRecord,
+      phone: '+15551234567',
+    } as never);
+
+    const result = await getSessionFromBearer(
+      requestWith({ Authorization: 'Bearer valid.jwt.here' })
+    );
+
+    expect(result?.user.phone).toBe('+15551234567');
+  });
+
   it('works for realtor + admin roles', async () => {
     stubAdminAuth();
     mockVerifyIdToken.mockResolvedValue({

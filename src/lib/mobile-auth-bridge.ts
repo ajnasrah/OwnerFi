@@ -73,6 +73,7 @@ export async function getSessionFromBearer(
       id: user.id,
       email: user.email,
       name: user.name,
+      phone: user.phone,
       role: user.role,
     },
     // `decoded.exp` is in seconds; ExtendedSession.expires is an

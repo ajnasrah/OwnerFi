@@ -19,6 +19,7 @@ export interface ExtendedSession {
     id: string;
     email: string;
     name?: string;
+    phone?: string | null;
     role: 'buyer' | 'realtor' | 'admin';
   };
   expires: string;

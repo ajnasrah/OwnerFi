@@ -22,7 +22,7 @@
       "schedule": "0 * * * *"
     },
     {
-      "path": "/api/cron/refresh-zillow-status",
+      "path": "/api/cron/refresh-zillow-status-fixed",
       "schedule": "*/30 * * * *"
     },
     {
@@ -67,6 +67,9 @@
       "maxDuration": 300
     },
     "src/app/api/cron/refresh-zillow-status/route.ts": {
+      "maxDuration": 300
+    },
+    "src/app/api/cron/refresh-zillow-status-fixed/route.ts": {
       "maxDuration": 300
     },
     "src/app/api/cron/run-agent-outreach-scraper/route.ts": {

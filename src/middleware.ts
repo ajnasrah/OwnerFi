@@ -120,7 +120,8 @@ export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const userAgent = request.headers.get('user-agent') || '';
 
-  // Allow bypass paths (webhooks, static assets, etc.)
+  // IMPORTANT: Allow bypass paths COMPLETELY - no further checks
+  // This includes cron jobs, webhooks, and admin endpoints which may not have browser headers
   if (BYPASS_PATHS.some(path => pathname.startsWith(path))) {
     return NextResponse.next();
   }

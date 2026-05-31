@@ -66,19 +66,10 @@
     "src/app/api/admin/upload-properties-v4/route.ts": {
       "maxDuration": 300
     },
-    "src/app/api/cron/refresh-zillow-status/route.ts": {
-      "maxDuration": 300
-    },
     "src/app/api/cron/refresh-zillow-status-fixed/route.ts": {
       "maxDuration": 300
     },
-    "src/app/api/cron/run-agent-outreach-scraper/route.ts": {
-      "maxDuration": 600
-    },
     "src/app/api/cron/process-agent-outreach-queue/route.ts": {
-      "maxDuration": 300
-    },
-    "src/app/api/cron/process-scraper-queue/route.ts": {
       "maxDuration": 300
     },
     "src/app/api/v2/scraper/run/route.ts": {

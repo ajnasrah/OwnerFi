@@ -17,6 +17,98 @@ import { execSync } from 'child_process';
 import * as fs from 'fs/promises';
 import { getFirebaseAdmin } from '../src/lib/scraper-v2/firebase-admin';
 
+// UTILITIES
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  options: {
+    retries?: number;
+    delay?: number;
+    onRetry?: (error: any, attempt: number) => void;
+  } = {}
+): Promise<T> {
+  const { retries = 3, delay = 2000, onRetry } = options;
+  let lastError: any;
+
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      
+      if (attempt === retries) {
+        throw error;
+      }
+
+      if (onRetry) {
+        onRetry(error, attempt);
+      }
+
+      const waitTime = delay * attempt;
+      console.log(`Retry attempt ${attempt}/${retries} in ${waitTime}ms...`);
+      await new Promise(resolve => setTimeout(resolve, waitTime));
+    }
+  }
+
+  throw lastError;
+}
+
+// MONITORING
+class PipelineMonitor {
+  private startTime: number;
+  private steps: Map<string, { start: number; end?: number; error?: string }> = new Map();
+  
+  constructor() {
+    this.startTime = Date.now();
+    console.log('\n📊 Pipeline Monitor Started\n');
+  }
+  
+  startStep(name: string) {
+    console.log(`\n⏳ ${name}...`);
+    this.steps.set(name, { start: Date.now() });
+  }
+  
+  endStep(name: string, success = true, error?: string) {
+    const step = this.steps.get(name);
+    if (!step) return;
+    
+    step.end = Date.now();
+    const duration = ((step.end - step.start) / 1000).toFixed(2);
+    
+    if (success) {
+      console.log(`✅ ${name} completed in ${duration}s`);
+    } else {
+      step.error = error;
+      console.error(`❌ ${name} failed in ${duration}s: ${error}`);
+    }
+  }
+  
+  async finish() {
+    const totalTime = ((Date.now() - this.startTime) / 1000).toFixed(2);
+    const successful = Array.from(this.steps.values()).filter(s => !s.error).length;
+    const failed = Array.from(this.steps.values()).filter(s => s.error).length;
+    
+    console.log('\n' + '='.repeat(50));
+    console.log('📊 PIPELINE SUMMARY');
+    console.log('='.repeat(50));
+    console.log(`Total Time: ${totalTime}s`);
+    console.log(`Steps: ${successful} successful, ${failed} failed`);
+    
+    // Save metrics to Firebase
+    try {
+      const { db } = getFirebaseAdmin();
+      await db.collection('pipeline_metrics').add({
+        timestamp: new Date().toISOString(),
+        totalTime,
+        successful,
+        failed,
+        steps: Object.fromEntries(this.steps)
+      });
+    } catch (error) {
+      console.error('Failed to save metrics:', error);
+    }
+  }
+}
+
 // TYPES
 interface VideoScript {
   theme: string;
@@ -300,6 +392,7 @@ Key: Make people curious about alternative home buying without being salesy.`;
     top_p: 0.95,
     frequency_penalty: 1.0, // Strong penalty for repetition
     presence_penalty: 1.0, // Strong encouragement for new topics
+    response_format: { type: "json_object" }, // Force JSON mode
     max_tokens: 800,
   });
 
@@ -347,6 +440,11 @@ Key: Make people curious about alternative home buying without being salesy.`;
       ...seasonHashtags.slice(0, 1)
     ];
     
+    // Ensure voiceStyle is always defined
+    if (!parsed.voiceStyle || !['excited', 'calm', 'urgent', 'friendly', 'mysterious', 'professional'].includes(parsed.voiceStyle)) {
+      parsed.voiceStyle = timeConfig.energy || 'friendly';
+    }
+    
     return parsed as VideoScript;
   } catch (error) {
     console.error('Failed to parse GPT response:', error);
@@ -368,7 +466,7 @@ Key: Make people curious about alternative home buying without being salesy.`;
       caption: `${selectedSeasonalAngle} discoveries 🏠`,
       title: `${todayTheme.angle} | ${timePeriod} edition`,
       hashtags: ['#realestate', '#homebuying', `#${todayTheme.theme}`, `#${season}2024`],
-      voiceStyle: timeConfig.energy as VideoScript['voiceStyle']
+      voiceStyle: (timeConfig.energy as VideoScript['voiceStyle']) || 'friendly'
     };
   }
 }
@@ -495,17 +593,31 @@ async function main() {
     
     const payload = { video_inputs: scenes, aspect_ratio: '9x16' };
     
-    const response = await fetch(`${CREATIFY_API}/lipsyncs_v2/`, {
-      method: 'POST',
-      headers: CREATIFY_HEADERS,
-      body: JSON.stringify(payload)
-    });
-    
-    const data = await response.json();
-    
-    if (!response.ok) {
-      throw new Error(`Creatify error: ${JSON.stringify(data)}`);
-    }
+    // Create video with retry logic
+    const data = await withRetry(
+      async () => {
+        const response = await fetch(`${CREATIFY_API}/lipsyncs_v2/`, {
+          method: 'POST',
+          headers: CREATIFY_HEADERS,
+          body: JSON.stringify(payload)
+        });
+        
+        const result = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(`Creatify error: ${JSON.stringify(result)}`);
+        }
+        
+        return result;
+      },
+      {
+        retries: 3,
+        delay: 3000,
+        onRetry: (error, attempt) => {
+          console.log(`Video creation attempt ${attempt} failed:`, error.message);
+        }
+      }
+    );
     
     console.log(`Video ID: ${data.id}`);
     console.log('Polling for completion...');
@@ -515,11 +627,15 @@ async function main() {
     for (let i = 0; i < 60; i++) {
       await new Promise(resolve => setTimeout(resolve, 5000));
       
-      const statusResponse = await fetch(`${CREATIFY_API}/lipsyncs/${data.id}/`, {
-        headers: CREATIFY_HEADERS
-      });
-      
-      const status = await statusResponse.json();
+      const status = await withRetry(
+        async () => {
+          const statusResponse = await fetch(`${CREATIFY_API}/lipsyncs/${data.id}/`, {
+            headers: CREATIFY_HEADERS
+          });
+          return await statusResponse.json();
+        },
+        { retries: 2, delay: 1000 }
+      );
       
       if (status.status === 'done') {
         videoUrl = status.output;
@@ -550,15 +666,28 @@ async function main() {
       accounts: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'twitter', 'threads', 'bluesky']
     };
     
-    const lateResponse = await fetch('https://api.zernio.com/v1/posts', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.LATE_API_KEY}`,
-        'Content-Type': 'application/json',
-        'Profile-Key': process.env.LATE_OWNERFI_PROFILE_ID!
+    const lateResponse = await withRetry(
+      async () => {
+        const response = await fetch('https://api.zernio.com/v1/posts', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${process.env.LATE_API_KEY}`,
+            'Content-Type': 'application/json',
+            'Profile-Key': process.env.LATE_OWNERFI_PROFILE_ID!
+          },
+          body: JSON.stringify(latePayload)
+        });
+        
+        return response;
       },
-      body: JSON.stringify(latePayload)
-    });
+      {
+        retries: 3,
+        delay: 2000,
+        onRetry: (error, attempt) => {
+          console.log(`Social posting attempt ${attempt} failed:`, error.message);
+        }
+      }
+    );
     
     if (lateResponse.ok) {
       console.log('✅ Posted to all social platforms via Zernio successfully!');

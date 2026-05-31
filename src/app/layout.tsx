@@ -52,8 +52,11 @@ export const metadata: Metadata = {
         height: 630,
         alt: 'Ownerfi - Owner Financed Properties',
         type: 'image/png',
+        secureUrl: 'https://ownerfi.ai/og-image.png',
       },
     ],
+    // @ts-ignore - Next.js doesn't have this in types but Facebook requires it
+    'fb:app_id': '590921764080268',
   },
   twitter: {
     card: 'summary_large_image',
@@ -71,11 +74,6 @@ export const metadata: Metadata = {
   },
   other: {
     'mobile-web-app-capable': 'yes',
-    'fb:app_id': '590921764080268',
-    'og:image:secure_url': 'https://ownerfi.ai/og-image.png',
-    'og:image:width': '1200',
-    'og:image:height': '630',
-    'og:image:alt': 'Ownerfi - Find Owner Financed Properties',
   },
   formatDetection: {
     telephone: false,

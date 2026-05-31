@@ -13,10 +13,8 @@ import {
   DocumentData
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
+import { requireAuth } from '@/lib/auth-helpers';
 import { unifiedDb } from '@/lib/unified-db';
-import { ExtendedSession } from '@/types/session';
 import { syncBuyerToGHL } from '@/lib/gohighlevel-api';
 import { logInfo, logWarn, logError } from '@/lib/logger';
 import { generateBuyerFilter, shouldUpdateFilter } from '@/lib/buyer-filter-service';
@@ -32,7 +30,7 @@ import { getAllPhoneFormats, normalizePhone } from '@/lib/phone-utils';
  * NO realtor matching, NO complex algorithms, NO dependencies.
  */
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     if (!db) {
       return NextResponse.json(
@@ -41,16 +39,12 @@ export async function GET() {
       );
     }
 
-    const session = await // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    getServerSession(authOptions as any) as ExtendedSession | null;
+    const authResult = await requireAuth(request);
+    if ('error' in authResult) return authResult.error;
+    const { session } = authResult;
 
-    // Allow buyers, realtors, and admins to access
-    if (!session?.user || (session.user.role !== 'buyer' && session.user.role !== 'realtor' && session.user.role !== 'admin')) {
-      console.log('❌ [BUYER PROFILE GET] Unauthorized:', {
-        hasSession: !!session,
-        hasUser: !!session?.user,
-        role: session?.user?.role
-      });
+    if (session.user.role !== 'buyer' && session.user.role !== 'realtor' && session.user.role !== 'admin') {
+      console.log('❌ [BUYER PROFILE GET] Forbidden role:', { role: session.user.role });
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -207,11 +201,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const session = await // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    getServerSession(authOptions as any) as ExtendedSession | null;
+    const authResult = await requireAuth(request);
+    if ('error' in authResult) return authResult.error;
+    const { session } = authResult;
 
-    // Allow buyers, realtors, and admins to access
-    if (!session?.user || (session.user.role !== 'buyer' && session.user.role !== 'realtor' && session.user.role !== 'admin')) {
+    if (session.user.role !== 'buyer' && session.user.role !== 'realtor' && session.user.role !== 'admin') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

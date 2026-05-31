@@ -421,7 +421,7 @@ async function createVideoScenes(script: VideoScript, cards: CardData[], lang: '
         ...voice
       },
       caption_setting: {
-        style: index === 0 ? 'karaoke' : 'shout-block', // Use valid caption styles
+        style: 'shout-block', // Only use valid style
         font_family: 'Montserrat', // Use only valid font
         font_size: 60 - (index * 2), // Gradually smaller text
         text_color: '#FFFFFFFF',

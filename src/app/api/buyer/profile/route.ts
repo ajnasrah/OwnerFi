@@ -371,14 +371,14 @@ export async function POST(request: NextRequest) {
       const wasRevoked = existingData.tcpaRevokedAt != null;
       const safeProfileData = wasRevoked
         ? (() => {
-            // Remove any field that would re-enroll a TCPA-revoked buyer.
-            const { smsNotifications, marketingOptOut, ...rest } = profileData as Record<string, unknown>;
-            // Reference the unused destructured vars so eslint stays quiet
-            // (and so a future reviewer sees what was stripped).
-            void smsNotifications;
-            void marketingOptOut;
-            return rest;
-          })()
+          // Remove any field that would re-enroll a TCPA-revoked buyer.
+          const { smsNotifications, marketingOptOut, ...rest } = profileData as Record<string, unknown>;
+          // Reference the unused destructured vars so eslint stays quiet
+          // (and so a future reviewer sees what was stripped).
+          void smsNotifications;
+          void marketingOptOut;
+          return rest;
+        })()
         : profileData;
       await updateDoc(doc(db, 'buyerProfiles', buyerId), safeProfileData);
       console.log(`✅ [PROFILE] Updated existing buyer profile: ${buyerId}${wasRevoked ? ' (TCPA flags preserved)' : ''}`);
@@ -434,13 +434,106 @@ export async function POST(request: NextRequest) {
   }
 }
 
+/**
+ * Partial profile update. Unlike POST (which rebuilds the full
+ * profile from request body + defaults and is therefore unsafe
+ * for single-field updates — it would flip `emailNotifications`
+ * back on for opted-out users, etc.), PATCH whitelists each
+ * mutable field and updates exactly those.
+ *
+ * Today only `arvThreshold` is exposed; add fields here as
+ * mobile / web surfaces need them. Unknown fields in the body
+ * are silently ignored so clients can be forward-compatible.
+ */
+export async function PATCH(request: NextRequest) {
+  try {
+    if (!db) {
+      return NextResponse.json(
+        { error: 'Database not available' },
+        { status: 500 }
+      );
+    }
+
+    const authResult = await requireAuth(request);
+    if ('error' in authResult) return authResult.error;
+    const { session } = authResult;
+
+    if (session.user.role !== 'buyer' && session.user.role !== 'realtor' && session.user.role !== 'admin') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body = await request.json().catch(() => null);
+    if (!body || typeof body !== 'object') {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+
+    const updates: Record<string, unknown> = {};
+
+    if ('arvThreshold' in body) {
+      const raw = (body as Record<string, unknown>).arvThreshold;
+      const n = Number(raw);
+      // Wide permissive bound — UI surfaces (e.g. mobile slider 75–95)
+      // narrow this further. Anything outside this range is almost
+      // certainly a bug rather than user intent.
+      if (!Number.isFinite(n) || n < 50 || n > 100) {
+        return NextResponse.json(
+          { error: 'arvThreshold must be a number between 50 and 100' },
+          { status: 400 }
+        );
+      }
+      updates.arvThreshold = Math.round(n);
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return NextResponse.json(
+        { error: 'No updatable fields provided' },
+        { status: 400 }
+      );
+    }
+
+    // Locate the profile by userId — the canonical key set when the
+    // profile is first created in POST. PATCH does not fall back to
+    // phone/email lookups (those exist in GET to repair legacy
+    // mis-keyed docs; PATCH callers already hold an authenticated
+    // session keyed to userId).
+    const profiles = await getDocs(
+      query(
+        collection(db, 'buyerProfiles'),
+        where('userId', '==', session.user.id)
+      )
+    );
+
+    if (profiles.empty) {
+      return NextResponse.json(
+        { error: 'Buyer profile not found' },
+        { status: 404 }
+      );
+    }
+
+    const profileId = profiles.docs[0].id;
+    await updateDoc(doc(db, 'buyerProfiles', profileId), {
+      ...updates,
+      updatedAt: serverTimestamp(),
+    });
+
+    return NextResponse.json({
+      buyerId: profileId,
+      updated: Object.keys(updates),
+    });
+  } catch (error) {
+    console.error('❌ [BUYER PROFILE PATCH] Error:', error);
+    await logError('PATCH /api/buyer/profile error', { action: 'buyer_profile_patch_error' }, error as Error);
+    return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 });
+  }
+}
+
 export async function OPTIONS(request: NextRequest) {
   return new NextResponse(null, {
     status: 200,
     headers: {
       'Access-Control-Allow-Credentials': 'true',
       'Access-Control-Allow-Origin': request.headers.get('origin') || '*',
-      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Methods': 'GET, POST, PATCH, PUT, DELETE, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization, Cookie',
     },
   });
